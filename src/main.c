@@ -33,7 +33,17 @@ int main()
 	printf("Hello, have a nice and productive day!\n");
 
 	gpio_init(16);
+	gpio_init(17);
+
 	gpio_pull_up(16);
+	gpio_pull_up(17);
+
+#if 1
+	while (true) {
+		printf("btn: %i %i\n", gpio_get(16), gpio_get(17));
+		sleep_ms(33);
+	}
+#else
 	gpio_set_drive_strength(16, GPIO_DRIVE_STRENGTH_2MA);
 	gpio_set_dir(16, GPIO_IN);
 	gpio_put(16, 1);
@@ -57,4 +67,5 @@ int main()
 
 		sleep_ms(33);
 	}
+#endif
 }
