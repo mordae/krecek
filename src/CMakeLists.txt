@@ -36,7 +36,7 @@ target_compile_definitions(
   pico_task
   INTERFACE
     MAX_TASKS=4
-    TASK_STACK_SIZE=1024
+    TASK_STACK_SIZE=2048
 )
 
 target_link_libraries(
