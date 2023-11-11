@@ -85,7 +85,7 @@ static void tft_task(void)
 			tft_draw_string(i + 32, i, RED, "Hello!");
 
 			tft_swap_buffers();
-			task_yield();
+			task_sleep_ms(9);
 			tft_sync();
 
 			uint32_t this_sync = time_us_32();
