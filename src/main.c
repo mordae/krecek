@@ -15,13 +15,91 @@
  */
 
 #include <pico/stdlib.h>
+#include <pico/multicore.h>
 #include <pico/stdio_usb.h>
 
+#include <tft.h>
 #include <stdio.h>
+#include <task.h>
+
+#define RED 240
+#define GREEN 244
+#define BLUE 250
+#define GRAY 4
+
+static void stats_task(void);
+static void tft_task(void);
+
+/*
+ * Tasks to run concurrently:
+ */
+task_t task_avail[NUM_CORES][MAX_TASKS] = {
+	{
+		/* On the first core: */
+		MAKE_TASK(4, "stats", stats_task),
+		NULL,
+	},
+	{
+		/* On the second core: */
+		MAKE_TASK(1, "tft", tft_task),
+		NULL,
+	},
+};
+
+/*
+ * Reports on all running tasks every 10 seconds.
+ */
+static void stats_task(void)
+{
+	while (true) {
+		task_sleep_ms(10 * 1000);
+
+		for (unsigned i = 0; i < NUM_CORES; i++)
+			task_stats_report_reset(i);
+	}
+}
+
+/*
+ * Outputs stuff to the screen as fast as possible.
+ */
+static void tft_task(void)
+{
+	uint32_t last_sync = time_us_32();
+	int fps = 0;
+
+	int len = tft_width > tft_height ? tft_height : tft_width;
+
+	while (true) {
+		for (int i = -16; i < len; i++) {
+			tft_fill(0);
+
+			char buf[32];
+			snprintf(buf, sizeof buf, "%i", fps);
+			tft_draw_string_right(tft_width - 1, 0, GRAY, buf);
+
+			for (int j = 0; j < len; j++) {
+				tft_draw_pixel(j, j, GREEN);
+				tft_draw_pixel(len - 1 - j, j, BLUE);
+			}
+
+			tft_draw_string(i + 32, i, RED, "Hello!");
+
+			tft_swap_buffers();
+			task_yield();
+			tft_sync();
+
+			uint32_t this_sync = time_us_32();
+			uint32_t delta = this_sync - last_sync;
+			fps = 1 * 1000 * 1000 / delta;
+			last_sync = this_sync;
+		}
+	}
+}
 
 int main()
 {
 	stdio_usb_init();
+	task_init();
 
 	for (int i = 0; i < 30; i++) {
 		if (stdio_usb_connected())
@@ -30,42 +108,13 @@ int main()
 		sleep_ms(100);
 	}
 
+	gpio_init(6);
+	gpio_set_dir(6, GPIO_OUT);
+	gpio_put(6, 1);
+	tft_init();
+
 	printf("Hello, have a nice and productive day!\n");
 
-	gpio_init(16);
-	gpio_init(17);
-
-	gpio_pull_up(16);
-	gpio_pull_up(17);
-
-#if 1
-	while (true) {
-		printf("btn: %i %i\n", gpio_get(16), gpio_get(17));
-		sleep_ms(33);
-	}
-#else
-	gpio_set_drive_strength(16, GPIO_DRIVE_STRENGTH_2MA);
-	gpio_set_dir(16, GPIO_IN);
-	gpio_put(16, 1);
-
-	unsigned avg = 1000000;
-
-	while (true) {
-		unsigned total = 0;
-
-		for (int i = 0; i < 1024; i++) {
-			int x = gpio_get(16);
-			gpio_set_dir(16, !x);
-			total += x;
-		}
-
-		gpio_set_dir(16, GPIO_IN);
-
-		avg = (avg + total * 1024) / 2;
-
-		printf("Button Pressure: %5u\n", (avg - 768 * 1024) / 1024);
-
-		sleep_ms(33);
-	}
-#endif
+	multicore_launch_core1(task_run_loop);
+	task_run_loop();
 }
