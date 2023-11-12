@@ -18,9 +18,15 @@
 #include <pico/multicore.h>
 #include <pico/stdio_usb.h>
 
+#include <hardware/adc.h>
+
 #include <tft.h>
 #include <stdio.h>
 #include <task.h>
+
+#define JOY_BTN_PIN 22
+#define JOY_X_PIN 27
+#define JOY_Y_PIN 28
 
 #define RED 240
 #define GREEN 244
@@ -29,6 +35,7 @@
 
 static void stats_task(void);
 static void tft_task(void);
+static void input_task(void);
 
 /*
  * Tasks to run concurrently:
@@ -37,6 +44,7 @@ task_t task_avail[NUM_CORES][MAX_TASKS] = {
 	{
 		/* On the first core: */
 		MAKE_TASK(4, "stats", stats_task),
+		MAKE_TASK(1, "input", input_task),
 		NULL,
 	},
 	{
@@ -56,6 +64,43 @@ static void stats_task(void)
 
 		for (unsigned i = 0; i < NUM_CORES; i++)
 			task_stats_report_reset(i);
+	}
+}
+
+/*
+ * Processes joystick and button inputs.
+ */
+static void input_task(void)
+{
+	gpio_init(JOY_BTN_PIN);
+	gpio_set_dir(JOY_BTN_PIN, GPIO_IN);
+	gpio_pull_up(JOY_BTN_PIN);
+
+	adc_init();
+	adc_gpio_init(JOY_X_PIN);
+	adc_gpio_init(JOY_Y_PIN);
+
+	while (true) {
+		int joy_btn = !gpio_get(JOY_BTN_PIN);
+
+		adc_select_input(JOY_X_PIN - 26);
+
+		int joy_x = 0;
+		int joy_y = 0;
+
+		for (int i = 0; i < 256; i++)
+			joy_x += -(adc_read() - 2048);
+
+		adc_select_input(JOY_Y_PIN - 26);
+
+		for (int i = 0; i < 256; i++)
+			joy_y += -(adc_read() - 2048);
+
+		joy_x /= 256;
+		joy_y /= 256;
+
+		printf("joy: btn=%i, x=%5i, y=%5i\n", joy_btn, joy_x, joy_y);
+		task_sleep_ms(50);
 	}
 }
 
