@@ -14,15 +14,16 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <pico/stdlib.h>
 #include <pico/multicore.h>
 #include <pico/stdio_usb.h>
+#include <pico/stdlib.h>
 
 #include <hardware/adc.h>
 
-#include <tft.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <task.h>
+#include <tft.h>
 
 #define JOY_BTN_PIN 22
 #define JOY_X_PIN 27
@@ -31,7 +32,11 @@
 #define RED 240
 #define GREEN 244
 #define BLUE 250
-#define GRAY 4
+#define GRAY 8
+
+static int input_joy_x = 0;
+static int input_joy_y = 0;
+static int input_joy_btn = 0;
 
 static void stats_task(void);
 static void tft_task(void);
@@ -76,10 +81,6 @@ static void input_task(void)
 	gpio_set_dir(JOY_BTN_PIN, GPIO_IN);
 	gpio_pull_up(JOY_BTN_PIN);
 
-	adc_init();
-	adc_gpio_init(JOY_X_PIN);
-	adc_gpio_init(JOY_Y_PIN);
-
 	while (true) {
 		int joy_btn = !gpio_get(JOY_BTN_PIN);
 
@@ -96,10 +97,16 @@ static void input_task(void)
 		for (int i = 0; i < 256; i++)
 			joy_y += -(adc_read() - 2048);
 
+		srand(joy_x + joy_y + time_us_32());
+
 		joy_x /= 256;
 		joy_y /= 256;
 
-		printf("joy: btn=%i, x=%5i, y=%5i\n", joy_btn, joy_x, joy_y);
+		input_joy_x = joy_x;
+		input_joy_y = joy_y;
+		input_joy_btn = joy_btn;
+
+		//printf("joy: btn=%i, x=%5i, y=%5i\n", joy_btn, joy_x, joy_y);
 		task_sleep_ms(50);
 	}
 }
@@ -112,32 +119,66 @@ static void tft_task(void)
 	uint32_t last_sync = time_us_32();
 	int fps = 0;
 
-	int len = tft_width > tft_height ? tft_height : tft_width;
+	int ew = 10;
+	int eh = 10;
+	int ex = random() % (tft_width - ew);
+	int ey = random() % (tft_height - eh);
+	int ehp_max = 59;
+	int ehp = ehp_max;
 
 	while (true) {
-		for (int i = -16; i < len; i++) {
-			tft_fill(0);
+		tft_fill(0);
+		char buf[64];
 
-			char buf[32];
-			snprintf(buf, sizeof buf, "%i", fps);
-			tft_draw_string_right(tft_width - 1, 0, GRAY, buf);
+		snprintf(buf, sizeof buf, "joy: btn=%i", input_joy_btn);
+		tft_draw_string(0, 0, GRAY, buf);
 
-			for (int j = 0; j < len; j++) {
-				tft_draw_pixel(j, j, GREEN);
-				tft_draw_pixel(len - 1 - j, j, BLUE);
-			}
+		snprintf(buf, sizeof buf, "     x=%i", input_joy_x);
+		tft_draw_string(0, 16, GRAY, buf);
 
-			tft_draw_string(i + 32, i, RED, "Hello!");
+		snprintf(buf, sizeof buf, "     y=%i", input_joy_y);
+		tft_draw_string(0, 32, GRAY, buf);
 
-			tft_swap_buffers();
-			task_sleep_ms(9);
-			tft_sync();
+		/* Calculate crosshair position */
+		int tx = tft_width / 2 * input_joy_x / 2047;
+		int ty = tft_height / 2 * -input_joy_y / 2047;
+		tx += tft_width / 2;
+		ty += tft_height / 2;
 
-			uint32_t this_sync = time_us_32();
-			uint32_t delta = this_sync - last_sync;
-			fps = 1 * 1000 * 1000 / delta;
-			last_sync = this_sync;
+		/* Check for collission */
+		if ((tx >= ex) && (tx <= (ex + ew)) && (ty >= ey) && (ty <= (ey + eh))) {
+			ehp = MAX(0, ehp - 1);
+		} else {
+			ehp = MIN(ehp_max, ehp + 1);
 		}
+
+		if (!ehp) {
+			ex = random() % (tft_width - ew);
+			ey = random() % (tft_height - eh);
+			ehp = ehp_max;
+		}
+
+		int ecolor = 240 - 32 + ehp / 10;
+		printf("ehp = %3i, ecolor = %3i\n", ehp, ecolor);
+
+		/* draw THE enemy */
+		tft_draw_rect(ex, ey, ex + ew, ey + eh, ecolor);
+
+		/* Draw the crosshair */
+		tft_draw_rect(tx - 2, ty, tx + 2, ty, GREEN);
+		tft_draw_rect(tx, ty - 2, tx, ty + 2, GREEN);
+
+		snprintf(buf, sizeof buf, "%i", fps);
+		tft_draw_string_right(tft_width - 1, 0, GREEN, buf);
+
+		tft_swap_buffers();
+		task_sleep_ms(9);
+		tft_sync();
+
+		uint32_t this_sync = time_us_32();
+		uint32_t delta = this_sync - last_sync;
+		fps = 1 * 1000 * 1000 / delta;
+		last_sync = this_sync;
 	}
 }
 
@@ -152,6 +193,14 @@ int main()
 
 		sleep_ms(100);
 	}
+
+	adc_init();
+	adc_gpio_init(JOY_X_PIN);
+	adc_gpio_init(JOY_Y_PIN);
+	adc_select_input(JOY_X_PIN);
+
+	for (int i = 0; i < 16; i++)
+		srand(adc_read() + random());
 
 	gpio_init(6);
 	gpio_set_dir(6, GPIO_OUT);
