@@ -49,6 +49,7 @@ target_link_libraries(
   pico_tft
   pico_task
   hardware_adc
+  hardware_pwm
   hardware_divider
   hardware_dma
   hardware_pio

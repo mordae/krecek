@@ -19,11 +19,14 @@
 #include <pico/stdlib.h>
 
 #include <hardware/adc.h>
+#include <hardware/pwm.h>
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <task.h>
 #include <tft.h>
+
+#define TFT_LED_PWM 6
 
 #define JOY_BTN_PIN 22
 #define JOY_X_PIN 27
@@ -198,6 +201,23 @@ static void tft_task(void)
 	}
 }
 
+static void backlight_init(void)
+{
+	int slice = pwm_gpio_to_slice_num(TFT_LED_PWM);
+	int chan = pwm_gpio_to_channel(TFT_LED_PWM);
+
+	pwm_config conf = pwm_get_default_config();
+	pwm_init(slice, &conf, false);
+	pwm_set_clkdiv_int_frac(slice, 1, 0);
+	pwm_set_wrap(slice, 99);
+	pwm_set_chan_level(slice, chan, 33);
+	pwm_set_enabled(slice, true);
+
+	gpio_init(TFT_LED_PWM);
+	gpio_set_dir(TFT_LED_PWM, GPIO_OUT);
+	gpio_set_function(TFT_LED_PWM, GPIO_FUNC_PWM);
+}
+
 int main()
 {
 	stdio_usb_init();
@@ -218,9 +238,7 @@ int main()
 	for (int i = 0; i < 16; i++)
 		srand(adc_read() + random());
 
-	gpio_init(6);
-	gpio_set_dir(6, GPIO_OUT);
-	gpio_put(6, 1);
+	backlight_init();
 	tft_init();
 
 	printf("Hello, have a nice and productive day!\n");
