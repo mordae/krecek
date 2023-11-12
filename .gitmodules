@@ -1,9 +1,9 @@
 [submodule "src/vendor/pico-stdio-usb-simple"]
 	path = src/vendor/pico-stdio-usb-simple
-	url = git@github.com:mordae/pico-stdio-usb-simple.git
+	url = https://github.com/mordae/pico-stdio-usb-simple.git
 [submodule "src/vendor/pico-task"]
 	path = src/vendor/pico-task
-	url = git@github.com:mordae/pico-task
+	url = https://github.com/mordae/pico-task
 [submodule "src/vendor/pico-tft"]
 	path = src/vendor/pico-tft
-	url = git@github.com:mordae/pico-tft
+	url = https://github.com/mordae/pico-tft
