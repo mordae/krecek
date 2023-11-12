@@ -185,7 +185,7 @@ static void tft_task(void)
 		tft_draw_rect(tx, ty - 2, tx, ty + 2, GREEN);
 
 		snprintf(buf, sizeof buf, "%i", fps);
-		tft_draw_string_right(tft_width - 1, 0, GREEN, buf);
+		tft_draw_string_right(tft_width - 1, 0, GRAY, buf);
 
 		tft_swap_buffers();
 		task_sleep_ms(9);
