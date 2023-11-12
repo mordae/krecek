@@ -68,4 +68,4 @@ target_compile_definitions(krecek PUBLIC PICO_STDIO_DEFAULT_CRLF=1)
 target_include_directories(krecek PRIVATE include)
 
 #pico_set_binary_type(krecek no_flash)
-pico_set_binary_type(krecek copy_to_ram)
+#pico_set_binary_type(krecek copy_to_ram)
