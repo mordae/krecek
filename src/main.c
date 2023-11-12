@@ -111,6 +111,17 @@ static void input_task(void)
 	}
 }
 
+inline static int clamp(int x, int lo, int hi)
+{
+	if (x < lo)
+		return lo;
+
+	if (x > hi)
+		return hi;
+
+	return x;
+}
+
 /*
  * Outputs stuff to the screen as fast as possible.
  */
@@ -119,25 +130,22 @@ static void tft_task(void)
 	uint32_t last_sync = time_us_32();
 	int fps = 0;
 
-	int ew = 10;
-	int eh = 10;
+	int ew = 30;
+	int eh = 30;
 	int ex = random() % (tft_width - ew);
 	int ey = random() % (tft_height - eh);
 	int ehp_max = 59;
 	int ehp = ehp_max;
+	int exa = 2;
+	int eya = 2;
+	int score = 0;
 
 	while (true) {
 		tft_fill(0);
 		char buf[64];
 
-		snprintf(buf, sizeof buf, "joy: btn=%i", input_joy_btn);
-		tft_draw_string(0, 0, GRAY, buf);
-
-		snprintf(buf, sizeof buf, "     x=%i", input_joy_x);
-		tft_draw_string(0, 16, GRAY, buf);
-
-		snprintf(buf, sizeof buf, "     y=%i", input_joy_y);
-		tft_draw_string(0, 32, GRAY, buf);
+		snprintf(buf, sizeof buf, "%i", score);
+		tft_draw_string(0, 0, RED, buf);
 
 		/* Calculate crosshair position */
 		int tx = tft_width / 2 * input_joy_x / 2047;
@@ -156,10 +164,18 @@ static void tft_task(void)
 			ex = random() % (tft_width - ew);
 			ey = random() % (tft_height - eh);
 			ehp = ehp_max;
+			ew = clamp(ew - 2, 10, 30);
+			eh = clamp(eh - 2, 10, 30);
+			score++;
+		} else {
+			ex += exa * (random() % 3 - 1);
+			ey += eya * (random() % 3 - 1);
+
+			ex = clamp(ex, 0, tft_width - ew);
+			ey = clamp(ey, 0, tft_height - eh);
 		}
 
-		int ecolor = 240 - 32 + ehp / 10;
-		printf("ehp = %3i, ecolor = %3i\n", ehp, ecolor);
+		int ecolor = 249 + 6 - ehp / 10;
 
 		/* draw THE enemy */
 		tft_draw_rect(ex, ey, ex + ew, ey + eh, ecolor);
