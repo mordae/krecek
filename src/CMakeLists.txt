@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 3.21)
 
 include($ENV{PICO_SDK_PATH}/pico_sdk_init.cmake)
 
-project(cyclone)
+project(krecek)
 pico_sdk_init()
 
-add_executable(cyclone main.c)
+add_executable(krecek main.c)
 
 add_subdirectory(vendor/pico-stdio-usb-simple)
 
@@ -40,7 +40,7 @@ target_compile_definitions(
 )
 
 target_link_libraries(
-  cyclone
+  krecek
   pico_divider
   pico_multicore
   pico_stdio_usb_simple
@@ -56,15 +56,15 @@ target_link_libraries(
   hardware_vreg
 )
 
-pico_add_extra_outputs(cyclone)
+pico_add_extra_outputs(krecek)
 
-set_property(TARGET cyclone PROPERTY C_STANDARD 23)
-target_compile_options(cyclone PRIVATE -Wall -Wextra -Wnull-dereference)
-target_compile_definitions(cyclone PUBLIC PICO_MAX_SHARED_IRQ_HANDLERS=8u)
-target_compile_definitions(cyclone PUBLIC PICO_STDIO_ENABLE_CRLF_SUPPORT=1)
-target_compile_definitions(cyclone PUBLIC PICO_STDIO_DEFAULT_CRLF=1)
+set_property(TARGET krecek PROPERTY C_STANDARD 23)
+target_compile_options(krecek PRIVATE -Wall -Wextra -Wnull-dereference)
+target_compile_definitions(krecek PUBLIC PICO_MAX_SHARED_IRQ_HANDLERS=8u)
+target_compile_definitions(krecek PUBLIC PICO_STDIO_ENABLE_CRLF_SUPPORT=1)
+target_compile_definitions(krecek PUBLIC PICO_STDIO_DEFAULT_CRLF=1)
 
-target_include_directories(cyclone PRIVATE include)
+target_include_directories(krecek PRIVATE include)
 
-#pico_set_binary_type(cyclone no_flash)
-pico_set_binary_type(cyclone copy_to_ram)
+#pico_set_binary_type(krecek no_flash)
+pico_set_binary_type(krecek copy_to_ram)
