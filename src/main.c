@@ -28,6 +28,8 @@
 
 #define TFT_LED_PWM 6
 
+#define BTN_PIN 15
+
 #define JOY_BTN_PIN 22
 #define JOY_X_PIN 27
 #define JOY_Y_PIN 28
@@ -40,6 +42,7 @@
 static int input_joy_x = 0;
 static int input_joy_y = 0;
 static int input_joy_btn = 0;
+static int input_btn = 0;
 
 static void stats_task(void);
 static void tft_task(void);
@@ -80,11 +83,23 @@ static void stats_task(void)
  */
 static void input_task(void)
 {
+	gpio_init(BTN_PIN);
+	gpio_set_dir(BTN_PIN, GPIO_IN);
+	gpio_pull_down(BTN_PIN);
+	gpio_put(BTN_PIN, 1);
+
 	gpio_init(JOY_BTN_PIN);
 	gpio_set_dir(JOY_BTN_PIN, GPIO_IN);
 	gpio_pull_up(JOY_BTN_PIN);
 
+	int joy_x_avg = 0;
+	int joy_y_avg = 0;
+	int btn_avg = 0;
+
 	while (true) {
+		/* Charge the button capacitor up in the meantime. */
+		gpio_set_dir(BTN_PIN, GPIO_OUT);
+
 		int joy_btn = !gpio_get(JOY_BTN_PIN);
 
 		adc_select_input(JOY_X_PIN - 26);
@@ -102,15 +117,29 @@ static void input_task(void)
 
 		srand(joy_x + joy_y + time_us_32());
 
-		joy_x /= 256;
-		joy_y /= 256;
+		joy_x_avg = (joy_x_avg * 7 + joy_x) / 8;
+		joy_y_avg = (joy_y_avg * 7 + joy_y) / 8;
 
-		input_joy_x = joy_x;
-		input_joy_y = joy_y;
+		input_joy_x = joy_x_avg / 256;
+		input_joy_y = joy_y_avg / 256;
 		input_joy_btn = joy_btn;
 
-		//printf("joy: btn=%i, x=%5i, y=%5i\n", joy_btn, joy_x, joy_y);
-		task_sleep_ms(50);
+		//printf("joy: btn=%i, x=%5i, y=%5i\n", input_joy_btn, input_joy_x, input_joy_y);
+
+		/* Start slowly discharging button capacitors. */
+		gpio_set_dir(BTN_PIN, GPIO_IN);
+
+		int btn = 0;
+
+		for (int i = 0; i < 1024; i++)
+			btn += gpio_get(BTN_PIN);
+
+		btn_avg = (btn_avg * 7 + (__builtin_clz(btn) - 21) * 1024) / 8;
+		input_btn = btn_avg / 128;
+
+		printf("btn: a=%5i\n", input_btn);
+
+		task_sleep_ms(10);
 	}
 }
 
