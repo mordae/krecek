@@ -1,4 +1,50 @@
 (kicad_symbol_lib (version 20220914) (generator kicad_symbol_editor)
+  (symbol "+3.3VSD" (power) (in_bom no) (on_board no)
+    (property "Reference" "+3.3VSD" (at 0 3.81 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Value" "+3.3VSD" (at 0 3.81 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "" (at 0 0 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "" (at 0 0 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (symbol "+3.3VSD_0_1"
+      (polyline
+        (pts
+          (xy -0.762 1.27)
+          (xy 0 2.54)
+        )
+        (stroke (width 0) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 0 0)
+          (xy 0 2.54)
+        )
+        (stroke (width 0) (type default))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy 0 2.54)
+          (xy 0.762 1.27)
+        )
+        (stroke (width 0) (type default))
+        (fill (type none))
+      )
+    )
+    (symbol "+3.3VSD_1_1"
+      (pin power_in line (at 0 0 90) (length 0) hide
+        (name "+3.3VSD" (effects (font (size 1.27 1.27))))
+        (number "1" (effects (font (size 1.27 1.27))))
+      )
+    )
+  )
   (symbol "ABXY" (pin_names hide) (in_bom yes) (on_board yes)
     (property "Reference" "SW" (at 0 5.08 0)
       (effects (font (size 1.27 1.27)))

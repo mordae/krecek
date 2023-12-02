@@ -1231,10 +1231,6 @@
     (effects (font (size 1.27 1.27)) (justify right bottom))
     (uuid 3deb8721-dc2b-4c1c-9905-e364136cdcd4)
   )
-  (label "CHGR_{ISET2}" (at 185.42 63.5 180) (fields_autoplaced)
-    (effects (font (size 1.27 1.27)) (justify right bottom))
-    (uuid 43742c41-c340-4a90-b9c1-b1972b40ef7a)
-  )
   (label "AMP_{SHDN}" (at 185.42 50.8 180) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify right bottom))
     (uuid 47c973a5-66da-45e8-95f0-41107af5646d)
@@ -1402,6 +1398,11 @@
   (label "XIN" (at 25.4 87.63 0) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid f7dbfc49-8987-4052-98c5-e6a1ef55a618)
+  )
+
+  (hierarchical_label "CHG_{ISET2}" (shape output) (at 185.42 63.5 0) (fields_autoplaced)
+    (effects (font (size 1.27 1.27)) (justify left))
+    (uuid 4fd9448b-7707-4909-988c-ba702e347757)
   )
 
   (symbol (lib_id "Device:R_Small") (at 161.29 167.64 90) (unit 1)
