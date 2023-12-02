@@ -247,7 +247,8 @@
       "Krecek"
     ],
     "pinned_symbol_libs": [
-      "Krecek"
+      "Krecek",
+      "LCSC"
     ]
   },
   "meta": {
