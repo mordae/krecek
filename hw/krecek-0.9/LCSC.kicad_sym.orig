@@ -520,6 +520,7 @@
       )
     )
   )
+<<<<<<< HEAD
   (symbol "TPA2028D1YZFT" (pin_names (offset 0.254)) (in_bom yes) (on_board yes)
     (property "Reference" "U" (at 0 12.7 0)
       (effects (font (size 1.524 1.524)))
@@ -582,8 +583,7 @@
         (stroke (width 0) (type default))
         (fill (type background))
       )
-    )
-  )
+=======
   (symbol "TF-012-P9" (in_bom yes) (on_board yes)
     (property "Reference" "TF" (at 0 15.24 0)
       (effects (font (size 1.27 1.27)))
@@ -659,6 +659,7 @@
         (name "CD" (effects (font (size 1.27 1.27))))
         (number "CD" (effects (font (size 1.27 1.27))))
       )
+>>>>>>> 07e5a94 (add sd card slot symbol and layout)
     )
   )
   (symbol "TYPEC-304J-BCP16" (in_bom yes) (on_board yes)
