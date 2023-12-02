@@ -339,6 +339,18 @@
     [
       "bd29cd8c-9207-416a-90c1-7bdf6b5cfb97",
       "Power"
+    ],
+    [
+      "a7733ec7-68c7-444f-aac5-8a965be5cbce",
+      "Audio"
+    ],
+    [
+      "40971852-55ba-4d75-a9d8-2b5de9b08cbd",
+      "Radio"
+    ],
+    [
+      "11c64485-27fc-47ac-864e-0b013ddf7d3c",
+      "Inputs"
     ]
   ],
   "text_variables": {}
