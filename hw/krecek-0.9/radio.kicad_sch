@@ -4,6 +4,13 @@
 
   (paper "A4")
 
+  (title_block
+    (title "Křeček")
+    (date "2023-12-20")
+    (rev "v0.9-wip")
+    (company "DDM Spirála")
+  )
+
   (lib_symbols
     (symbol "LCSC:CC1101RGPR" (in_bom yes) (on_board yes)
       (property "Reference" "U" (at 0 19.05 0)

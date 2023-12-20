@@ -6,6 +6,9 @@
 
   (title_block
     (title "Křeček")
+    (date "2023-12-20")
+    (rev "v0.9-wip")
+    (company "DDM Spirála")
   )
 
   (lib_symbols
@@ -239,6 +242,10 @@
     (stroke (width 0) (type default))
     (uuid 2955c2e7-9e2f-490f-98b6-ac2e96fd1d23)
   )
+  (wire (pts (xy 139.7 63.5) (xy 165.1 63.5))
+    (stroke (width 0) (type default))
+    (uuid 2c60c571-5fa0-4937-8eda-b63f8fffbbd5)
+  )
   (wire (pts (xy 147.32 134.62) (xy 147.32 109.22))
     (stroke (width 0) (type default))
     (uuid 2d2be51a-731c-4aa2-abb0-d7919bdcba5f)
@@ -310,6 +317,10 @@
   (wire (pts (xy 139.7 111.76) (xy 142.24 111.76))
     (stroke (width 0) (type default))
     (uuid a87e8b5e-ea49-4f8d-a962-a815c718b2be)
+  )
+  (wire (pts (xy 139.7 66.04) (xy 165.1 66.04))
+    (stroke (width 0) (type default))
+    (uuid ab9a8fe9-9723-472b-b689-5fc28ae440c6)
   )
   (wire (pts (xy 149.86 137.16) (xy 149.86 101.6))
     (stroke (width 0) (type default))
@@ -615,6 +626,14 @@
     (pin "USB_{D-}" bidirectional (at 139.7 60.96 0)
       (effects (font (size 1.27 1.27)) (justify right))
       (uuid 7714e52f-b799-417f-aa82-00e58a7c3f96)
+    )
+    (pin "USB_{CC1}" input (at 139.7 63.5 0)
+      (effects (font (size 1.27 1.27)) (justify right))
+      (uuid 3cf25178-939a-4d58-9f5f-d651970a3e16)
+    )
+    (pin "USB_{CC2}" input (at 139.7 66.04 0)
+      (effects (font (size 1.27 1.27)) (justify right))
+      (uuid 83b1a67f-da51-4596-b906-d9c6096ff4d9)
     )
     (instances
       (project "krecek-0.9"
