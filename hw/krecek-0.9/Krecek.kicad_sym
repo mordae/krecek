@@ -249,7 +249,7 @@
         (name "LED" (effects (font (size 1.27 1.27))))
         (number "8" (effects (font (size 1.27 1.27))))
       )
-      (pin output line (at -12.7 -7.62 0) (length 2.54)
+      (pin tri_state line (at -12.7 -7.62 0) (length 2.54)
         (name "MISO" (effects (font (size 1.27 1.27))))
         (number "9" (effects (font (size 1.27 1.27))))
       )
