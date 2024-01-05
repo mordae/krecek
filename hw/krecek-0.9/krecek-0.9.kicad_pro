@@ -463,7 +463,7 @@
     },
     "net_format_name": "",
     "page_layout_descr_file": "template.kicad_wks",
-    "plot_directory": "",
+    "plot_directory": "out/",
     "spice_current_sheet_as_root": false,
     "spice_external_command": "spice \"%I\"",
     "spice_model_current_sheet_as_root": true,

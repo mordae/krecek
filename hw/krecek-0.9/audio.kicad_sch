@@ -2125,6 +2125,37 @@
     )
   )
 
+  (symbol (lib_id "power:+3.3V") (at 233.68 132.08 270) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
+    (uuid 6a8825fe-834f-440b-b3dc-b9aac0ac6dbf)
+    (property "Reference" "#PWR04" (at 229.87 132.08 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Value" "+3.3V" (at 237.49 132.08 90)
+      (effects (font (size 1.27 1.27)) (justify left))
+    )
+    (property "Footprint" "" (at 233.68 132.08 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "" (at 233.68 132.08 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid c087b7ea-3529-46ff-874c-69806182baed))
+    (instances
+      (project "krecek-0.9"
+        (path "/8888f37b-ecc2-47df-8824-4b4e1e726451"
+          (reference "#PWR04") (unit 1)
+        )
+        (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
+          (reference "#PWR019") (unit 1)
+        )
+        (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
+          (reference "#PWR031") (unit 1)
+        )
+      )
+    )
+  )
+
   (symbol (lib_id "power:GND") (at 254 102.87 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 6cabd782-9455-4d7b-ab29-af40cfbc344b)
@@ -3031,31 +3062,6 @@
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
           (reference "C55") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "power:+3.3VA") (at 233.68 132.08 270) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
-    (uuid ac32afa6-4147-4094-aa86-c3a523bac9fb)
-    (property "Reference" "#PWR080" (at 229.87 132.08 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Value" "+3.3VA" (at 237.49 132.08 90)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "" (at 233.68 132.08 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 233.68 132.08 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid dd1f4cef-5810-48ee-8f14-b7e22750c0ed))
-    (instances
-      (project "krecek-0.9"
-        (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR080") (unit 1)
         )
       )
     )
