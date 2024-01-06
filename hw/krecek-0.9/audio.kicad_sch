@@ -1586,7 +1586,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C58") (unit 1)
+          (reference "C57") (unit 1)
         )
       )
     )
@@ -1644,7 +1644,7 @@
           (reference "C12") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C48") (unit 1)
+          (reference "C46") (unit 1)
         )
       )
     )
@@ -1653,7 +1653,7 @@
   (symbol (lib_id "power:+3.3VA") (at 50.8 22.86 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 1c5cbca6-3e9b-491b-9a39-24f9b0be8e38)
-    (property "Reference" "#PWR065" (at 50.8 26.67 0)
+    (property "Reference" "#PWR057" (at 50.8 26.67 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+3.3VA" (at 50.8 17.78 0)
@@ -1669,7 +1669,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR065") (unit 1)
+          (reference "#PWR057") (unit 1)
         )
       )
     )
@@ -1700,7 +1700,7 @@
           (reference "#PWR019") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR056") (unit 1)
+          (reference "#PWR073") (unit 1)
         )
       )
     )
@@ -1709,7 +1709,7 @@
   (symbol (lib_id "power:+3.3VA") (at 165.1 74.93 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 2726e8e4-37b0-4bd1-ba07-4bd7421ae222)
-    (property "Reference" "#PWR074" (at 165.1 78.74 0)
+    (property "Reference" "#PWR066" (at 165.1 78.74 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+3.3VA" (at 165.1 69.85 0)
@@ -1725,7 +1725,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR074") (unit 1)
+          (reference "#PWR066") (unit 1)
         )
       )
     )
@@ -1734,7 +1734,7 @@
   (symbol (lib_id "power:+3.3VA") (at 139.7 38.1 90) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 2e2e80e4-87d7-4729-b596-2154eff7efc7)
-    (property "Reference" "#PWR069" (at 143.51 38.1 0)
+    (property "Reference" "#PWR061" (at 143.51 38.1 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+3.3VA" (at 135.89 38.1 90)
@@ -1750,7 +1750,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR069") (unit 1)
+          (reference "#PWR061") (unit 1)
         )
       )
     )
@@ -1846,7 +1846,7 @@
           (reference "C12") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C47") (unit 1)
+          (reference "C45") (unit 1)
         )
       )
     )
@@ -1876,7 +1876,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR083") (unit 1)
+          (reference "#PWR077") (unit 1)
         )
       )
     )
@@ -1906,7 +1906,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR071") (unit 1)
+          (reference "#PWR063") (unit 1)
         )
       )
     )
@@ -1915,7 +1915,7 @@
   (symbol (lib_id "power:+5V") (at 254 24.13 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 45a31a4f-9640-461b-a0e5-d23a4a2a26f0)
-    (property "Reference" "#PWR067" (at 254 27.94 0)
+    (property "Reference" "#PWR059" (at 254 27.94 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+5V" (at 254 19.05 0)
@@ -1931,7 +1931,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR067") (unit 1)
+          (reference "#PWR059") (unit 1)
         )
       )
     )
@@ -1940,7 +1940,7 @@
   (symbol (lib_id "power:GND") (at 233.68 144.78 90) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 477fa62b-41a0-43aa-81bd-07eee59cc941)
-    (property "Reference" "#PWR081" (at 240.03 144.78 0)
+    (property "Reference" "#PWR074" (at 240.03 144.78 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 237.49 144.78 90)
@@ -1956,7 +1956,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR081") (unit 1)
+          (reference "#PWR074") (unit 1)
         )
       )
     )
@@ -2070,7 +2070,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C50") (unit 1)
+          (reference "C48") (unit 1)
         )
       )
     )
@@ -2128,7 +2128,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C56") (unit 1)
+          (reference "C55") (unit 1)
         )
       )
     )
@@ -2158,7 +2158,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR085") (unit 1)
+          (reference "#PWR079") (unit 1)
         )
       )
     )
@@ -2189,7 +2189,7 @@
           (reference "#PWR019") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR031") (unit 1)
+          (reference "#PWR072") (unit 1)
         )
       )
     )
@@ -2222,7 +2222,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR078") (unit 1)
+          (reference "#PWR070") (unit 1)
         )
       )
     )
@@ -2345,7 +2345,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "R34") (unit 1)
+          (reference "R32") (unit 1)
         )
       )
     )
@@ -2403,7 +2403,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C53") (unit 1)
+          (reference "C51") (unit 1)
         )
       )
     )
@@ -2412,7 +2412,7 @@
   (symbol (lib_id "power:GND") (at 71.12 175.26 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 7a9c97f0-89cd-45d8-ac67-d1eff7bc5561)
-    (property "Reference" "#PWR086" (at 71.12 181.61 0)
+    (property "Reference" "#PWR080" (at 71.12 181.61 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 71.12 180.34 0)
@@ -2428,7 +2428,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR086") (unit 1)
+          (reference "#PWR080") (unit 1)
         )
       )
     )
@@ -2486,7 +2486,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C61") (unit 1)
+          (reference "C60") (unit 1)
         )
       )
     )
@@ -2575,7 +2575,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "R32") (unit 1)
+          (reference "R30") (unit 1)
         )
       )
     )
@@ -2606,7 +2606,7 @@
           (reference "#PWR019") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR076") (unit 1)
+          (reference "#PWR068") (unit 1)
         )
       )
     )
@@ -2664,7 +2664,7 @@
           (reference "C12") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C52") (unit 1)
+          (reference "C50") (unit 1)
         )
       )
     )
@@ -2697,7 +2697,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR070") (unit 1)
+          (reference "#PWR062") (unit 1)
         )
       )
     )
@@ -2706,7 +2706,7 @@
   (symbol (lib_id "power:GND") (at 146.05 50.8 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 948558e2-6c97-48f6-b3e6-693b75b6a041)
-    (property "Reference" "#PWR073" (at 146.05 57.15 0)
+    (property "Reference" "#PWR065" (at 146.05 57.15 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 146.05 55.88 0)
@@ -2722,7 +2722,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR073") (unit 1)
+          (reference "#PWR065") (unit 1)
         )
       )
     )
@@ -2816,7 +2816,7 @@
           (reference "C12") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C42") (unit 1)
+          (reference "C40") (unit 1)
         )
       )
     )
@@ -2874,7 +2874,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C51") (unit 1)
+          (reference "C49") (unit 1)
         )
       )
     )
@@ -2932,7 +2932,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C59") (unit 1)
+          (reference "C58") (unit 1)
         )
       )
     )
@@ -2941,7 +2941,7 @@
   (symbol (lib_id "power:GND") (at 48.26 116.84 270) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid a32a83d4-ffd6-42b3-86eb-f2c544f48150)
-    (property "Reference" "#PWR079" (at 41.91 116.84 0)
+    (property "Reference" "#PWR071" (at 41.91 116.84 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 44.45 116.84 90)
@@ -2957,7 +2957,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR079") (unit 1)
+          (reference "#PWR071") (unit 1)
         )
       )
     )
@@ -3015,7 +3015,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "R31") (unit 1)
+          (reference "R29") (unit 1)
         )
       )
     )
@@ -3045,7 +3045,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR077") (unit 1)
+          (reference "#PWR069") (unit 1)
         )
       )
     )
@@ -3103,7 +3103,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C55") (unit 1)
+          (reference "C54") (unit 1)
         )
       )
     )
@@ -3161,7 +3161,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "R33") (unit 1)
+          (reference "R31") (unit 1)
         )
       )
     )
@@ -3219,7 +3219,7 @@
           (reference "C12") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C49") (unit 1)
+          (reference "C47") (unit 1)
         )
       )
     )
@@ -3277,7 +3277,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C54") (unit 1)
+          (reference "C52") (unit 1)
         )
       )
     )
@@ -3344,7 +3344,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR072") (unit 1)
+          (reference "#PWR064") (unit 1)
         )
       )
     )
@@ -3353,7 +3353,7 @@
   (symbol (lib_id "power:GND") (at 177.8 35.56 270) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid bf9b72ba-4755-4571-a772-a08a32d52e60)
-    (property "Reference" "#PWR068" (at 171.45 35.56 0)
+    (property "Reference" "#PWR060" (at 171.45 35.56 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 173.99 35.56 90)
@@ -3369,7 +3369,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR068") (unit 1)
+          (reference "#PWR060") (unit 1)
         )
       )
     )
@@ -3427,7 +3427,7 @@
           (reference "C12") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C43") (unit 1)
+          (reference "C41") (unit 1)
         )
       )
     )
@@ -3458,7 +3458,7 @@
           (reference "#PWR019") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR066") (unit 1)
+          (reference "#PWR058") (unit 1)
         )
       )
     )
@@ -3516,7 +3516,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C60") (unit 1)
+          (reference "C59") (unit 1)
         )
       )
     )
@@ -3574,7 +3574,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C57") (unit 1)
+          (reference "C56") (unit 1)
         )
       )
     )
@@ -3604,7 +3604,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR084") (unit 1)
+          (reference "#PWR078") (unit 1)
         )
       )
     )
@@ -3662,7 +3662,7 @@
           (reference "C12") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C45") (unit 1)
+          (reference "C43") (unit 1)
         )
       )
     )
@@ -3671,7 +3671,7 @@
   (symbol (lib_id "power:+3.3VA") (at 64.77 96.52 90) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid e481ba5c-5997-49f2-a242-0eb9d25be278)
-    (property "Reference" "#PWR075" (at 68.58 96.52 0)
+    (property "Reference" "#PWR067" (at 68.58 96.52 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+3.3VA" (at 60.96 96.52 90)
@@ -3687,7 +3687,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR075") (unit 1)
+          (reference "#PWR067") (unit 1)
         )
       )
     )
@@ -3717,7 +3717,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR0109") (unit 1)
+          (reference "#PWR075") (unit 1)
         )
       )
     )
@@ -3812,7 +3812,7 @@
           (reference "C12") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C44") (unit 1)
+          (reference "C42") (unit 1)
         )
       )
     )
@@ -3870,7 +3870,7 @@
           (reference "C12") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C79") (unit 1)
+          (reference "C53") (unit 1)
         )
       )
     )
@@ -3928,7 +3928,7 @@
           (reference "C12") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "C46") (unit 1)
+          (reference "C44") (unit 1)
         )
       )
     )
@@ -3958,7 +3958,7 @@
       )
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "#PWR082") (unit 1)
+          (reference "#PWR076") (unit 1)
         )
       )
     )
@@ -3990,7 +3990,7 @@
           (reference "R7") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-          (reference "R30") (unit 1)
+          (reference "R28") (unit 1)
         )
       )
     )

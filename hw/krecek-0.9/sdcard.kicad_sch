@@ -406,7 +406,7 @@
   (symbol (lib_id "Krecek:+3.3VSD") (at 88.9 63.5 90) (unit 1)
     (in_bom no) (on_board no) (dnp no) (fields_autoplaced)
     (uuid 11ba157d-1cfe-428b-a6af-49f7ac2ef013)
-    (property "Reference" "#+3.3VSD03" (at 85.09 63.5 0)
+    (property "Reference" "#+3.3VSD02" (at 85.09 63.5 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+3.3VSD" (at 85.09 63.5 90)
@@ -422,7 +422,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a9ff151a-3813-42b7-837e-58004a43f525"
-          (reference "#+3.3VSD03") (unit 1)
+          (reference "#+3.3VSD02") (unit 1)
         )
       )
     )
@@ -483,7 +483,7 @@
           (reference "C69") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a9ff151a-3813-42b7-837e-58004a43f525"
-          (reference "C72") (unit 1)
+          (reference "C81") (unit 1)
         )
       )
     )
@@ -511,7 +511,7 @@
           (reference "#PWR060") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a9ff151a-3813-42b7-837e-58004a43f525"
-          (reference "#PWR0105") (unit 1)
+          (reference "#PWR0110") (unit 1)
         )
       )
     )
@@ -539,7 +539,7 @@
           (reference "#PWR060") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a9ff151a-3813-42b7-837e-58004a43f525"
-          (reference "#PWR0104") (unit 1)
+          (reference "#PWR0109") (unit 1)
         )
       )
     )
@@ -571,7 +571,7 @@
           (reference "C29") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a9ff151a-3813-42b7-837e-58004a43f525"
-          (reference "C71") (unit 1)
+          (reference "C80") (unit 1)
         )
       )
     )
@@ -599,7 +599,7 @@
           (reference "#PWR060") (unit 1)
         )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a9ff151a-3813-42b7-837e-58004a43f525"
-          (reference "#PWR0103") (unit 1)
+          (reference "#PWR0108") (unit 1)
         )
       )
     )
@@ -608,7 +608,7 @@
   (symbol (lib_id "Connector:Micro_SD_Card_Det1") (at 171.45 66.04 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid ee4142a8-466e-47ba-8e50-e49e2c2ed72e)
-    (property "Reference" "J4" (at 172.085 44.45 0)
+    (property "Reference" "J5" (at 172.085 44.45 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "Micro_SD_Card_Det1" (at 172.085 46.99 0)
@@ -636,7 +636,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a9ff151a-3813-42b7-837e-58004a43f525"
-          (reference "J4") (unit 1)
+          (reference "J5") (unit 1)
         )
       )
     )
