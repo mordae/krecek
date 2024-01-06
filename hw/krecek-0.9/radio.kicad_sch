@@ -842,8 +842,8 @@
     (property " LCSC Part" "C12669" (at 146.05 77.47 90)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "2" (uuid 12866789-665e-4cd8-9798-9231612950b6))
     (pin "1" (uuid 10d17fd1-3e82-47cf-8a05-f03b099e3805))
+    (pin "2" (uuid 12866789-665e-4cd8-9798-9231612950b6))
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/40971852-55ba-4d75-a9d8-2b5de9b08cbd"
@@ -921,8 +921,8 @@
     (property " LCSC Part" "C12669" (at 171.45 77.47 90)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "2" (uuid b9a06987-4a81-44ef-b313-36914e8997da))
     (pin "1" (uuid ce137514-10ba-452b-a29b-5f02eeef30c7))
+    (pin "2" (uuid b9a06987-4a81-44ef-b313-36914e8997da))
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/40971852-55ba-4d75-a9d8-2b5de9b08cbd"
@@ -1393,8 +1393,8 @@
     (property " LCSC Part" "C12669" (at 127 88.9 90)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "2" (uuid 932a5557-b761-43eb-bf75-06e752c743a8))
     (pin "1" (uuid 8ddc4ab2-abbb-43fe-9c92-49945b8a23f6))
+    (pin "2" (uuid 932a5557-b761-43eb-bf75-06e752c743a8))
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/40971852-55ba-4d75-a9d8-2b5de9b08cbd"
@@ -1457,8 +1457,8 @@
     (property " LCSC Part" "C12669" (at 158.75 77.47 90)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "2" (uuid 37e7bd73-72d1-48c4-8308-bc924b361a1e))
     (pin "1" (uuid a400ca94-9473-4a66-a4dd-42326ac9cbb9))
+    (pin "2" (uuid 37e7bd73-72d1-48c4-8308-bc924b361a1e))
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/40971852-55ba-4d75-a9d8-2b5de9b08cbd"
@@ -1508,8 +1508,8 @@
     (property "Datasheet" " ~" (at 203.2 77.47 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "2" (uuid 4ebe719d-d2b4-4265-ac51-75e77b4b58eb))
     (pin "1" (uuid 83813346-e697-4b8d-97a6-269cd84a52e2))
+    (pin "2" (uuid 4ebe719d-d2b4-4265-ac51-75e77b4b58eb))
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/40971852-55ba-4d75-a9d8-2b5de9b08cbd"

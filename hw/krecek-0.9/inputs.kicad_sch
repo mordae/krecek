@@ -1031,11 +1031,11 @@
     (property "LCSC Part" "C318951" (at 50.8 62.23 0)
       (effects (font (size 1.27 1.27)) hide)
     )
+    (pin "1" (uuid 4e4ee587-bd6f-4843-b2d1-6921b3d59ca2))
+    (pin "2" (uuid 9d946824-e3c4-43ed-bd6f-3d1a74f1961e))
     (pin "C" (uuid 3c4aa948-1716-4ab6-84f8-7b0363cb1acc))
     (pin "SH" (uuid fb453cf9-c132-4213-9a46-3c28ddde9eff))
     (pin "T" (uuid 09957cb7-a9a6-408b-bbeb-bc418b64d21f))
-    (pin "1" (uuid 4e4ee587-bd6f-4843-b2d1-6921b3d59ca2))
-    (pin "2" (uuid 9d946824-e3c4-43ed-bd6f-3d1a74f1961e))
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
@@ -1560,9 +1560,9 @@
     (property "LCSC Part" "C115341" (at 120.65 105.41 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "3" (uuid 5b3d793c-1fe5-4c4e-9887-a55a9600b1c8))
     (pin "1" (uuid f35e22b8-b631-45d4-84e6-ee9ef26ff5e1))
     (pin "2" (uuid 29e28914-98b7-439e-bf3a-e03dc8c7ee76))
+    (pin "3" (uuid 5b3d793c-1fe5-4c4e-9887-a55a9600b1c8))
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
@@ -1762,9 +1762,9 @@
     (property "LCSC Part" "C115341" (at 120.65 130.81 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "3" (uuid ba2dddf5-605e-4de6-9b29-c59b983187ec))
     (pin "1" (uuid f45cdc11-7648-4dcc-a6fb-98d03ad31325))
     (pin "2" (uuid d06fed31-f82a-4314-9d56-8dcc14e7e78a))
+    (pin "3" (uuid ba2dddf5-605e-4de6-9b29-c59b983187ec))
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
