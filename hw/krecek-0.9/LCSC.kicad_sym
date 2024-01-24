@@ -1,4 +1,4 @@
-(kicad_symbol_lib (version 20220914) (generator kicad_symbol_editor)
+(kicad_symbol_lib (version 20220914) (generator https://github.com/uPesy/easyeda2kicad.py)
   (symbol "BQ24045DSQR" (in_bom yes) (on_board yes)
     (property "Reference" "U" (at 0 10.16 0)
       (effects (font (size 1.27 1.27)))
@@ -1560,6 +1560,68 @@
       (pin bidirectional line (at 12.7 7.62 180) (length 2.54)
         (name "IO0_5" (effects (font (size 1.27 1.27))))
         (number "9" (effects (font (size 1.27 1.27))))
+      )
+    )
+  )
+
+  (symbol "T14-433M"
+    (in_bom yes)
+    (on_board yes)
+    (property
+      "Reference"
+      "L"
+      (id 0)
+      (at 0 2.54 0)
+      (effects (font (size 1.27 1.27) ) )
+    )
+    (property
+      "Value"
+      "T14-433M"
+      (id 1)
+      (at 0 -7.62 0)
+      (effects (font (size 1.27 1.27) ) )
+    )
+    (property
+      "Footprint"
+      "LCSC:ANT-TH_T14-433M"
+      (id 2)
+      (at 0 -10.16 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (property
+      "Datasheet"
+      "https://lcsc.com/product-detail/New-Arrivals_DreamLNK-T14-433M_C381188.html"
+      (id 3)
+      (at 0 -12.70 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (property
+      "LCSC Part"
+      "C381188"
+      (id 5)
+      (at 0 -15.24 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (symbol "T14-433M_0_1"
+      (polyline
+        (pts
+          (xy 0.00 5.08) (xy 0.00 -0.00)
+        )
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type none))
+      )
+      (polyline
+        (pts
+          (xy -2.54 5.08) (xy 2.54 5.08) (xy 0.00 2.54) (xy -2.54 5.08)
+        )
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type background))
+      )
+      (pin unspecified line
+        (at 0.00 -2.54 90)
+        (length 5.08)
+        (name "1" (effects (font (size 1.27 1.27))))
+        (number "1" (effects (font (size 1.27 1.27))))
       )
     )
   )

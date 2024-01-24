@@ -3048,7 +3048,7 @@
   (symbol (lib_id "LCSC:BQ24045DSQR") (at 130.81 30.48 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 2802e42c-112f-486a-a1e3-acfc9ec831ad)
-    (property "Reference" "U3" (at 130.81 17.78 0)
+    (property "Reference" "U7" (at 130.81 17.78 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "BQ24045DSQR" (at 130.81 20.32 0)
@@ -3076,9 +3076,6 @@
     (pin "9" (uuid d9bddd95-ffe9-4e58-a761-36f4f9bc26b9))
     (instances
       (project "krecek-0.9"
-        (path "/8888f37b-ecc2-47df-8824-4b4e1e726451"
-          (reference "U3") (unit 1)
-        )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
           (reference "U7") (unit 1)
         )
@@ -4740,7 +4737,7 @@
   (symbol (lib_id "LCSC:USB_C_Receptacle_USB2.0") (at 22.86 40.64 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid d1d953c9-c18c-4046-b8ae-bd3c15fbf0ec)
-    (property "Reference" "J1" (at 35.56 17.78 0)
+    (property "Reference" "J3" (at 35.56 17.78 0)
       (effects (font (size 1.27 1.27)) (justify right))
     )
     (property "Value" "USB_C_Receptacle_USB2.0" (at 35.56 20.32 0)
@@ -4770,9 +4767,6 @@
     (pin "S1" (uuid 87812002-5ea4-44fa-9133-96ab4f75330c))
     (instances
       (project "krecek-0.9"
-        (path "/8888f37b-ecc2-47df-8824-4b4e1e726451"
-          (reference "J1") (unit 1)
-        )
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
           (reference "J3") (unit 1)
         )
