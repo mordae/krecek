@@ -7,3 +7,4 @@
 *-cache
 _autosave-*
 *-backups/
+*.lck
