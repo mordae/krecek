@@ -68,8 +68,7 @@
         "clearance|200900000|61300000|13b0db8b-8167-4953-8ae2-29a2569a151c|9cb23133-1857-4cd5-b0f0-a59ce7bba2b1",
         "clearance|209760000|76210000|cb43f017-d52b-4f95-8ec5-0ba1b43226fe|c2338f68-602a-4c6e-b9c4-4f0a1af012ac",
         "clearance|215560000|76450000|d4375111-2642-4ca9-afab-b0a5dcd3925e|72dcedc9-45f9-4720-b25f-52f9e019b667",
-        "lib_footprint_mismatch|140248000|107950000|39c3a701-65f6-4ba9-8e8f-a8d1d1c18536|00000000-0000-0000-0000-000000000000",
-        "lib_footprint_mismatch|188837000|109847000|84cdf638-01a6-4f80-9b25-37d4c24a52b5|00000000-0000-0000-0000-000000000000"
+        "lib_footprint_mismatch|140248000|107950000|39c3a701-65f6-4ba9-8e8f-a8d1d1c18536|00000000-0000-0000-0000-000000000000"
       ],
       "meta": {
         "version": 2
@@ -137,10 +136,10 @@
         "min_silk_clearance": 0.0,
         "min_text_height": 0.7999999999999999,
         "min_text_thickness": 0.08,
-        "min_through_hole_diameter": 0.15,
+        "min_through_hole_diameter": 0.3,
         "min_track_width": 0.0,
         "min_via_annular_width": 0.075,
-        "min_via_diameter": 0.25,
+        "min_via_diameter": 0.5,
         "solder_mask_clearance": 0.0,
         "solder_mask_min_width": 0.0,
         "solder_mask_to_copper_clearance": 0.0,
