@@ -8,3 +8,4 @@
 _autosave-*
 *-backups/
 *.lck
+.clangd
