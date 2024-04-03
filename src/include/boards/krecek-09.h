@@ -16,3 +16,6 @@
 #define TFT_FLIP_X 1
 #define TFT_FLIP_Y 1
 #define TFT_SCALE 2
+
+/* For the secondary chip */
+#define CLK_OUT_PIN 23

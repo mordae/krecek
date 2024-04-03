@@ -20,6 +20,12 @@
 
 #include <hardware/adc.h>
 #include <hardware/pwm.h>
+#include <hardware/clocks.h>
+
+#include <hardware/regs/adc.h>
+#include <hardware/regs/pll.h>
+#include <hardware/regs/resets.h>
+#include <hardware/regs/xosc.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -169,6 +175,26 @@ inline static int slave_gpio_get(int pin)
 	return (tmp >> 17) & 1;
 }
 
+inline static int slave_adc_read(int ain)
+{
+	if (!dap_poke(ADC_BASE + ADC_CS_OFFSET,
+		      (ain << ADC_CS_AINSEL_LSB) | ADC_CS_EN_BITS | ADC_CS_START_ONCE_BITS)) {
+		puts("slave_adc_read: gap_poke failed");
+	}
+
+	for (int i = 0; i < 10; i++) {
+		uint32_t status = 0;
+		dap_peek(ADC_BASE + ADC_CS_OFFSET, &status);
+		if (status & ADC_CS_READY_BITS)
+			break;
+	}
+
+	uint32_t result = 0;
+	dap_peek(ADC_BASE + ADC_RESULT_OFFSET, &result);
+
+	return result;
+}
+
 /*
  * Processes joystick and button inputs.
  */
@@ -187,6 +213,9 @@ static void input_task(void)
 			puts("SELECT");
 			dap_poke(0x40018004, 0x331f);
 		}
+
+		printf("JoyX = %i\n", slave_adc_read(2));
+		printf("JoyY = %i\n", slave_adc_read(3));
 
 		task_sleep_ms(10);
 	}
@@ -436,6 +465,70 @@ int main()
 	dap_setup_mem((uint32_t *)&idcode);
 	printf("idr = %#010x\n", idcode);
 	dap_noop();
+
+	/* Start XOSC */
+	clock_gpio_init(CLK_OUT_PIN, CLOCKS_CLK_GPOUT0_CTRL_AUXSRC_VALUE_XOSC_CLKSRC, 1.0);
+	dap_poke(XOSC_BASE + XOSC_STARTUP_OFFSET, 0);
+	dap_poke(XOSC_BASE + XOSC_CTRL_OFFSET, 0xfabaa0);
+
+	uint32_t status = 0;
+#if 0
+	while (true) {
+		dap_peek(XOSC_BASE + XOSC_STATUS_OFFSET, &status);
+		if (status >> 31)
+			break;
+	}
+#endif
+
+	uint32_t resets = 0;
+	dap_peek(RESETS_BASE + RESETS_RESET_OFFSET, &resets);
+	dap_poke(RESETS_BASE + RESETS_RESET_OFFSET, resets & ~RESETS_RESET_PLL_SYS_BITS);
+
+	while (true) {
+		dap_peek(RESETS_BASE + RESETS_RESET_DONE_OFFSET, &status);
+		if (status & RESETS_RESET_DONE_PLL_SYS_BITS)
+			break;
+	}
+
+	puts("#2 PLL_SYS un-reset");
+
+	dap_poke(PLL_SYS_BASE + PLL_FBDIV_INT_OFFSET, 125);
+	dap_poke(PLL_SYS_BASE + PLL_PRIM_OFFSET, 0x62000);
+
+	dap_peek(PLL_SYS_BASE + PLL_PWR_OFFSET, &status);
+	dap_poke(PLL_SYS_BASE + PLL_PWR_OFFSET, status & ~(PLL_PWR_PD_BITS | PLL_PWR_VCOPD_BITS));
+
+	while (true) {
+		dap_peek(PLL_SYS_BASE + PLL_CS_OFFSET, &status);
+		if (status & PLL_CS_LOCK_BITS)
+			break;
+	}
+
+	dap_poke(PLL_SYS_BASE + PLL_PWR_OFFSET, 0);
+
+	puts("#2 PLL_SYS locked");
+
+	dap_poke(CLOCKS_BASE + CLOCKS_CLK_SYS_CTRL_OFFSET,
+		 CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLKSRC_CLK_SYS_AUX);
+	dap_poke(CLOCKS_BASE + CLOCKS_CLK_PERI_CTRL_OFFSET, CLOCKS_CLK_PERI_CTRL_ENABLE_BITS);
+
+	dap_poke(CLOCKS_BASE + CLOCKS_CLK_ADC_DIV_OFFSET, 3 << CLOCKS_CLK_ADC_DIV_INT_LSB);
+	dap_poke(CLOCKS_BASE + CLOCKS_CLK_ADC_CTRL_OFFSET,
+		 CLOCKS_CLK_ADC_CTRL_ENABLE_BITS | (CLOCKS_CLK_ADC_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS
+						    << CLOCKS_CLK_ADC_CTRL_AUXSRC_LSB));
+
+	dap_peek(RESETS_BASE + RESETS_RESET_OFFSET, &status);
+	dap_poke(RESETS_BASE + RESETS_RESET_OFFSET, status & ~RESETS_RESET_ADC_BITS);
+
+	while (true) {
+		dap_peek(RESETS_BASE + RESETS_RESET_DONE_OFFSET, &status);
+		if (status & RESETS_RESET_DONE_ADC_BITS)
+			break;
+	}
+
+	puts("#2 ADC un-reset");
+
+	dap_poke(ADC_BASE + ADC_CS_OFFSET, ADC_CS_EN_BITS);
 
 	/* Un-reset stuff that's ok with clk_sys and clk_ref */
 	dap_poke(0x4000c000, 0x1e3bc9d);
