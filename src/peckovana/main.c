@@ -173,7 +173,7 @@ inline static int slave_gpio_get(int pin)
 	return (tmp >> IO_BANK0_GPIO0_STATUS_INFROMPAD_LSB) & 1;
 }
 
-inline static int slave_adc_read(int ain)
+inline static __unused int slave_adc_read(int ain)
 {
 	if (!dap_poke(ADC_BASE + ADC_CS_OFFSET,
 		      (ain << ADC_CS_AINSEL_LSB) | ADC_CS_EN_BITS | ADC_CS_START_ONCE_BITS))
