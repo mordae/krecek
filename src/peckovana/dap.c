@@ -38,6 +38,8 @@
 static int swdio_pin = -1;
 static int swclk_pin = -1;
 
+static bool ok = true;
+
 enum {
 	DAP_FRAME = 0x81,
 	DAP_APnDP = 0x02,
@@ -179,6 +181,9 @@ void dap_reset(void)
 	dap_write(0xffffffff, 32);
 	dap_write(0x00ffffff, 32);
 	dap_idle(8);
+
+	/* Mark as OK for now. */
+	ok = true;
 }
 
 static inline uint32_t dap_parity(uint32_t value)
@@ -391,55 +396,83 @@ void dap_noop(void)
 
 bool dap_peek(uint32_t addr, uint32_t *value)
 {
-	if (!dap_set_reg(DAP_AP4, addr))
+	if (!ok)
 		return false;
+
+	if (!dap_set_reg(DAP_AP4, addr))
+		goto fail;
 
 	if (!dap_get_reg(DAP_APc, value))
-		return false;
+		goto fail;
 
 	if (!dap_get_reg(DAP_DPc, value))
-		return false;
+		goto fail;
 
 	return true;
+
+fail:
+	puts("dap_peek: failed, disabling dap until reset");
+	return ok = false;
 }
 
 bool dap_peek_many(uint32_t addr, uint32_t *values, int len)
 {
-	if (!dap_set_reg(DAP_AP4, addr))
+	if (!ok)
 		return false;
 
+	if (!dap_set_reg(DAP_AP4, addr))
+		goto fail;
+
 	if (!dap_get_reg(DAP_APc, values))
-		return false;
+		goto fail;
 
 	while (len--)
 		if (!dap_get_reg(DAP_APc, values++))
-			return false;
+			goto fail;
 
 	if (!dap_get_reg(DAP_DPc, values))
-		return false;
+		goto fail;
 
 	return true;
+
+fail:
+	puts("dap_peek_many: failed, disabling dap until reset");
+	return ok = false;
 }
 
 bool dap_poke(uint32_t addr, uint32_t value)
 {
-	if (!dap_set_reg(DAP_AP4, addr))
+	if (!ok)
 		return false;
+
+	if (!dap_set_reg(DAP_AP4, addr))
+		goto fail;
 
 	if (!dap_set_reg(DAP_APc, value))
-		return false;
+		goto fail;
 
 	return true;
+
+fail:
+	puts("dap_poke: failed, disabling dap until reset");
+	return ok = false;
 }
 
 bool dap_poke_many(uint32_t addr, const uint32_t *values, int len)
 {
-	if (!dap_set_reg(DAP_AP4, addr))
+	if (!ok)
 		return false;
+
+	if (!dap_set_reg(DAP_AP4, addr))
+		goto fail;
 
 	while (len--)
 		if (!dap_set_reg(DAP_APc, *values++))
-			return false;
+			goto fail;
 
 	return true;
+
+fail:
+	puts("dap_poke_many failed, disabling dap until reset");
+	return ok = false;
 }
