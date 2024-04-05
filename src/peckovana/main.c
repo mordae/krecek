@@ -63,6 +63,8 @@ static bool p1_gun_btn = 0;
 static bool p2_up_btn = 0;
 static bool p2_gun_btn = 0;
 
+static float bat_mv = 0.0;
+
 static void stats_task(void);
 static void tft_task(void);
 static void input_task(void);
@@ -222,6 +224,19 @@ static void input_task(void)
 
 		printf("joy: %4i  %4i\n", joy_x, joy_y);
 #endif
+
+		adc_select_input(2);
+		int bat = 0;
+
+		for (int i = 0; i < 32; i++)
+			bat += adc_read();
+
+		float mv = (float)bat * 1.6f / 32.0f;
+
+		if (!bat_mv)
+			bat_mv = mv;
+		else
+			bat_mv = bat_mv * 0.9 + 0.1 * mv;
 
 		task_sleep_ms(10);
 	}
@@ -430,6 +445,9 @@ static void tft_task(void)
 		snprintf(buf, sizeof buf, "%i", fps);
 		tft_draw_string_right(tft_width - 1, 0, GRAY, buf);
 
+		snprintf(buf, sizeof buf, "%.1f mV", bat_mv);
+		tft_draw_string_right(tft_width - 1, 16, GRAY, buf);
+
 		tft_swap_buffers();
 		task_sleep_ms(3);
 		tft_sync();
@@ -454,6 +472,11 @@ int main()
 	}
 
 	adc_init();
+
+	adc_gpio_init(26);
+	adc_gpio_init(27);
+	adc_gpio_init(28);
+	adc_gpio_init(29);
 
 	for (int i = 0; i < 16; i++)
 		srand(adc_read() + random());
