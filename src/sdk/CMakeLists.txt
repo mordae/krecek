@@ -1,5 +1,5 @@
-add_library(krecek sdk.c)
-target_include_directories(krecek PRIVATE include)
+add_library(krecek sdk.c dap.c)
+target_include_directories(krecek PUBLIC include)
 krecek_set_target_options(krecek)
 
 target_link_libraries(

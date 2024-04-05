@@ -1,4 +1,4 @@
-add_executable(peckovana main.c dap.c)
+add_executable(peckovana main.c)
 target_include_directories(peckovana PRIVATE include)
 target_link_libraries(peckovana krecek)
 pico_add_extra_outputs(peckovana)
