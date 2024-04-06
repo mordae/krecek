@@ -18,4 +18,5 @@ endfunction()
 
 add_subdirectory(vendor)
 add_subdirectory(sdk)
+add_subdirectory(tecka)
 add_subdirectory(peckovana)
