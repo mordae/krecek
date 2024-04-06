@@ -6,6 +6,8 @@ list(APPEND PICO_BOARD_HEADER_DIRS ${CMAKE_CURRENT_LIST_DIR}/include/boards)
 include($ENV{PICO_SDK_PATH}/pico_sdk_init.cmake)
 
 project(krecek)
+
+list(APPEND PICO_CONFIG_HEADER_FILES ${CMAKE_CURRENT_LIST_DIR}/vendor/pico-task/include/task_hooks.h)
 pico_sdk_init()
 
 function(krecek_set_target_options target)
