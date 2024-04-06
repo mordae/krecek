@@ -45,14 +45,19 @@
 struct sdk_config sdk_config = {};
 struct sdk_inputs sdk_inputs = {};
 
+static semaphore_t paint_sema;
+static semaphore_t sync_sema;
+
 static void stats_task(void);
 static void tft_task(void);
 static void input_task(void);
+static void paint_task(void);
 
 task_t task_avail[NUM_CORES][MAX_TASKS] = {
 	{
 		MAKE_TASK(4, "stats", stats_task),
-		MAKE_TASK(1, "input", input_task),
+		MAKE_TASK(2, "input", input_task),
+		MAKE_TASK(1, "paint", paint_task),
 		NULL,
 	},
 	{
@@ -247,6 +252,9 @@ void sdk_main(struct sdk_config *conf)
 	tft_init();
 	slave_init();
 
+	sem_init(&paint_sema, 1, 1);
+	sem_init(&sync_sema, 0, 1);
+
 	multicore_launch_core1(task_run_loop);
 	task_run_loop();
 }
@@ -293,23 +301,18 @@ inline static int slave_gpio_qspi_get(int pin)
 	return (tmp >> IO_QSPI_GPIO_QSPI_SCLK_STATUS_INFROMPAD_LSB) & 1;
 }
 
-inline static __unused int slave_adc_read(int gpio, int samples)
+inline static __unused int slave_adc_read(int gpio)
 {
 	if (!dap_poke(ADC_BASE + ADC_CS_OFFSET,
 		      ((gpio - 26) << ADC_CS_AINSEL_LSB) | ADC_CS_EN_BITS | ADC_CS_START_MANY_BITS))
 		return 0;
 
-	uint32_t accum = 0;
 	uint32_t sample = 0;
 
-	for (int i = 0; i < samples; i++) {
-		if (!dap_peek(ADC_BASE + ADC_RESULT_OFFSET, &sample))
-			return 0;
+	if (!dap_peek(ADC_BASE + ADC_RESULT_OFFSET, &sample))
+		return 0;
 
-		accum += sample;
-	}
-
-	return accum / samples;
+	return sample;
 }
 
 static void input_task(void)
@@ -346,10 +349,10 @@ static void input_task(void)
 			}
 		}
 
-		sdk_inputs.joy_x = 2048 - slave_adc_read(SLAVE_JOY_X_PIN, 4);
-		sdk_inputs.joy_y = 2048 - slave_adc_read(SLAVE_JOY_Y_PIN, 4);
+		sdk_inputs.joy_x = 2048 - slave_adc_read(SLAVE_JOY_X_PIN);
+		sdk_inputs.joy_y = 2048 - slave_adc_read(SLAVE_JOY_Y_PIN);
 
-		// TODO: aux[0-7] + joy_sw + brackets?
+		// TODO: joy_sw + brackets?
 
 		adc_select_input(2);
 		int bat = 0;
@@ -366,11 +369,11 @@ static void input_task(void)
 
 		game_input();
 
-		task_sleep_ms(16);
+		task_sleep_ms(15);
 	}
 }
 
-static void tft_task(void)
+static void paint_task(void)
 {
 	uint32_t last_sync = time_us_32();
 	uint32_t delta = 1000 * 1000 / 30;
@@ -380,30 +383,41 @@ static void tft_task(void)
 
 	while (true) {
 		if (sdk_config.show_fps) {
+			sem_acquire_blocking(&paint_sema);
 			game_paint(delta ? delta : 1);
 
 			static char buf[64];
 			snprintf(buf, sizeof buf, "%i", fps);
 			tft_draw_string_right(tft_width - 1, 0, 8, buf);
 
-			tft_swap_buffers();
-			tft_sync();
+			sem_release(&sync_sema);
 
 			uint32_t this_sync = time_us_32();
 			delta = this_sync - last_sync;
 			fps = 1 * 1000 * 1000 / delta;
 			last_sync = this_sync;
 		} else {
+			sem_acquire_blocking(&paint_sema);
 			game_paint(delta ? delta : 1);
-
-			tft_swap_buffers();
-			tft_sync();
+			sem_release(&sync_sema);
 
 			uint32_t this_sync = time_us_32();
 			delta = this_sync - last_sync;
 			last_sync = this_sync;
 		}
 
-		task_sleep_ms(1);
+		task_yield();
+	}
+}
+
+static void tft_task(void)
+{
+	while (true) {
+		sem_acquire_blocking(&sync_sema);
+		tft_swap_buffers();
+		sem_release(&paint_sema);
+
+		tft_sync();
+		task_yield();
 	}
 }
