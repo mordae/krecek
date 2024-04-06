@@ -459,38 +459,18 @@ static void tft_task(void)
 	}
 }
 
-int main()
+static uint32_t unreset = RESETS_RESET_SYSINFO_BITS | RESETS_RESET_SYSCFG_BITS |
+			  RESETS_RESET_PWM_BITS | RESETS_RESET_PLL_SYS_BITS |
+			  RESETS_RESET_PADS_QSPI_BITS | RESETS_RESET_PADS_BANK0_BITS |
+			  RESETS_RESET_IO_QSPI_BITS | RESETS_RESET_IO_BANK0_BITS;
+
+static void slave_park()
 {
-	stdio_usb_init();
-	task_init();
-
-	for (int i = 0; i < 30; i++) {
-		if (stdio_usb_connected())
-			break;
-
-		sleep_ms(100);
-	}
-
-	adc_init();
-
-	adc_gpio_init(26);
-	adc_gpio_init(27);
-	adc_gpio_init(28);
-	adc_gpio_init(29);
-
-	for (int i = 0; i < 16; i++)
-		srand(adc_read() + random());
-
-	tft_init();
-
-	printf("Hello, have a nice and productive day!\n");
-
 	dap_init(DAP_SWDIO_PIN, DAP_SWCLK_PIN);
 	dap_reset();
 
 	dap_select_target(DAP_RESCUE);
 	unsigned idcode = dap_read_idcode();
-	printf("rescue idcode = 0x%08x\n", idcode);
 #define CDBGPWRUPREQ (1 << 28)
 	dap_set_reg(DAP_DP4, CDBGPWRUPREQ);
 	dap_set_reg(DAP_DP4, 0);
@@ -498,9 +478,9 @@ int main()
 	dap_reset();
 	dap_select_target(DAP_CORE0);
 	idcode = dap_read_idcode();
-	printf("core0 idcode = 0x%08x\n", idcode);
+	//printf("core0 idcode = 0x%08x\n", idcode);
 	dap_setup_mem((uint32_t *)&idcode);
-	printf("idr = %#010x\n", idcode);
+	//printf("idr = %#010x\n", idcode);
 	dap_noop();
 
 	/* Start XOSC */
@@ -508,14 +488,15 @@ int main()
 	dap_poke(XOSC_BASE + XOSC_STARTUP_OFFSET, 0);
 	dap_poke(XOSC_BASE + XOSC_CTRL_OFFSET, 0xfabaa0);
 
-	uint32_t unreset = RESETS_RESET_SYSINFO_BITS | RESETS_RESET_SYSCFG_BITS |
-			   RESETS_RESET_PWM_BITS | RESETS_RESET_PLL_SYS_BITS |
-			   RESETS_RESET_PADS_QSPI_BITS | RESETS_RESET_PADS_BANK0_BITS |
-			   RESETS_RESET_IO_QSPI_BITS | RESETS_RESET_IO_BANK0_BITS;
-
 	/* Un-reset subsystems we wish to use */
 	dap_poke(RESETS_BASE + RESETS_RESET_OFFSET, RESETS_RESET_BITS & ~unreset);
 
+	/* Prevent power-off */
+	dap_poke(0x40018004, 0x001f);
+}
+
+static void slave_init()
+{
 	uint32_t status = 0;
 
 	while (true) {
@@ -585,6 +566,37 @@ int main()
 
 	/* Make sure we do not turn outselves off. */
 	dap_poke(0x40018004, 0x001f);
+}
+
+int main()
+{
+	stdio_usb_init();
+	task_init();
+
+	slave_park();
+
+	for (int i = 0; i < 30; i++) {
+		if (stdio_usb_connected())
+			break;
+
+		sleep_ms(100);
+	}
+
+	adc_init();
+
+	adc_gpio_init(26);
+	adc_gpio_init(27);
+	adc_gpio_init(28);
+	adc_gpio_init(29);
+
+	for (int i = 0; i < 16; i++)
+		srand(adc_read() + random());
+
+	tft_init();
+
+	printf("Hello, have a nice and productive day!\n");
+
+	slave_init();
 
 	multicore_launch_core1(task_run_loop);
 	task_run_loop();
