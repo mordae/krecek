@@ -137,10 +137,10 @@ void game_paint(unsigned __unused dt_usec)
 	if (sdk_inputs.y)
 		worms[1].angle += ANGLE_DELTA;
 
-	if (sdk_inputs.joy_x < -1000)
+	if (sdk_inputs.joy_x < -400)
 		worms[2].angle -= ANGLE_DELTA;
 
-	if (sdk_inputs.joy_x > 1000)
+	if (sdk_inputs.joy_x > 400)
 		worms[2].angle += ANGLE_DELTA;
 
 	if (sdk_inputs.aux[3])
