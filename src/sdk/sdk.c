@@ -30,6 +30,7 @@
 #include <hardware/regs/adc.h>
 #include <hardware/regs/clocks.h>
 #include <hardware/regs/io_qspi.h>
+#include <hardware/regs/pads_qspi.h>
 #include <hardware/regs/pll.h>
 #include <hardware/regs/resets.h>
 #include <hardware/regs/xosc.h>
@@ -161,12 +162,48 @@ static void slave_init()
 			 IO_BANK0_GPIO0_CTRL_OUTOVER_BITS);
 
 	/* Enable button input + pull-ups. */
-	dap_poke(0x4001c000 + 4 + 4 * SLAVE_A_PIN, (1 << 3) | (1 << 6));
-	dap_poke(0x4001c000 + 4 + 4 * SLAVE_B_PIN, (1 << 3) | (1 << 6));
-	dap_poke(0x4001c000 + 4 + 4 * SLAVE_X_PIN, (1 << 3) | (1 << 6));
-	dap_poke(0x4001c000 + 4 + 4 * SLAVE_Y_PIN, (1 << 3) | (1 << 6));
+	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_A_PIN,
+		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_PUE_BITS |
+			 PADS_BANK0_GPIO0_SCHMITT_BITS);
+	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_B_PIN,
+		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_PUE_BITS |
+			 PADS_BANK0_GPIO0_SCHMITT_BITS);
+	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_X_PIN,
+		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_PUE_BITS |
+			 PADS_BANK0_GPIO0_SCHMITT_BITS);
+	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_Y_PIN,
+		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_PUE_BITS |
+			 PADS_BANK0_GPIO0_SCHMITT_BITS);
 
-	dap_poke(0x4001c000 + 4 + 4 * SLAVE_SELECT_PIN, (1 << 3) | (1 << 6));
+	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_SELECT_PIN,
+		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_PUE_BITS |
+			 PADS_BANK0_GPIO0_SCHMITT_BITS);
+
+	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_AUX0_PIN,
+		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_PUE_BITS |
+			 PADS_BANK0_GPIO0_SCHMITT_BITS);
+	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_AUX1_PIN,
+		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_PUE_BITS |
+			 PADS_BANK0_GPIO0_SCHMITT_BITS);
+	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_AUX2_PIN,
+		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_PUE_BITS |
+			 PADS_BANK0_GPIO0_SCHMITT_BITS);
+	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_AUX3_PIN,
+		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_PUE_BITS |
+			 PADS_BANK0_GPIO0_SCHMITT_BITS);
+
+	dap_poke(PADS_QSPI_BASE + PADS_QSPI_GPIO_QSPI_SCLK_OFFSET + 4 * SLAVE_AUX4_QSPI_PIN,
+		 PADS_QSPI_GPIO_QSPI_SCLK_IE_BITS | PADS_QSPI_GPIO_QSPI_SCLK_PUE_BITS |
+			 PADS_QSPI_GPIO_QSPI_SCLK_SCHMITT_BITS);
+	dap_poke(PADS_QSPI_BASE + PADS_QSPI_GPIO_QSPI_SCLK_OFFSET + 4 * SLAVE_AUX5_QSPI_PIN,
+		 PADS_QSPI_GPIO_QSPI_SCLK_IE_BITS | PADS_QSPI_GPIO_QSPI_SCLK_PUE_BITS |
+			 PADS_QSPI_GPIO_QSPI_SCLK_SCHMITT_BITS);
+	dap_poke(PADS_QSPI_BASE + PADS_QSPI_GPIO_QSPI_SCLK_OFFSET + 4 * SLAVE_AUX6_QSPI_PIN,
+		 PADS_QSPI_GPIO_QSPI_SCLK_IE_BITS | PADS_QSPI_GPIO_QSPI_SCLK_PUE_BITS |
+			 PADS_QSPI_GPIO_QSPI_SCLK_SCHMITT_BITS);
+	dap_poke(PADS_QSPI_BASE + PADS_QSPI_GPIO_QSPI_SCLK_OFFSET + 4 * SLAVE_AUX7_QSPI_PIN,
+		 PADS_QSPI_GPIO_QSPI_SCLK_IE_BITS | PADS_QSPI_GPIO_QSPI_SCLK_PUE_BITS |
+			 PADS_QSPI_GPIO_QSPI_SCLK_SCHMITT_BITS);
 
 	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * 26,
 		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_SCHMITT_BITS);
@@ -246,6 +283,16 @@ inline static int slave_gpio_get(int pin)
 	return (tmp >> IO_BANK0_GPIO0_STATUS_INFROMPAD_LSB) & 1;
 }
 
+inline static int slave_gpio_qspi_get(int pin)
+{
+	uint32_t tmp;
+
+	if (!dap_peek(IO_QSPI_BASE + IO_QSPI_GPIO_QSPI_SCLK_STATUS_OFFSET + 8 * pin, &tmp))
+		return 0;
+
+	return (tmp >> IO_QSPI_GPIO_QSPI_SCLK_STATUS_INFROMPAD_LSB) & 1;
+}
+
 inline static __unused int slave_adc_read(int gpio, int samples)
 {
 	if (!dap_poke(ADC_BASE + ADC_CS_OFFSET,
@@ -274,6 +321,16 @@ static void input_task(void)
 		sdk_inputs.b = !slave_gpio_get(SLAVE_B_PIN);
 		sdk_inputs.x = !slave_gpio_get(SLAVE_X_PIN);
 		sdk_inputs.y = !slave_gpio_get(SLAVE_Y_PIN);
+
+		sdk_inputs.aux[0] = !slave_gpio_get(SLAVE_AUX0_PIN);
+		sdk_inputs.aux[1] = !slave_gpio_get(SLAVE_AUX1_PIN);
+		sdk_inputs.aux[2] = !slave_gpio_get(SLAVE_AUX2_PIN);
+		sdk_inputs.aux[3] = !slave_gpio_get(SLAVE_AUX3_PIN);
+
+		sdk_inputs.aux[4] = !slave_gpio_qspi_get(SLAVE_AUX4_QSPI_PIN);
+		sdk_inputs.aux[5] = !slave_gpio_qspi_get(SLAVE_AUX5_QSPI_PIN);
+		sdk_inputs.aux[6] = !slave_gpio_qspi_get(SLAVE_AUX6_QSPI_PIN);
+		sdk_inputs.aux[7] = !slave_gpio_qspi_get(SLAVE_AUX7_QSPI_PIN);
 
 		sdk_inputs.start = slave_gpio_get(SLAVE_START_PIN);
 		sdk_inputs.select = !slave_gpio_get(SLAVE_SELECT_PIN);
