@@ -31,9 +31,9 @@
 #define SLAVE_TFT_LED_PIN 13
 
 #define SLAVE_A_PIN 22
-#define SLAVE_B_PIN 23
-#define SLAVE_Y_PIN 24
-#define SLAVE_X_PIN 25
+#define SLAVE_B_PIN 24
+#define SLAVE_X_PIN 23
+#define SLAVE_Y_PIN 25
 
 #define SLAVE_START_PIN 19
 #define SLAVE_SELECT_PIN 20
