@@ -143,10 +143,10 @@ void game_paint(unsigned __unused dt_usec)
 	if (sdk_inputs.joy_x > 400)
 		worms[2].angle += ANGLE_DELTA;
 
-	if (sdk_inputs.aux[3])
+	if (sdk_inputs.aux[7])
 		worms[3].angle -= ANGLE_DELTA;
 
-	if (sdk_inputs.aux[7])
+	if (sdk_inputs.aux[3])
 		worms[3].angle += ANGLE_DELTA;
 
 	bool anybody_alive = false;
