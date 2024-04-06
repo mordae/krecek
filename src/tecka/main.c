@@ -27,6 +27,7 @@
 #include <hardware/regs/pll.h>
 #include <hardware/regs/resets.h>
 #include <hardware/regs/xosc.h>
+#include <hardware/regs/io_qspi.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,27 +36,12 @@
 #include <task.h>
 #include <tft.h>
 
-#define DAP_SWDIO_PIN 25
-#define DAP_SWCLK_PIN 24
-
-#define DAP_CORE0 0x01002927u
-#define DAP_CORE1 0x11002927u
-#define DAP_RESCUE 0xf1002927u
-
 #define RED 240
 #define YELLOW 242
 #define GREEN 244
 #define BLUE 250
 #define GRAY 8
 #define WHITE 15
-
-#define SLAVE_A_PIN 22
-#define SLAVE_B_PIN 23
-#define SLAVE_Y_PIN 24
-#define SLAVE_X_PIN 25
-
-#define SLAVE_START_PIN 19
-#define SLAVE_SELECT_PIN 20
 
 static int input_joy_x = 0;
 static int input_joy_y = 0;
@@ -106,10 +92,10 @@ inline static int slave_gpio_get(int pin)
 	return (tmp >> IO_BANK0_GPIO0_STATUS_INFROMPAD_LSB) & 1;
 }
 
-inline static __unused int slave_adc_read(int ain)
+inline static __unused int slave_adc_read(int gpio)
 {
 	if (!dap_poke(ADC_BASE + ADC_CS_OFFSET,
-		      (ain << ADC_CS_AINSEL_LSB) | ADC_CS_EN_BITS | ADC_CS_START_ONCE_BITS))
+		      ((gpio - 26) << ADC_CS_AINSEL_LSB) | ADC_CS_EN_BITS | ADC_CS_START_ONCE_BITS))
 		return 0;
 
 	for (int i = 0; i < 10; i++) {
@@ -143,8 +129,8 @@ static void input_task(void)
 			dap_poke(0x40018004, 0x331f);
 		}
 
-		input_joy_x = 2048 - slave_adc_read(2) - 197;
-		input_joy_y = 2048 - slave_adc_read(3) - 172;
+		input_joy_x = 2048 - slave_adc_read(SLAVE_JOY_X_PIN) - 197;
+		input_joy_y = 2048 - slave_adc_read(SLAVE_JOY_Y_PIN) - 172;
 
 		//printf("joy: x=%5i, y=%5i\n", input_joy_x, input_joy_y);
 
@@ -289,7 +275,10 @@ static void slave_park()
 	dap_poke(RESETS_BASE + RESETS_RESET_OFFSET, RESETS_RESET_BITS & ~unreset);
 
 	/* Prevent power-off */
-	dap_poke(0x40018004, 0x001f);
+	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_SELECT_PIN,
+		 (1 << 3) | (1 << 6));
+	dap_poke(IO_QSPI_BASE + IO_QSPI_GPIO_QSPI_SCLK_CTRL_OFFSET + 8 * SLAVE_OFF_QSPI_PIN,
+		 IO_QSPI_GPIO_QSPI_SCLK_CTRL_FUNCSEL_BITS);
 }
 
 static void slave_init()
@@ -360,17 +349,13 @@ static void slave_init()
 	dap_poke(0x4001c000 + 4 + 4 * SLAVE_Y_PIN, (1 << 3) | (1 << 6));
 
 	dap_poke(0x4001c000 + 4 + 4 * SLAVE_SELECT_PIN, (1 << 3) | (1 << 6));
-
-	/* Make sure we do not turn outselves off. */
-	dap_poke(0x40018004, 0x001f);
 }
 
 int main()
 {
+	slave_park();
 	stdio_usb_init();
 	task_init();
-
-	slave_park();
 
 	for (int i = 0; i < 30; i++) {
 		if (stdio_usb_connected())
