@@ -135,7 +135,7 @@ static void slave_init()
 	dap_poke(CLOCKS_BASE + CLOCKS_CLK_REF_CTRL_OFFSET,
 		 CLOCKS_CLK_REF_CTRL_SRC_VALUE_XOSC_CLKSRC << CLOCKS_CLK_REF_CTRL_SRC_LSB);
 
-	dap_poke(CLOCKS_BASE + CLOCKS_CLK_ADC_DIV_OFFSET, 5 << CLOCKS_CLK_ADC_DIV_INT_LSB);
+	dap_poke(CLOCKS_BASE + CLOCKS_CLK_ADC_DIV_OFFSET, 3 << CLOCKS_CLK_ADC_DIV_INT_LSB);
 	dap_poke(CLOCKS_BASE + CLOCKS_CLK_ADC_CTRL_OFFSET,
 		 CLOCKS_CLK_ADC_CTRL_ENABLE_BITS | (CLOCKS_CLK_ADC_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS
 						    << CLOCKS_CLK_ADC_CTRL_AUXSRC_LSB));
@@ -167,6 +167,15 @@ static void slave_init()
 	dap_poke(0x4001c000 + 4 + 4 * SLAVE_Y_PIN, (1 << 3) | (1 << 6));
 
 	dap_poke(0x4001c000 + 4 + 4 * SLAVE_SELECT_PIN, (1 << 3) | (1 << 6));
+
+	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * 26,
+		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_SCHMITT_BITS);
+	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * 27,
+		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_SCHMITT_BITS);
+	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * 28,
+		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_SCHMITT_BITS);
+	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * 29,
+		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_SCHMITT_BITS);
 }
 
 void sdk_main(struct sdk_config *conf)
@@ -237,28 +246,23 @@ inline static int slave_gpio_get(int pin)
 	return (tmp >> IO_BANK0_GPIO0_STATUS_INFROMPAD_LSB) & 1;
 }
 
-inline static __unused int slave_adc_read(int gpio)
+inline static __unused int slave_adc_read(int gpio, int samples)
 {
 	if (!dap_poke(ADC_BASE + ADC_CS_OFFSET,
-		      ((gpio - 26) << ADC_CS_AINSEL_LSB) | ADC_CS_EN_BITS | ADC_CS_START_ONCE_BITS))
+		      ((gpio - 26) << ADC_CS_AINSEL_LSB) | ADC_CS_EN_BITS | ADC_CS_START_MANY_BITS))
 		return 0;
 
-	for (int i = 0; i < 10; i++) {
-		uint32_t status = 0;
+	uint32_t accum = 0;
+	uint32_t sample = 0;
 
-		if (!dap_peek(ADC_BASE + ADC_CS_OFFSET, &status))
+	for (int i = 0; i < samples; i++) {
+		if (!dap_peek(ADC_BASE + ADC_RESULT_OFFSET, &sample))
 			return 0;
 
-		if (status & ADC_CS_READY_BITS)
-			break;
+		accum += sample;
 	}
 
-	uint32_t result = 0;
-
-	if (!dap_peek(ADC_BASE + ADC_RESULT_OFFSET, &result))
-		return 0;
-
-	return result;
+	return accum / samples;
 }
 
 static void input_task(void)
@@ -285,8 +289,8 @@ static void input_task(void)
 			}
 		}
 
-		sdk_inputs.joy_x = 2048 - slave_adc_read(SLAVE_JOY_X_PIN) - 197;
-		sdk_inputs.joy_y = 2048 - slave_adc_read(SLAVE_JOY_Y_PIN) - 172;
+		sdk_inputs.joy_x = 2048 - slave_adc_read(SLAVE_JOY_X_PIN, 4);
+		sdk_inputs.joy_y = 2048 - slave_adc_read(SLAVE_JOY_Y_PIN, 4);
 
 		// TODO: aux[0-7] + joy_sw + brackets?
 
@@ -305,7 +309,7 @@ static void input_task(void)
 
 		game_input();
 
-		task_sleep_ms(10);
+		task_sleep_ms(16);
 	}
 }
 

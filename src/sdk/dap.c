@@ -53,13 +53,13 @@ enum dap_status {
 	DAP_ERROR = 7,
 };
 
-static void dap_delay(void)
+inline static void dap_delay(void)
 {
 	for (int i = 0; i < DAP_DELAY_CYCLES; i++)
 		asm volatile("");
 }
 
-static void dap_idle(int ticks)
+inline static void dap_idle(int ticks)
 {
 #if DAP_INSERT_IDLE_CYCLES
 	while (ticks--) {
@@ -71,7 +71,7 @@ static void dap_idle(int ticks)
 #endif
 }
 
-static void dap_clock(int ticks)
+inline static void dap_clock(int ticks)
 {
 	while (ticks--) {
 		gpio_put(swclk_pin, 0);

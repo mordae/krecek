@@ -72,8 +72,8 @@ void game_paint(unsigned __unused dt_usec)
 	tft_draw_string(0, 0, RED, buf);
 
 	/* Calculate crosshair position */
-	int tx = tft_width / 2 * sdk_inputs.joy_x / 1200;
-	int ty = tft_height / 2 * sdk_inputs.joy_y / 1200;
+	int tx = tft_width / 2 * sdk_inputs.joy_x / 1400;
+	int ty = tft_height / 2 * sdk_inputs.joy_y / 1400;
 
 	tx += tft_width / 2;
 	ty += tft_height / 2;
