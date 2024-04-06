@@ -1,5 +1,7 @@
 #pragma once
 
+#define CLK_SYS_HZ 125000000
+
 /* For vendor/pico-task */
 #define MAX_TASKS 4
 #define TASK_STACK_SIZE 2048

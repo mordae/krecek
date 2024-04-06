@@ -222,6 +222,10 @@ static void slave_init()
 
 void sdk_main(struct sdk_config *conf)
 {
+	set_sys_clock_khz(CLK_SYS_HZ / KHZ, true);
+	clock_configure(clk_peri, 0, CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS, CLK_SYS_HZ,
+			CLK_SYS_HZ);
+
 	sdk_config = *conf;
 
 	slave_park();
