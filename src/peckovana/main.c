@@ -271,6 +271,7 @@ int main()
 	struct sdk_config config = {
 		.wait_for_usb = true,
 		.show_fps = true,
+		.target_fps = 40.5,
 		.off_on_select = true,
 	};
 

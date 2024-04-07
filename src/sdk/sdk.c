@@ -37,6 +37,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #if !defined(__weak)
 #define __weak __attribute__((__weak__))
@@ -384,34 +385,51 @@ static void input_task(void)
 static void paint_task(void)
 {
 	uint32_t last_sync = time_us_32();
-	uint32_t delta = 1000 * 1000 / 30;
-	int fps = 30;
+	int delta = 1000 * 1000 / 30;
+	int budget = 0;
+
+	uint32_t last_updated = 0;
+	float active_fps = 30;
+	float fps = active_fps;
 
 	game_reset();
 
 	while (true) {
+		sem_acquire_blocking(&paint_sema);
+
+		if (sdk_config.target_fps > 0)
+			budget += 1000000.0f / sdk_config.target_fps;
+
+		game_paint(delta ? delta : 1);
+
 		if (sdk_config.show_fps) {
-			sem_acquire_blocking(&paint_sema);
-			game_paint(delta ? delta : 1);
-
 			static char buf[64];
-			snprintf(buf, sizeof buf, "%i", fps);
+			snprintf(buf, sizeof buf, "%.0f", floorf(active_fps));
 			tft_draw_string_right(tft_width - 1, 0, 8, buf);
+		}
 
-			sem_release(&sync_sema);
+		sem_release(&sync_sema);
 
-			uint32_t this_sync = time_us_32();
-			delta = this_sync - last_sync;
-			fps = 1 * 1000 * 1000 / delta;
-			last_sync = this_sync;
-		} else {
-			sem_acquire_blocking(&paint_sema);
-			game_paint(delta ? delta : 1);
-			sem_release(&sync_sema);
+		uint32_t this_sync = time_us_32();
+		delta = this_sync - last_sync;
+		fps = 0.95 * fps + 0.05 * (1000000.0f / delta);
+		last_sync = this_sync;
 
-			uint32_t this_sync = time_us_32();
-			delta = this_sync - last_sync;
-			last_sync = this_sync;
+		if ((this_sync - last_updated) >= 1000000) {
+			last_updated = this_sync;
+			active_fps = fps;
+		}
+
+		if (sdk_config.target_fps > 0) {
+			budget -= delta;
+
+			if (budget > 0) {
+				task_sleep_us(budget);
+				continue;
+			} else if (budget < -1000000) {
+				puts("sdk: cannot reach target fps, giving up");
+				budget = 0;
+			}
 		}
 
 		task_yield();

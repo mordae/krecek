@@ -21,6 +21,8 @@ struct sdk_config {
 	bool wait_for_usb;
 	bool show_fps;
 	bool off_on_select;
+
+	float target_fps;
 };
 
 struct sdk_inputs {
