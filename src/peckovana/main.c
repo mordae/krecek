@@ -16,6 +16,8 @@
 
 #include <pico/stdlib.h>
 
+#include <stdio.h>
+
 #include <sdk.h>
 #include <tft.h>
 
@@ -104,6 +106,23 @@ void game_reset(void)
 	p2.px = -1;
 	p2.py = -1;
 	p2.hp = 3;
+}
+
+void game_input(void)
+{
+	static int brightness = 64;
+
+	if (sdk_inputs_delta.vol_up > 0 && brightness < 64) {
+		brightness *= 2;
+		sdk_set_screen_brightness(brightness);
+		printf("brightness: %i\n", brightness);
+	}
+
+	if (sdk_inputs_delta.vol_down > 0 && brightness > 2) {
+		brightness /= 2;
+		sdk_set_screen_brightness(brightness);
+		printf("brightness: %i\n", brightness);
+	}
 }
 
 void game_paint(unsigned dt_usec)
