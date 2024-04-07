@@ -32,6 +32,19 @@
 /* Slave pinout */
 #define SLAVE_TFT_LED_PIN 13
 
+#define SLAVE_TOUCH_MISO_PIN 0
+#define SLAVE_TOUCH_CS_PIN 1
+#define SLAVE_TOUCH_SCK_PIN 2
+#define SLAVE_TOUCH_MOSI_PIN 3
+#define SLAVE_TOUCH_IRQ_PIN 4
+
+#define SLAVE_BUS0_PIN 5
+#define SLAVE_BUS1_PIN 6
+#define SLAVE_BUS2_PIN 7
+#define SLAVE_BUS3_PIN 8
+
+#define SLAVE_RF_CLK_PIN 21
+
 #define SLAVE_A_PIN 22
 #define SLAVE_B_PIN 24
 #define SLAVE_X_PIN 23
@@ -40,10 +53,16 @@
 #define SLAVE_START_PIN 19
 #define SLAVE_SELECT_PIN 20
 
+#define SLAVE_VOL_UP_PIN 15
+#define SLAVE_VOL_DOWN_PIN 16
+#define SLAVE_VOL_SW_PIN 17
+
 #define SLAVE_BRACK_R_PIN 26
 #define SLAVE_BRACK_L_PIN 27
 #define SLAVE_JOY_X_PIN 28
 #define SLAVE_JOY_Y_PIN 29
+
+#define SLAVE_AMP_EN_PIN 14
 
 #define SLAVE_AUX0_PIN 9
 #define SLAVE_AUX1_PIN 10
