@@ -51,3 +51,4 @@ void game_paint(unsigned dt);
 
 void sdk_main(struct sdk_config *conf);
 void sdk_set_screen_brightness(uint8_t level);
+void sdk_set_amp_enabled(bool en);

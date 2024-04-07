@@ -250,6 +250,14 @@ void sdk_set_screen_brightness(uint8_t level)
 	dap_poke(PWM_BASE + PWM_CH6_CC_OFFSET, (uint32_t)level << PWM_CH6_CC_B_LSB);
 }
 
+void sdk_set_amp_enabled(bool en)
+{
+	dap_poke(IO_BANK0_BASE + IO_BANK0_GPIO0_CTRL_OFFSET + 8 * SLAVE_AMP_EN_PIN,
+		 (IO_QSPI_GPIO_QSPI_SCLK_CTRL_OEOVER_BITS |
+		  (en ? IO_QSPI_GPIO_QSPI_SCLK_CTRL_OUTOVER_BITS : 0) |
+		  IO_QSPI_GPIO_QSPI_SCLK_CTRL_FUNCSEL_BITS));
+}
+
 void sdk_main(struct sdk_config *conf)
 {
 	set_sys_clock_khz(CLK_SYS_HZ / KHZ, true);
@@ -384,9 +392,9 @@ static void input_task(void)
 				puts("sdk: SELECT pressed, turning off...");
 				dap_poke(IO_QSPI_BASE + IO_QSPI_GPIO_QSPI_SCLK_CTRL_OFFSET +
 						 8 * SLAVE_OFF_QSPI_PIN,
-					 IO_QSPI_GPIO_QSPI_SCLK_CTRL_OEOVER_BITS |
-						 IO_QSPI_GPIO_QSPI_SCLK_CTRL_OUTOVER_BITS |
-						 IO_QSPI_GPIO_QSPI_SCLK_CTRL_FUNCSEL_BITS);
+					 (IO_QSPI_GPIO_QSPI_SCLK_CTRL_OEOVER_BITS |
+					  IO_QSPI_GPIO_QSPI_SCLK_CTRL_OUTOVER_BITS |
+					  IO_QSPI_GPIO_QSPI_SCLK_CTRL_FUNCSEL_BITS));
 			}
 		}
 
