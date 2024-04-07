@@ -23,9 +23,9 @@
 #include <tft.h>
 
 #define RED 240
-#define YELLOW 242
+#define YELLOW 226
 #define GREEN 244
-#define BLUE 250
+#define BLUE 234
 #define GRAY 8
 #define WHITE 15
 
