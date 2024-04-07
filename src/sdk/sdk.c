@@ -124,7 +124,7 @@ static void slave_init()
 			break;
 	}
 
-	puts("#2 un-reset");
+	puts("sdk: slave un-reset");
 
 	dap_poke(PLL_SYS_BASE + PLL_FBDIV_INT_OFFSET, 125);
 	dap_poke(PLL_SYS_BASE + PLL_PRIM_OFFSET, 0x62000);
@@ -140,7 +140,7 @@ static void slave_init()
 
 	dap_poke(PLL_SYS_BASE + PLL_PWR_OFFSET, 0);
 
-	puts("#2 PLL_SYS locked");
+	puts("sdk: slave PLL_SYS locked");
 
 	dap_poke(CLOCKS_BASE + CLOCKS_CLK_SYS_CTRL_OFFSET,
 		 CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLKSRC_CLK_SYS_AUX);
@@ -164,7 +164,7 @@ static void slave_init()
 			break;
 	}
 
-	puts("#2 ADC un-reset");
+	puts("sdk: slave ADC un-reset");
 
 	dap_peek(CLOCKS_BASE + CLOCKS_CLK_ADC_SELECTED_OFFSET, &status);
 
@@ -240,6 +240,8 @@ static void slave_init()
 		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_SCHMITT_BITS);
 	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * 29,
 		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_SCHMITT_BITS);
+
+	puts("sdk: slave configuration complete");
 }
 
 void sdk_set_screen_brightness(uint8_t level)
@@ -282,7 +284,7 @@ void sdk_main(struct sdk_config *conf)
 	for (int i = 0; i < 16; i++)
 		srand(adc_read() + random());
 
-	printf("Hello, welcome to Krecek!\n");
+	printf("sdk: Hello, welcome to Krecek!\n");
 
 	tft_init();
 	slave_init();
@@ -379,7 +381,7 @@ static void input_task(void)
 
 		if (sdk_config.off_on_select) {
 			if (sdk_inputs.select) {
-				puts("SELECT pressed, turning off...");
+				puts("sdk: SELECT pressed, turning off...");
 				dap_poke(IO_QSPI_BASE + IO_QSPI_GPIO_QSPI_SCLK_CTRL_OFFSET +
 						 8 * SLAVE_OFF_QSPI_PIN,
 					 IO_QSPI_GPIO_QSPI_SCLK_CTRL_OEOVER_BITS |
