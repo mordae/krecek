@@ -103,6 +103,18 @@ static void reset_game(void)
 	memcpy(worms, worms_init, sizeof worms);
 }
 
+float angle_diff(float a, float b)
+{
+	float diff = fmodf(a - b, 2 * M_PI);
+
+	if (diff < -M_PI)
+		diff += 2 * M_PI;
+	else if (diff > M_PI)
+		diff -= 2 * M_PI;
+
+	return diff;
+}
+
 void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(2);
@@ -137,11 +149,13 @@ void game_paint(unsigned __unused dt_usec)
 	if (sdk_inputs.y)
 		worms[1].angle += ANGLE_DELTA;
 
-	if (sdk_inputs.joy_x < -400)
-		worms[2].angle -= ANGLE_DELTA;
+	float p2_mag = sqrtf(powf(sdk_inputs.joy_x, 2) + powf(sdk_inputs.joy_y, 2));
 
-	if (sdk_inputs.joy_x > 400)
-		worms[2].angle += ANGLE_DELTA;
+	if (p2_mag > 200) {
+		float new_angle = atan2f(sdk_inputs.joy_y, sdk_inputs.joy_x);
+		float diff = angle_diff(worms[2].angle, new_angle);
+		worms[2].angle -= diff * p2_mag / 2048 / 20;
+	}
 
 	if (sdk_inputs.aux[7])
 		worms[3].angle -= ANGLE_DELTA;
