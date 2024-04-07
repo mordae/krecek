@@ -35,6 +35,8 @@ struct sdk_inputs {
 
 	int joy_x, joy_y, joy_sw;
 
+	int vol_up, vol_down, vol_sw;
+
 	int aux[8];
 };
 

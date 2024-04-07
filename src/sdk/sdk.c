@@ -189,6 +189,16 @@ static void slave_init()
 		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_PUE_BITS |
 			 PADS_BANK0_GPIO0_SCHMITT_BITS);
 
+	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_VOL_UP_PIN,
+		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_PUE_BITS |
+			 PADS_BANK0_GPIO0_SCHMITT_BITS);
+	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_VOL_DOWN_PIN,
+		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_PUE_BITS |
+			 PADS_BANK0_GPIO0_SCHMITT_BITS);
+	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_VOL_SW_PIN,
+		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_PUE_BITS |
+			 PADS_BANK0_GPIO0_SCHMITT_BITS);
+
 	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_SELECT_PIN,
 		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_PUE_BITS |
 			 PADS_BANK0_GPIO0_SCHMITT_BITS);
@@ -346,6 +356,10 @@ static void input_task(void)
 		sdk_inputs.b = !slave_gpio_get(SLAVE_B_PIN);
 		sdk_inputs.x = !slave_gpio_get(SLAVE_X_PIN);
 		sdk_inputs.y = !slave_gpio_get(SLAVE_Y_PIN);
+
+		sdk_inputs.vol_up = !slave_gpio_get(SLAVE_VOL_UP_PIN);
+		sdk_inputs.vol_down = !slave_gpio_get(SLAVE_VOL_DOWN_PIN);
+		sdk_inputs.vol_sw = !slave_gpio_get(SLAVE_VOL_SW_PIN);
 
 		sdk_inputs.aux[0] = !slave_gpio_get(SLAVE_AUX0_PIN);
 		sdk_inputs.aux[1] = !slave_gpio_get(SLAVE_AUX1_PIN);
