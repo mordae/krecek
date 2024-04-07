@@ -119,6 +119,7 @@ int main()
 		.wait_for_usb = true,
 		.show_fps = true,
 		.off_on_select = true,
+		.target_fps = 40.5,
 	};
 
 	sdk_main(&config);
