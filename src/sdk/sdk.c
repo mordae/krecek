@@ -90,8 +90,12 @@ static void slave_park()
 	//printf("idr = %#010x\n", idcode);
 	dap_noop();
 
+	/* Output inverse of the crystal clock */
+	gpio_set_outover(CLK_OUT_PIN, GPIO_OVERRIDE_INVERT);
+	clock_gpio_init_int_frac(CLK_OUT_PIN, CLOCKS_CLK_GPOUT0_CTRL_AUXSRC_VALUE_XOSC_CLKSRC, 1,
+				 0);
+
 	/* Start XOSC */
-	clock_gpio_init(CLK_OUT_PIN, CLOCKS_CLK_GPOUT0_CTRL_AUXSRC_VALUE_XOSC_CLKSRC, 1.0);
 	dap_poke(XOSC_BASE + XOSC_STARTUP_OFFSET, 0);
 	dap_poke(XOSC_BASE + XOSC_CTRL_OFFSET, 0xfabaa0);
 
