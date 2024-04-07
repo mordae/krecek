@@ -46,6 +46,9 @@
 
 struct sdk_config sdk_config = {};
 struct sdk_inputs sdk_inputs = {};
+struct sdk_inputs sdk_inputs_delta = {};
+
+static struct sdk_inputs prev_inputs = {};
 
 static semaphore_t paint_sema;
 static semaphore_t sync_sema;
@@ -403,6 +406,27 @@ static void input_task(void)
 		else
 			sdk_inputs.batt_mv = sdk_inputs.batt_mv * 0.9 + 0.1 * mv;
 
+		/* Calculate input deltas */
+		sdk_inputs_delta.a = sdk_inputs.a - prev_inputs.a;
+		sdk_inputs_delta.b = sdk_inputs.b - prev_inputs.b;
+		sdk_inputs_delta.x = sdk_inputs.x - prev_inputs.x;
+		sdk_inputs_delta.y = sdk_inputs.y - prev_inputs.y;
+
+		sdk_inputs_delta.vol_up = sdk_inputs.vol_up - prev_inputs.vol_up;
+		sdk_inputs_delta.vol_down = sdk_inputs.vol_down - prev_inputs.vol_down;
+		sdk_inputs_delta.vol_sw = sdk_inputs.vol_sw - prev_inputs.vol_sw;
+
+		for (int i = 0; i < 8; i++)
+			sdk_inputs_delta.aux[i] = sdk_inputs.aux[i] - prev_inputs.aux[i];
+
+		sdk_inputs_delta.start = sdk_inputs.start - prev_inputs.start;
+		sdk_inputs_delta.select = sdk_inputs.select - prev_inputs.select;
+
+		sdk_inputs_delta.batt_mv = sdk_inputs.batt_mv - prev_inputs.batt_mv;
+
+		prev_inputs = sdk_inputs;
+
+		/* Let the game process inputs as soon as possible. */
 		game_input();
 
 		task_sleep_ms(15);

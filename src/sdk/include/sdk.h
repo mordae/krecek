@@ -41,6 +41,8 @@ struct sdk_inputs {
 };
 
 extern struct sdk_inputs sdk_inputs;
+extern struct sdk_inputs sdk_inputs_delta;
+
 extern struct sdk_config sdk_config;
 
 void game_reset(void);
