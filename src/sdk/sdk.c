@@ -32,6 +32,7 @@
 #include <hardware/regs/io_qspi.h>
 #include <hardware/regs/pads_qspi.h>
 #include <hardware/regs/pll.h>
+#include <hardware/regs/pwm.h>
 #include <hardware/regs/resets.h>
 #include <hardware/regs/xosc.h>
 
@@ -167,9 +168,12 @@ static void slave_init()
 	dap_poke(ADC_BASE + ADC_CS_OFFSET, ADC_CS_EN_BITS);
 
 	/* Enable display backlight. */
-	dap_poke(IO_BANK0_BASE + IO_BANK0_GPIO0_CTRL_OFFSET + 8 * SLAVE_TFT_LED_PIN,
-		 IO_BANK0_GPIO0_CTRL_FUNCSEL_BITS | IO_BANK0_GPIO0_CTRL_OEOVER_BITS |
-			 IO_BANK0_GPIO0_CTRL_OUTOVER_BITS);
+	static_assert(SLAVE_TFT_LED_PIN == 13, "Code assumes that SLAVE_TFT_LED_PIN == 13");
+	dap_poke(IO_BANK0_BASE + IO_BANK0_GPIO13_CTRL_OFFSET,
+		 IO_BANK0_GPIO13_CTRL_FUNCSEL_VALUE_PWM_B_6 << IO_BANK0_GPIO13_CTRL_FUNCSEL_LSB);
+	dap_poke(PWM_BASE + PWM_CH6_CC_OFFSET, (uint32_t)sdk_config.brightness << PWM_CH6_CC_B_LSB);
+	dap_poke(PWM_BASE + PWM_CH6_TOP_OFFSET, 256);
+	dap_poke(PWM_BASE + PWM_EN_OFFSET, PWM_EN_CH6_BITS);
 
 	/* Enable button input + pull-ups. */
 	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_A_PIN,
@@ -225,6 +229,12 @@ static void slave_init()
 		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_SCHMITT_BITS);
 }
 
+void sdk_set_screen_brightness(uint8_t level)
+{
+	sdk_config.brightness = level;
+	dap_poke(PWM_BASE + PWM_CH6_CC_OFFSET, (uint32_t)level << PWM_CH6_CC_B_LSB);
+}
+
 void sdk_main(struct sdk_config *conf)
 {
 	set_sys_clock_khz(CLK_SYS_HZ / KHZ, true);
@@ -232,6 +242,9 @@ void sdk_main(struct sdk_config *conf)
 			CLK_SYS_HZ);
 
 	sdk_config = *conf;
+
+	if (!sdk_config.brightness)
+		sdk_config.brightness = 64;
 
 	slave_park();
 	stdio_usb_init();

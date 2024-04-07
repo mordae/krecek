@@ -15,7 +15,7 @@
  */
 
 #pragma once
-#include <stdbool.h>
+#include <pico/stdlib.h>
 
 struct sdk_config {
 	bool wait_for_usb;
@@ -23,6 +23,8 @@ struct sdk_config {
 	bool off_on_select;
 
 	float target_fps;
+
+	uint8_t brightness;
 };
 
 struct sdk_inputs {
@@ -44,3 +46,4 @@ void game_input(void);
 void game_paint(unsigned dt);
 
 void sdk_main(struct sdk_config *conf);
+void sdk_set_screen_brightness(uint8_t level);
