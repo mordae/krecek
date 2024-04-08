@@ -387,17 +387,6 @@ static void input_task(void)
 		sdk_inputs.start = slave_gpio_get(SLAVE_START_PIN);
 		sdk_inputs.select = !slave_gpio_get(SLAVE_SELECT_PIN);
 
-		if (sdk_config.off_on_select) {
-			if (sdk_inputs.select) {
-				puts("sdk: SELECT pressed, turning off...");
-				dap_poke(IO_QSPI_BASE + IO_QSPI_GPIO_QSPI_SCLK_CTRL_OFFSET +
-						 8 * SLAVE_OFF_QSPI_PIN,
-					 (IO_QSPI_GPIO_QSPI_SCLK_CTRL_OEOVER_BITS |
-					  IO_QSPI_GPIO_QSPI_SCLK_CTRL_OUTOVER_BITS |
-					  IO_QSPI_GPIO_QSPI_SCLK_CTRL_FUNCSEL_BITS));
-			}
-		}
-
 		sdk_inputs.joy_x = 2048 - slave_adc_read(SLAVE_JOY_X_PIN);
 		sdk_inputs.joy_y = 2048 - slave_adc_read(SLAVE_JOY_Y_PIN);
 
@@ -435,6 +424,17 @@ static void input_task(void)
 		sdk_inputs_delta.batt_mv = sdk_inputs.batt_mv - prev_inputs.batt_mv;
 
 		prev_inputs = sdk_inputs;
+
+		if (sdk_config.off_on_select) {
+			if (sdk_inputs_delta.select > 0) {
+				puts("sdk: SELECT pressed, turning off...");
+				dap_poke(IO_QSPI_BASE + IO_QSPI_GPIO_QSPI_SCLK_CTRL_OFFSET +
+						 8 * SLAVE_OFF_QSPI_PIN,
+					 (IO_QSPI_GPIO_QSPI_SCLK_CTRL_OEOVER_BITS |
+					  IO_QSPI_GPIO_QSPI_SCLK_CTRL_OUTOVER_BITS |
+					  IO_QSPI_GPIO_QSPI_SCLK_CTRL_FUNCSEL_BITS));
+			}
+		}
 
 		/* Let the game process inputs as soon as possible. */
 		game_input();
