@@ -304,6 +304,10 @@ void sdk_main(struct sdk_config *conf)
 	task_run_loop();
 }
 
+__weak void game_start(void)
+{
+}
+
 __weak void game_reset(void)
 {
 }
@@ -453,6 +457,7 @@ static void paint_task(void)
 	float active_fps = 30;
 	float fps = active_fps;
 
+	game_start();
 	game_reset();
 
 	while (true) {
