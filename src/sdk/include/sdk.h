@@ -40,11 +40,25 @@ struct sdk_inputs {
 	int aux[8];
 };
 
+struct sdk_file {
+	const void *data;
+	size_t len;
+};
+
+#define embed_file(name, path)                       \
+	extern struct sdk_file name;                 \
+	__asm__(".section \".text.files\", \"a\"\n"  \
+		"_" #name "_start:\n"                \
+		".incbin \"" path "\"\n" #name ":\n" \
+		".int _" #name "_start\n"            \
+		".int " #name " - _" #name "_start\n")
+
 extern struct sdk_inputs sdk_inputs;
 extern struct sdk_inputs sdk_inputs_delta;
 
 extern struct sdk_config sdk_config;
 
+void game_start(void);
 void game_reset(void);
 void game_input(void);
 void game_paint(unsigned dt);
