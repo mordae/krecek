@@ -2292,7 +2292,7 @@
   (symbol (lib_id "Device:R_Small") (at 163.83 165.1 90) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 08285e52-ea3a-426a-b14e-1da41e3007de)
-    (property "Reference" "R4" (at 163.83 160.02 90)
+    (property "Reference" "R5" (at 163.83 160.02 90)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1k" (at 163.83 162.56 90)
@@ -2312,7 +2312,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "R4") (unit 1)
+          (reference "R5") (unit 1)
         )
       )
     )
@@ -2321,7 +2321,7 @@
   (symbol (lib_id "power:GND") (at 260.35 154.94 90) (mirror x) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 11414e75-9106-4041-b96d-6429ff89eda4)
-    (property "Reference" "#PWR022" (at 266.7 154.94 0)
+    (property "Reference" "#PWR023" (at 266.7 154.94 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 264.16 154.94 90)
@@ -2337,7 +2337,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR022") (unit 1)
+          (reference "#PWR023") (unit 1)
         )
       )
     )
@@ -2346,7 +2346,7 @@
   (symbol (lib_id "power:GND") (at 247.65 154.94 270) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 13f778f5-42ed-479f-af75-5814e25a7c47)
-    (property "Reference" "#PWR021" (at 241.3 154.94 0)
+    (property "Reference" "#PWR022" (at 241.3 154.94 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 243.84 154.94 90)
@@ -2362,7 +2362,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR021") (unit 1)
+          (reference "#PWR022") (unit 1)
         )
       )
     )
@@ -2371,7 +2371,7 @@
   (symbol (lib_id "power:GND") (at 260.35 162.56 90) (mirror x) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 178fdf4a-0b0f-4661-aa4c-ec5e81ac80d2)
-    (property "Reference" "#PWR024" (at 266.7 162.56 0)
+    (property "Reference" "#PWR025" (at 266.7 162.56 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 264.16 162.56 90)
@@ -2387,7 +2387,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR024") (unit 1)
+          (reference "#PWR025") (unit 1)
         )
       )
     )
@@ -2502,7 +2502,7 @@
   (symbol (lib_id "power:GND") (at 25.4 120.65 90) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 1ce3b454-3f69-410e-bee6-b5e3c609aae2)
-    (property "Reference" "#PWR09" (at 31.75 120.65 0)
+    (property "Reference" "#PWR010" (at 31.75 120.65 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 29.21 120.65 90)
@@ -2518,7 +2518,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR09") (unit 1)
+          (reference "#PWR010") (unit 1)
         )
       )
     )
@@ -2527,7 +2527,7 @@
   (symbol (lib_id "power:GND") (at 190.5 165.1 90) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 1e2d98a9-0fb5-407f-b07f-30d295deb7d1)
-    (property "Reference" "#PWR025" (at 196.85 165.1 0)
+    (property "Reference" "#PWR026" (at 196.85 165.1 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 194.31 165.1 90)
@@ -2543,7 +2543,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR025") (unit 1)
+          (reference "#PWR026") (unit 1)
         )
       )
     )
@@ -2607,7 +2607,7 @@
   (symbol (lib_id "power:GND") (at 76.2 137.16 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 27dbde6d-594b-4e24-8b4e-1977621746d6)
-    (property "Reference" "#PWR012" (at 76.2 143.51 0)
+    (property "Reference" "#PWR013" (at 76.2 143.51 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 76.2 142.24 0)
@@ -2623,7 +2623,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR012") (unit 1)
+          (reference "#PWR013") (unit 1)
         )
       )
     )
@@ -2632,7 +2632,7 @@
   (symbol (lib_id "power:GND") (at 50.8 129.54 270) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 290074ee-109c-4f58-a889-708775c4eb5c)
-    (property "Reference" "#PWR010" (at 44.45 129.54 0)
+    (property "Reference" "#PWR011" (at 44.45 129.54 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 46.99 129.54 90)
@@ -2648,7 +2648,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR010") (unit 1)
+          (reference "#PWR011") (unit 1)
         )
       )
     )
@@ -2907,7 +2907,7 @@
   (symbol (lib_id "power:GND") (at 247.65 162.56 270) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 5483def4-0a28-43d9-a120-7304fa4d90e7)
-    (property "Reference" "#PWR023" (at 241.3 162.56 0)
+    (property "Reference" "#PWR024" (at 241.3 162.56 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 243.84 162.56 90)
@@ -2923,7 +2923,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR023") (unit 1)
+          (reference "#PWR024") (unit 1)
         )
       )
     )
@@ -2988,7 +2988,7 @@
   (symbol (lib_id "power:GND") (at 247.65 147.32 270) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 5c373d76-9e73-474b-8b12-e08cfdc63009)
-    (property "Reference" "#PWR016" (at 241.3 147.32 0)
+    (property "Reference" "#PWR017" (at 241.3 147.32 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 243.84 147.32 90)
@@ -3004,7 +3004,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR016") (unit 1)
+          (reference "#PWR017") (unit 1)
         )
       )
     )
@@ -3288,7 +3288,7 @@
   (symbol (lib_id "power:GND") (at 38.1 193.04 0) (mirror y) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 77bfdf68-7855-4820-842a-f9a97ef594da)
-    (property "Reference" "#PWR028" (at 38.1 199.39 0)
+    (property "Reference" "#PWR029" (at 38.1 199.39 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 38.1 198.12 0)
@@ -3304,7 +3304,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR028") (unit 1)
+          (reference "#PWR029") (unit 1)
         )
       )
     )
@@ -3313,7 +3313,7 @@
   (symbol (lib_id "power:+5V") (at 247.65 144.78 90) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 79032888-9026-4b14-a0e9-07699d927da2)
-    (property "Reference" "#PWR014" (at 251.46 144.78 0)
+    (property "Reference" "#PWR015" (at 251.46 144.78 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+5V" (at 243.84 144.78 90)
@@ -3329,7 +3329,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR014") (unit 1)
+          (reference "#PWR015") (unit 1)
         )
       )
     )
@@ -3338,7 +3338,7 @@
   (symbol (lib_id "Device:R_Small") (at 57.15 177.8 90) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 8071ba27-a632-4e33-9982-bc416edd82f5)
-    (property "Reference" "R5" (at 57.15 172.72 90)
+    (property "Reference" "R6" (at 57.15 172.72 90)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1k" (at 57.15 175.26 90)
@@ -3358,7 +3358,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "R5") (unit 1)
+          (reference "R6") (unit 1)
         )
       )
     )
@@ -3396,7 +3396,7 @@
   (symbol (lib_id "power:+3.3V") (at 152.4 149.86 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 869a2aa5-8e6a-4daf-b1fb-1ce587095d8a)
-    (property "Reference" "#PWR018" (at 152.4 153.67 0)
+    (property "Reference" "#PWR019" (at 152.4 153.67 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+3.3V" (at 152.4 144.78 0)
@@ -3412,7 +3412,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR018") (unit 1)
+          (reference "#PWR019") (unit 1)
         )
       )
     )
@@ -3476,7 +3476,7 @@
   (symbol (lib_id "power:GND") (at 177.8 129.54 270) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 931d1efd-5ddd-42ee-9132-133e297a5982)
-    (property "Reference" "#PWR011" (at 171.45 129.54 0)
+    (property "Reference" "#PWR012" (at 171.45 129.54 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 173.99 129.54 90)
@@ -3492,7 +3492,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR011") (unit 1)
+          (reference "#PWR012") (unit 1)
         )
       )
     )
@@ -3745,7 +3745,7 @@
   (symbol (lib_id "power:+3.3V") (at 260.35 144.78 270) (mirror x) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid acf22f7c-c86c-43de-a0bd-cf4f0361951b)
-    (property "Reference" "#PWR015" (at 256.54 144.78 0)
+    (property "Reference" "#PWR016" (at 256.54 144.78 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+3.3V" (at 264.16 144.78 90)
@@ -3761,7 +3761,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR015") (unit 1)
+          (reference "#PWR016") (unit 1)
         )
       )
     )
@@ -4191,7 +4191,7 @@
   (symbol (lib_id "power:GND") (at 203.2 137.16 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid c85597d3-9352-40ce-b02a-9d62bcb239e7)
-    (property "Reference" "#PWR013" (at 203.2 143.51 0)
+    (property "Reference" "#PWR014" (at 203.2 143.51 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 203.2 142.24 0)
@@ -4207,7 +4207,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR013") (unit 1)
+          (reference "#PWR014") (unit 1)
         )
       )
     )
@@ -4494,7 +4494,7 @@
   (symbol (lib_id "Device:R_Small") (at 152.4 156.21 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid d92194ae-b1f6-4be7-a692-f57d982ffe57)
-    (property "Reference" "R3" (at 154.94 154.94 0)
+    (property "Reference" "R4" (at 154.94 154.94 0)
       (effects (font (size 1.27 1.27)) (justify left))
     )
     (property "Value" "33k" (at 154.94 157.48 0)
@@ -4514,7 +4514,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "R3") (unit 1)
+          (reference "R4") (unit 1)
         )
       )
     )
@@ -4552,7 +4552,7 @@
   (symbol (lib_id "power:GND") (at 260.35 147.32 90) (mirror x) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid dd0c50fd-74f1-4e6c-84bb-eccd12f3fb01)
-    (property "Reference" "#PWR017" (at 266.7 147.32 0)
+    (property "Reference" "#PWR018" (at 266.7 147.32 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 264.16 147.32 90)
@@ -4568,7 +4568,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR017") (unit 1)
+          (reference "#PWR018") (unit 1)
         )
       )
     )
@@ -4577,7 +4577,7 @@
   (symbol (lib_id "power:GND") (at 38.1 172.72 0) (mirror x) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid eb8c54d2-33b7-4cce-8ab7-d3dca428d1ea)
-    (property "Reference" "#PWR026" (at 38.1 166.37 0)
+    (property "Reference" "#PWR027" (at 38.1 166.37 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 38.1 167.64 0)
@@ -4593,7 +4593,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR026") (unit 1)
+          (reference "#PWR027") (unit 1)
         )
       )
     )
@@ -4602,7 +4602,7 @@
   (symbol (lib_id "power:GND") (at 165.1 71.12 270) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid ec16c005-1bb7-44fb-aa39-986a1d347f37)
-    (property "Reference" "#PWR0113" (at 158.75 71.12 0)
+    (property "Reference" "#PWR09" (at 158.75 71.12 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 161.29 71.12 90)
@@ -4618,7 +4618,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR0113") (unit 1)
+          (reference "#PWR09") (unit 1)
         )
       )
     )
@@ -4627,7 +4627,7 @@
   (symbol (lib_id "Device:R_Small") (at 171.45 71.12 90) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid ec9b0d2d-3409-4d31-9142-313854b3abb2)
-    (property "Reference" "R40" (at 171.45 66.04 90)
+    (property "Reference" "R3" (at 171.45 66.04 90)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "1k" (at 171.45 68.58 90)
@@ -4647,7 +4647,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "R40") (unit 1)
+          (reference "R3") (unit 1)
         )
       )
     )
@@ -4656,7 +4656,7 @@
   (symbol (lib_id "power:GND") (at 114.3 185.42 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid eeaa2d0b-e712-4cd4-a827-5eaf6f289e4c)
-    (property "Reference" "#PWR027" (at 114.3 191.77 0)
+    (property "Reference" "#PWR028" (at 114.3 191.77 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 114.3 190.5 0)
@@ -4672,7 +4672,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR027") (unit 1)
+          (reference "#PWR028") (unit 1)
         )
       )
     )
@@ -4681,7 +4681,7 @@
   (symbol (lib_id "power:+3.3V") (at 114.3 151.13 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid f3385367-131c-4770-ac0c-e504a356d014)
-    (property "Reference" "#PWR019" (at 114.3 154.94 0)
+    (property "Reference" "#PWR020" (at 114.3 154.94 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "+3.3V" (at 114.3 146.05 0)
@@ -4697,7 +4697,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR019") (unit 1)
+          (reference "#PWR020") (unit 1)
         )
       )
     )
@@ -4761,7 +4761,7 @@
   (symbol (lib_id "power:GND") (at 127 154.94 90) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid feece6d7-effd-461c-a110-626a33454b89)
-    (property "Reference" "#PWR020" (at 133.35 154.94 0)
+    (property "Reference" "#PWR021" (at 133.35 154.94 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "GND" (at 130.81 154.94 90)
@@ -4777,7 +4777,7 @@
     (instances
       (project "krecek-0.9"
         (path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
-          (reference "#PWR020") (unit 1)
+          (reference "#PWR021") (unit 1)
         )
       )
     )
