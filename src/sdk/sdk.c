@@ -446,6 +446,8 @@ static void stats_task(void)
 
 		printf("sdk: audio samples per wakeup: %i / %i\n", 10 * 48000 / audio_wakeups,
 		       I2S_BUF_LEN);
+
+		audio_wakeups = 0;
 	}
 }
 
