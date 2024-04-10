@@ -63,6 +63,21 @@ void game_reset(void)
 	score = 0;
 }
 
+void game_start(void)
+{
+	sdk_set_output_gain_db(6);
+}
+
+void game_audio(int nsamples)
+{
+	for (int s = 0; s < nsamples; s++) {
+		int max = INT16_MAX / 6 * (ehp_max - ehp) / ehp_max;
+		int sample = rand() % (2 * max) - max;
+
+		sdk_write_sample(sample);
+	}
+}
+
 void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
