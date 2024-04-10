@@ -16,8 +16,8 @@
 
 #include <pico/stdlib.h>
 
-#include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <sdk.h>
 #include <tft.h>
@@ -38,6 +38,32 @@ struct hamster {
 };
 
 static struct hamster p1, p2;
+
+typedef int16_t (*effect_gen_fn)(int volume, int frequency, int offset);
+
+struct effect {
+	int offset;
+	int length;
+	int volume;
+	int period;
+	effect_gen_fn generator;
+};
+
+#define MAX_EFFECTS 8
+struct effect effects[MAX_EFFECTS];
+
+static int16_t __unused square_wave(int volume, int period, int offset)
+{
+	if ((offset % period) < (period / 2))
+		return volume;
+	else
+		return -volume;
+}
+
+static int16_t __unused noise(int volume, int __unused period, int __unused offset)
+{
+	return rand() % (2 * volume) - volume;
+}
 
 uint32_t heart_sprite[32] = {
 	0b00000000000000000000000000000000, /* do not wrap please */
@@ -92,26 +118,49 @@ static void draw_sprite(int x0, int y0, uint32_t sprite[32], int color, bool tra
 	}
 }
 
-#if 0
 void game_start(void)
 {
 	sdk_set_output_gain_db(6);
 }
 
-void game_audio(int __unused nsamples)
+void game_audio(int nsamples)
 {
-	static int offset = 0;
+	for (int s = 0; s < nsamples; s++) {
+		int sample = 0;
 
-	while (true) {
-		int16_t sample = offset >= 24 ? 1000 : -1000;
+		for (int i = 0; i < MAX_EFFECTS; i++) {
+			struct effect *e = effects + i;
 
-		if (!sdk_write_sample(sample))
-			break;
+			if (!e->volume)
+				continue;
 
-		offset = offset >= 120 ? 0 : offset + 1;
+			sample += e->generator(e->volume, e->period, e->offset++);
+
+			if (e->offset >= e->length)
+				e->volume = 0;
+		}
+
+		sdk_write_sample(sample);
 	}
 }
-#endif
+
+static void __unused play_effect(int volume, int frequency, int length, effect_gen_fn gen)
+{
+	for (int i = 0; i < MAX_EFFECTS; i++) {
+		struct effect *e = effects + i;
+
+		if (e->volume)
+			continue;
+
+		e->offset = 0;
+		e->volume = volume;
+		e->length = length;
+		e->period = frequency ? 48000 / frequency : 1;
+		e->generator = gen;
+
+		break;
+	}
+}
 
 void game_reset(void)
 {
@@ -182,6 +231,7 @@ void game_paint(unsigned dt_usec)
 	if ((p1.px < 0) && sdk_inputs.x) {
 		p1.px = 24;
 		p1.py = p1.y + 16;
+		play_effect(INT16_MAX / 5, 440, 6000, square_wave);
 	}
 
 	if ((p2.y >= tft_height - 31) && sdk_inputs.y)
@@ -190,6 +240,7 @@ void game_paint(unsigned dt_usec)
 	if ((p2.px < 0) && sdk_inputs.b) {
 		p2.px = tft_width - 25;
 		p2.py = p2.y + 16;
+		play_effect(INT16_MAX / 5, 440, 6000, square_wave);
 	}
 
 	/*
@@ -256,6 +307,8 @@ void game_paint(unsigned dt_usec)
 				/* They must have collided. */
 				p1.px = -1;
 				p2.px = -1;
+
+				play_effect(INT16_MAX / 5, 0, 6000, noise);
 			}
 		}
 	}
@@ -288,6 +341,8 @@ void game_paint(unsigned dt_usec)
 				p1.px = -1;
 				p2.hp -= 1;
 
+				play_effect(INT16_MAX / 5, 220, 12000, square_wave);
+
 				if (p2.hp < 1)
 					game_reset();
 			}
@@ -299,6 +354,8 @@ void game_paint(unsigned dt_usec)
 			if (p2.px < 24) {
 				p2.px = -1;
 				p1.hp -= 1;
+
+				play_effect(INT16_MAX / 5, 220, 12000, square_wave);
 
 				if (p1.hp < 1)
 					game_reset();
