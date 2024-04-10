@@ -60,9 +60,14 @@ extern struct sdk_config sdk_config;
 
 void game_start(void);
 void game_reset(void);
+void game_audio(int nsamples);
 void game_input(void);
 void game_paint(unsigned dt);
 
 void sdk_main(struct sdk_config *conf);
 void sdk_set_screen_brightness(uint8_t level);
-void sdk_set_amp_enabled(bool en);
+void sdk_set_output_gain_db(float gain);
+bool sdk_write_sample(int16_t sample);
+bool sdk_read_sample(int16_t *sample);
+int sdk_write_samples(const int16_t *buf, int len);
+int sdk_read_samples(int16_t *buf, int len);

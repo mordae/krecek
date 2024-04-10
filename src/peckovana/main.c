@@ -16,6 +16,7 @@
 
 #include <pico/stdlib.h>
 
+#include <math.h>
 #include <stdio.h>
 
 #include <sdk.h>
@@ -90,6 +91,27 @@ static void draw_sprite(int x0, int y0, uint32_t sprite[32], int color, bool tra
 		}
 	}
 }
+
+#if 0
+void game_start(void)
+{
+	sdk_set_output_gain_db(6);
+}
+
+void game_audio(int __unused nsamples)
+{
+	static int offset = 0;
+
+	while (true) {
+		int16_t sample = offset >= 24 ? 1000 : -1000;
+
+		if (!sdk_write_sample(sample))
+			break;
+
+		offset = offset >= 120 ? 0 : offset + 1;
+	}
+}
+#endif
 
 void game_reset(void)
 {

@@ -1,4 +1,5 @@
-add_library(krecek sdk.c dap.c)
+add_library(krecek sdk.c dap.c es8312.c)
+pico_generate_pio_header(krecek ${CMAKE_CURRENT_LIST_DIR}/i2s.pio)
 target_include_directories(krecek PUBLIC include)
 krecek_set_target_options(krecek)
 
@@ -19,6 +20,7 @@ target_link_libraries(
   hardware_adc
   hardware_divider
   hardware_dma
+  hardware_i2c
   hardware_pio
   hardware_pwm
   hardware_timer

@@ -1,6 +1,7 @@
 #pragma once
 
 #define CLK_SYS_HZ 132000000
+#define SDK_PIO pio0
 
 /* For vendor/pico-task */
 #define MAX_TASKS 4
@@ -27,6 +28,21 @@
 #define DAP_CORE0 0x01002927u
 #define DAP_CORE1 0x11002927u
 #define DAP_RESCUE 0xf1002927u
+
+#define DSP_CDATA_PIN 12
+#define DSP_CCLK_PIN 13
+#define DSP_DIN_PIN 14
+#define DSP_DOUT_PIN 15
+#define DSP_LRCK_PIN 16
+#define DSP_SCLK_PIN 17
+#define DSP_I2C i2c0
+
+#define IR_TX_PIN 18
+
+#define USB_CC1_PIN 26
+#define USB_CC2_PIN 27
+#define BAT_VSENSE_PIN 28
+#define HP_SENSE_PIN 29
 
 /* For the secondary chip */
 #define CLK_OUT_PIN 23

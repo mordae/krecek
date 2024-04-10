@@ -19,6 +19,8 @@
 #include <dap.h>
 #include <task.h>
 #include <tft.h>
+#include <es8312.h>
+#include <i2s.pio.h>
 
 #include <pico/multicore.h>
 #include <pico/stdio_usb.h>
@@ -26,6 +28,8 @@
 
 #include <hardware/adc.h>
 #include <hardware/clocks.h>
+#include <hardware/dma.h>
+#include <hardware/gpio.h>
 
 #include <hardware/regs/adc.h>
 #include <hardware/regs/clocks.h>
@@ -36,9 +40,10 @@
 #include <hardware/regs/resets.h>
 #include <hardware/regs/xosc.h>
 
+#include <limits.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 #if !defined(__weak)
 #define __weak __attribute__((__weak__))
@@ -50,24 +55,41 @@ struct sdk_inputs sdk_inputs_delta = {};
 
 static struct sdk_inputs prev_inputs = {};
 
+static int sm_i2s = -1;
+static int dma_i2s_rx = -1;
+static int dma_i2s_tx = -1;
+
+static int audio_wakeups = 0;
+
+#define I2S_BUF_LEN 4096
+static int16_t i2s_rx_buf[I2S_BUF_LEN] __attribute__((__aligned__(I2S_BUF_LEN * 2)));
+static int16_t i2s_tx_buf[I2S_BUF_LEN] __attribute__((__aligned__(I2S_BUF_LEN * 2)));
+
 static semaphore_t paint_sema;
 static semaphore_t sync_sema;
 
+static struct es8312_driver dsp = {
+	.i2c = DSP_I2C,
+	.addr = ES8312_ADDR,
+};
+
 static void stats_task(void);
 static void tft_task(void);
+static void audio_task(void);
 static void input_task(void);
 static void paint_task(void);
+
+static void set_amp_enabled(bool en);
 
 task_t task_avail[NUM_CORES][MAX_TASKS] = {
 	{
 		MAKE_TASK(4, "stats", stats_task),
+		MAKE_TASK(3, "audio", audio_task),
 		MAKE_TASK(2, "input", input_task),
 		MAKE_TASK(1, "paint", paint_task),
-		NULL,
 	},
 	{
 		MAKE_TASK(1, "tft", tft_task),
-		NULL,
 	},
 };
 
@@ -241,6 +263,8 @@ static void slave_init()
 	dap_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * 29,
 		 PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_SCHMITT_BITS);
 
+	set_amp_enabled(false);
+
 	puts("sdk: slave configuration complete");
 }
 
@@ -250,12 +274,93 @@ void sdk_set_screen_brightness(uint8_t level)
 	dap_poke(PWM_BASE + PWM_CH6_CC_OFFSET, (uint32_t)level << PWM_CH6_CC_B_LSB);
 }
 
-void sdk_set_amp_enabled(bool en)
+static void set_amp_enabled(bool en)
 {
 	dap_poke(IO_BANK0_BASE + IO_BANK0_GPIO0_CTRL_OFFSET + 8 * SLAVE_AMP_EN_PIN,
 		 (IO_QSPI_GPIO_QSPI_SCLK_CTRL_OEOVER_BITS |
 		  (en ? IO_QSPI_GPIO_QSPI_SCLK_CTRL_OUTOVER_BITS : 0) |
 		  IO_QSPI_GPIO_QSPI_SCLK_CTRL_FUNCSEL_BITS));
+}
+
+static void dsp_init(void)
+{
+	unsigned rate = i2c_init(DSP_I2C, 100000);
+
+	printf("sdk: i2c rate=%u\n", rate);
+
+	gpio_set_function(DSP_CDATA_PIN, GPIO_FUNC_I2C);
+	gpio_set_function(DSP_CCLK_PIN, GPIO_FUNC_I2C);
+
+	gpio_set_pulls(DSP_CDATA_PIN, true, false);
+	gpio_set_pulls(DSP_CCLK_PIN, true, false);
+
+	int id = es8312_identify(&dsp);
+
+	printf("sdk: DSP identified as ES%x r%x\n", id >> 8, id & 0xff);
+
+	es8312_reset(&dsp);
+
+	sm_i2s = pio_claim_unused_sm(SDK_PIO, true);
+
+	struct pio_i2s_config i2s_cfg = {
+		.origin = -1,
+		.pio = SDK_PIO,
+		.sm = sm_i2s,
+		.in_pin = DSP_DOUT_PIN,
+		.out_pin = DSP_DIN_PIN,
+		.clock_pin_base = DSP_LRCK_PIN,
+		.sample_rate = 48000,
+	};
+
+	pio_i2s_init(&i2s_cfg);
+	pio_sm_set_enabled(SDK_PIO, sm_i2s, true);
+
+	dma_i2s_rx = dma_claim_unused_channel(true);
+	dma_i2s_tx = dma_claim_unused_channel(true);
+
+	dma_channel_config dma_cfg;
+
+	dma_cfg = dma_channel_get_default_config(dma_i2s_rx);
+	channel_config_set_dreq(&dma_cfg, pio_get_dreq(SDK_PIO, sm_i2s, false));
+	channel_config_set_read_increment(&dma_cfg, false);
+	channel_config_set_write_increment(&dma_cfg, true);
+	channel_config_set_ring(&dma_cfg, true, 13);
+	channel_config_set_transfer_data_size(&dma_cfg, DMA_SIZE_16);
+	dma_channel_configure(dma_i2s_rx, &dma_cfg, i2s_rx_buf, &SDK_PIO->rxf[sm_i2s], UINT_MAX,
+			      false);
+
+	dma_cfg = dma_channel_get_default_config(dma_i2s_tx);
+	channel_config_set_dreq(&dma_cfg, pio_get_dreq(SDK_PIO, sm_i2s, true));
+	channel_config_set_read_increment(&dma_cfg, true);
+	channel_config_set_write_increment(&dma_cfg, false);
+	channel_config_set_ring(&dma_cfg, false, 13);
+	channel_config_set_transfer_data_size(&dma_cfg, DMA_SIZE_16);
+	dma_channel_configure(dma_i2s_tx, &dma_cfg, &SDK_PIO->txf[sm_i2s], i2s_tx_buf, UINT_MAX,
+			      false);
+
+	puts("sdk: configured i2s");
+
+	es8312_start(&dsp);
+	es8312_set_output(&dsp, false, false);
+	es8312_set_output_gain(&dsp, 0);
+
+	puts("sdk: configured audio DSP");
+}
+
+void sdk_set_output_gain_db(float gain)
+{
+	int gain_raw = 191 + gain * 2;
+
+	if (gain_raw < 0)
+		gain_raw = 0;
+
+	if (gain_raw > 255)
+		gain_raw = 255;
+
+	if (0 > es8312_set_output_gain(&dsp, gain_raw))
+		puts("sdk: failed to set output gain");
+
+	set_amp_enabled(!!gain_raw);
 }
 
 void sdk_main(struct sdk_config *conf)
@@ -296,9 +401,15 @@ void sdk_main(struct sdk_config *conf)
 
 	tft_init();
 	slave_init();
+	dsp_init();
 
 	sem_init(&paint_sema, 1, 1);
 	sem_init(&sync_sema, 0, 1);
+
+	game_start();
+
+	dma_channel_start(dma_i2s_rx);
+	dma_channel_start(dma_i2s_tx);
 
 	multicore_launch_core1(task_run_loop);
 	task_run_loop();
@@ -310,6 +421,11 @@ __weak void game_start(void)
 
 __weak void game_reset(void)
 {
+}
+
+__weak void game_audio(int nsamples)
+{
+	(void)nsamples;
 }
 
 __weak void game_input(void)
@@ -327,6 +443,9 @@ static void stats_task(void)
 
 		for (unsigned i = 0; i < NUM_CORES; i++)
 			task_stats_report_reset(i);
+
+		printf("sdk: audio samples per wakeup: %i / %i\n", 10 * 48000 / audio_wakeups,
+		       I2S_BUF_LEN);
 	}
 }
 
@@ -362,6 +481,67 @@ inline static __unused int slave_adc_read(int gpio)
 		return 0;
 
 	return sample;
+}
+
+static unsigned rx_offset = 0;
+static unsigned tx_offset = 0;
+static unsigned xx_limit = 0;
+
+static void audio_task(void)
+{
+	while (true) {
+		audio_wakeups++;
+
+		xx_limit = ~(unsigned)dma_hw->ch[dma_i2s_rx].transfer_count;
+		int delta = xx_limit - rx_offset;
+
+		if (delta > I2S_BUF_LEN) {
+			puts("sdk: audio buffer underflow, try yielding more");
+			game_audio(I2S_BUF_LEN);
+		} else {
+			game_audio(delta);
+		}
+
+		rx_offset = xx_limit;
+		tx_offset = xx_limit;
+		task_sleep_ms(10);
+	}
+}
+
+bool sdk_write_sample(int16_t sample)
+{
+	if (tx_offset >= xx_limit)
+		return false;
+
+	i2s_tx_buf[tx_offset++ & (I2S_BUF_LEN - 1)] = sample;
+	return true;
+}
+
+bool sdk_read_sample(int16_t *sample)
+{
+	if (rx_offset >= xx_limit)
+		return false;
+
+	*sample = i2s_rx_buf[rx_offset++ & (I2S_BUF_LEN - 1)];
+	return true;
+}
+
+int sdk_write_samples(const int16_t *buf, int len)
+{
+	for (int i = 0; i < len; i++)
+		if (!sdk_write_sample(buf[i]))
+			return i;
+
+	return len;
+}
+
+int sdk_read_samples(int16_t *buf, int len)
+{
+	for (int i = 0; i < len; i++)
+		if (!sdk_read_sample(buf + i))
+			return i;
+
+	return len;
 }
 
 static void input_task(void)
@@ -457,7 +637,6 @@ static void paint_task(void)
 	float active_fps = 30;
 	float fps = active_fps;
 
-	game_start();
 	game_reset();
 
 	while (true) {

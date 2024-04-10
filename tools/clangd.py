@@ -24,6 +24,7 @@ def clangd():
         f"{pico_sdk_path}/lib/tinyusb/src",
         *glob(f"{cwd}/src/**/include", recursive=True),
         f"{cwd}/build/generated/pico_base",
+        f"{cwd}/build/sdk",
     ]
 
     flags = [

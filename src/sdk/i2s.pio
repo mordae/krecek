@@ -1,0 +1,109 @@
+;
+; Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+
+; Transmit (and receive) stereo audio signal using the I2S protocol.
+;
+; Autopull must be enabled, with threshold set to 32.
+; Since I2S is MSB-first, shift direction should be to left.
+; Hence the format of the FIFO word is:
+;
+; | 31   :   16 | 15   :    0 |
+; | sample ws=0 | sample ws=1 |
+;
+; Data is transferred at 1 bit per 4 clocks. Use clock divider to adjust frequency.
+; Fractional divider will probably be needed to get correct bit clock period,
+; but for common syslck freqs this should still give a constant word select period.
+;
+; One input pin is used for the data input.
+; One output pin is used for the data output.
+; Two side-set pins are used. Bit 0 is word select, bit 1 is bit clock.
+
+.program pio_i2s
+.side_set 2
+
+                      ;      ,--- SCLK
+                      ;      |,-- LRCK
+bitloop1:             ;      ||
+    out pins, 1       side 0b11
+    in pins, 1        side 0b01
+
+    nop               side 0b01
+    jmp x-- bitloop1  side 0b11
+
+    out pins, 1       side 0b10
+    in pins, 1        side 0b00
+
+    nop               side 0b00
+    set x, 14         side 0b10
+
+bitloop0:
+    out pins, 1       side 0b10
+    in pins, 1        side 0b00
+
+    nop               side 0b00
+    jmp x-- bitloop0  side 0b10
+
+    out pins, 1       side 0b11
+    in pins, 1        side 0b01
+
+public entry_point:
+    nop               side 0b01
+    set x, 14         side 0b11
+
+% c-sdk {
+
+struct pio_i2s_config {
+	PIO pio;
+	int sm;
+	int origin;
+	int in_pin;
+	int out_pin;
+	int clock_pin_base;
+	int sample_rate;
+};
+
+inline static int pio_i2s_init(struct pio_i2s_config *cfg) {
+	pio_sm_set_enabled(cfg->pio, cfg->sm, false);
+	pio_sm_restart(cfg->pio, cfg->sm);
+	pio_sm_clear_fifos(cfg->pio, cfg->sm);
+
+	int origin = cfg->origin;
+	static struct pio_program program = pio_i2s_program;
+	program.origin = origin;
+
+	if (!pio_can_add_program(cfg->pio, &program))
+		return -1;
+
+	origin = pio_add_program(cfg->pio, &program);
+
+	pio_gpio_init(cfg->pio, cfg->in_pin);
+	pio_gpio_init(cfg->pio, cfg->out_pin);
+	pio_gpio_init(cfg->pio, cfg->clock_pin_base);
+	pio_gpio_init(cfg->pio, cfg->clock_pin_base + 1);
+
+	pio_sm_config sm_config = pio_i2s_program_get_default_config(origin);
+
+	sm_config_set_in_pins(&sm_config, cfg->in_pin);
+	sm_config_set_out_pins(&sm_config, cfg->out_pin, 1);
+	sm_config_set_sideset_pins(&sm_config, cfg->clock_pin_base);
+	sm_config_set_out_shift(&sm_config, false, true, 32);
+	sm_config_set_in_shift(&sm_config, false, true, 32);
+	sm_config_set_clkdiv(&sm_config, (float)CLK_SYS_HZ / (32 * 4 * cfg->sample_rate));
+
+	pio_sm_init(cfg->pio, cfg->sm, origin + pio_i2s_offset_entry_point, &sm_config);
+
+	uint out_mask = (1u << cfg->out_pin) | (3u << cfg->clock_pin_base);
+	pio_sm_set_pindirs_with_mask(cfg->pio, cfg->sm, out_mask, out_mask);
+
+	uint in_mask = 1u << cfg->in_pin;
+	pio_sm_set_pindirs_with_mask(cfg->pio, cfg->sm, 0, in_mask);
+
+	pio_sm_set_pins(cfg->pio, cfg->sm, 0);
+
+	return origin;
+}
+
+%}
