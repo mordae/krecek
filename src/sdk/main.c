@@ -60,9 +60,14 @@ static int sm_i2s = -1;
 static int dma_i2s_rx = -1;
 static int dma_i2s_tx = -1;
 
-static int audio_wakeups = 0;
+static int num_wakeups = 0;
+static int min_samples = INT_MAX;
+static int max_samples = 0;
+static int all_samples = 0;
 
-#define I2S_BUF_LEN 4096
+#define I2S_BUF_BITS 11
+#define I2S_BUF_LEN (1 << (I2S_BUF_BITS - 1))
+
 static int16_t i2s_rx_buf[I2S_BUF_LEN] __attribute__((__aligned__(I2S_BUF_LEN * 2)));
 static int16_t i2s_tx_buf[I2S_BUF_LEN] __attribute__((__aligned__(I2S_BUF_LEN * 2)));
 
@@ -116,12 +121,12 @@ static void poke(uint32_t addr, uint32_t value)
 task_t task_avail[NUM_CORES][MAX_TASKS] = {
 	{
 		MAKE_TASK(4, "stats", stats_task),
-		MAKE_TASK(3, "audio", audio_task),
 		MAKE_TASK(2, "input", input_task),
 		MAKE_TASK(1, "paint", paint_task),
 	},
 	{
-		MAKE_TASK(1, "tft", tft_task),
+		MAKE_TASK(4, "tft", tft_task),
+		MAKE_TASK(1, "audio", audio_task),
 	},
 };
 
@@ -344,7 +349,7 @@ static void dsp_init(void)
 	channel_config_set_dreq(&dma_cfg, pio_get_dreq(SDK_PIO, sm_i2s, false));
 	channel_config_set_read_increment(&dma_cfg, false);
 	channel_config_set_write_increment(&dma_cfg, true);
-	channel_config_set_ring(&dma_cfg, true, 13);
+	channel_config_set_ring(&dma_cfg, true, I2S_BUF_BITS);
 	channel_config_set_transfer_data_size(&dma_cfg, DMA_SIZE_16);
 	dma_channel_configure(dma_i2s_rx, &dma_cfg, i2s_rx_buf, &SDK_PIO->rxf[sm_i2s], UINT_MAX,
 			      false);
@@ -353,7 +358,7 @@ static void dsp_init(void)
 	channel_config_set_dreq(&dma_cfg, pio_get_dreq(SDK_PIO, sm_i2s, true));
 	channel_config_set_read_increment(&dma_cfg, true);
 	channel_config_set_write_increment(&dma_cfg, false);
-	channel_config_set_ring(&dma_cfg, false, 13);
+	channel_config_set_ring(&dma_cfg, false, I2S_BUF_BITS);
 	channel_config_set_transfer_data_size(&dma_cfg, DMA_SIZE_16);
 	dma_channel_configure(dma_i2s_tx, &dma_cfg, &SDK_PIO->txf[sm_i2s], i2s_tx_buf, UINT_MAX,
 			      false);
@@ -464,10 +469,13 @@ static void stats_task(void)
 		for (unsigned i = 0; i < NUM_CORES; i++)
 			task_stats_report_reset(i);
 
-		printf("sdk: audio samples per wakeup: %i / %i\n", 10 * 48000 / audio_wakeups,
-		       I2S_BUF_LEN);
+		printf("sdk: audio samples: min=%i, avg=%i, max=%i / buf=%i\n", min_samples,
+		       all_samples / num_wakeups, max_samples, I2S_BUF_LEN);
 
-		audio_wakeups = 0;
+		num_wakeups = 0;
+		min_samples = INT_MAX;
+		max_samples = 0;
+		all_samples = 0;
 	}
 }
 
@@ -500,10 +508,17 @@ static unsigned xx_limit = 0;
 static void audio_task(void)
 {
 	while (true) {
-		audio_wakeups++;
-
 		xx_limit = ~(unsigned)dma_hw->ch[dma_i2s_rx].transfer_count;
 		int delta = xx_limit - rx_offset;
+
+		if (delta < min_samples)
+			min_samples = delta;
+
+		if (delta > max_samples)
+			max_samples = delta;
+
+		all_samples += delta;
+		num_wakeups++;
 
 		if (delta > I2S_BUF_LEN) {
 			puts("sdk: audio buffer underflow, try yielding more");
@@ -514,7 +529,7 @@ static void audio_task(void)
 
 		rx_offset = xx_limit;
 		tx_offset = xx_limit;
-		task_sleep_ms(10);
+		task_sleep_us(900);
 	}
 }
 
@@ -679,7 +694,7 @@ static void paint_task(void)
 			budget -= delta;
 
 			if (budget > 0) {
-				task_sleep_us(budget);
+				task_sleep_us(budget / 2);
 				continue;
 			} else if (budget < -1000000) {
 				puts("sdk: cannot reach target fps, giving up");
@@ -701,4 +716,9 @@ static void tft_task(void)
 		tft_sync();
 		task_yield();
 	}
+}
+
+void tft_dma_channel_wait_for_finish_blocking(int dma_ch)
+{
+	task_wait_for_dma(dma_ch);
 }
