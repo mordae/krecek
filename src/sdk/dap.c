@@ -38,6 +38,8 @@
 static int swdio_pin = -1;
 static int swclk_pin = -1;
 
+static int delay_cycles = DAP_DELAY_CYCLES;
+
 enum {
 	DAP_FRAME = 0x81,
 	DAP_APnDP = 0x02,
@@ -51,9 +53,14 @@ enum dap_status {
 	DAP_ERROR = 7,
 };
 
+void dap_set_delay_cycles(int cycles)
+{
+	delay_cycles = cycles >= 0 ? cycles : 0;
+}
+
 inline static void dap_delay(void)
 {
-	for (int i = 0; i < DAP_DELAY_CYCLES; i++)
+	for (int i = 0; i < delay_cycles; i++)
 		asm volatile("");
 }
 

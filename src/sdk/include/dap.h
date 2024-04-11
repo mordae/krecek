@@ -41,6 +41,11 @@ enum dap_register {
 void dap_init(int swdio, int swclk);
 
 /*
+ * Adjust tick delay cycles on the fly.
+ */
+void dap_set_delay_cycles(int cycles);
+
+/*
  * Reinitialize the communication link.
  */
 void dap_reset(void);

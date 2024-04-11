@@ -179,7 +179,7 @@ static void slave_init()
 
 	puts("sdk: slave un-reset");
 
-	poke(PLL_SYS_BASE + PLL_FBDIV_INT_OFFSET, 125);
+	poke(PLL_SYS_BASE + PLL_FBDIV_INT_OFFSET, 132);
 	poke(PLL_SYS_BASE + PLL_PRIM_OFFSET, 0x62000);
 
 	status = peek(PLL_SYS_BASE + PLL_PWR_OFFSET);
@@ -218,6 +218,9 @@ static void slave_init()
 	}
 
 	puts("sdk: slave ADC un-reset");
+
+	/* We can now increase the access speed. */
+	dap_set_delay_cycles(0);
 
 	poke(ADC_BASE + ADC_CS_OFFSET, ADC_CS_EN_BITS);
 
