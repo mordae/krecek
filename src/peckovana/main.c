@@ -39,7 +39,9 @@ struct hamster {
 
 static struct hamster p1, p2;
 
-typedef int16_t (*effect_gen_fn)(int volume, int frequency, int offset);
+struct effect;
+
+typedef int16_t (*effect_gen_fn)(struct effect *eff);
 
 struct effect {
 	int offset;
@@ -52,17 +54,17 @@ struct effect {
 #define MAX_EFFECTS 8
 struct effect effects[MAX_EFFECTS];
 
-static int16_t __unused square_wave(int volume, int period, int offset)
+static int16_t __unused square_wave(struct effect *eff)
 {
-	if ((offset % period) < (period / 2))
-		return volume;
+	if ((eff->offset % eff->period) < (eff->period / 2))
+		return eff->volume;
 	else
-		return -volume;
+		return -eff->volume;
 }
 
-static int16_t __unused noise(int volume, int __unused period, int __unused offset)
+static int16_t __unused noise(struct effect *eff)
 {
-	return rand() % (2 * volume) - volume;
+	return rand() % (2 * eff->volume) - eff->volume;
 }
 
 uint32_t heart_sprite[32] = {
@@ -134,9 +136,9 @@ void game_audio(int nsamples)
 			if (!e->volume)
 				continue;
 
-			sample += e->generator(e->volume, e->period, e->offset++);
+			sample += e->generator(e);
 
-			if (e->offset >= e->length)
+			if (e->offset++ >= e->length)
 				e->volume = 0;
 		}
 
