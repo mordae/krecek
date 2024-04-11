@@ -38,8 +38,6 @@
 static int swdio_pin = -1;
 static int swclk_pin = -1;
 
-static bool ok = true;
-
 enum {
 	DAP_FRAME = 0x81,
 	DAP_APnDP = 0x02,
@@ -59,26 +57,25 @@ inline static void dap_delay(void)
 		asm volatile("");
 }
 
-inline static void dap_idle(int ticks)
+inline static void dap_idle(int __unused ticks)
 {
 #if DAP_INSERT_IDLE_CYCLES
-	while (ticks--) {
+	while (ticks--)
 		dap_delay();
-		dap_delay();
-	}
-#else
-	(void)ticks;
 #endif
+}
+
+inline static void dap_edge(int edge)
+{
+	gpio_put(swclk_pin, edge);
+	dap_delay();
 }
 
 inline static void dap_clock(int ticks)
 {
 	while (ticks--) {
-		gpio_put(swclk_pin, 0);
-		dap_delay();
-
-		gpio_put(swclk_pin, 1);
-		dap_delay();
+		dap_edge(0);
+		dap_edge(1);
 	}
 }
 
@@ -99,8 +96,9 @@ static uint32_t dap_read(int len)
 	uint32_t value = 0;
 
 	for (int i = 0; i < len; i++) {
+		dap_edge(0);
 		value |= (uint32_t)gpio_get(swdio_pin) << i;
-		dap_clock(1);
+		dap_edge(1);
 	}
 
 	return value;
@@ -153,7 +151,7 @@ void dap_reset(void)
 	/*
 	 * B5.3.4 Leaving dormant state
 	 *
-	 * 1. Send at least eightSWCLKTCK cycles with SWDIOTMS HIGH.
+	 * 1. Send at least eight SWCLKTCK cycles with SWDIOTMS HIGH.
 	 */
 	dap_write(0xff, 8);
 	dap_idle(8);
@@ -166,7 +164,7 @@ void dap_reset(void)
 	dap_idle(8);
 
 	/*
-	 * 3. Send four SWCLKTCKcycles with SWDIOTMS LOW.
+	 * 3. Send four SWCLKTCK cycles with SWDIOTMS LOW.
 	 * 4. Send the required activation code sequence on SWDIOTMS.
 	 */
 	dap_write(0xf1a0, 16);
@@ -181,9 +179,6 @@ void dap_reset(void)
 	dap_write(0xffffffff, 32);
 	dap_write(0x00ffffff, 32);
 	dap_idle(8);
-
-	/* Mark as OK for now. */
-	ok = true;
 }
 
 static inline uint32_t dap_parity(uint32_t value)
@@ -396,83 +391,55 @@ void dap_noop(void)
 
 bool dap_peek(uint32_t addr, uint32_t *value)
 {
-	if (!ok)
+	if (!dap_set_reg(DAP_AP4, addr))
 		return false;
 
-	if (!dap_set_reg(DAP_AP4, addr))
-		goto fail;
-
 	if (!dap_get_reg(DAP_APc, value))
-		goto fail;
+		return false;
 
 	if (!dap_get_reg(DAP_DPc, value))
-		goto fail;
+		return false;
 
 	return true;
-
-fail:
-	puts("dap_peek: failed, disabling dap until reset");
-	return ok = false;
 }
 
 bool dap_peek_many(uint32_t addr, uint32_t *values, int len)
 {
-	if (!ok)
+	if (!dap_set_reg(DAP_AP4, addr))
 		return false;
 
-	if (!dap_set_reg(DAP_AP4, addr))
-		goto fail;
-
 	if (!dap_get_reg(DAP_APc, values))
-		goto fail;
+		return false;
 
 	while (len--)
 		if (!dap_get_reg(DAP_APc, values++))
-			goto fail;
+			return false;
 
 	if (!dap_get_reg(DAP_DPc, values))
-		goto fail;
+		return false;
 
 	return true;
-
-fail:
-	puts("dap_peek_many: failed, disabling dap until reset");
-	return ok = false;
 }
 
 bool dap_poke(uint32_t addr, uint32_t value)
 {
-	if (!ok)
+	if (!dap_set_reg(DAP_AP4, addr))
 		return false;
 
-	if (!dap_set_reg(DAP_AP4, addr))
-		goto fail;
-
 	if (!dap_set_reg(DAP_APc, value))
-		goto fail;
+		return false;
 
 	return true;
-
-fail:
-	puts("dap_poke: failed, disabling dap until reset");
-	return ok = false;
 }
 
 bool dap_poke_many(uint32_t addr, const uint32_t *values, int len)
 {
-	if (!ok)
-		return false;
-
 	if (!dap_set_reg(DAP_AP4, addr))
-		goto fail;
+		return false;
 
 	while (len--)
 		if (!dap_set_reg(DAP_APc, *values++))
-			goto fail;
+			return false;
 
 	return true;
-
-fail:
-	puts("dap_poke_many failed, disabling dap until reset");
-	return ok = false;
 }
