@@ -157,10 +157,10 @@ void game_paint(unsigned __unused dt_usec)
 		worms[2].angle -= diff * p2_mag / 2048 / 20;
 	}
 
-	if (sdk_inputs.aux[7])
+	if (sdk_inputs.vol_up)
 		worms[3].angle -= ANGLE_DELTA;
 
-	if (sdk_inputs.aux[3])
+	if (sdk_inputs.vol_down)
 		worms[3].angle += ANGLE_DELTA;
 
 	bool anybody_alive = false;
