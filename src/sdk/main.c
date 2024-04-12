@@ -522,6 +522,7 @@ static void audio_task(void)
 
 		if (delta > I2S_BUF_LEN) {
 			puts("sdk: audio buffer underflow, try yielding more");
+			xx_limit = rx_offset + I2S_BUF_LEN;
 			game_audio(I2S_BUF_LEN);
 		} else {
 			game_audio(delta);
