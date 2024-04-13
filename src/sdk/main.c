@@ -700,7 +700,7 @@ static void paint_task(void)
 		game_paint(delta ? delta : 1);
 
 		if (sdk_config.show_fps) {
-			static char buf[64];
+			char buf[16];
 			snprintf(buf, sizeof buf, "%.0f", floorf(active_fps));
 			tft_draw_string_right(TFT_WIDTH - 1, 0, 8, buf);
 		}
