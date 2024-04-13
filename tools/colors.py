@@ -3,6 +3,8 @@ from colorsys import hsv_to_rgb
 
 from PIL import Image
 
+H_OFFSET = 0.06
+
 H_MAX = (1 << 4) - 1
 S_MAX = (1 << 2) - 1
 V_MAX = (1 << 2) - 1
@@ -20,7 +22,7 @@ for v in range(V_MAX + 1):
     for s in range(0, S_MAX + 1):
         for h in range(H_MAX + 1):
             r, g, b = hsv_to_rgb(
-                h / (H_MAX + 1),
+                (h / (H_MAX + 1) + H_OFFSET) % 1.0,
                 (s + 1) / (S_MAX + 1),
                 values[v],
             )
