@@ -65,11 +65,13 @@ static int min_samples = INT_MAX;
 static int max_samples = 0;
 static int all_samples = 0;
 
-#define I2S_BUF_BITS 11
+#define I2S_BUF_BITS 10
 #define I2S_BUF_LEN (1 << (I2S_BUF_BITS - 1))
 
-static int16_t i2s_rx_buf[I2S_BUF_LEN] __attribute__((__aligned__(I2S_BUF_LEN * 2)));
-static int16_t i2s_tx_buf[I2S_BUF_LEN] __attribute__((__aligned__(I2S_BUF_LEN * 2)));
+static int16_t __scratch_y("i2s_rx_buf") i2s_rx_buf[I2S_BUF_LEN]
+	__attribute__((__aligned__(I2S_BUF_LEN * 2)));
+static int16_t __scratch_y("i2s_tx_buf") i2s_tx_buf[I2S_BUF_LEN]
+	__attribute__((__aligned__(I2S_BUF_LEN * 2)));
 
 static semaphore_t paint_sema;
 static semaphore_t sync_sema;
