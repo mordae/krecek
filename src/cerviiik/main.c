@@ -39,40 +39,38 @@ struct worm {
 	bool alive;
 };
 
-#define WIDTH 160
-#define HEIGHT 120
-static int8_t grid[WIDTH][HEIGHT];
+static int8_t grid[TFT_HEIGHT][TFT_WIDTH];
 
 #define NUM_WORMS 4
 static struct worm worms[NUM_WORMS];
 static struct worm worms_init[NUM_WORMS] = {
 	{
-		.x = WIDTH / 2.0f - 5,
-		.y = HEIGHT / 2.0f - 5,
+		.x = TFT_WIDTH / 2.0f - 5,
+		.y = TFT_HEIGHT / 2.0f - 5,
 		.angle = 225.0f / 180.0f * M_PI,
 		.speed = 0.5f,
 		.color = RED,
 		.alive = true,
 	},
 	{
-		.x = WIDTH / 2.0f + 5,
-		.y = HEIGHT / 2.0f + 5,
+		.x = TFT_WIDTH / 2.0f + 5,
+		.y = TFT_HEIGHT / 2.0f + 5,
 		.angle = 45.0f / 180.0f * M_PI,
 		.speed = 0.5f,
 		.color = GREEN,
 		.alive = true,
 	},
 	{
-		.x = WIDTH / 2.0f + 5,
-		.y = HEIGHT / 2.0f - 5,
+		.x = TFT_WIDTH / 2.0f + 5,
+		.y = TFT_HEIGHT / 2.0f - 5,
 		.angle = 315.0f / 180.0f * M_PI,
 		.speed = 0.5f,
 		.color = BLUE,
 		.alive = true,
 	},
 	{
-		.x = WIDTH / 2.0f - 5,
-		.y = HEIGHT / 2.0f + 5,
+		.x = TFT_WIDTH / 2.0f - 5,
+		.y = TFT_HEIGHT / 2.0f + 5,
 		.angle = 135.0f / 180.0f * M_PI,
 		.speed = 0.5f,
 		.color = YELLOW,
@@ -94,9 +92,9 @@ inline static int clamp(int x, int lo, int hi)
 
 static void reset_game(void)
 {
-	for (int x = 0; x < WIDTH; x++) {
-		for (int y = 0; y < HEIGHT; y++) {
-			grid[x][y] = -1;
+	for (int x = 0; x < TFT_WIDTH; x++) {
+		for (int y = 0; y < TFT_HEIGHT; y++) {
+			grid[y][x] = -1;
 		}
 	}
 
@@ -117,11 +115,16 @@ float angle_diff(float a, float b)
 
 void game_paint(unsigned __unused dt_usec)
 {
-	tft_fill(2);
+	tft_fill(0);
 
-	for (int x = 0; x < WIDTH; x++) {
-		for (int y = 0; y < HEIGHT; y++) {
-			int8_t owner = grid[x][y];
+	tft_draw_rect(0, 0, 0, TFT_HEIGHT - 1, 7);
+	tft_draw_rect(0, 0, TFT_WIDTH - 1, 0, 7);
+	tft_draw_rect(TFT_WIDTH - 1, 0, TFT_WIDTH - 1, TFT_HEIGHT - 1, 7);
+	tft_draw_rect(0, TFT_HEIGHT - 1, TFT_WIDTH - 1, TFT_HEIGHT - 1, 7);
+
+	for (int x = 0; x < TFT_WIDTH; x++) {
+		for (int y = 0; y < TFT_HEIGHT; y++) {
+			int8_t owner = grid[y][x];
 
 			if (owner < 0)
 				continue;
@@ -133,7 +136,7 @@ void game_paint(unsigned __unused dt_usec)
 				tft_draw_pixel(x, y, worms[owner].color);
 
 			if (age)
-				grid[x][y] = (owner << 4) | (age - 1);
+				grid[y][x] = (owner << 4) | (age - 1);
 		}
 	}
 
@@ -178,21 +181,21 @@ void game_paint(unsigned __unused dt_usec)
 		float y = worms[i].y += vspd;
 
 		int nx[4] = {
-			clamp(x + 0.5f, 0, WIDTH - 1),
-			clamp(x + 0.5f, 0, WIDTH - 1),
-			clamp(x - 0.5f, 0, WIDTH - 1),
-			clamp(x - 0.5f, 0, WIDTH - 1),
+			clamp(x + 0.5f, 0, TFT_WIDTH - 1),
+			clamp(x + 0.5f, 0, TFT_WIDTH - 1),
+			clamp(x - 0.5f, 0, TFT_WIDTH - 1),
+			clamp(x - 0.5f, 0, TFT_WIDTH - 1),
 		};
 
 		int ny[4] = {
-			clamp(y + 0.5f, 0, HEIGHT - 1),
-			clamp(y - 0.5f, 0, HEIGHT - 1),
-			clamp(y + 0.5f, 0, HEIGHT - 1),
-			clamp(y - 0.5f, 0, HEIGHT - 1),
+			clamp(y + 0.5f, 0, TFT_HEIGHT - 1),
+			clamp(y - 0.5f, 0, TFT_HEIGHT - 1),
+			clamp(y + 0.5f, 0, TFT_HEIGHT - 1),
+			clamp(y - 0.5f, 0, TFT_HEIGHT - 1),
 		};
 
 		for (int j = 0; j < 4; j++) {
-			int8_t owner = grid[nx[j]][ny[j]];
+			int8_t owner = grid[ny[j]][nx[j]];
 			int8_t age = owner & 0x0f;
 			owner >>= 4;
 
@@ -206,13 +209,13 @@ void game_paint(unsigned __unused dt_usec)
 				continue;
 			}
 
-			grid[nx[j]][ny[j]] = (i << 4) | 0x0f;
+			grid[ny[j]][nx[j]] = (i << 4) | 0x0f;
 		}
 
-		if (worms[i].x < 0 || worms[i].x > WIDTH)
+		if (worms[i].x < 0 || worms[i].x > TFT_WIDTH)
 			worms[i].alive = false;
 
-		if (worms[i].y < 0 || worms[i].y > HEIGHT)
+		if (worms[i].y < 0 || worms[i].y > TFT_HEIGHT)
 			worms[i].alive = false;
 	}
 
