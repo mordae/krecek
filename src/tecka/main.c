@@ -54,8 +54,8 @@ void game_reset(void)
 {
 	ew = 30;
 	eh = 30;
-	ex = random() % (tft_width - ew);
-	ey = random() % (tft_height - eh);
+	ex = random() % (TFT_WIDTH - ew);
+	ey = random() % (TFT_HEIGHT - eh);
 	ehp_max = 59;
 	ehp = ehp_max;
 	exa = 2;
@@ -87,14 +87,14 @@ void game_paint(unsigned __unused dt_usec)
 	tft_draw_string(0, 0, RED, buf);
 
 	/* Calculate crosshair position */
-	int tx = tft_width / 2 * sdk_inputs.joy_x / 1400;
-	int ty = tft_height / 2 * sdk_inputs.joy_y / 1400;
+	int tx = TFT_WIDTH / 2 * sdk_inputs.joy_x / 1400;
+	int ty = TFT_HEIGHT / 2 * sdk_inputs.joy_y / 1400;
 
-	tx += tft_width / 2;
-	ty += tft_height / 2;
+	tx += TFT_WIDTH / 2;
+	ty += TFT_HEIGHT / 2;
 
-	tx = clamp(tx, 0, tft_width - 1);
-	ty = clamp(ty, 0, tft_height - 1);
+	tx = clamp(tx, 0, TFT_WIDTH - 1);
+	ty = clamp(ty, 0, TFT_HEIGHT - 1);
 
 	/* Check for collission */
 	if ((tx >= ex) && (tx <= (ex + ew)) && (ty >= ey) && (ty <= (ey + eh))) {
@@ -104,8 +104,8 @@ void game_paint(unsigned __unused dt_usec)
 	}
 
 	if (!ehp) {
-		ex = random() % (tft_width - ew);
-		ey = random() % (tft_height - eh);
+		ex = random() % (TFT_WIDTH - ew);
+		ey = random() % (TFT_HEIGHT - eh);
 		ehp = ehp_max;
 		ew = clamp(ew - 2, 10, 30);
 		eh = clamp(eh - 2, 10, 30);
@@ -114,8 +114,8 @@ void game_paint(unsigned __unused dt_usec)
 		ex += exa * (random() % 3 - 1);
 		ey += eya * (random() % 3 - 1);
 
-		ex = clamp(ex, 0, tft_width - ew);
-		ey = clamp(ey, 0, tft_height - eh);
+		ex = clamp(ex, 0, TFT_WIDTH - ew);
+		ey = clamp(ey, 0, TFT_HEIGHT - eh);
 	}
 
 	int ecolor = 249 + 6 - ehp / 10;
@@ -134,7 +134,6 @@ int main()
 		.wait_for_usb = true,
 		.show_fps = true,
 		.off_on_select = true,
-		.target_fps = 37.5,
 	};
 
 	sdk_main(&config);

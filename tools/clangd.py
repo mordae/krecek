@@ -25,6 +25,7 @@ def clangd():
         *glob(f"{cwd}/src/**/include", recursive=True),
         f"{cwd}/build/generated/pico_base",
         f"{cwd}/build/sdk",
+        f"{cwd}/build/vendor/pico-tft",
     ]
 
     flags = [

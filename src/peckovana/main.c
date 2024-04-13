@@ -168,14 +168,14 @@ void game_reset(void)
 {
 	p1.color = RED;
 	p1.dy = 0;
-	p1.y = tft_height - 31;
+	p1.y = TFT_HEIGHT - 31;
 	p1.px = -1;
 	p1.py = -1;
 	p1.hp = 3;
 
 	p2.color = GREEN;
 	p2.dy = 0;
-	p2.y = tft_height - 31;
+	p2.y = TFT_HEIGHT - 31;
 	p2.px = -1;
 	p2.py = -1;
 	p2.hp = 3;
@@ -204,14 +204,14 @@ void game_paint(unsigned dt_usec)
 
 	tft_fill(0);
 
-	float bottom = tft_height - 31;
+	float bottom = TFT_HEIGHT - 31;
 
 	/*
 	 * Draw hamsters
 	 */
 
 	tft_draw_rect(0, p1.y, 23, p1.y + 31, p1.color);
-	tft_draw_rect(tft_width - 24, p2.y, tft_width - 1, p2.y + 31, p2.color);
+	tft_draw_rect(TFT_WIDTH - 24, p2.y, TFT_WIDTH - 1, p2.y + 31, p2.color);
 
 	/*
 	 * Draw hearts
@@ -221,14 +221,14 @@ void game_paint(unsigned dt_usec)
 		draw_sprite(28 + 16 * i, 4, heart_sprite, RED, true);
 
 	for (int i = 0; i < p2.hp; i++)
-		draw_sprite(tft_width - 17 - (28 + 16 * i), 4, heart_sprite, GREEN, true);
+		draw_sprite(TFT_WIDTH - 17 - (28 + 16 * i), 4, heart_sprite, GREEN, true);
 
 	/*
 	 * Jumping
 	 */
 
-	if ((p1.y >= tft_height - 31) && sdk_inputs.a)
-		p1.dy = -tft_height * 1.15;
+	if ((p1.y >= TFT_HEIGHT - 31) && sdk_inputs.a)
+		p1.dy = -TFT_HEIGHT * 1.15;
 
 	if ((p1.px < 0) && sdk_inputs.x) {
 		p1.px = 24;
@@ -236,11 +236,11 @@ void game_paint(unsigned dt_usec)
 		play_effect(INT16_MAX / 5, 440, 6000, square_wave);
 	}
 
-	if ((p2.y >= tft_height - 31) && sdk_inputs.y)
-		p2.dy = -tft_height * 1.15;
+	if ((p2.y >= TFT_HEIGHT - 31) && sdk_inputs.y)
+		p2.dy = -TFT_HEIGHT * 1.15;
 
 	if ((p2.px < 0) && sdk_inputs.b) {
-		p2.px = tft_width - 25;
+		p2.px = TFT_WIDTH - 25;
 		p2.py = p2.y + 16;
 		play_effect(INT16_MAX / 5, 440, 6000, square_wave);
 	}
@@ -256,30 +256,30 @@ void game_paint(unsigned dt_usec)
 	 * Gravitation
 	 */
 
-	p1.dy += (float)tft_height * dt;
-	p2.dy += (float)tft_height * dt;
+	p1.dy += (float)TFT_HEIGHT * dt;
+	p2.dy += (float)TFT_HEIGHT * dt;
 
 	/*
 	 * Fall boosting
 	 */
 
 	if (p1.dy > 0 && sdk_inputs.a) {
-		p1.dy += (float)tft_height * dt;
+		p1.dy += (float)TFT_HEIGHT * dt;
 	}
 
 	if (p2.dy > 0 && sdk_inputs.y) {
-		p2.dy += (float)tft_height * dt;
+		p2.dy += (float)TFT_HEIGHT * dt;
 	}
 
 	/*
 	 * Cap acceleration and keep hamsters above floor
 	 */
 
-	if (p1.dy > tft_height)
-		p1.dy = tft_height;
+	if (p1.dy > TFT_HEIGHT)
+		p1.dy = TFT_HEIGHT;
 
-	if (p2.dy > tft_height)
-		p2.dy = tft_height;
+	if (p2.dy > TFT_HEIGHT)
+		p2.dy = TFT_HEIGHT;
 
 	if (p1.y >= bottom)
 		p1.y = bottom;
@@ -319,7 +319,7 @@ void game_paint(unsigned dt_usec)
 	 * Horizontal projectile movement
 	 */
 
-	float pdistance = 0.5 * (float)tft_width * dt;
+	float pdistance = 0.5 * (float)TFT_WIDTH * dt;
 
 	if (p1.px >= 0)
 		p1.px += pdistance;
@@ -327,7 +327,7 @@ void game_paint(unsigned dt_usec)
 	if (p2.px >= 0)
 		p2.px -= pdistance;
 
-	if (p1.px >= tft_width)
+	if (p1.px >= TFT_WIDTH)
 		p1.px = -1;
 
 	if (p2.px < 0)
@@ -339,7 +339,7 @@ void game_paint(unsigned dt_usec)
 
 	if (p1.px >= 0) {
 		if (p1.py >= p2.y && p1.py < (p2.y + 32)) {
-			if (p1.px >= tft_width - 24) {
+			if (p1.px >= TFT_WIDTH - 24) {
 				p1.px = -1;
 				p2.hp -= 1;
 
@@ -372,7 +372,6 @@ int main()
 		.wait_for_usb = true,
 		.show_fps = true,
 		.off_on_select = true,
-		.target_fps = 37.5,
 	};
 
 	sdk_main(&config);

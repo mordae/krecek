@@ -20,7 +20,10 @@
 #define TFT_FLIP_Y 1
 #define TFT_SCALE 2
 
+#define TFT_DRIVER TFT_DRIVER_ILI9341
 #define TFT_RST_DELAY 5
+#define TFT_HW_ACCEL 1
+#define TFT_PIO SDK_PIO
 
 #define DAP_SWDIO_PIN 25
 #define DAP_SWCLK_PIN 24

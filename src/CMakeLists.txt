@@ -12,7 +12,7 @@ pico_sdk_init()
 
 function(krecek_set_target_options target)
   set_property(TARGET ${target} PROPERTY C_STANDARD 23)
-  target_compile_options(${target} PRIVATE -Wall -Wextra -Wnull-dereference)
+  target_compile_options(${target} PRIVATE -Wall -Wextra -Wnull-dereference -g)
   target_compile_definitions(${target} PUBLIC PICO_MAX_SHARED_IRQ_HANDLERS=8u)
   target_compile_definitions(${target} PUBLIC PICO_STDIO_ENABLE_CRLF_SUPPORT=1)
   target_compile_definitions(${target} PUBLIC PICO_STDIO_DEFAULT_CRLF=1)

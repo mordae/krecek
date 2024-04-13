@@ -337,7 +337,13 @@ static void dsp_init(void)
 		.sample_rate = 48000,
 	};
 
-	pio_i2s_init(&i2s_cfg);
+	int offset = pio_i2s_init(&i2s_cfg);
+
+	if (0 > offset)
+		hang("sdk: pio_i2s_init failed\n");
+
+	printf("sdk: pio_i2s offset=%i\n", offset);
+
 	pio_sm_set_enabled(SDK_PIO, sm_i2s, true);
 
 	dma_i2s_rx = dma_claim_unused_channel(true);
@@ -433,8 +439,7 @@ void sdk_main(struct sdk_config *conf)
 
 	game_start();
 
-	dma_channel_start(dma_i2s_rx);
-	dma_channel_start(dma_i2s_tx);
+	dma_hw->multi_channel_trigger = (1u << dma_i2s_tx) | (1u << dma_i2s_rx);
 
 	multicore_launch_core1(task_run_loop);
 	task_run_loop();
@@ -507,7 +512,14 @@ static unsigned xx_limit = 0;
 
 static void audio_task(void)
 {
+	unsigned sleep = 900;
+
 	while (true) {
+		if (!dma_channel_is_busy(dma_i2s_tx)) {
+			dma_channel_abort(dma_i2s_rx); // Just in case
+			dma_hw->multi_channel_trigger = (1u << dma_i2s_tx) | (1u << dma_i2s_rx);
+		}
+
 		xx_limit = ~(unsigned)dma_hw->ch[dma_i2s_rx].transfer_count;
 		int delta = xx_limit - rx_offset;
 
@@ -521,16 +533,30 @@ static void audio_task(void)
 		num_wakeups++;
 
 		if (delta > I2S_BUF_LEN) {
-			puts("sdk: audio buffer underflow, try yielding more");
-			xx_limit = rx_offset + I2S_BUF_LEN;
-			game_audio(I2S_BUF_LEN);
-		} else {
-			game_audio(delta);
+			puts("sdk: audio buffer underflow");
+			delta = I2S_BUF_LEN;
+			rx_offset = xx_limit - delta;
+			tx_offset = rx_offset;
 		}
+
+		game_audio(delta);
 
 		rx_offset = xx_limit;
 		tx_offset = xx_limit;
-		task_sleep_us(900);
+
+		if (delta > 64) {
+			sleep--;
+		} else if (delta < 64) {
+			sleep++;
+		}
+
+		if (sleep < 250)
+			sleep = 250;
+
+		if (sleep > 2500)
+			sleep = 2500;
+
+		task_sleep_us(sleep);
 	}
 }
 
@@ -657,7 +683,6 @@ static void paint_task(void)
 {
 	uint32_t last_sync = time_us_32();
 	int delta = 1000 * 1000 / 30;
-	int budget = 0;
 
 	uint32_t last_updated = 0;
 	float active_fps = 30;
@@ -668,38 +693,25 @@ static void paint_task(void)
 	while (true) {
 		sem_acquire_blocking(&paint_sema);
 
-		if (sdk_config.target_fps > 0)
-			budget += 1000000.0f / sdk_config.target_fps;
-
 		game_paint(delta ? delta : 1);
 
 		if (sdk_config.show_fps) {
 			static char buf[64];
 			snprintf(buf, sizeof buf, "%.0f", floorf(active_fps));
-			tft_draw_string_right(tft_width - 1, 0, 8, buf);
+			tft_draw_string_right(TFT_WIDTH - 1, 0, 8, buf);
 		}
 
 		sem_release(&sync_sema);
 
-		uint32_t this_sync = time_us_32();
-		delta = this_sync - last_sync;
-		fps = 0.95 * fps + 0.05 * (1000000.0f / delta);
-		last_sync = this_sync;
+		if (sdk_config.show_fps) {
+			uint32_t this_sync = time_us_32();
+			delta = this_sync - last_sync;
+			fps = 0.95 * fps + 0.05 * (1000000.0f / delta);
+			last_sync = this_sync;
 
-		if ((this_sync - last_updated) >= 1000000) {
-			last_updated = this_sync;
-			active_fps = fps;
-		}
-
-		if (sdk_config.target_fps > 0) {
-			budget -= delta;
-
-			if (budget > 0) {
-				task_sleep_us(budget / 2);
-				continue;
-			} else if (budget < -1000000) {
-				puts("sdk: cannot reach target fps, giving up");
-				budget = 0;
+			if ((this_sync - last_updated) >= 1000000) {
+				last_updated = this_sync;
+				active_fps = fps;
 			}
 		}
 
