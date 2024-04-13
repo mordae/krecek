@@ -26,16 +26,16 @@ struct sdk_config {
 };
 
 struct sdk_inputs {
+	int8_t a, b, x, y;
+	int8_t start, select;
+	int8_t joy_sw;
+	int8_t vol_up, vol_down, vol_sw;
+	int8_t aux[8];
+
+	int16_t joy_x, joy_y;
+	int16_t brack_l, brack_r;
+
 	float batt_mv;
-
-	int a, b, x, y;
-	int start, select;
-
-	int joy_x, joy_y, joy_sw;
-
-	int vol_up, vol_down, vol_sw;
-
-	int aux[8];
 };
 
 struct sdk_file {

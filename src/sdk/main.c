@@ -254,6 +254,8 @@ static void slave_init()
 	poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_VOL_SW_PIN,
 	     PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_PUE_BITS | PADS_BANK0_GPIO0_SCHMITT_BITS);
 
+	poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_JOY_SW_PIN,
+	     PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_PUE_BITS | PADS_BANK0_GPIO0_SCHMITT_BITS);
 	poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_SELECT_PIN,
 	     PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_PUE_BITS | PADS_BANK0_GPIO0_SCHMITT_BITS);
 
@@ -279,13 +281,13 @@ static void slave_init()
 	     PADS_QSPI_GPIO_QSPI_SCLK_IE_BITS | PADS_QSPI_GPIO_QSPI_SCLK_PUE_BITS |
 		     PADS_QSPI_GPIO_QSPI_SCLK_SCHMITT_BITS);
 
-	poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * 26,
+	poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_BRACK_R_PIN,
 	     PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_SCHMITT_BITS);
-	poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * 27,
+	poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_BRACK_L_PIN,
 	     PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_SCHMITT_BITS);
-	poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * 28,
+	poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_JOY_X_PIN,
 	     PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_SCHMITT_BITS);
-	poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * 29,
+	poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_JOY_Y_PIN,
 	     PADS_BANK0_GPIO0_IE_BITS | PADS_BANK0_GPIO0_SCHMITT_BITS);
 
 	set_amp_enabled(false);
@@ -610,6 +612,8 @@ static void input_task(void)
 		sdk_inputs.vol_down = !slave_gpio_get(SLAVE_VOL_DOWN_PIN);
 		sdk_inputs.vol_sw = !slave_gpio_get(SLAVE_VOL_SW_PIN);
 
+		sdk_inputs.joy_sw = !slave_gpio_get(SLAVE_JOY_SW_PIN);
+
 		sdk_inputs.aux[0] = !slave_gpio_get(SLAVE_AUX0_PIN);
 		sdk_inputs.aux[1] = !slave_gpio_get(SLAVE_AUX1_PIN);
 		sdk_inputs.aux[2] = !slave_gpio_get(SLAVE_AUX2_PIN);
@@ -625,8 +629,8 @@ static void input_task(void)
 
 		sdk_inputs.joy_x = 2048 - slave_adc_read(SLAVE_JOY_X_PIN);
 		sdk_inputs.joy_y = 2048 - slave_adc_read(SLAVE_JOY_Y_PIN);
-
-		// TODO: joy_sw + brackets?
+		sdk_inputs.brack_l = 2048 - slave_adc_read(SLAVE_BRACK_L_PIN);
+		sdk_inputs.brack_r = 2048 - slave_adc_read(SLAVE_BRACK_R_PIN);
 
 		adc_select_input(2);
 		int bat = 0;
