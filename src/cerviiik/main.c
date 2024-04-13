@@ -74,7 +74,7 @@ inline static int clamp(int x, int lo, int hi)
 	return x;
 }
 
-static void reset_game(void)
+void game_reset(void)
 {
 	for (int x = 0; x < TFT_WIDTH; x++) {
 		for (int y = 0; y < TFT_HEIGHT; y++) {
@@ -204,7 +204,7 @@ void game_paint(unsigned __unused dt_usec)
 	}
 
 	if (!anybody_alive)
-		reset_game();
+		game_reset();
 }
 
 int main()
