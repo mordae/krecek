@@ -14,7 +14,7 @@
 #define TFT_RST_PIN 6
 #define TFT_RS_PIN 4
 #define TFT_SPI_DEV spi0
-#define TFT_BAUDRATE 80000000
+#define TFT_BAUDRATE (unsigned)(CLK_SYS_HZ / 2 + 1)
 #define TFT_SWAP_XY 1
 #define TFT_FLIP_X 1
 #define TFT_FLIP_Y 1

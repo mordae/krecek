@@ -737,5 +737,6 @@ static void tft_task(void)
 
 void tft_dma_channel_wait_for_finish_blocking(int dma_ch)
 {
-	task_wait_for_dma(dma_ch);
+	while (dma_channel_is_busy(dma_ch))
+		task_wait_for_dma(dma_ch);
 }
