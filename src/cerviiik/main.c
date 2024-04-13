@@ -22,8 +22,8 @@
 #include <sdk.h>
 #include <tft.h>
 
-#define RED 240
-#define YELLOW 226
+#define RED 255
+#define YELLOW 241
 #define GREEN 244
 #define BLUE 234
 #define GRAY 8
