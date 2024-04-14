@@ -62,7 +62,7 @@ void game_reset(void)
 
 	for (int i = 0; i < 64; i++)
 		poke_hole(rand() % (WORLD_WIDTH + 64) - 32, rand() % (WORLD_HEIGHT + 64) - 32,
-			  rand() % 17);
+			  rand() % 14 + 3);
 }
 
 void game_input(void)
