@@ -165,7 +165,7 @@ void game_reset(void)
 	p2.hp = 3;
 }
 
-void game_input(void)
+void game_input(unsigned __unused dt_usec)
 {
 	if (sdk_inputs_delta.vol_up > 0) {
 		sdk_set_screen_brightness(

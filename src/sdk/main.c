@@ -453,7 +453,7 @@ __weak void game_audio(int nsamples)
 	(void)nsamples;
 }
 
-__weak void game_input(void)
+__weak void game_input(unsigned __unused dt)
 {
 }
 
@@ -595,6 +595,8 @@ static void input_task(void)
 {
 	task_sleep_ms(250);
 
+	uint32_t last_event = time_us_32();
+
 	while (true) {
 		sdk_inputs.a = !slave_gpio_get(SLAVE_A_PIN);
 		sdk_inputs.b = !slave_gpio_get(SLAVE_B_PIN);
@@ -670,7 +672,9 @@ static void input_task(void)
 		}
 
 		/* Let the game process inputs as soon as possible. */
-		game_input();
+		uint32_t now = time_us_32();
+		game_input(now - last_event);
+		last_event = now;
 
 		task_sleep_ms(15);
 	}
