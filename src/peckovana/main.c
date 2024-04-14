@@ -167,18 +167,16 @@ void game_reset(void)
 
 void game_input(void)
 {
-	static int brightness = 64;
-
-	if (sdk_inputs_delta.vol_up > 0 && brightness < 64) {
-		brightness *= 2;
-		sdk_set_screen_brightness(brightness);
-		printf("brightness: %i\n", brightness);
+	if (sdk_inputs_delta.vol_up > 0) {
+		sdk_set_screen_brightness(
+			clamp(sdk_config.brightness * 2, SDK_BRIGHTNESS_MIN, SDK_BRIGHTNESS_MAX));
+		printf("brightness: %u\n", sdk_config.brightness);
 	}
 
-	if (sdk_inputs_delta.vol_down > 0 && brightness > 2) {
-		brightness /= 2;
-		sdk_set_screen_brightness(brightness);
-		printf("brightness: %i\n", brightness);
+	if (sdk_inputs_delta.vol_down > 0) {
+		sdk_set_screen_brightness(
+			clamp(sdk_config.brightness / 2, SDK_BRIGHTNESS_MIN, SDK_BRIGHTNESS_MAX));
+		printf("brightness: %u\n", sdk_config.brightness);
 	}
 }
 

@@ -281,8 +281,10 @@ static void slave_init()
 	puts("sdk: slave configuration complete");
 }
 
-void sdk_set_screen_brightness(uint8_t level)
+void sdk_set_screen_brightness(unsigned level)
 {
+	level = clamp(level, 0, 256);
+
 	sdk_config.brightness = level;
 	poke(PWM_BASE + PWM_CH6_CC_OFFSET, (uint32_t)level << PWM_CH6_CC_B_LSB);
 }
@@ -391,7 +393,7 @@ void sdk_main(struct sdk_config *conf)
 	sdk_config = *conf;
 
 	if (!sdk_config.brightness)
-		sdk_config.brightness = 64;
+		sdk_config.brightness = SDK_BRIGHTNESS_STD;
 
 	slave_park();
 	stdio_usb_init();

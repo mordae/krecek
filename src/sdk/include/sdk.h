@@ -8,7 +8,7 @@ struct sdk_config {
 	bool show_fps;
 	bool off_on_select;
 
-	uint8_t brightness;
+	unsigned brightness; // 0-256
 };
 
 struct sdk_inputs {
@@ -49,7 +49,16 @@ void game_input(void);
 void game_paint(unsigned dt);
 
 void sdk_main(struct sdk_config *conf);
-void sdk_set_screen_brightness(uint8_t level);
+
+/*
+ * Set screen brightness (actually the PWM threshold).
+ * Acceptable values are 0 to 256.
+ */
+void sdk_set_screen_brightness(unsigned level);
+#define SDK_BRIGHTNESS_MIN 2
+#define SDK_BRIGHTNESS_STD 128
+#define SDK_BRIGHTNESS_MAX 256
+
 void sdk_set_output_gain_db(float gain);
 bool sdk_write_sample(int16_t sample);
 bool sdk_read_sample(int16_t *sample);
