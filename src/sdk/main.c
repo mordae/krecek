@@ -673,14 +673,15 @@ static void input_task(void)
 
 static void paint_task(void)
 {
+	game_reset();
+	puts("sdk: initial game reset done, painting...");
+
 	uint32_t last_sync = time_us_32();
 	int delta = 1000 * 1000 / 30;
 
 	uint32_t last_updated = 0;
 	float active_fps = 30;
 	float fps = active_fps;
-
-	game_reset();
 
 	while (true) {
 		sem_acquire_blocking(&paint_sema);
