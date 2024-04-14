@@ -24,6 +24,7 @@
 #define TFT_DRIVER TFT_DRIVER_ILI9341
 #define TFT_RST_DELAY 5
 #define TFT_HW_ACCEL 1
+#define TFT_VSYNC 1
 #define TFT_PIO SDK_PIO
 
 #define RF_CS_PIN 5
