@@ -41,8 +41,9 @@ static uint8_t sqrt_table[2 * SQRT_MAX_2 * SQRT_MAX_2];
 #define NUM_INITIAL_HOLES 128
 #define HOLE_MAX_RADIUS SQRT_MAX_2
 
-static int camera_left = 0;
-static int camera_top = 0;
+static float camera_speed = 300.0f;
+static float camera_left = 0.0f;
+static float camera_top = 0.0f;
 
 inline static int dirt_color(int wx, int wy);
 inline static bool has_dirt(int wx, int wy);
@@ -68,8 +69,8 @@ void game_start(void)
 
 void game_reset(void)
 {
-	camera_left = TFT_WIDTH / 2;
-	camera_top = TFT_HEIGHT / 2;
+	camera_left = TFT_WIDTH / 2.0f;
+	camera_top = TFT_HEIGHT / 2.0f;
 
 	memset(grid, 0xff, sizeof grid);
 
@@ -80,18 +81,23 @@ void game_reset(void)
 	}
 }
 
-void game_input(void)
+void game_input(unsigned dt_usec)
 {
-	camera_top = clamp(camera_top + sdk_inputs.joy_y / 256, TFT_HEIGHT / 2,
-			   WORLD_BOTTOM - TFT_HEIGHT / 2);
-	camera_left = clamp(camera_left + sdk_inputs.joy_x / 256, TFT_WIDTH / 2,
-			    WORLD_RIGHT - TFT_WIDTH / 2);
+	float dt = dt_usec / 1000000.0f;
+
+	if (abs(sdk_inputs.joy_y) > 200)
+		camera_top = clamp(camera_top + sdk_inputs.joy_y / 2048.0f * camera_speed * dt,
+				   TFT_HEIGHT / 2.0f, WORLD_BOTTOM - TFT_HEIGHT / 2.0f);
+
+	if (abs(sdk_inputs.joy_x) > 200)
+		camera_left = clamp(camera_left + sdk_inputs.joy_x / 2048.0f * camera_speed * dt,
+				    TFT_WIDTH / 2.0f, WORLD_RIGHT - TFT_WIDTH / 2.0f);
 }
 
 void game_paint(unsigned __unused dt_usec)
 {
-	int viewport_left = clamp(camera_left - TFT_WIDTH / 2, 0, WORLD_RIGHT - TFT_WIDTH);
-	int viewport_top = clamp(camera_top - TFT_HEIGHT / 2, 0, WORLD_BOTTOM - TFT_HEIGHT);
+	int viewport_left = clamp(camera_left - TFT_WIDTH / 2.0f, 0, WORLD_RIGHT - TFT_WIDTH);
+	int viewport_top = clamp(camera_top - TFT_HEIGHT / 2.0f, 0, WORLD_BOTTOM - TFT_HEIGHT);
 	//int viewport_right = viewport_left + TFT_WIDTH - 1;
 	//int viewport_bottom = viewport_top + TFT_HEIGHT - 1;
 
