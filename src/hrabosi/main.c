@@ -4,6 +4,7 @@
 #include <tft.h>
 
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -41,13 +42,21 @@ static uint8_t sqrt_table[2 * SQRT_MAX_2 * SQRT_MAX_2];
 #define NUM_INITIAL_HOLES 128
 #define HOLE_MAX_RADIUS SQRT_MAX_2
 
-static float camera_speed = 300.0f;
-static float camera_left = 0.0f;
-static float camera_top = 0.0f;
-
 inline static int dirt_color(int wx, int wy);
 inline static bool has_dirt(int wx, int wy);
-static void poke_hole(int gx, int gy, int radius);
+static int poke_hole(int gx, int gy, int radius);
+static int poke_square(int gx, int gy, int radius);
+
+struct tank {
+	float wx, wy;
+	float speed;
+	uint8_t angle;
+	uint8_t color;
+};
+
+static struct tank tank1;
+
+#define TANK_SPEED 66.0f
 
 int main()
 {
@@ -65,13 +74,14 @@ void game_start(void)
 	/* Pre-calculate square roots. */
 	for (unsigned i = 0; i < sizeof(sqrt_table); i++)
 		sqrt_table[i] = roundf(sqrtf(i));
+
+	/* Adjust colors little bit. */
+	tft_palette[YELLOW] = rgb565(255, 255, 0);
+	tft_palette[GREEN] = rgb565(0, 222, 0);
 }
 
 void game_reset(void)
 {
-	camera_left = TFT_WIDTH / 2.0f;
-	camera_top = TFT_HEIGHT / 2.0f;
-
 	memset(grid, 0xff, sizeof grid);
 
 	for (int i = 0; i < NUM_INITIAL_HOLES; i++) {
@@ -79,25 +89,42 @@ void game_reset(void)
 			  rand() % (GRID_HEIGHT + HOLE_MAX_RADIUS * 2) - HOLE_MAX_RADIUS,
 			  rand() % 10 + 2);
 	}
+
+	tank1.wx = (int)((rand() % (WORLD_WIDTH * 6 / 8)) + WORLD_WIDTH / 8);
+	tank1.wy = (int)((rand() % (WORLD_HEIGHT * 6 / 8)) + WORLD_HEIGHT / 8);
+	tank1.color = GREEN;
+	tank1.speed = TANK_SPEED;
+
+	printf("tank1: wx=%f, wy=%f\n", tank1.wx, tank1.wy);
+
+	poke_hole(tank1.wx / CELL_SCALE, tank1.wy / CELL_SCALE, 12);
 }
 
 void game_input(unsigned dt_usec)
 {
-	float dt = dt_usec / 1000000.0f;
+	float dt = dt_usec / 1000000.0;
+	float joy_x = dt * (sdk_inputs.joy_x + 64) / 2048.0;
+	float joy_y = dt * (sdk_inputs.joy_y + 64) / 2048.0;
 
-	if (abs(sdk_inputs.joy_y) > 200)
-		camera_top = clamp(camera_top + sdk_inputs.joy_y / 2048.0f * camera_speed * dt,
-				   TFT_HEIGHT / 2.0f, WORLD_BOTTOM - TFT_HEIGHT / 2.0f);
+	tank1.speed = clamp(tank1.speed + TANK_SPEED * dt, 0, TANK_SPEED);
+
+	int cells = poke_square(tank1.wx / CELL_SCALE, tank1.wy / CELL_SCALE, 3);
+	tank1.speed /= (cells + 1);
+
+	if (!cells)
+		tank1.speed = clamp(tank1.speed * 1.2f, 0, TANK_SPEED);
 
 	if (abs(sdk_inputs.joy_x) > 200)
-		camera_left = clamp(camera_left + sdk_inputs.joy_x / 2048.0f * camera_speed * dt,
-				    TFT_WIDTH / 2.0f, WORLD_RIGHT - TFT_WIDTH / 2.0f);
+		tank1.wx = clamp(tank1.wx + joy_x * tank1.speed, 5, WORLD_RIGHT - 5);
+
+	if (abs(sdk_inputs.joy_y) > 200)
+		tank1.wy = clamp(tank1.wy + joy_y * tank1.speed, 5, WORLD_BOTTOM - 5);
 }
 
 void game_paint(unsigned __unused dt_usec)
 {
-	int viewport_left = clamp(camera_left - TFT_WIDTH / 2.0f, 0, WORLD_RIGHT - TFT_WIDTH);
-	int viewport_top = clamp(camera_top - TFT_HEIGHT / 2.0f, 0, WORLD_BOTTOM - TFT_HEIGHT);
+	int viewport_left = clamp(tank1.wx - TFT_WIDTH / 2.0f, 0, WORLD_RIGHT - TFT_WIDTH);
+	int viewport_top = clamp(tank1.wy - TFT_HEIGHT / 2.0f, 0, WORLD_BOTTOM - TFT_HEIGHT);
 	//int viewport_right = viewport_left + TFT_WIDTH - 1;
 	//int viewport_bottom = viewport_top + TFT_HEIGHT - 1;
 
@@ -114,6 +141,16 @@ void game_paint(unsigned __unused dt_usec)
 
 			tft_draw_pixel(x, y, has_dirt(wx, wy) ? dirt_color(wx, wy) : BLACK);
 		}
+	}
+
+	{
+		int vx = tank1.wx - viewport_left;
+		int vy = tank1.wy - viewport_top;
+
+		tft_draw_rect(vx - 3, vy - 3, vx + 3, vy + 3, tank1.color);
+		tft_draw_rect(vx - 5, vy - 5, vx - 4, vy + 5, tank1.color - 64);
+		tft_draw_rect(vx + 5, vy + 5, vx + 4, vy - 5, tank1.color - 64);
+		tft_draw_rect(vx - 1, vy - 6, vx + 1, vy, YELLOW);
 	}
 }
 
@@ -139,10 +176,12 @@ inline static bool has_dirt(int wx, int wy)
 	return (grid[gy][gx / 32] >> (gx & 31)) & 1;
 }
 
-static void poke_hole(int gx, int gy, int radius)
+static int poke_hole(int gx, int gy, int radius)
 {
 	/* Maximum allowable radius that fits within the sqrt_table. */
 	radius = abs(clamp(radius, -HOLE_MAX_RADIUS, HOLE_MAX_RADIUS));
+
+	int cells = 0;
 
 	for (int y = gy - radius; y <= gy + radius; y++) {
 		if (y < 0)
@@ -163,7 +202,36 @@ static void poke_hole(int gx, int gy, int radius)
 			if (r > radius)
 				continue;
 
+			cells += (grid[y][x / 32] >> (x & 31)) & 1;
 			grid[y][x / 32] &= ~(1u << (x & 31));
 		}
 	}
+
+	return cells;
+}
+
+static int poke_square(int gx, int gy, int radius)
+{
+	int cells = 0;
+
+	for (int y = gy - radius; y <= gy + radius; y++) {
+		if (y < 0)
+			continue;
+
+		if (y > GRID_BOTTOM)
+			break;
+
+		for (int x = gx - radius; x <= gx + radius; x++) {
+			if (x < 0)
+				continue;
+
+			if (x > GRID_RIGHT)
+				break;
+
+			cells += (grid[y][x / 32] >> (x & 31)) & 1;
+			grid[y][x / 32] &= ~(1u << (x & 31));
+		}
+	}
+
+	return cells;
 }
