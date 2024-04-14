@@ -109,18 +109,14 @@ inline static int dirt_color(int wx, int wy)
 {
 	int xy = wy * WORLD_WIDTH + wx;
 
-	xy ^= xy >> 7;
 	xy *= 1367130551;
-	xy ^= xy >> 9;
-	xy &= 31;
+	xy ^= xy >> 16;
+	xy ^= xy >> 8;
+	xy ^= xy >> 4;
+	xy ^= xy >> 2;
+	xy ^= xy >> 1;
 
-	if (xy >= 31)
-		return DARK_RED - 16;
-
-	if (xy >= 1)
-		return DARK_ORANGE;
-
-	return DARK_BROWN;
+	return (xy & 1) ? ORANGE : BROWN;
 }
 
 inline static bool has_dirt(int wx, int wy)
