@@ -738,3 +738,17 @@ void tft_dma_channel_wait_for_finish_blocking(int dma_ch)
 	while (dma_channel_is_busy(dma_ch))
 		task_wait_for_dma(dma_ch);
 }
+
+void sdk_yield_every_us(unsigned us)
+{
+	static uint32_t last_yield[NUM_CORES] = { 0 };
+
+	unsigned core = get_core_num();
+	uint32_t last = last_yield[core];
+	uint32_t now = time_us_32();
+
+	if (now - last >= us) {
+		task_yield();
+		last_yield[core] = now;
+	}
+}

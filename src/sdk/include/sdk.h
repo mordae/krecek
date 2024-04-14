@@ -64,3 +64,9 @@ bool sdk_write_sample(int16_t sample);
 bool sdk_read_sample(int16_t *sample);
 int sdk_write_samples(const int16_t *buf, int len);
 int sdk_read_samples(int16_t *buf, int len);
+
+/*
+ * Can be called very often, will actually only yield after
+ * given number of microseconds since the last actual yield.
+ */
+void sdk_yield_every_us(unsigned us);

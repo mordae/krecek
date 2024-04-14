@@ -102,6 +102,12 @@ void game_paint(unsigned __unused dt_usec)
 	//int viewport_bottom = viewport_top + TFT_HEIGHT - 1;
 
 	for (int y = 0; y < TFT_HEIGHT; y++) {
+		/*
+		 * Painting the background takes a lot of time.
+		 * Make sure the input task can run unimpeded.
+		 */
+		sdk_yield_every_us(2000);
+
 		for (int x = 0; x < TFT_WIDTH; x++) {
 			int wx = viewport_left + x;
 			int wy = viewport_top + y;
