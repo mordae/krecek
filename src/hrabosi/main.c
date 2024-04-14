@@ -20,20 +20,33 @@
 #define DARK_ORANGE (ORANGE - 64)
 #define DARK_BROWN (BROWN - 64)
 
-#define WORLD_WIDTH 640
-#define WORLD_HEIGHT 480
+#define GRID_WIDTH 640
+#define GRID_HEIGHT 480
+#define GRID_RIGHT (GRID_WIDTH - 1)
+#define GRID_BOTTOM (GRID_HEIGHT - 1)
+
+#define CELL_SCALE 2
+#define WORLD_WIDTH (GRID_WIDTH * CELL_SCALE)
+#define WORLD_HEIGHT (GRID_HEIGHT * CELL_SCALE)
 
 #define WORLD_RIGHT (WORLD_WIDTH - 1)
 #define WORLD_BOTTOM (WORLD_HEIGHT - 1)
 
 static uint32_t grid[WORLD_HEIGHT][WORLD_WIDTH / 32];
-static uint8_t sqrt_table[512];
+
+#define SQRT_MAX_1 22
+#define SQRT_MAX_2 16
+static uint8_t sqrt_table[2 * SQRT_MAX_2 * SQRT_MAX_2];
+
+#define NUM_INITIAL_HOLES 128
+#define HOLE_MAX_RADIUS SQRT_MAX_2
 
 static int camera_left = 0;
 static int camera_top = 0;
 
-inline static int dirt_color(int x, int y);
-static void poke_hole(int wx, int wy, int radius);
+inline static int dirt_color(int wx, int wy);
+inline static bool has_dirt(int wx, int wy);
+static void poke_hole(int gx, int gy, int radius);
 
 int main()
 {
@@ -60,9 +73,11 @@ void game_reset(void)
 
 	memset(grid, 0xff, sizeof grid);
 
-	for (int i = 0; i < 64; i++)
-		poke_hole(rand() % (WORLD_WIDTH + 64) - 32, rand() % (WORLD_HEIGHT + 64) - 32,
-			  rand() % 14 + 3);
+	for (int i = 0; i < NUM_INITIAL_HOLES; i++) {
+		poke_hole(rand() % (GRID_WIDTH + HOLE_MAX_RADIUS * 2) - HOLE_MAX_RADIUS,
+			  rand() % (GRID_HEIGHT + HOLE_MAX_RADIUS * 2) - HOLE_MAX_RADIUS,
+			  rand() % 10 + 2);
+	}
 }
 
 void game_input(void)
@@ -85,15 +100,14 @@ void game_paint(unsigned __unused dt_usec)
 			int wx = viewport_left + x;
 			int wy = viewport_top + y;
 
-			int dirt = (grid[wy][wx / 32] >> (wx & 31)) & 1;
-			tft_draw_pixel(x, y, dirt ? dirt_color(wx, wy) : BLACK);
+			tft_draw_pixel(x, y, has_dirt(wx, wy) ? dirt_color(wx, wy) : BLACK);
 		}
 	}
 }
 
-inline static int dirt_color(int x, int y)
+inline static int dirt_color(int wx, int wy)
 {
-	int xy = y * WORLD_WIDTH + x;
+	int xy = wy * WORLD_WIDTH + wx;
 
 	xy ^= xy >> 7;
 	xy *= 1367130551;
@@ -109,26 +123,34 @@ inline static int dirt_color(int x, int y)
 	return DARK_BROWN;
 }
 
-static void poke_hole(int wx, int wy, int radius)
+inline static bool has_dirt(int wx, int wy)
+{
+	int gx = wx / CELL_SCALE;
+	int gy = wy / CELL_SCALE;
+
+	return (grid[gy][gx / 32] >> (gx & 31)) & 1;
+}
+
+static void poke_hole(int gx, int gy, int radius)
 {
 	/* Maximum allowable radius that fits within the sqrt_table. */
-	radius = clamp(radius, -16, 16);
+	radius = abs(clamp(radius, -HOLE_MAX_RADIUS, HOLE_MAX_RADIUS));
 
-	for (int y = wy - radius; y <= wy + radius; y++) {
+	for (int y = gy - radius; y <= gy + radius; y++) {
 		if (y < 0)
 			continue;
 
-		if (y > WORLD_BOTTOM)
+		if (y > GRID_BOTTOM)
 			break;
 
-		for (int x = wx - radius; x <= wx + radius; x++) {
+		for (int x = gx - radius; x <= gx + radius; x++) {
 			if (x < 0)
 				continue;
 
-			if (x > WORLD_RIGHT)
+			if (x > GRID_RIGHT)
 				break;
 
-			int r = sqrt_table[(y - wy) * (y - wy) + (x - wx) * (x - wx)];
+			int r = sqrt_table[(y - gy) * (y - gy) + (x - gx) * (x - gx)];
 
 			if (r > radius)
 				continue;
