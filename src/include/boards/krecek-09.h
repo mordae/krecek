@@ -8,11 +8,12 @@
 #define TASK_STACK_SIZE 2048
 
 /* For vendor/pico-tft */
+#define TFT_MISO_PIN 0
 #define TFT_CS_PIN 1
 #define TFT_SCK_PIN 2
 #define TFT_MOSI_PIN 3
-#define TFT_RST_PIN 6
 #define TFT_RS_PIN 4
+#define TFT_RST_PIN 6
 #define TFT_SPI_DEV spi0
 #define TFT_BAUDRATE (unsigned)(CLK_SYS_HZ / 2 + 1)
 #define TFT_SWAP_XY 1
@@ -24,6 +25,8 @@
 #define TFT_RST_DELAY 5
 #define TFT_HW_ACCEL 1
 #define TFT_PIO SDK_PIO
+
+#define RF_CS_PIN 5
 
 #define DAP_SWDIO_PIN 25
 #define DAP_SWCLK_PIN 24
