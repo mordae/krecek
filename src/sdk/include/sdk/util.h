@@ -9,17 +9,17 @@ inline static int __unused clampi(int x, int lo, int hi)
 	return x < lo ? lo : (x > hi ? hi : x);
 }
 
-inline static int __unused clampu(unsigned x, unsigned lo, unsigned hi)
+inline static unsigned __unused clampu(unsigned x, unsigned lo, unsigned hi)
 {
 	return x < lo ? lo : (x > hi ? hi : x);
 }
 
-inline static int __unused clampf(float x, float lo, float hi)
+inline static float __unused clampf(float x, float lo, float hi)
 {
 	return x < lo ? lo : (x > hi ? hi : x);
 }
 
-inline static int __unused clampq(double x, double lo, double hi)
+inline static double __unused clampq(double x, double lo, double hi)
 {
 	return x < lo ? lo : (x > hi ? hi : x);
 }
