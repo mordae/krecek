@@ -1,6 +1,8 @@
 #pragma once
 #include <pico/stdlib.h>
 
+#include <sdk/util.h>
+
 struct sdk_config {
 	bool wait_for_usb;
 	bool show_fps;

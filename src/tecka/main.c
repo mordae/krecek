@@ -23,17 +23,6 @@ static int exa;
 static int eya;
 static int score;
 
-inline static int clamp(int x, int lo, int hi)
-{
-	if (x < lo)
-		return lo;
-
-	if (x > hi)
-		return hi;
-
-	return x;
-}
-
 void game_reset(void)
 {
 	ew = 30;

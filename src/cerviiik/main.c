@@ -63,17 +63,6 @@ static struct worm worms_init[NUM_WORMS] = {
 
 };
 
-inline static int clamp(int x, int lo, int hi)
-{
-	if (x < lo)
-		return lo;
-
-	if (x > hi)
-		return hi;
-
-	return x;
-}
-
 void game_reset(void)
 {
 	for (int x = 0; x < TFT_WIDTH; x++) {
