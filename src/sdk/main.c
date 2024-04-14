@@ -676,7 +676,7 @@ static void input_task(void)
 		game_input(now - last_event);
 		last_event = now;
 
-		task_sleep_ms(15);
+		task_sleep_ms(9);
 	}
 }
 
