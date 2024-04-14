@@ -395,6 +395,11 @@ void sdk_main(struct sdk_config *conf)
 	if (!sdk_config.brightness)
 		sdk_config.brightness = SDK_BRIGHTNESS_STD;
 
+	/* Park the RF chip. */
+	gpio_init(RF_CS_PIN);
+	gpio_set_dir(RF_CS_PIN, GPIO_OUT);
+	gpio_set_dir(RF_CS_PIN, 1);
+
 	slave_park();
 	stdio_usb_init();
 	task_init();
