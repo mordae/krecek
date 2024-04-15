@@ -4,22 +4,24 @@
 #include <tft.h>
 
 #include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define RED 255
-#define ORANGE 240
-#define BROWN 241
-#define YELLOW 242
-#define GREEN 244
-#define BLUE 234
-#define WHITE 15
-#define GRAY 7
-#define BLACK 0
-#define DARK_RED (RED - 64)
-#define DARK_ORANGE (ORANGE - 64)
-#define DARK_BROWN (BROWN - 64)
+#define multiply332(x, f) \
+	rgb_to_rgb332(rgb332_red((x)) * f, rgb332_green((x)) * f, rgb332_blue((x)) * f)
+
+#define RED rgb332(7, 0, 0)
+#define GREEN rgb332(0, 7, 0)
+#define BLUE rgb332(0, 0, 3)
+
+#define YELLOW rgb332(7, 7, 0)
+#define ORANGE rgb332(7, 5, 0)
+#define BROWN rgb332(7, 3, 0)
+
+#define WHITE rgb332(7, 7, 3)
+#define LGRAY rgb332(5, 5, 2)
+#define DGRAY rgb332(2, 2, 1)
+#define BLACK rgb332(0, 0, 0)
 
 #define GRID_WIDTH 640
 #define GRID_HEIGHT 480
@@ -64,6 +66,7 @@ int main()
 		.wait_for_usb = true,
 		.show_fps = true,
 		.off_on_select = true,
+		.fps_color = DGRAY,
 	};
 
 	sdk_main(&config);
@@ -75,9 +78,9 @@ void game_start(void)
 	for (unsigned i = 0; i < sizeof(sqrt_table); i++)
 		sqrt_table[i] = roundf(sqrtf(i));
 
-	/* Adjust colors little bit. */
-	tft_palette[YELLOW] = rgb565(255, 255, 0);
-	tft_palette[GREEN] = rgb565(0, 222, 0);
+	/* Use RGB332 palette arrangement. */
+	for (int i = 0; i < 256; i++)
+		tft_palette[i] = rgb332_to_rgb565(i);
 }
 
 void game_reset(void)
@@ -94,8 +97,6 @@ void game_reset(void)
 	tank1.wy = (int)((rand() % (WORLD_HEIGHT * 6 / 8)) + WORLD_HEIGHT / 8);
 	tank1.color = GREEN;
 	tank1.speed = TANK_SPEED;
-
-	printf("tank1: wx=%f, wy=%f\n", tank1.wx, tank1.wy);
 
 	poke_hole(tank1.wx / CELL_SCALE, tank1.wy / CELL_SCALE, 12);
 }
@@ -148,8 +149,8 @@ void game_paint(unsigned __unused dt_usec)
 		int vy = tank1.wy - viewport_top;
 
 		tft_draw_rect(vx - 3, vy - 3, vx + 3, vy + 3, tank1.color);
-		tft_draw_rect(vx - 5, vy - 5, vx - 4, vy + 5, tank1.color - 64);
-		tft_draw_rect(vx + 5, vy + 5, vx + 4, vy - 5, tank1.color - 64);
+		tft_draw_rect(vx - 5, vy - 5, vx - 4, vy + 5, multiply332(tank1.color, 3 / 4));
+		tft_draw_rect(vx + 5, vy + 5, vx + 4, vy - 5, multiply332(tank1.color, 3 / 4));
 		tft_draw_rect(vx - 1, vy - 6, vx + 1, vy, YELLOW);
 	}
 }
