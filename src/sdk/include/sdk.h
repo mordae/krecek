@@ -8,6 +8,7 @@ struct sdk_config {
 	bool show_fps;
 	bool off_on_select;
 
+	uint16_t fps_color;
 	unsigned brightness; // 0-256
 };
 
