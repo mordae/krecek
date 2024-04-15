@@ -70,18 +70,21 @@ static sdk_sprite_t ss_blue_tank[8] = { &s_blue_tank_0,	  &s_blue_tank_45,  &s_b
 					&s_blue_tank_135, &s_blue_tank_180, &s_blue_tank_225,
 					&s_blue_tank_270, &s_blue_tank_315 };
 
-inline static int dirt_color(int wx, int wy);
-inline static bool has_dirt(int wx, int wy);
-static int poke_hole(int gx, int gy, int radius);
-static int poke_sprite(int wx, int wy, const struct sdk_sprite *sprite);
-inline static int8_t get_angle(float rx, float ry);
-static bool sprites_collide(int s1x, int s1y, sdk_sprite_t s1, int s2x, int s2y, sdk_sprite_t s2);
-
 struct tank {
 	float wx, wy;
 	float speed;
 	uint8_t angle;
 };
+
+inline static int dirt_color(int wx, int wy);
+inline static bool has_dirt(int wx, int wy);
+static int poke_hole(int gx, int gy, int radius);
+static int poke_sprite(int wx, int wy, const struct sdk_sprite *sprite);
+inline static int8_t get_angle(float rx, float ry);
+static int sprites_collide(int s1x, int s1y, sdk_sprite_t s1, int s2x, int s2y, sdk_sprite_t s2);
+static bool sprite_has_opaque_point(int sx, int sy, sdk_sprite_t s);
+static void slide_on_collission(float wx, float wy, struct tank *t1, sdk_sprite_t s1,
+				struct tank *t2, sdk_sprite_t s2);
 
 static struct tank tank1;
 static struct tank tank2;
@@ -177,14 +180,7 @@ void game_input(unsigned dt_usec)
 
 		sdk_sprite_t sg = ss_green_tank[tank1.angle];
 		sdk_sprite_t sb = ss_blue_tank[tank2.angle];
-
-		if (sprites_collide((int)tank1.wx - sg->w / 2, (int)wy - sg->h / 2, sg,
-				    (int)tank2.wx - sb->w / 2, (int)tank2.wy - sb->h / 2, sb))
-			tank1.wx = wx;
-
-		if (sprites_collide((int)wx - sg->w / 2, (int)tank1.wy - sg->h / 2, sg,
-				    (int)tank2.wx - sb->w / 2, (int)tank2.wy - sb->h / 2, sb))
-			tank1.wy = wy;
+		slide_on_collission(wx, wy, &tank1, sg, &tank2, sb);
 	}
 
 	{
@@ -212,16 +208,9 @@ void game_input(unsigned dt_usec)
 		if (angle >= 0)
 			tank2.angle = angle;
 
-		sdk_sprite_t sg = ss_green_tank[tank1.angle];
 		sdk_sprite_t sb = ss_blue_tank[tank2.angle];
-
-		if (sprites_collide((int)tank2.wx - sb->w / 2, (int)wy - sb->h / 2, sb,
-				    (int)tank1.wx - sg->w / 2, (int)tank1.wy - sg->h / 2, sg))
-			tank2.wx = wx;
-
-		if (sprites_collide((int)wx - sb->w / 2, (int)tank2.wy - sb->h / 2, sb,
-				    (int)tank1.wx - sg->w / 2, (int)tank1.wy - sg->h / 2, sg))
-			tank2.wy = wy;
+		sdk_sprite_t sg = ss_green_tank[tank1.angle];
+		slide_on_collission(wx, wy, &tank2, sb, &tank1, sg);
 	}
 }
 
@@ -384,17 +373,39 @@ static int poke_sprite(int wx, int wy, sdk_sprite_t sprite)
 	return cells;
 }
 
-static bool sprites_collide(int s1x, int s1y, sdk_sprite_t s1, int s2x, int s2y, sdk_sprite_t s2)
+static int sprites_collide(int s1x, int s1y, sdk_sprite_t s1, int s2x, int s2y, sdk_sprite_t s2)
 {
+	int points = 0;
+
 	if (s1x + s1->w < s2x || s2x + s2->w < s1x)
-		return false;
+		return 0;
 
 	if (s1y + s1->h < s2y || s2y + s2->h < s1y)
+		return 0;
+
+	for (int y = 0; y < s1->h; y++) {
+		for (int x = 0; x < s1->w; x++) {
+			int x2 = s2x - s1x + x;
+			int y2 = s2y - s1y + y;
+
+			if (sprite_has_opaque_point(x, y, s1) &&
+			    sprite_has_opaque_point(x2, y2, s2))
+				points++;
+		}
+	}
+
+	return points;
+}
+
+static bool sprite_has_opaque_point(int sx, int sy, sdk_sprite_t s)
+{
+	if (sx < 0 || sx >= s->w)
 		return false;
 
-	/* TODO: Perform pixel-perfect detection next. */
+	if (sy < 0 || sy >= s->h)
+		return false;
 
-	return true;
+	return s->data[sy * s->w + sx] != s->transparency;
 }
 
 inline static int8_t get_angle(float rx, float ry)
@@ -409,4 +420,33 @@ inline static int8_t get_angle(float rx, float ry)
 	int x_orient = rx < 0 ? 0 : (rx > 0 ? 2 : 1);
 
 	return angles[y_orient][x_orient];
+}
+
+static void slide_on_collission(float wx, float wy, struct tank *t1, sdk_sprite_t s1,
+				struct tank *t2, sdk_sprite_t s2)
+{
+	/*
+	 * Calculate collission baseline.
+	 * We might be already colliding due to a rotation.
+	 */
+	int baseline = sprites_collide((int)wx - s1->w / 2, (int)wy - s1->h / 2, s1,
+				       (int)t2->wx - s2->w / 2, (int)t2->wy - s2->h / 2, s2);
+
+	/*
+	 * Try moving horizontally and if the collission gets worse,
+	 * cancel that movement.
+	 */
+	int h_score = sprites_collide((int)t1->wx - s1->w / 2, (int)wy - s1->h / 2, s1,
+				      (int)t2->wx - s2->w / 2, (int)t2->wy - s2->h / 2, s2);
+	if (h_score && h_score > baseline)
+		t1->wx = wx;
+
+	/*
+	 * Try moving vertically and if the collission gets worse,
+	 * cancel that movement.
+	 */
+	int v_score = sprites_collide((int)wx - s1->w / 2, (int)t1->wy - s1->h / 2, s1,
+				      (int)t2->wx - s2->w / 2, (int)t2->wy - s2->h / 2, s2);
+	if (v_score && v_score > baseline)
+		t1->wy = wy;
 }
