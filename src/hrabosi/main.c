@@ -75,6 +75,7 @@ inline static bool has_dirt(int wx, int wy);
 static int poke_hole(int gx, int gy, int radius);
 static int poke_sprite(int wx, int wy, const struct sdk_sprite *sprite);
 inline static int8_t get_angle(float rx, float ry);
+static bool sprites_collide(int s1x, int s1y, sdk_sprite_t s1, int s2x, int s2y, sdk_sprite_t s2);
 
 struct tank {
 	float wx, wy;
@@ -125,11 +126,15 @@ void game_reset(void)
 	tank1.wy = (int)((rand() % (WORLD_HEIGHT * 6 / 8)) + WORLD_HEIGHT / 8);
 	tank1.speed = TANK_SPEED;
 
-	tank2.wx = (int)((rand() % (WORLD_WIDTH * 6 / 8)) + WORLD_WIDTH / 8);
-	tank2.wy = (int)((rand() % (WORLD_HEIGHT * 6 / 8)) + WORLD_HEIGHT / 8);
+	tank2.wx = tank1.wx;
+	tank2.wy = tank1.wy;
 	tank2.speed = TANK_SPEED;
 
-	/* TODO: Avoid tanks spawning too close. */
+	while ((fabsf(tank2.wx - tank1.wx) < WORLD_WIDTH / 4.0f) &&
+	       (fabsf(tank2.wy - tank1.wy) < WORLD_HEIGHT / 4.0f)) {
+		tank2.wx = (int)((rand() % (WORLD_WIDTH * 6 / 8)) + WORLD_WIDTH / 8);
+		tank2.wy = (int)((rand() % (WORLD_HEIGHT * 6 / 8)) + WORLD_HEIGHT / 8);
+	}
 
 	poke_hole(tank1.wx / CELL_SCALE, tank1.wy / CELL_SCALE, 12);
 	poke_hole(tank2.wx / CELL_SCALE, tank2.wy / CELL_SCALE, 12);
@@ -169,6 +174,17 @@ void game_input(unsigned dt_usec)
 		int angle = get_angle(tank1.wx - wx, tank1.wy - wy);
 		if (angle >= 0)
 			tank1.angle = angle;
+
+		sdk_sprite_t sg = ss_green_tank[tank1.angle];
+		sdk_sprite_t sb = ss_blue_tank[tank2.angle];
+
+		if (sprites_collide((int)tank1.wx - sg->w / 2, (int)wy - sg->h / 2, sg,
+				    (int)tank2.wx - sb->w / 2, (int)tank2.wy - sb->h / 2, sb))
+			tank1.wx = wx;
+
+		if (sprites_collide((int)wx - sg->w / 2, (int)tank1.wy - sg->h / 2, sg,
+				    (int)tank2.wx - sb->w / 2, (int)tank2.wy - sb->h / 2, sb))
+			tank1.wy = wy;
 	}
 
 	{
@@ -195,6 +211,17 @@ void game_input(unsigned dt_usec)
 		int angle = get_angle(tank2.wx - wx, tank2.wy - wy);
 		if (angle >= 0)
 			tank2.angle = angle;
+
+		sdk_sprite_t sg = ss_green_tank[tank1.angle];
+		sdk_sprite_t sb = ss_blue_tank[tank2.angle];
+
+		if (sprites_collide((int)tank2.wx - sb->w / 2, (int)wy - sb->h / 2, sb,
+				    (int)tank1.wx - sg->w / 2, (int)tank1.wy - sg->h / 2, sg))
+			tank2.wx = wx;
+
+		if (sprites_collide((int)wx - sb->w / 2, (int)tank2.wy - sb->h / 2, sb,
+				    (int)tank1.wx - sg->w / 2, (int)tank1.wy - sg->h / 2, sg))
+			tank2.wy = wy;
 	}
 }
 
@@ -355,6 +382,19 @@ static int poke_sprite(int wx, int wy, sdk_sprite_t sprite)
 	}
 
 	return cells;
+}
+
+static bool sprites_collide(int s1x, int s1y, sdk_sprite_t s1, int s2x, int s2y, sdk_sprite_t s2)
+{
+	if (s1x + s1->w < s2x || s2x + s2->w < s1x)
+		return false;
+
+	if (s1y + s1->h < s2y || s2y + s2->h < s1y)
+		return false;
+
+	/* TODO: Perform pixel-perfect detection next. */
+
+	return true;
 }
 
 inline static int8_t get_angle(float rx, float ry)
