@@ -30,9 +30,11 @@ struct sdk_file {
 	size_t len;
 };
 
+asm(".section \".flashdata.files\", \"a\"");
+
 #define embed_file(name, path)                       \
 	extern struct sdk_file name;                 \
-	__asm__(".section \".text.files\", \"a\"\n"  \
+	__asm__(".section \".flashdata.files\"\n"    \
 		"_" #name "_start:\n"                \
 		".incbin \"" path "\"\n" #name ":\n" \
 		".int _" #name "_start\n"            \
