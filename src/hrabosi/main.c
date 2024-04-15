@@ -167,10 +167,10 @@ void game_paint(unsigned __unused dt_usec)
 	}
 
 	{
-		int vx = tank1.wx - viewport_left;
-		int vy = tank1.wy - viewport_top;
-
-		sdk_draw_sprite(vx - 8, vy - 8, ss_green_tank[tank1.angle]);
+		sdk_sprite_t sprite = ss_green_tank[tank1.angle];
+		int vx = (int)tank1.wx - viewport_left - sprite->w / 2;
+		int vy = (int)tank1.wy - viewport_top - sprite->w / 2;
+		sdk_draw_sprite(vx, vy, ss_green_tank[tank1.angle]);
 	}
 }
 
