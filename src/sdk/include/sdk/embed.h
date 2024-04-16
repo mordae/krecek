@@ -46,9 +46,24 @@ asm(".section \".flashdata.sprites\", \"a\"");
 	asm(".int " SDK_TO_STRING((h)) "\n");     \
 	asm(".int " SDK_TO_STRING((t)) "\n")
 
-inline static void __unused sdk_draw_sprite(int x, int y, sdk_sprite_t sprite)
+inline static void sdk_draw_sprite_flipped(int x, int y, sdk_sprite_t sprite, bool flip_x,
+					   bool flip_y, bool swap_xy)
 {
 	/* Make sure not to read the data through cache. */
 	const uint8_t *data = sprite->data - XIP_BASE + XIP_NOALLOC_BASE;
-	tft_draw_sprite(x, y, sprite->w, sprite->h, data, sprite->transparency);
+	tft_draw_sprite_flipped(x, y, sprite->w, sprite->h, data, sprite->transparency, flip_x,
+				flip_y, swap_xy);
+}
+
+inline static void __unused sdk_draw_sprite(int x, int y, sdk_sprite_t sprite)
+{
+	sdk_draw_sprite_flipped(x, y, sprite, false, false, false);
+}
+
+/* Draw rotated sprite, where angle is times 90° clockwise. */
+inline static void __unused sdk_draw_sprite_rotated(int x, int y, sdk_sprite_t sprite, int angle)
+{
+	bool a = angle & 1;
+	bool b = (angle >> 1) & 1;
+	sdk_draw_sprite_flipped(x, y, sprite, b, b ^ a, a);
 }
