@@ -76,6 +76,13 @@ struct tank {
 	uint8_t angle;
 };
 
+struct bullet {
+	float wx, wy;
+	float dx, dy;
+	uint8_t angle : 7;
+	bool spawned : 1;
+};
+
 inline static int dirt_color(int wx, int wy);
 inline static bool has_dirt(int wx, int wy);
 static int poke_hole(int gx, int gy, int radius);
@@ -86,11 +93,16 @@ static bool sprite_has_opaque_point(int sx, int sy, sdk_sprite_t s);
 static void slide_on_collission(float wx, float wy, struct tank *t1, sdk_sprite_t s1,
 				struct tank *t2, sdk_sprite_t s2);
 
+#define TANK_SIZE 16
+#define TANK_SPEED 66.0f
+
 static struct tank tank1;
 static struct tank tank2;
 
-#define TANK_SIZE 16
-#define TANK_SPEED 66.0f
+#define NUM_BULLETS 8
+
+static struct bullet bullets1[NUM_BULLETS];
+static struct bullet bullets2[NUM_BULLETS];
 
 int main()
 {
