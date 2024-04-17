@@ -1,13 +1,12 @@
 #include <pico/stdlib.h>
 
-#include <stdio.h>
 #include <stdlib.h>
 
 #include <sdk.h>
 #include <tft.h>
 
 #define PADDLE_WIDTH 4
-#define PADDLE_HEIGHT (TFT_HEIGHT / 3)
+#define PADDLE_HEIGHT (int)(TFT_HEIGHT / 3)
 
 #define RED 240
 #define YELLOW 242
@@ -106,7 +105,7 @@ void game_reset(void)
 
 void game_input(unsigned __unused dt_usec)
 {
-	float dt = dt_usec / 1000000.0f;
+	//float dt = dt_usec / 1000000.0f;
 
 	/* Joys have value from -2048 to +2047. */
 	if (sdk_inputs.joy_y > 500)
@@ -128,7 +127,6 @@ void game_input(unsigned __unused dt_usec)
 		paddle2.y = 0;
 	else if (paddle2.y > TFT_BOTTOM - PADDLE_HEIGHT)
 		paddle2.y = TFT_BOTTOM - PADDLE_HEIGHT;
-
 }
 
 void game_paint(unsigned __unused dt_usec)
@@ -136,8 +134,8 @@ void game_paint(unsigned __unused dt_usec)
 	tft_fill(0);
 
 	tft_draw_rect(0, paddle1.y, PADDLE_WIDTH - 1, paddle1.y + PADDLE_HEIGHT, WHITE);
-	tft_draw_rect(TFT_RIGHT, paddle2.y, TFT_RIGHT - PADDLE_WIDTH + 1, paddle2.y + PADDLE_HEIGHT, WHITE);
-
+	tft_draw_rect(TFT_RIGHT, paddle2.y, TFT_RIGHT - PADDLE_WIDTH + 1, paddle2.y + PADDLE_HEIGHT,
+		      WHITE);
 }
 
 int main()
