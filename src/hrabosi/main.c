@@ -44,43 +44,43 @@ static uint8_t sqrt_table[2 * SQRT_MAX_2 * SQRT_MAX_2];
 #define NUM_INITIAL_HOLES 128
 #define HOLE_MAX_RADIUS SQRT_MAX_2
 
-embed_sprite(s_green_tank_0, 16, 16, BLACK, "green_tank_0.data");
-embed_sprite(s_green_tank_45, 16, 16, BLACK, "green_tank_45.data");
-embed_sprite(s_green_tank_90, 16, 16, BLACK, "green_tank_90.data");
-embed_sprite(s_green_tank_135, 16, 16, BLACK, "green_tank_135.data");
-embed_sprite(s_green_tank_180, 16, 16, BLACK, "green_tank_180.data");
-embed_sprite(s_green_tank_225, 16, 16, BLACK, "green_tank_225.data");
-embed_sprite(s_green_tank_270, 16, 16, BLACK, "green_tank_270.data");
-embed_sprite(s_green_tank_315, 16, 16, BLACK, "green_tank_315.data");
+embed_tile(t_green_tank_0, 16, 16, BLACK, "green_tank_0.data");
+embed_tile(t_green_tank_45, 16, 16, BLACK, "green_tank_45.data");
+embed_tile(t_green_tank_90, 16, 16, BLACK, "green_tank_90.data");
+embed_tile(t_green_tank_135, 16, 16, BLACK, "green_tank_135.data");
+embed_tile(t_green_tank_180, 16, 16, BLACK, "green_tank_180.data");
+embed_tile(t_green_tank_225, 16, 16, BLACK, "green_tank_225.data");
+embed_tile(t_green_tank_270, 16, 16, BLACK, "green_tank_270.data");
+embed_tile(t_green_tank_315, 16, 16, BLACK, "green_tank_315.data");
 
-embed_sprite(s_blue_tank_0, 16, 16, BLACK, "blue_tank_0.data");
-embed_sprite(s_blue_tank_45, 16, 16, BLACK, "blue_tank_45.data");
-embed_sprite(s_blue_tank_90, 16, 16, BLACK, "blue_tank_90.data");
-embed_sprite(s_blue_tank_135, 16, 16, BLACK, "blue_tank_135.data");
-embed_sprite(s_blue_tank_180, 16, 16, BLACK, "blue_tank_180.data");
-embed_sprite(s_blue_tank_225, 16, 16, BLACK, "blue_tank_225.data");
-embed_sprite(s_blue_tank_270, 16, 16, BLACK, "blue_tank_270.data");
-embed_sprite(s_blue_tank_315, 16, 16, BLACK, "blue_tank_315.data");
+embed_tile(t_blue_tank_0, 16, 16, BLACK, "blue_tank_0.data");
+embed_tile(t_blue_tank_45, 16, 16, BLACK, "blue_tank_45.data");
+embed_tile(t_blue_tank_90, 16, 16, BLACK, "blue_tank_90.data");
+embed_tile(t_blue_tank_135, 16, 16, BLACK, "blue_tank_135.data");
+embed_tile(t_blue_tank_180, 16, 16, BLACK, "blue_tank_180.data");
+embed_tile(t_blue_tank_225, 16, 16, BLACK, "blue_tank_225.data");
+embed_tile(t_blue_tank_270, 16, 16, BLACK, "blue_tank_270.data");
+embed_tile(t_blue_tank_315, 16, 16, BLACK, "blue_tank_315.data");
 
-embed_sprite(s_bullet_0, 5, 5, BLACK, "bullet_0.data");
-embed_sprite(s_bullet_45, 5, 5, BLACK, "bullet_45.data");
-embed_sprite(s_bullet_90, 5, 5, BLACK, "bullet_90.data");
-embed_sprite(s_bullet_135, 5, 5, BLACK, "bullet_135.data");
-embed_sprite(s_bullet_180, 5, 5, BLACK, "bullet_180.data");
-embed_sprite(s_bullet_225, 5, 5, BLACK, "bullet_225.data");
-embed_sprite(s_bullet_270, 5, 5, BLACK, "bullet_270.data");
-embed_sprite(s_bullet_315, 5, 5, BLACK, "bullet_315.data");
+embed_tile(t_bullet_0, 5, 5, BLACK, "bullet_0.data");
+embed_tile(t_bullet_45, 5, 5, BLACK, "bullet_45.data");
+embed_tile(t_bullet_90, 5, 5, BLACK, "bullet_90.data");
+embed_tile(t_bullet_135, 5, 5, BLACK, "bullet_135.data");
+embed_tile(t_bullet_180, 5, 5, BLACK, "bullet_180.data");
+embed_tile(t_bullet_225, 5, 5, BLACK, "bullet_225.data");
+embed_tile(t_bullet_270, 5, 5, BLACK, "bullet_270.data");
+embed_tile(t_bullet_315, 5, 5, BLACK, "bullet_315.data");
 
-static sdk_sprite_t ss_green_tank[8] = { &s_green_tank_0,   &s_green_tank_45,  &s_green_tank_90,
-					 &s_green_tank_135, &s_green_tank_180, &s_green_tank_225,
-					 &s_green_tank_270, &s_green_tank_315 };
+static sdk_tile_t ts__green_tank[8] = { &t_green_tank_0,   &t_green_tank_45,  &t_green_tank_90,
+					&t_green_tank_135, &t_green_tank_180, &t_green_tank_225,
+					&t_green_tank_270, &t_green_tank_315 };
 
-static sdk_sprite_t ss_blue_tank[8] = { &s_blue_tank_0,	  &s_blue_tank_45,  &s_blue_tank_90,
-					&s_blue_tank_135, &s_blue_tank_180, &s_blue_tank_225,
-					&s_blue_tank_270, &s_blue_tank_315 };
+static sdk_tile_t ts__blue_tank[8] = { &t_blue_tank_0,	 &t_blue_tank_45,  &t_blue_tank_90,
+				       &t_blue_tank_135, &t_blue_tank_180, &t_blue_tank_225,
+				       &t_blue_tank_270, &t_blue_tank_315 };
 
-static sdk_sprite_t ss_bullet[8] = { &s_bullet_0,   &s_bullet_45,  &s_bullet_90,  &s_bullet_135,
-				     &s_bullet_180, &s_bullet_225, &s_bullet_270, &s_bullet_315 };
+static sdk_tile_t ts__bullet[8] = { &t_bullet_0,   &t_bullet_45,  &t_bullet_90,	 &t_bullet_135,
+				    &t_bullet_180, &t_bullet_225, &t_bullet_270, &t_bullet_315 };
 
 struct tank {
 	float wx, wy;
@@ -98,12 +98,12 @@ struct bullet {
 inline static int dirt_color(int wx, int wy);
 inline static bool has_dirt(int wx, int wy);
 static int poke_hole(int gx, int gy, int radius);
-static int poke_sprite(int wx, int wy, const struct sdk_sprite *sprite);
+static int poke_tile(int wx, int wy, const struct sdk_tile *tile);
 inline static int8_t get_angle(float rx, float ry);
-static int sprites_collide(int s1x, int s1y, sdk_sprite_t s1, int s2x, int s2y, sdk_sprite_t s2);
-static bool sprite_has_opaque_point(int sx, int sy, sdk_sprite_t s);
-static void slide_on_collission(float wx, float wy, struct tank *t1, sdk_sprite_t s1,
-				struct tank *t2, sdk_sprite_t s2);
+static int tiles_collide(int s1x, int s1y, sdk_tile_t s1, int s2x, int s2y, sdk_tile_t s2);
+static bool tile_has_opaque_point(int sx, int sy, sdk_tile_t s);
+static void slide_on_collission(float wx, float wy, struct tank *t1, sdk_tile_t s1, struct tank *t2,
+				sdk_tile_t s2);
 
 static void paint_bullets(void);
 static void paint_dirt(int wx, int wy, int w, int h);
@@ -187,8 +187,8 @@ void game_input(unsigned dt_usec)
 
 		tank1.speed = clamp(tank1.speed + TANK_SPEED * dt, 0, TANK_SPEED);
 
-		sdk_sprite_t s = ss_green_tank[tank1.angle];
-		int cells = poke_sprite(tank1.wx - s->w / 2.0f, tank1.wy - s->w / 2.0f, s);
+		sdk_tile_t s = ts__green_tank[tank1.angle];
+		int cells = poke_tile(tank1.wx - s->w / 2.0f, tank1.wy - s->w / 2.0f, s);
 		tank1.speed /= (cells + 1);
 
 		if (!cells)
@@ -206,8 +206,8 @@ void game_input(unsigned dt_usec)
 		if (angle >= 0)
 			tank1.angle = angle;
 
-		sdk_sprite_t sg = ss_green_tank[tank1.angle];
-		sdk_sprite_t sb = ss_blue_tank[tank2.angle];
+		sdk_tile_t sg = ts__green_tank[tank1.angle];
+		sdk_tile_t sb = ts__blue_tank[tank2.angle];
 		slide_on_collission(wx, wy, &tank1, sg, &tank2, sb);
 	}
 
@@ -220,8 +220,8 @@ void game_input(unsigned dt_usec)
 
 		tank2.speed = clamp(tank2.speed + TANK_SPEED * dt, 0, TANK_SPEED);
 
-		sdk_sprite_t s = ss_blue_tank[tank2.angle];
-		int cells = poke_sprite(tank2.wx - s->w / 2.0f, tank2.wy - s->w / 2.0f, s);
+		sdk_tile_t s = ts__blue_tank[tank2.angle];
+		int cells = poke_tile(tank2.wx - s->w / 2.0f, tank2.wy - s->w / 2.0f, s);
 		tank2.speed /= (cells + 1);
 
 		if (!cells)
@@ -236,8 +236,8 @@ void game_input(unsigned dt_usec)
 		if (angle >= 0)
 			tank2.angle = angle;
 
-		sdk_sprite_t sb = ss_blue_tank[tank2.angle];
-		sdk_sprite_t sg = ss_green_tank[tank1.angle];
+		sdk_tile_t sb = ts__blue_tank[tank2.angle];
+		sdk_tile_t sg = ts__green_tank[tank1.angle];
 		slide_on_collission(wx, wy, &tank2, sb, &tank1, sg);
 	}
 
@@ -255,8 +255,8 @@ void game_input(unsigned dt_usec)
 			}
 
 			if (has_dirt(b1->wx, b1->wy)) {
-				const sdk_sprite_t s = ss_bullet[b1->angle];
-				poke_sprite(b1->wx - s->w / 2.0f, b1->wy - s->w / 2.0f, s);
+				const sdk_tile_t s = ts__bullet[b1->angle];
+				poke_tile(b1->wx - s->w / 2.0f, b1->wy - s->w / 2.0f, s);
 				b1->spawned = false;
 			}
 		}
@@ -271,8 +271,8 @@ void game_input(unsigned dt_usec)
 			}
 
 			if (has_dirt(b2->wx, b2->wy)) {
-				const sdk_sprite_t s = ss_bullet[b2->angle];
-				poke_sprite(b2->wx - s->w / 2.0f, b2->wy - s->w / 2.0f, s);
+				const sdk_tile_t s = ts__bullet[b2->angle];
+				poke_tile(b2->wx - s->w / 2.0f, b2->wy - s->w / 2.0f, s);
 				b2->spawned = false;
 			}
 		}
@@ -296,8 +296,8 @@ void game_paint(unsigned __unused dt_usec)
 	const int pane_width = TFT_WIDTH / 2 - 1;
 	const int pane_gap = 2;
 
-	sdk_sprite_t green = ss_green_tank[tank1.angle];
-	sdk_sprite_t blue = ss_blue_tank[tank2.angle];
+	sdk_tile_t green = ts__green_tank[tank1.angle];
+	sdk_tile_t blue = ts__blue_tank[tank2.angle];
 
 	int t1x = tank1.wx;
 	int t1y = tank1.wy;
@@ -316,8 +316,8 @@ void game_paint(unsigned __unused dt_usec)
 
 		paint_dirt(wx, wy, pane_width, pane_height);
 
-		sdk_draw_sprite(t2x - blue->w / 2, t2y - blue->h / 2, blue);
-		sdk_draw_sprite(t1x - green->w / 2, t1y - green->h / 2, green);
+		sdk_draw_tile(t2x - blue->w / 2, t2y - blue->h / 2, blue);
+		sdk_draw_tile(t1x - green->w / 2, t1y - green->h / 2, green);
 
 		paint_bullets();
 
@@ -334,8 +334,8 @@ void game_paint(unsigned __unused dt_usec)
 
 		paint_dirt(wx, wy, pane_width, pane_height);
 
-		sdk_draw_sprite(t1x - green->w / 2, t1y - green->h / 2, green);
-		sdk_draw_sprite(t2x - blue->w / 2, t2y - blue->h / 2, blue);
+		sdk_draw_tile(t1x - green->w / 2, t1y - green->h / 2, green);
+		sdk_draw_tile(t2x - blue->w / 2, t2y - blue->h / 2, blue);
 
 		paint_bullets();
 
@@ -351,13 +351,13 @@ static void paint_bullets(void)
 		const struct bullet *b2 = &bullets2[i];
 
 		if (b1->spawned) {
-			const sdk_sprite_t sb1 = ss_bullet[b1->angle];
-			sdk_draw_sprite(b1->wx - sb1->w / 2.0f, b1->wy - sb1->w / 2.0f, sb1);
+			const sdk_tile_t sb1 = ts__bullet[b1->angle];
+			sdk_draw_tile(b1->wx - sb1->w / 2.0f, b1->wy - sb1->w / 2.0f, sb1);
 		}
 
 		if (b2->spawned) {
-			const sdk_sprite_t sb2 = ss_bullet[b2->angle];
-			sdk_draw_sprite(b2->wx - sb2->w / 2.0f, b2->wy - sb2->h / 2.0f, sb2);
+			const sdk_tile_t sb2 = ts__bullet[b2->angle];
+			sdk_draw_tile(b2->wx - sb2->w / 2.0f, b2->wy - sb2->h / 2.0f, sb2);
 		}
 	}
 }
@@ -436,11 +436,11 @@ static int poke_hole(int gx, int gy, int radius)
 	return cells;
 }
 
-static int poke_sprite(int wx, int wy, sdk_sprite_t sprite)
+static int poke_tile(int wx, int wy, sdk_tile_t tile)
 {
 	int cells = 0;
 
-	for (int sy = 0; sy < sprite->h; sy++) {
+	for (int sy = 0; sy < tile->h; sy++) {
 		int gy = (wy + sy) / CELL_SCALE;
 
 		if (gy < 0)
@@ -449,8 +449,8 @@ static int poke_sprite(int wx, int wy, sdk_sprite_t sprite)
 		if (gy > GRID_BOTTOM)
 			continue;
 
-		for (int sx = 0; sx < sprite->w; sx++) {
-			if (sprite->data[sy * sprite->w + sx] == sprite->transparency)
+		for (int sx = 0; sx < tile->w; sx++) {
+			if (tile->data[sy * tile->w + sx] == tile->transparency)
 				continue;
 
 			int gx = (wx + sx) / CELL_SCALE;
@@ -469,7 +469,7 @@ static int poke_sprite(int wx, int wy, sdk_sprite_t sprite)
 	return cells;
 }
 
-static int sprites_collide(int s1x, int s1y, sdk_sprite_t s1, int s2x, int s2y, sdk_sprite_t s2)
+static int tiles_collide(int s1x, int s1y, sdk_tile_t s1, int s2x, int s2y, sdk_tile_t s2)
 {
 	int points = 0;
 
@@ -484,8 +484,7 @@ static int sprites_collide(int s1x, int s1y, sdk_sprite_t s1, int s2x, int s2y, 
 			int x2 = s2x - s1x + x;
 			int y2 = s2y - s1y + y;
 
-			if (sprite_has_opaque_point(x, y, s1) &&
-			    sprite_has_opaque_point(x2, y2, s2))
+			if (tile_has_opaque_point(x, y, s1) && tile_has_opaque_point(x2, y2, s2))
 				points++;
 		}
 	}
@@ -493,7 +492,7 @@ static int sprites_collide(int s1x, int s1y, sdk_sprite_t s1, int s2x, int s2y, 
 	return points;
 }
 
-static bool sprite_has_opaque_point(int sx, int sy, sdk_sprite_t s)
+static bool tile_has_opaque_point(int sx, int sy, sdk_tile_t s)
 {
 	if (sx < 0 || sx >= s->w)
 		return false;
@@ -518,22 +517,22 @@ inline static int8_t get_angle(float rx, float ry)
 	return angles[y_orient][x_orient];
 }
 
-static void slide_on_collission(float wx, float wy, struct tank *t1, sdk_sprite_t s1,
-				struct tank *t2, sdk_sprite_t s2)
+static void slide_on_collission(float wx, float wy, struct tank *t1, sdk_tile_t s1, struct tank *t2,
+				sdk_tile_t s2)
 {
 	/*
 	 * Calculate collission baseline.
 	 * We might be already colliding due to a rotation.
 	 */
-	int baseline = sprites_collide((int)wx - s1->w / 2, (int)wy - s1->h / 2, s1,
-				       (int)t2->wx - s2->w / 2, (int)t2->wy - s2->h / 2, s2);
+	int baseline = tiles_collide((int)wx - s1->w / 2, (int)wy - s1->h / 2, s1,
+				     (int)t2->wx - s2->w / 2, (int)t2->wy - s2->h / 2, s2);
 
 	/*
 	 * Try moving horizontally and if the collission gets worse,
 	 * cancel that movement.
 	 */
-	int h_score = sprites_collide((int)t1->wx - s1->w / 2, (int)wy - s1->h / 2, s1,
-				      (int)t2->wx - s2->w / 2, (int)t2->wy - s2->h / 2, s2);
+	int h_score = tiles_collide((int)t1->wx - s1->w / 2, (int)wy - s1->h / 2, s1,
+				    (int)t2->wx - s2->w / 2, (int)t2->wy - s2->h / 2, s2);
 	if (h_score && h_score > baseline)
 		t1->wx = wx;
 
@@ -541,8 +540,8 @@ static void slide_on_collission(float wx, float wy, struct tank *t1, sdk_sprite_
 	 * Try moving vertically and if the collission gets worse,
 	 * cancel that movement.
 	 */
-	int v_score = sprites_collide((int)wx - s1->w / 2, (int)t1->wy - s1->h / 2, s1,
-				      (int)t2->wx - s2->w / 2, (int)t2->wy - s2->h / 2, s2);
+	int v_score = tiles_collide((int)wx - s1->w / 2, (int)t1->wy - s1->h / 2, s1,
+				    (int)t2->wx - s2->w / 2, (int)t2->wy - s2->h / 2, s2);
 	if (v_score && v_score > baseline)
 		t1->wy = wy;
 }
