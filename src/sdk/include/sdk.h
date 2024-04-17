@@ -1,12 +1,14 @@
 #pragma once
 #include <pico/stdlib.h>
 
+#include <sdk/audio.h>
 #include <sdk/embed.h>
 #include <sdk/game.h>
 #include <sdk/input.h>
+#include <sdk/panic.h>
+#include <sdk/sprite.h>
 #include <sdk/util.h>
 #include <sdk/video.h>
-#include <sdk/audio.h>
 
 #if !defined(__noreturn)
 #define __noreturn __attribute__((__noreturn__))
@@ -35,6 +37,3 @@ void __noreturn sdk_main(const struct sdk_config *conf);
  * given number of microseconds since the last actual yield.
  */
 void sdk_yield_every_us(uint32_t us);
-
-/* Our panic that flushes stdout. */
-void __attribute__((__noreturn__, __format__(printf, 1, 2))) sdk_panic(const char *fmt, ...);

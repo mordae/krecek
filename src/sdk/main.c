@@ -60,6 +60,8 @@ void __attribute__((__noreturn__, __format__(printf, 1, 2))) sdk_panic(const cha
 	vprintf(fmt, ap);
 	va_end(ap);
 
+	puts("");
+
 	fflush(stdout);
 	exit(1);
 }
