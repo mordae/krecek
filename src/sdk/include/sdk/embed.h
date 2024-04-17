@@ -30,9 +30,11 @@ asm(".section \".flashdata.sprites\", \"a\"");
 	asm(".section \".flashdata.files\"\n"); \
 	asm("_" #name "_start:\n");             \
 	asm(".incbin \"" path "\"\n");          \
+	asm("_" #name "_end:\n");               \
+	asm(".align 4\n");                      \
 	asm(#name ":\n");                       \
 	asm(".int _" #name "_start\n");         \
-	asm(".int " #name " - _" #name "_start\n")
+	asm(".int _" #name "_end - _" #name "_start\n")
 
 #define embed_sprite(name, w, h, t, path)         \
 	extern const struct sdk_sprite name;      \
@@ -40,6 +42,7 @@ asm(".section \".flashdata.sprites\", \"a\"");
 	asm(".section \".flashdata.sprites\"\n"); \
 	asm("_" #name "_start:\n");               \
 	asm(".incbin \"" path "\"\n");            \
+	asm(".align 4\n");                        \
 	asm(#name ":\n");                         \
 	asm(".int _" #name "_start\n");           \
 	asm(".int " SDK_TO_STRING((w)) "\n");     \
