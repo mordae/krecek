@@ -1,5 +1,18 @@
 #pragma once
 
+/* Access the QSPI flash using Winbond protocol. */
+#define PICO_BOOT_STAGE2_CHOOSE_W25Q080 1
+
+/* Flash access clock divider. */
+#if !defined(PICO_FLASH_SPI_CLKDIV)
+#define PICO_FLASH_SPI_CLKDIV 2
+#endif
+
+/* Total flash size in bytes. */
+#if !defined(PICO_FLASH_SIZE_BYTES)
+#define PICO_FLASH_SIZE_BYTES (16 * 1024 * 1024)
+#endif
+
 #define CLK_SYS_HZ 132000000
 #define SDK_PIO pio0
 

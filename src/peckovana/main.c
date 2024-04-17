@@ -168,15 +168,15 @@ void game_reset(void)
 void game_input(unsigned __unused dt_usec)
 {
 	if (sdk_inputs_delta.vol_up > 0) {
-		sdk_set_screen_brightness(
-			clamp(sdk_config.brightness * 2, SDK_BRIGHTNESS_MIN, SDK_BRIGHTNESS_MAX));
-		printf("brightness: %u\n", sdk_config.brightness);
+		sdk_set_backlight(
+			clamp(sdk_config.backlight * 2, SDK_BACKLIGHT_MIN, SDK_BACKLIGHT_MAX));
+		printf("backlight: %u\n", sdk_config.backlight);
 	}
 
 	if (sdk_inputs_delta.vol_down > 0) {
-		sdk_set_screen_brightness(
-			clamp(sdk_config.brightness / 2, SDK_BRIGHTNESS_MIN, SDK_BRIGHTNESS_MAX));
-		printf("brightness: %u\n", sdk_config.brightness);
+		sdk_set_backlight(
+			clamp(sdk_config.backlight / 2, SDK_BACKLIGHT_MIN, SDK_BACKLIGHT_MAX));
+		printf("backlight: %u\n", sdk_config.backlight);
 	}
 }
 
