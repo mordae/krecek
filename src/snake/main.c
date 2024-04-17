@@ -1,10 +1,6 @@
-#include "sdk/game.h"
-#include "sdk/input.h"
-#include "sys/_types.h"
 #include <pico/stdlib.h>
 
 #include <stdio.h>
-#include <stdlib.h>
 
 #include <sdk.h>
 #include <tft.h>
@@ -37,7 +33,7 @@ void game_start(void)
 	sdk_set_output_gain_db(6);
 }
 
-void game_audio(int nsamples)
+void game_audio(int __unused nsamples)
 {
 }
 
@@ -46,7 +42,7 @@ void game_input(unsigned dt_usec)
 	if (sdk_inputs_delta.b > 0) {
 		snakedeltax = 1;
 		snakedeltay = 0;
-	} 
+	}
 	if (sdk_inputs_delta.x > 0) {
 		snakedeltax = -1;
 		snakedeltay = 0;
@@ -67,7 +63,7 @@ void game_input(unsigned dt_usec)
 	}
 
 	since_last_move += dt_usec;
-	
+
 	if (snakeheadx < 0)
 		snakeheadx = 0;
 	if (snakeheadx > 31)
@@ -86,12 +82,9 @@ void game_paint(unsigned __unused dt_usec)
 	snprintf(buf, sizeof buf, "%i", score);
 	tft_draw_string(0, 0, RED, buf);
 
-
-	tft_draw_rect(SPACESIZE * snakeheadx,
-	              SPACESIZE * snakeheady,
-	              SPACESIZE * snakeheadx + SPACESIZE - 1,
-	              SPACESIZE * snakeheady + SPACESIZE - 1,
-	              GREEN);
+	tft_draw_rect(SPACESIZE * snakeheadx, SPACESIZE * snakeheady,
+		      SPACESIZE * snakeheadx + SPACESIZE - 1,
+		      SPACESIZE * snakeheady + SPACESIZE - 1, GREEN);
 }
 
 int main()
