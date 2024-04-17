@@ -67,6 +67,8 @@ inline static int8_t get_angle(float rx, float ry);
 static int sprites_collide(const sdk_sprite_t *s1, const sdk_sprite_t *s2);
 static bool sprite_has_opaque_point(int sx, int sy, const sdk_sprite_t *s);
 static void move_and_slide(float wx, float wy, struct tank *t1, const struct tank *t2);
+static float angle_to_x(int angle);
+static float angle_to_y(int angle);
 
 static void paint_bullets(void);
 static void paint_dirt(int wx, int wy, int w, int h);
@@ -261,11 +263,17 @@ void game_input(unsigned dt_usec)
 	{
 		if (sdk_inputs_delta.select > 0) {
 			bullets2[0].spawned = true;
-			bullets2[0].s.x = tank2.s.x + 9;
+			bullets2[0].s.x = tank2.s.x;
 			bullets2[0].s.y = tank2.s.y;
-			bullets2[0].dx = BULLET_SPEED;
-			bullets2[0].dy = 0;
-			bullets2[0].s.tile = 2;
+			bullets2[0].dx = angle_to_x(tank2.s.tile) * BULLET_SPEED;
+			bullets2[0].dy = angle_to_y(tank2.s.tile) * BULLET_SPEED;
+			bullets2[0].s.tile = tank2.s.tile;
+
+			if (tank2.s.tile == 0 || tank2.s.tile == 4)
+				bullets2[0].s.x -= 0.5f;
+
+			if (tank2.s.tile == 2 || tank2.s.tile == 6)
+				bullets2[0].s.y -= 0.5f;
 		}
 	}
 }
@@ -293,10 +301,9 @@ void game_paint(unsigned __unused dt_usec)
 
 		paint_dirt(wx, wy, pane_width, pane_height);
 
+		paint_bullets();
 		sdk_draw_sprite(&tank2.s);
 		sdk_draw_sprite(&tank1.s);
-
-		paint_bullets();
 
 		tft_set_origin(0, 0);
 		tft_clear_clip();
@@ -311,10 +318,9 @@ void game_paint(unsigned __unused dt_usec)
 
 		paint_dirt(wx, wy, pane_width, pane_height);
 
+		paint_bullets();
 		sdk_draw_sprite(&tank1.s);
 		sdk_draw_sprite(&tank2.s);
-
-		paint_bullets();
 
 		tft_set_origin(0, 0);
 		tft_clear_clip();
@@ -535,4 +541,46 @@ static void move_and_slide(float wx, float wy, struct tank *t1, const struct tan
 	int v_score = sprites_collide(&t1->s, &t2->s);
 	if (v_score && v_score > baseline)
 		t1->s.y = orig_y;
+}
+
+static float angle_to_x(int angle)
+{
+	switch (angle & 7) {
+	case 2:
+		return +1.0f;
+
+	case 6:
+		return -1.0f;
+
+	case 1:
+	case 3:
+		return +M_SQRT1_2;
+
+	case 5:
+	case 7:
+		return -M_SQRT1_2;
+	}
+
+	return 0.0f;
+}
+
+static float angle_to_y(int angle)
+{
+	switch (angle & 7) {
+	case 4:
+		return +1.0f;
+
+	case 0:
+		return -1.0f;
+
+	case 3:
+	case 5:
+		return +M_SQRT1_2;
+
+	case 1:
+	case 7:
+		return -M_SQRT1_2;
+	}
+
+	return 0.0f;
 }
