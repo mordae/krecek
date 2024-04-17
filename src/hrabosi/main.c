@@ -23,8 +23,8 @@
 #define DGRAY rgb332(2, 2, 1)
 #define BLACK rgb332(0, 0, 0)
 
-#define GRID_WIDTH 640
-#define GRID_HEIGHT 480
+#define GRID_WIDTH (640 >> 2)
+#define GRID_HEIGHT (480 >> 2)
 #define GRID_RIGHT (GRID_WIDTH - 1)
 #define GRID_BOTTOM (GRID_HEIGHT - 1)
 
@@ -62,6 +62,15 @@ embed_sprite(s_blue_tank_225, 16, 16, BLACK, "blue_tank_225.data");
 embed_sprite(s_blue_tank_270, 16, 16, BLACK, "blue_tank_270.data");
 embed_sprite(s_blue_tank_315, 16, 16, BLACK, "blue_tank_315.data");
 
+embed_sprite(s_bullet_0, 5, 5, BLACK, "bullet_0.data");
+embed_sprite(s_bullet_45, 5, 5, BLACK, "bullet_45.data");
+embed_sprite(s_bullet_90, 5, 5, BLACK, "bullet_90.data");
+embed_sprite(s_bullet_135, 5, 5, BLACK, "bullet_135.data");
+embed_sprite(s_bullet_180, 5, 5, BLACK, "bullet_180.data");
+embed_sprite(s_bullet_225, 5, 5, BLACK, "bullet_225.data");
+embed_sprite(s_bullet_270, 5, 5, BLACK, "bullet_270.data");
+embed_sprite(s_bullet_315, 5, 5, BLACK, "bullet_315.data");
+
 static sdk_sprite_t ss_green_tank[8] = { &s_green_tank_0,   &s_green_tank_45,  &s_green_tank_90,
 					 &s_green_tank_135, &s_green_tank_180, &s_green_tank_225,
 					 &s_green_tank_270, &s_green_tank_315 };
@@ -69,6 +78,9 @@ static sdk_sprite_t ss_green_tank[8] = { &s_green_tank_0,   &s_green_tank_45,  &
 static sdk_sprite_t ss_blue_tank[8] = { &s_blue_tank_0,	  &s_blue_tank_45,  &s_blue_tank_90,
 					&s_blue_tank_135, &s_blue_tank_180, &s_blue_tank_225,
 					&s_blue_tank_270, &s_blue_tank_315 };
+
+static sdk_sprite_t ss_bullet[8] = { &s_bullet_0,   &s_bullet_45,  &s_bullet_90,  &s_bullet_135,
+				     &s_bullet_180, &s_bullet_225, &s_bullet_270, &s_bullet_315 };
 
 struct tank {
 	float wx, wy;
@@ -93,6 +105,9 @@ static bool sprite_has_opaque_point(int sx, int sy, sdk_sprite_t s);
 static void slide_on_collission(float wx, float wy, struct tank *t1, sdk_sprite_t s1,
 				struct tank *t2, sdk_sprite_t s2);
 
+static void paint_bullets(void);
+static void paint_dirt(int wx, int wy, int w, int h);
+
 #define TANK_SIZE 16
 #define TANK_SPEED 66.0f
 
@@ -100,6 +115,7 @@ static struct tank tank1;
 static struct tank tank2;
 
 #define NUM_BULLETS 8
+#define BULLET_SPEED (TANK_SPEED * 2.0f)
 
 static struct bullet bullets1[NUM_BULLETS];
 static struct bullet bullets2[NUM_BULLETS];
@@ -109,7 +125,7 @@ int main()
 	struct sdk_config config = {
 		.wait_for_usb = true,
 		.show_fps = true,
-		.off_on_select = true,
+		.off_on_select = false,
 		.fps_color = DGRAY,
 	};
 
@@ -224,6 +240,54 @@ void game_input(unsigned dt_usec)
 		sdk_sprite_t sg = ss_green_tank[tank1.angle];
 		slide_on_collission(wx, wy, &tank2, sb, &tank1, sg);
 	}
+
+	for (int i = 0; i < NUM_BULLETS; i++) {
+		struct bullet *b1 = &bullets1[i];
+		struct bullet *b2 = &bullets2[i];
+
+		if (b1->spawned) {
+			b1->wx += b1->dx * dt;
+			b1->wy += b1->dy * dt;
+
+			if (b1->wx < 0 || b1->wx > WORLD_RIGHT || b1->wy < 0 ||
+			    b1->wy > WORLD_BOTTOM) {
+				b1->spawned = false;
+			}
+
+			if (has_dirt(b1->wx, b1->wy)) {
+				const sdk_sprite_t s = ss_bullet[b1->angle];
+				poke_sprite(b1->wx - s->w / 2.0f, b1->wy - s->w / 2.0f, s);
+				b1->spawned = false;
+			}
+		}
+
+		if (b2->spawned) {
+			b2->wx += b2->dx * dt;
+			b2->wy += b2->dy * dt;
+
+			if (b2->wx < 0 || b2->wx > WORLD_RIGHT || b2->wy < 0 ||
+			    b2->wy > WORLD_BOTTOM) {
+				b2->spawned = false;
+			}
+
+			if (has_dirt(b2->wx, b2->wy)) {
+				const sdk_sprite_t s = ss_bullet[b2->angle];
+				poke_sprite(b2->wx - s->w / 2.0f, b2->wy - s->w / 2.0f, s);
+				b2->spawned = false;
+			}
+		}
+	}
+
+	{
+		if (sdk_inputs_delta.select > 0) {
+			bullets2[0].spawned = true;
+			bullets2[0].wx = tank2.wx + 9;
+			bullets2[0].wy = tank2.wy;
+			bullets2[0].dx = BULLET_SPEED;
+			bullets2[0].dy = 0;
+			bullets2[0].angle = 2;
+		}
+	}
 }
 
 void game_paint(unsigned __unused dt_usec)
@@ -250,17 +314,12 @@ void game_paint(unsigned __unused dt_usec)
 		tft_set_clip(0, 0, pane_width, pane_height);
 		tft_set_origin(wx, wy);
 
-		for (int y = wy; y < wy + pane_height; y++) {
-			sdk_yield_every_us(2000);
-
-			for (int x = wx; x < wx + pane_width; x++) {
-				bool dirt = has_dirt(x, y);
-				tft_draw_pixel(x, y, dirt ? dirt_color(x, y) : BLACK);
-			}
-		}
+		paint_dirt(wx, wy, pane_width, pane_height);
 
 		sdk_draw_sprite(t2x - blue->w / 2, t2y - blue->h / 2, blue);
 		sdk_draw_sprite(t1x - green->w / 2, t1y - green->h / 2, green);
+
+		paint_bullets();
 
 		tft_set_origin(0, 0);
 		tft_clear_clip();
@@ -273,20 +332,45 @@ void game_paint(unsigned __unused dt_usec)
 		tft_set_clip(pane_width + pane_gap, 0, TFT_WIDTH, pane_height);
 		tft_set_origin(wx - pane_gap - pane_width, wy);
 
-		for (int y = wy; y < wy + pane_height; y++) {
-			sdk_yield_every_us(2000);
-
-			for (int x = wx; x < wx + pane_width; x++) {
-				bool dirt = has_dirt(x, y);
-				tft_draw_pixel(x, y, dirt ? dirt_color(x, y) : BLACK);
-			}
-		}
+		paint_dirt(wx, wy, pane_width, pane_height);
 
 		sdk_draw_sprite(t1x - green->w / 2, t1y - green->h / 2, green);
 		sdk_draw_sprite(t2x - blue->w / 2, t2y - blue->h / 2, blue);
 
+		paint_bullets();
+
 		tft_set_origin(0, 0);
 		tft_clear_clip();
+	}
+}
+
+static void paint_bullets(void)
+{
+	for (int i = 0; i < NUM_BULLETS; i++) {
+		const struct bullet *b1 = &bullets1[i];
+		const struct bullet *b2 = &bullets2[i];
+
+		if (b1->spawned) {
+			const sdk_sprite_t sb1 = ss_bullet[b1->angle];
+			sdk_draw_sprite(b1->wx - sb1->w / 2.0f, b1->wy - sb1->w / 2.0f, sb1);
+		}
+
+		if (b2->spawned) {
+			const sdk_sprite_t sb2 = ss_bullet[b2->angle];
+			sdk_draw_sprite(b2->wx - sb2->w / 2.0f, b2->wy - sb2->h / 2.0f, sb2);
+		}
+	}
+}
+
+static void paint_dirt(int wx, int wy, int w, int h)
+{
+	for (int y = wy; y < wy + h; y++) {
+		sdk_yield_every_us(2000);
+
+		for (int x = wx; x < wx + w; x++) {
+			bool dirt = has_dirt(x, y);
+			tft_draw_pixel(x, y, dirt ? dirt_color(x, y) : BLACK);
+		}
 	}
 }
 
