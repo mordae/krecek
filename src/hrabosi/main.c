@@ -6,6 +6,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #define multiply332(x, f) \
 	rgb_to_rgb332(rgb332_red((x)) * f, rgb332_green((x)) * f, rgb332_blue((x)) * f)
@@ -48,15 +49,20 @@ embed_tileset(ts_green_tank, 8, 16, 16, BLACK, "green_tank.data");
 embed_tileset(ts_blue_tank, 8, 16, 16, BLACK, "blue_tank.data");
 embed_tileset(ts_bullet, 8, 5, 5, BLACK, "bullet.data");
 
-struct tank {
-	sdk_sprite_t s;
-	float speed;
-};
+#define NUM_BULLETS 6
+#define BULLET_SPEED (TANK_SPEED * 2.0f)
 
 struct bullet {
 	sdk_sprite_t s;
 	float dx, dy;
 	bool spawned;
+};
+
+struct tank {
+	sdk_sprite_t s;
+	float speed;
+	int cooldown;
+	struct bullet bullets[NUM_BULLETS];
 };
 
 inline static int dirt_color(int wx, int wy);
@@ -70,11 +76,13 @@ static void move_and_slide(float wx, float wy, struct tank *t1, const struct tan
 static float angle_to_x(int angle);
 static float angle_to_y(int angle);
 
+static void spawn_bullet(struct tank *t);
 static void paint_bullets(void);
 static void paint_dirt(int wx, int wy, int w, int h);
 
 #define TANK_SIZE 16
 #define TANK_SPEED 66.0f
+#define TANK_COOLDOWN (100 * 1000)
 
 static struct tank tank1 = {
 	.s = {
@@ -83,6 +91,7 @@ static struct tank tank1 = {
 		.ts = &ts_green_tank,
 	},
 	.speed = TANK_SPEED,
+	.bullets = {{ .s = { .ts = &ts_bullet, .ox = 2.5f, .oy = 2.5f, } }},
 };
 static struct tank tank2 = {
 	.s = {
@@ -91,17 +100,7 @@ static struct tank tank2 = {
 		.ts = &ts_blue_tank,
 	},
 	.speed = TANK_SPEED,
-};
-
-#define NUM_BULLETS 8
-#define BULLET_SPEED (TANK_SPEED * 2.0f)
-
-static struct bullet bullets1[NUM_BULLETS] = {
-	{ .s = { .ts = &ts_bullet, .ox = 2.5f, .oy = 2.5f, } },
-};
-
-static struct bullet bullets2[NUM_BULLETS] = {
-	{ .s = { .ts = &ts_bullet, .ox = 2.5f, .oy = 2.5f, } },
+	.bullets = {{ .s = { .ts = &ts_bullet, .ox = 2.5f, .oy = 2.5f, } }},
 };
 
 int main()
@@ -128,8 +127,8 @@ void game_start(void)
 
 	/* Copy bullet template to other slots. */
 	for (int i = 1; i < NUM_BULLETS; i++) {
-		bullets1[i] = bullets1[0];
-		bullets2[i] = bullets2[0];
+		tank1.bullets[i] = tank1.bullets[0];
+		tank2.bullets[i] = tank2.bullets[0];
 	}
 }
 
@@ -146,10 +145,12 @@ void game_reset(void)
 	tank1.s.x = (int)((rand() % (WORLD_WIDTH * 6 / 8)) + WORLD_WIDTH / 8);
 	tank1.s.y = (int)((rand() % (WORLD_HEIGHT * 6 / 8)) + WORLD_HEIGHT / 8);
 	tank1.speed = TANK_SPEED;
+	tank1.cooldown = 0;
 
 	tank2.s.x = tank1.s.x;
 	tank2.s.y = tank1.s.y;
 	tank2.speed = TANK_SPEED;
+	tank2.cooldown = 0;
 
 	while ((fabsf(tank2.s.x - tank1.s.x) < WORLD_WIDTH / 4.0f) &&
 	       (fabsf(tank2.s.y - tank1.s.y) < WORLD_HEIGHT / 4.0f)) {
@@ -226,8 +227,8 @@ void game_input(unsigned dt_usec)
 	}
 
 	for (int i = 0; i < NUM_BULLETS; i++) {
-		struct bullet *b1 = &bullets1[i];
-		struct bullet *b2 = &bullets2[i];
+		struct bullet *b1 = &tank1.bullets[i];
+		struct bullet *b2 = &tank2.bullets[i];
 
 		if (b1->spawned) {
 			b1->s.x += b1->dx * dt;
@@ -260,22 +261,14 @@ void game_input(unsigned dt_usec)
 		}
 	}
 
-	{
-		if (sdk_inputs_delta.select > 0) {
-			bullets2[0].spawned = true;
-			bullets2[0].s.x = tank2.s.x;
-			bullets2[0].s.y = tank2.s.y;
-			bullets2[0].dx = angle_to_x(tank2.s.tile) * BULLET_SPEED;
-			bullets2[0].dy = angle_to_y(tank2.s.tile) * BULLET_SPEED;
-			bullets2[0].s.tile = tank2.s.tile;
+	tank1.cooldown = clampi(tank1.cooldown - dt_usec, 0, TANK_COOLDOWN);
+	tank2.cooldown = clampi(tank2.cooldown - dt_usec, 0, TANK_COOLDOWN);
 
-			if (tank2.s.tile == 0 || tank2.s.tile == 4)
-				bullets2[0].s.x -= 0.5f;
+	if (sdk_inputs.select)
+		spawn_bullet(&tank1);
 
-			if (tank2.s.tile == 2 || tank2.s.tile == 6)
-				bullets2[0].s.y -= 0.5f;
-		}
-	}
+	if (sdk_inputs.vol_down)
+		spawn_bullet(&tank2);
 }
 
 void game_paint(unsigned __unused dt_usec)
@@ -291,6 +284,7 @@ void game_paint(unsigned __unused dt_usec)
 	int t2y = tank2.s.y;
 
 	tft_draw_rect(pane_width, 0, pane_width + pane_gap, pane_height, DGRAY);
+	tft_draw_rect(TFT_RIGHT, 0, TFT_RIGHT - 50, 50, BLACK);
 
 	{
 		int wx = clamp(t1x - pane_width * 1 / 2, 0, WORLD_RIGHT - pane_width);
@@ -330,8 +324,8 @@ void game_paint(unsigned __unused dt_usec)
 static void paint_bullets(void)
 {
 	for (int i = 0; i < NUM_BULLETS; i++) {
-		const struct bullet *b1 = &bullets1[i];
-		const struct bullet *b2 = &bullets2[i];
+		const struct bullet *b1 = &tank1.bullets[i];
+		const struct bullet *b2 = &tank2.bullets[i];
 
 		if (b1->spawned)
 			sdk_draw_sprite(&b1->s);
@@ -339,6 +333,38 @@ static void paint_bullets(void)
 		if (b2->spawned)
 			sdk_draw_sprite(&b2->s);
 	}
+}
+
+static void spawn_bullet(struct tank *t)
+{
+	if (t->cooldown > 0)
+		return;
+
+	struct bullet *b = NULL;
+
+	for (int i = 0; i < NUM_BULLETS; i++) {
+		if (!t->bullets[i].spawned) {
+			b = &t->bullets[i];
+			break;
+		}
+	}
+
+	if (NULL == b)
+		return;
+
+	t->cooldown = TANK_COOLDOWN;
+	b->spawned = true;
+	b->s.x = t->s.x;
+	b->s.y = t->s.y;
+	b->dx = angle_to_x(t->s.tile) * BULLET_SPEED;
+	b->dy = angle_to_y(t->s.tile) * BULLET_SPEED;
+	b->s.tile = t->s.tile;
+
+	if (t->s.tile == 0 || t->s.tile == 4)
+		b->s.x -= 0.5f;
+
+	if (t->s.tile == 2 || t->s.tile == 6)
+		b->s.y -= 0.5f;
 }
 
 static void paint_dirt(int wx, int wy, int w, int h)
