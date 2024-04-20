@@ -79,6 +79,7 @@ static float angle_to_y(int angle);
 static void spawn_bullet(struct tank *t);
 static void paint_bullets(void);
 static void paint_dirt(int wx, int wy, int w, int h);
+static void explode(int gx, int gy, int size);
 
 #define TANK_SIZE 16
 #define TANK_SPEED 66.0f
@@ -179,10 +180,8 @@ void game_input(unsigned dt_usec)
 		tank1.speed = clamp(tank1.speed + TANK_SPEED * dt, 0, TANK_SPEED);
 
 		int cells = poke_sprite(&tank1.s);
-		tank1.speed /= (cells + 1);
-
-		if (!cells)
-			tank1.speed = clamp(tank1.speed * 1.2f, 0, TANK_SPEED);
+		tank1.speed -= cells * TANK_SPEED / 10;
+		tank1.speed = clamp(tank1.speed * (cells ? 1.0f : 1.2f), 0, TANK_SPEED);
 
 		if (abs(sdk_inputs.joy_x) > 200)
 			wx = clamp(wx + joy_x * tank1.speed, TANK_SIZE / 2.0f,
@@ -209,10 +208,8 @@ void game_input(unsigned dt_usec)
 		tank2.speed = clamp(tank2.speed + TANK_SPEED * dt, 0, TANK_SPEED);
 
 		int cells = poke_sprite(&tank2.s);
-		tank2.speed /= (cells + 1);
-
-		if (!cells)
-			tank2.speed = clamp(tank2.speed * 1.2f, 0, TANK_SPEED);
+		tank2.speed -= cells * TANK_SPEED / 10;
+		tank2.speed = clamp(tank2.speed * (cells ? 1.0f : 1.2f), 0, TANK_SPEED);
 
 		wx = clamp(wx + joy_x * tank2.speed, TANK_SIZE / 2.0f,
 			   WORLD_RIGHT - TANK_SIZE / 2.0f);
@@ -234,13 +231,14 @@ void game_input(unsigned dt_usec)
 			b1->s.x += b1->dx * dt;
 			b1->s.y += b1->dy * dt;
 
-			if (b1->s.x < 0 || b1->s.x > WORLD_RIGHT || b1->s.y < 0 ||
-			    b1->s.y > WORLD_BOTTOM) {
-				b1->spawned = false;
-			}
+			float b1x = b1->s.x - b1->s.ts->w / 2.0f;
+			float b1y = b1->s.y - b1->s.ts->h / 2.0f;
 
-			if (has_dirt(b1->s.x, b1->s.y)) {
-				poke_sprite(&b1->s);
+			if (has_dirt(b1x, b1y)) {
+				explode(b1x / CELL_SCALE, b1y / CELL_SCALE, 4);
+				//poke_sprite(&b1->s);
+				b1->spawned = false;
+			} else if (b1x < 0 || b1x > WORLD_RIGHT || b1y < 0 || b1y > WORLD_BOTTOM) {
 				b1->spawned = false;
 			}
 		}
@@ -249,13 +247,14 @@ void game_input(unsigned dt_usec)
 			b2->s.x += b2->dx * dt;
 			b2->s.y += b2->dy * dt;
 
-			if (b2->s.x < 0 || b2->s.x > WORLD_RIGHT || b2->s.y < 0 ||
-			    b2->s.y > WORLD_BOTTOM) {
-				b2->spawned = false;
-			}
+			float b2x = b2->s.x - b2->s.ts->w / 2.0f;
+			float b2y = b2->s.y - b2->s.ts->h / 2.0f;
 
 			if (has_dirt(b2->s.x, b2->s.y)) {
-				poke_sprite(&b2->s);
+				explode(b2x / CELL_SCALE, b2y / CELL_SCALE, 4);
+				//poke_sprite(&b2->s);
+				b2->spawned = false;
+			} else if (b2x < 0 || b2x > WORLD_RIGHT || b2y < 0 || b2y > WORLD_BOTTOM) {
 				b2->spawned = false;
 			}
 		}
@@ -609,4 +608,29 @@ static float angle_to_y(int angle)
 	}
 
 	return 0.0f;
+}
+
+static void explode(int gx, int gy, int size)
+{
+	if (size < 1)
+		return;
+
+	if (gx < 0 || gx > GRID_RIGHT)
+		return;
+
+	if (gy < 0 || gy > GRID_BOTTOM)
+		return;
+
+	uint32_t *tile = &grid[gy][gx / 32];
+	uint32_t bit = 1u << (gx & 31);
+
+	if (!((*tile) & bit))
+		return;
+
+	*tile &= ~bit;
+
+	for (int y = gy - 1; y <= gy + 1; y++)
+		for (int x = gx - 1; x <= gx + 1; x++)
+			if (rand() & 1)
+				explode(x, y, size - 1);
 }
