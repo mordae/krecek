@@ -7,6 +7,10 @@
 
 #define PADDLE_WIDTH 4
 #define PADDLE_HEIGHT (int)(TFT_HEIGHT / 3)
+#define BALL_WIDTH 5
+#define BALL_HEIGHT 5
+
+#define BALL_SPEED 70
 
 #define RED 240
 #define YELLOW 242
@@ -20,7 +24,13 @@ struct paddle {
 	int score;
 };
 
+struct ball {
+	float x, y;
+	float dx, dy;
+};
+
 static struct paddle paddle1, paddle2;
+static struct ball ball;
 
 struct effect;
 
@@ -101,11 +111,17 @@ void game_reset(void)
 
 	paddle2.y = PADDLE_HEIGHT * 2;
 	paddle2.score = 0;
+
+	ball.x = TFT_WIDTH / 2;
+	ball.y = TFT_HEIGHT / 2;
+
+	ball.dx = BALL_SPEED;
+	ball.dy = BALL_SPEED;
 }
 
-void game_input(unsigned __unused dt_usec)
+void game_input(unsigned dt_usec)
 {
-	//float dt = dt_usec / 1000000.0f;
+	float dt = dt_usec / 1000000.0f;
 
 	/* Joys have value from -2048 to +2047. */
 	if (sdk_inputs.joy_y > 500)
@@ -127,15 +143,34 @@ void game_input(unsigned __unused dt_usec)
 		paddle2.y = 0;
 	else if (paddle2.y > TFT_BOTTOM - PADDLE_HEIGHT)
 		paddle2.y = TFT_BOTTOM - PADDLE_HEIGHT;
+
+	/* ball is moving */
+	ball.x += ball.dx * dt;
+	ball.y += ball.dy * dt;
+
+	/* ball can bounce from top and bottom */
+	if (ball.y < 0)
+		ball.dy *= -1;
+	else if (ball.y > TFT_BOTTOM - BALL_HEIGHT)
+		ball.dy *= -1;
+
+	if (ball.x < 0 + PADDLE_WIDTH)
+		ball.dx *= -1;
+	else if (ball.x + BALL_WIDTH > TFT_RIGHT - PADDLE_WIDTH)
+		ball.dx *= -1;
 }
 
 void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
 
+	/* draw paddles */
 	tft_draw_rect(0, paddle1.y, PADDLE_WIDTH - 1, paddle1.y + PADDLE_HEIGHT, WHITE);
 	tft_draw_rect(TFT_RIGHT, paddle2.y, TFT_RIGHT - PADDLE_WIDTH + 1, paddle2.y + PADDLE_HEIGHT,
 		      WHITE);
+
+	/* draw ball */
+	tft_draw_rect(ball.x, ball.y, ball.x + BALL_WIDTH, ball.y + BALL_HEIGHT, WHITE); 
 }
 
 int main()
