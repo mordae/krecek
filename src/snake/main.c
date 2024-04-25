@@ -21,11 +21,22 @@ static int snakeheady = 5;
 static int snakedeltax = 0;
 static int snakedeltay = 0;
 
+static int snakelength = 1; // the lenght of the snake in the amount of blocks to be drawn
+static int snaketrailx[200]; // the positions of all parts of the snake (back to front)
+static int snaketraily[200];
+
 static int since_last_move = 0;
 
 void game_reset(void)
 {
 	score = 0;
+	snakelength = 1;
+
+	// initialise the snake part possitions to a default value
+	for (int i = 0; i < 200; i++) {
+		snaketrailx[i] = 0;
+		snaketraily[i] = 0;
+	}
 }
 
 void game_start(void)
@@ -72,19 +83,37 @@ void game_input(unsigned dt_usec)
 		snakeheady = 0;
 	if (snakeheady > 23)
 		snakeheady = 23;
+
+	// set possition of each snake part to the part in front of it (except for the head)
+	if (snakelength > 1) {
+		for (int snakecell = 0; snakecell < snakelength - 2; snakecell++) {
+			snaketrailx[snakecell] = snaketrailx[snakecell + 1];
+			snaketraily[snakecell] = snaketraily[snakecell + 1];
+		}
+	}
+
+	// set the possition of the last snake part (where the head is)
+	snaketrailx[snakelength - 1] = snakeheadx;
+	snaketraily[snakelength - 1] = snakeheady;
 }
 
 void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
+
+	score = snakelength - 1;
+	
 	char buf[64];
 
 	snprintf(buf, sizeof buf, "%i", score);
 	tft_draw_string(0, 0, RED, buf);
 
-	tft_draw_rect(SPACESIZE * snakeheadx, SPACESIZE * snakeheady,
-		      SPACESIZE * snakeheadx + SPACESIZE - 1,
-		      SPACESIZE * snakeheady + SPACESIZE - 1, GREEN);
+	// draw all snake parts
+	for (int snakecell = 0; snakecell < snakelength - 1; snakecell++) {
+		tft_draw_rect(SPACESIZE * snaketrailx[snakecell], SPACESIZE * snaketraily[snakecell],
+			      SPACESIZE * snaketrailx[snakecell] + SPACESIZE - 1,
+			      SPACESIZE * snaketraily[snakecell] + SPACESIZE - 1, GREEN);
+	}
 }
 
 int main()
