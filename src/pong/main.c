@@ -147,8 +147,8 @@ static void new_round(void)
 	paddle1.y = PADDLE_HEIGHT * 2;
 	paddle2.y = PADDLE_HEIGHT * 2;
 
-	ball.x = TFT_WIDTH / 2;
-	ball.y = TFT_HEIGHT / 2;
+	ball.x = TFT_WIDTH / 2.0f;
+	ball.y = TFT_HEIGHT / 2.0f;
 
 	ball.dx = BALL_SPEED_DIAG;
 	ball.dy = BALL_SPEED_DIAG;
@@ -200,8 +200,9 @@ void game_input(unsigned dt_usec)
 		ball.dy *= -1;
 		ball.y = TFT_BOTTOM - BALL_HEIGHT;
 	}
-	
-	if (rects_overlap(ball.x, ball.y, ball.x + BALL_WIDTH, ball.y + BALL_HEIGHT, 0, paddle1.y, PADDLE_WIDTH - 1, paddle1.y + PADDLE_HEIGHT)) {
+
+	if (rects_overlap(ball.x, ball.y, ball.x + BALL_WIDTH, ball.y + BALL_HEIGHT, 0, paddle1.y,
+			  PADDLE_WIDTH - 1, paddle1.y + PADDLE_HEIGHT)) {
 		// prekryv s levou palkou
 		ball.color = BLUE;
 
@@ -220,10 +221,12 @@ void game_input(unsigned dt_usec)
 	} else if (ball.x < PADDLE_WIDTH - 1) {
 		// srazka s levou zdi
 		paddle2.score++;
+		play_effect(2000, 0, 48000 / 20, noise);
 		new_round();
 	}
 
-	if (rects_overlap(ball.x, ball.y, ball.x + BALL_WIDTH, ball.y + BALL_HEIGHT, TFT_RIGHT, paddle2.y, TFT_RIGHT - PADDLE_WIDTH + 1, paddle2.y + PADDLE_HEIGHT)) {
+	if (rects_overlap(ball.x, ball.y, ball.x + BALL_WIDTH, ball.y + BALL_HEIGHT, TFT_RIGHT,
+			  paddle2.y, TFT_RIGHT - PADDLE_WIDTH + 1, paddle2.y + PADDLE_HEIGHT)) {
 		// prekryv s pravou
 		ball.color = GREEN;
 
@@ -242,6 +245,7 @@ void game_input(unsigned dt_usec)
 	} else if (ball.x + BALL_WIDTH > TFT_RIGHT - PADDLE_WIDTH + 1) {
 		// srazka s pravou zdi
 		paddle1.score++;
+		play_effect(2000, 0, 48000 / 20, noise);
 		new_round();
 	}
 }
@@ -253,7 +257,7 @@ void game_paint(unsigned __unused dt_usec)
 	for (int i = 0; i < TFT_HEIGHT; i += 20) {
 		tft_draw_rect(TFT_WIDTH / 2, i + 5, TFT_WIDTH / 2, i + 10 + 5, ball.color);
 	}
-	
+
 	tft_draw_rect(TFT_RIGHT - 1, 0, TFT_RIGHT - 2, TFT_BOTTOM, 3);
 	tft_draw_rect(1, 0, 2, TFT_BOTTOM, 3);
 
