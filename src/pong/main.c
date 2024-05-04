@@ -1,5 +1,6 @@
 #include <pico/stdlib.h>
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include <sdk.h>
@@ -60,6 +61,36 @@ static int16_t __unused noise(struct effect *eff)
 	return rand() % (2 * eff->volume) - eff->volume;
 }
 
+static bool rects_overlap(int x0, int y0, int x1, int y1, int a0, int b0, int a1, int b1)
+{
+	int tmp;
+
+	if (x0 > x1)
+		tmp = x1, x1 = x0, x0 = tmp;
+
+	if (a0 > a1)
+		tmp = a1, a1 = a0, a0 = tmp;
+
+	if (y0 > y1)
+		tmp = y1, y1 = y0, y0 = tmp;
+
+	if (b0 > b1)
+		tmp = b1, b1 = b0, b0 = tmp;
+
+	if (x1 < a0)
+		return false;
+
+	if (x0 > a1)
+		return false;
+
+	if (y1 < b0)
+		return false;
+
+	if (y0 > b1)
+		return false;
+
+	return true;
+}
 void game_start(void)
 {
 	sdk_set_output_gain_db(6);
@@ -104,19 +135,23 @@ static void __unused play_effect(int volume, int frequency, int length, effect_g
 	}
 }
 
-void game_reset(void)
+static void new_round(void)
 {
 	paddle1.y = PADDLE_HEIGHT * 2;
-	paddle1.score = 0;
-
 	paddle2.y = PADDLE_HEIGHT * 2;
-	paddle2.score = 0;
 
 	ball.x = TFT_WIDTH / 2;
 	ball.y = TFT_HEIGHT / 2;
 
 	ball.dx = BALL_SPEED;
 	ball.dy = BALL_SPEED;
+}
+
+void game_reset(void)
+{
+	paddle1.score = 0;
+	paddle2.score = 0;
+	new_round();
 }
 
 void game_input(unsigned dt_usec)
@@ -153,11 +188,28 @@ void game_input(unsigned dt_usec)
 		ball.dy *= -1;
 	else if (ball.y > TFT_BOTTOM - BALL_HEIGHT)
 		ball.dy *= -1;
+	
+	if (rects_overlap(ball.x, ball.y, ball.x + BALL_WIDTH, ball.y + BALL_HEIGHT, 0, paddle1.y, PADDLE_WIDTH - 1, paddle1.y + PADDLE_HEIGHT)) {
+		// prekryv s levou palkou
+		ball.dx *= -1;
+	}
 
-	if (ball.x < 0 + PADDLE_WIDTH)
+	if (rects_overlap(ball.x, ball.y, ball.x + BALL_WIDTH, ball.y + BALL_HEIGHT, TFT_RIGHT, paddle2.y, TFT_RIGHT - PADDLE_WIDTH + 1, paddle2.y + PADDLE_HEIGHT)) {
+		// prekryv s pravou
 		ball.dx *= -1;
-	else if (ball.x + BALL_WIDTH > TFT_RIGHT - PADDLE_WIDTH)
-		ball.dx *= -1;
+	}
+
+	if (ball.x <= 0) {
+		// srazka s levou zdi
+		paddle2.score++;
+		new_round();
+	}
+
+	if (ball.x + BALL_WIDTH >= TFT_RIGHT) {
+		// srazka s pravou zdi
+		paddle1.score++;
+		new_round();
+	}
 }
 
 void game_paint(unsigned __unused dt_usec)
@@ -170,14 +222,21 @@ void game_paint(unsigned __unused dt_usec)
 		      WHITE);
 
 	/* draw ball */
-	tft_draw_rect(ball.x, ball.y, ball.x + BALL_WIDTH, ball.y + BALL_HEIGHT, WHITE); 
+	tft_draw_rect(ball.x, ball.y, ball.x + BALL_WIDTH, ball.y + BALL_HEIGHT, WHITE);
+
+	char buf[16];
+	snprintf(buf, sizeof buf, "%i", paddle1.score);
+	tft_draw_string(0 + 10, 0, WHITE, buf);
+
+	snprintf(buf, sizeof buf, "%i", paddle2.score);
+	tft_draw_string_right(TFT_RIGHT - 10, 0, WHITE, buf);
 }
 
 int main()
 {
 	struct sdk_config config = {
 		.wait_for_usb = true,
-		.show_fps = true,
+		.show_fps = false,
 		.off_on_select = true,
 		.fps_color = GRAY,
 	};
