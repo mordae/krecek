@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <sdk.h>
 #include <tft.h>
@@ -192,24 +193,30 @@ void game_input(unsigned dt_usec)
 	ball.y += ball.dy * dt;
 
 	/* ball can bounce from top and bottom */
-	if (ball.y < 0)
+	if (ball.y < 0) {
 		ball.dy *= -1;
-	else if (ball.y > TFT_BOTTOM - BALL_HEIGHT)
+		ball.y = 0;
+	} else if (ball.y > TFT_BOTTOM - BALL_HEIGHT) {
 		ball.dy *= -1;
+		ball.y = TFT_BOTTOM - BALL_HEIGHT;
+	}
 	
 	if (rects_overlap(ball.x, ball.y, ball.x + BALL_WIDTH, ball.y + BALL_HEIGHT, 0, paddle1.y, PADDLE_WIDTH - 1, paddle1.y + PADDLE_HEIGHT)) {
 		// prekryv s levou palkou
-		ball.dx *= -1;
 		ball.color = BLUE;
 
-		int mid = paddle1.y + PADDLE_MID;
+		float mid = paddle1.y + PADDLE_HEIGHT / 2.0f;
+		float ballmid = ball.y + BALL_HEIGHT / 2.0f;
 
-		if (ball.y + BALL_HEIGHT < mid)
-			ball.dx = BALL_SPEED_DIAG, ball.dy = -BALL_SPEED_DIAG;
-		else if (ball.y > mid)
-			ball.dx = BALL_SPEED_DIAG, ball.dy = +BALL_SPEED_DIAG;
-		else
-			ball.dx = BALL_SPEED, ball.dy = 0;
+		float impact = (mid - ballmid) / (PADDLE_HEIGHT / 2.0f + BALL_HEIGHT) / 2.0f;
+		float refl = asinf(impact);
+
+		ball.dx = cosf(refl) * BALL_SPEED;
+		ball.dy = -sinf(refl) * BALL_SPEED;
+
+		ball.x = PADDLE_WIDTH + 1;
+
+		play_effect(2000, 440, 48000 / 20, square_wave);
 	} else if (ball.x < PADDLE_WIDTH - 1) {
 		// srazka s levou zdi
 		paddle2.score++;
@@ -218,17 +225,20 @@ void game_input(unsigned dt_usec)
 
 	if (rects_overlap(ball.x, ball.y, ball.x + BALL_WIDTH, ball.y + BALL_HEIGHT, TFT_RIGHT, paddle2.y, TFT_RIGHT - PADDLE_WIDTH + 1, paddle2.y + PADDLE_HEIGHT)) {
 		// prekryv s pravou
-		ball.dx *= -1;
 		ball.color = GREEN;
 
-		int mid = paddle2.y + PADDLE_MID;
+		float mid = paddle2.y + PADDLE_HEIGHT / 2.0f;
+		float ballmid = ball.y + BALL_HEIGHT / 2.0f;
 
-		if (ball.y + BALL_HEIGHT < mid)
-			ball.dx = -BALL_SPEED_DIAG, ball.dy = -BALL_SPEED_DIAG;
-		else if (ball.y > mid)
-			ball.dx = -BALL_SPEED_DIAG, ball.dy = +BALL_SPEED_DIAG;
-		else
-			ball.dx = -BALL_SPEED, ball.dy = 0;
+		float impact = (mid - ballmid) / (PADDLE_HEIGHT / 2.0f + BALL_HEIGHT) / 2.0f;
+		float refl = asinf(impact) + M_PI;
+
+		ball.dx = cosf(refl) * BALL_SPEED;
+		ball.dy = sinf(refl) * BALL_SPEED;
+
+		ball.x = TFT_RIGHT - PADDLE_WIDTH - BALL_WIDTH - 1;
+
+		play_effect(2000, 440 + 2 * 440 / 8, 48000 / 20, square_wave);
 	} else if (ball.x + BALL_WIDTH > TFT_RIGHT - PADDLE_WIDTH + 1) {
 		// srazka s pravou zdi
 		paddle1.score++;
@@ -243,6 +253,9 @@ void game_paint(unsigned __unused dt_usec)
 	for (int i = 0; i < TFT_HEIGHT; i += 20) {
 		tft_draw_rect(TFT_WIDTH / 2, i + 5, TFT_WIDTH / 2, i + 10 + 5, ball.color);
 	}
+	
+	tft_draw_rect(TFT_RIGHT - 1, 0, TFT_RIGHT - 2, TFT_BOTTOM, 3);
+	tft_draw_rect(1, 0, 2, TFT_BOTTOM, 3);
 
 	/* draw paddles */
 	tft_draw_rect(0, paddle1.y, PADDLE_WIDTH - 1, paddle1.y + PADDLE_HEIGHT, BLUE);
