@@ -1,8 +1,10 @@
 #include <pico/stdlib.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 
 #include <sdk.h>
+#include <stdlib.h>
 #include <tft.h>
 
 #define RED 240
@@ -12,30 +14,41 @@
 #define GRAY 8
 #define WHITE 15
 
-#define SPACESIZE 5
-#define MOVEWAIT 200000
+#define SPACE_SIZE 5
+#define MOVE_WAIT 150000
 
 static int score = 0;
-static int snakeheadx = 5;
-static int snakeheady = 5;
-static int snakedeltax = 0;
-static int snakedeltay = 0;
+static int snake_head_x = 5;
+static int snake_head_y = 5;
+static int snake_delta_x = 0;
+static int snake_delta_y = 0;
+static bool snake_collided = false;
 
-static int snakelength = 1; // the lenght of the snake in the amount of blocks to be drawn
-static int snaketrailx[200]; // the positions of all parts of the snake (back to front)
-static int snaketraily[200];
+static int snake_trail_x[200]; // the positions of all parts of the snake (back to front)
+static int snake_trail_y[200];
+
+static int fruit_x = 10;
+static int fruit_y = 10;
+static int fruit_color = RED;
+static int fruit_posible_colors[3] = {RED, YELLOW, BLUE};
 
 static int since_last_move = 0;
 
 void game_reset(void)
 {
 	score = 0;
-	snakelength = 1;
-
+	snake_head_x = 5;
+	snake_head_y = 5;
+	snake_delta_x = 0;
+	snake_delta_y = 0;
+	snake_collided = false;
+	fruit_x = 10;
+	fruit_y = 10;
+	
 	// initialise the snake part possitions to a default value
 	for (int i = 0; i < 200; i++) {
-		snaketrailx[i] = 0;
-		snaketraily[i] = 0;
+		snake_trail_x[i] = 0;
+		snake_trail_y[i] = 0;
 	}
 }
 
@@ -51,70 +64,104 @@ void game_audio(int __unused nsamples)
 void game_input(unsigned dt_usec)
 {
 	if (sdk_inputs_delta.b > 0) {
-		snakedeltax = 1;
-		snakedeltay = 0;
+		if (score == 0) {
+			snake_delta_x = 1;
+			snake_delta_y = 0;
+		} else if (snake_head_x + 1 != snake_trail_x[score - 1]) {
+			snake_delta_x = 1;
+			snake_delta_y = 0;
+		}
 	}
 	if (sdk_inputs_delta.x > 0) {
-		snakedeltax = -1;
-		snakedeltay = 0;
+		if (score == 0) {
+			snake_delta_x = -1;
+			snake_delta_y = 0;
+		} else if (snake_head_x - 1 != snake_trail_x[score - 1]) {
+			snake_delta_x = -1;
+			snake_delta_y = 0;
+		}
 	}
 	if (sdk_inputs_delta.a > 0) {
-		snakedeltay = 1;
-		snakedeltax = 0;
+		if (score == 0) {
+			snake_delta_x = 0;
+			snake_delta_y = 1;
+		} else if (snake_head_y + 1 != snake_trail_y[score - 1]) {
+			snake_delta_x = 0;
+			snake_delta_y = 1;
+		}
 	}
 	if (sdk_inputs_delta.y > 0) {
-		snakedeltay = -1;
-		snakedeltax = 0;
+		if (score == 0) {
+			snake_delta_x = 0;
+			snake_delta_y = -1;
+		} else if (snake_head_y - 1 != snake_trail_y[score - 1]) {
+			snake_delta_x = 0;
+			snake_delta_y = -1;
+		}
 	}
 
-	if (since_last_move > MOVEWAIT) {
-		since_last_move -= MOVEWAIT;
-		snakeheadx += snakedeltax;
-		snakeheady += snakedeltay;
+	if (since_last_move > MOVE_WAIT) { // handle snake movement
+		since_last_move -= MOVE_WAIT;
+		snake_head_x += snake_delta_x;
+		snake_head_y += snake_delta_y;
+
+		for (int snake_cell = 0; snake_cell <= score - 1; snake_cell++) {
+			if (snake_trail_x[snake_cell] == snake_head_x && snake_trail_y[snake_cell] == snake_head_y)
+				snake_collided = true;
+		}
+		if (snake_collided)
+			game_reset();
+		else {
+			if (snake_head_x == fruit_x && snake_head_y == fruit_y) {
+				score++;
+				fruit_x = rand() % 32;
+				fruit_y = rand() % 24;
+				fruit_color = fruit_posible_colors[rand() % 3];
+			} else if (score > 0) {
+				for (int snake_cell = 0; snake_cell <= score - 1; snake_cell++) {
+					snake_trail_x[snake_cell] = snake_trail_x[snake_cell + 1];
+					snake_trail_y[snake_cell] = snake_trail_y[snake_cell + 1];
+				}
+			}
+		}
+
+		snake_trail_x[score] = snake_head_x;
+		snake_trail_y[score] = snake_head_y;
 	}
 
 	since_last_move += dt_usec;
 
-	if (snakeheadx < 0)
-		snakeheadx = 0;
-	if (snakeheadx > 31)
-		snakeheadx = 31;
-	if (snakeheady < 0)
-		snakeheady = 0;
-	if (snakeheady > 23)
-		snakeheady = 23;
+	if (snake_head_x < 0)
+		game_reset();
+	if (snake_head_x > 31)
+		game_reset();
+	if (snake_head_y < 0)
+		game_reset();
+	if (snake_head_y > 23)
+		game_reset();
 
-	// set possition of each snake part to the part in front of it (except for the head)
-	if (snakelength > 1) {
-		for (int snakecell = 0; snakecell < snakelength - 2; snakecell++) {
-			snaketrailx[snakecell] = snaketrailx[snakecell + 1];
-			snaketraily[snakecell] = snaketraily[snakecell + 1];
-		}
-	}
-
-	// set the possition of the last snake part (where the head is)
-	snaketrailx[snakelength - 1] = snakeheadx;
-	snaketraily[snakelength - 1] = snakeheady;
 }
 
 void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
 
-	score = snakelength - 1;
-	
 	char buf[64];
 
 	snprintf(buf, sizeof buf, "%i", score);
 	tft_draw_string(0, 0, RED, buf);
 
 	// draw all snake parts
-	for (int snakecell = 0; snakecell < snakelength - 1; snakecell++) {
-		tft_draw_rect(SPACESIZE * snaketrailx[snakecell], SPACESIZE * snaketraily[snakecell],
-			      SPACESIZE * snaketrailx[snakecell] + SPACESIZE - 1,
-			      SPACESIZE * snaketraily[snakecell] + SPACESIZE - 1, GREEN);
+	for (int snake_cell = 0; snake_cell <= score; snake_cell++) {
+		tft_draw_rect(SPACE_SIZE * snake_trail_x[snake_cell], SPACE_SIZE * snake_trail_y[snake_cell],
+			      SPACE_SIZE * snake_trail_x[snake_cell] + SPACE_SIZE - 1,
+			      SPACE_SIZE * snake_trail_y[snake_cell] + SPACE_SIZE - 1, GREEN);
 	}
-}
+	// draw fruit
+	tft_draw_rect(SPACE_SIZE * fruit_x, SPACE_SIZE * fruit_y,
+		      SPACE_SIZE * fruit_x + SPACE_SIZE - 1,
+		      SPACE_SIZE * fruit_y + SPACE_SIZE - 1, fruit_color);
+	}
 
 int main()
 {
