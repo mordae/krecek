@@ -8,10 +8,12 @@
 
 #define PADDLE_WIDTH 4
 #define PADDLE_HEIGHT (int)(TFT_HEIGHT / 3)
+#define PADDLE_MID (PADDLE_HEIGHT / 2)
 #define BALL_WIDTH 5
 #define BALL_HEIGHT 5
 
-#define BALL_SPEED 70
+#define BALL_SPEED 100
+#define BALL_SPEED_DIAG 70
 
 #define RED 240
 #define YELLOW 242
@@ -28,6 +30,7 @@ struct paddle {
 struct ball {
 	float x, y;
 	float dx, dy;
+	uint8_t color;
 };
 
 static struct paddle paddle1, paddle2;
@@ -94,6 +97,9 @@ static bool rects_overlap(int x0, int y0, int x1, int y1, int a0, int b0, int a1
 void game_start(void)
 {
 	sdk_set_output_gain_db(6);
+
+	tft_palette[BLUE] = rgb_to_rgb565(63, 63, 255);
+	tft_palette[GREEN] = rgb_to_rgb565(0, 191, 0);
 }
 
 void game_audio(int nsamples)
@@ -143,8 +149,10 @@ static void new_round(void)
 	ball.x = TFT_WIDTH / 2;
 	ball.y = TFT_HEIGHT / 2;
 
-	ball.dx = BALL_SPEED;
-	ball.dy = BALL_SPEED;
+	ball.dx = BALL_SPEED_DIAG;
+	ball.dy = BALL_SPEED_DIAG;
+
+	ball.color = WHITE;
 }
 
 void game_reset(void)
@@ -192,20 +200,36 @@ void game_input(unsigned dt_usec)
 	if (rects_overlap(ball.x, ball.y, ball.x + BALL_WIDTH, ball.y + BALL_HEIGHT, 0, paddle1.y, PADDLE_WIDTH - 1, paddle1.y + PADDLE_HEIGHT)) {
 		// prekryv s levou palkou
 		ball.dx *= -1;
-	}
+		ball.color = BLUE;
 
-	if (rects_overlap(ball.x, ball.y, ball.x + BALL_WIDTH, ball.y + BALL_HEIGHT, TFT_RIGHT, paddle2.y, TFT_RIGHT - PADDLE_WIDTH + 1, paddle2.y + PADDLE_HEIGHT)) {
-		// prekryv s pravou
-		ball.dx *= -1;
-	}
+		int mid = paddle1.y + PADDLE_MID;
 
-	if (ball.x <= 0) {
+		if (ball.y + BALL_HEIGHT < mid)
+			ball.dx = BALL_SPEED_DIAG, ball.dy = -BALL_SPEED_DIAG;
+		else if (ball.y > mid)
+			ball.dx = BALL_SPEED_DIAG, ball.dy = +BALL_SPEED_DIAG;
+		else
+			ball.dx = BALL_SPEED, ball.dy = 0;
+	} else if (ball.x < PADDLE_WIDTH - 1) {
 		// srazka s levou zdi
 		paddle2.score++;
 		new_round();
 	}
 
-	if (ball.x + BALL_WIDTH >= TFT_RIGHT) {
+	if (rects_overlap(ball.x, ball.y, ball.x + BALL_WIDTH, ball.y + BALL_HEIGHT, TFT_RIGHT, paddle2.y, TFT_RIGHT - PADDLE_WIDTH + 1, paddle2.y + PADDLE_HEIGHT)) {
+		// prekryv s pravou
+		ball.dx *= -1;
+		ball.color = GREEN;
+
+		int mid = paddle2.y + PADDLE_MID;
+
+		if (ball.y + BALL_HEIGHT < mid)
+			ball.dx = -BALL_SPEED_DIAG, ball.dy = -BALL_SPEED_DIAG;
+		else if (ball.y > mid)
+			ball.dx = -BALL_SPEED_DIAG, ball.dy = +BALL_SPEED_DIAG;
+		else
+			ball.dx = -BALL_SPEED, ball.dy = 0;
+	} else if (ball.x + BALL_WIDTH > TFT_RIGHT - PADDLE_WIDTH + 1) {
 		// srazka s pravou zdi
 		paddle1.score++;
 		new_round();
@@ -216,20 +240,24 @@ void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
 
+	for (int i = 0; i < TFT_HEIGHT; i += 20) {
+		tft_draw_rect(TFT_WIDTH / 2, i + 5, TFT_WIDTH / 2, i + 10 + 5, ball.color);
+	}
+
 	/* draw paddles */
-	tft_draw_rect(0, paddle1.y, PADDLE_WIDTH - 1, paddle1.y + PADDLE_HEIGHT, WHITE);
+	tft_draw_rect(0, paddle1.y, PADDLE_WIDTH - 1, paddle1.y + PADDLE_HEIGHT, BLUE);
 	tft_draw_rect(TFT_RIGHT, paddle2.y, TFT_RIGHT - PADDLE_WIDTH + 1, paddle2.y + PADDLE_HEIGHT,
-		      WHITE);
+		      GREEN);
 
 	/* draw ball */
-	tft_draw_rect(ball.x, ball.y, ball.x + BALL_WIDTH, ball.y + BALL_HEIGHT, WHITE);
+	tft_draw_rect(ball.x, ball.y, ball.x + BALL_WIDTH, ball.y + BALL_HEIGHT, ball.color);
 
 	char buf[16];
 	snprintf(buf, sizeof buf, "%i", paddle1.score);
-	tft_draw_string(0 + 10, 0, WHITE, buf);
+	tft_draw_string(0 + 10, 0, BLUE, buf);
 
 	snprintf(buf, sizeof buf, "%i", paddle2.score);
-	tft_draw_string_right(TFT_RIGHT - 10, 0, WHITE, buf);
+	tft_draw_string_right(TFT_RIGHT - 10, 0, GREEN, buf);
 }
 
 int main()
