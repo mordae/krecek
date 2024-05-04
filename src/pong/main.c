@@ -209,7 +209,7 @@ void game_input(unsigned dt_usec)
 		float mid = paddle1.y + PADDLE_HEIGHT / 2.0f;
 		float ballmid = ball.y + BALL_HEIGHT / 2.0f;
 
-		float impact = (mid - ballmid) / (PADDLE_HEIGHT / 2.0f + BALL_HEIGHT) / 2.0f;
+		float impact = (mid - ballmid) / (PADDLE_HEIGHT / 2.0f + BALL_HEIGHT) / 1.5f;
 		float refl = asinf(impact);
 
 		ball.dx = cosf(refl) * BALL_SPEED;
@@ -233,7 +233,7 @@ void game_input(unsigned dt_usec)
 		float mid = paddle2.y + PADDLE_HEIGHT / 2.0f;
 		float ballmid = ball.y + BALL_HEIGHT / 2.0f;
 
-		float impact = (mid - ballmid) / (PADDLE_HEIGHT / 2.0f + BALL_HEIGHT) / 2.0f;
+		float impact = (mid - ballmid) / (PADDLE_HEIGHT / 2.0f + BALL_HEIGHT) / 1.5f;
 		float refl = asinf(impact) + M_PI;
 
 		ball.dx = cosf(refl) * BALL_SPEED;
