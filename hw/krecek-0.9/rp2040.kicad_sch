@@ -1122,6 +1122,7 @@
   (no_connect (at 177.8 109.22) (uuid b4759100-6f4d-4a74-b0f5-8a64a0705456))
   (no_connect (at 177.8 63.5) (uuid ee0b2527-8592-4a05-a1fd-a470fdabaf63))
   (no_connect (at 177.8 60.96) (uuid ee7f2cec-bf0a-4bee-b8ae-0a335fbc2e5c))
+  (no_connect (at 228.6 63.5) (uuid f194cf6d-d9d5-47a6-aaa9-c4f06855e1b8))
 
   (wire (pts (xy 228.6 86.36) (xy 254 86.36))
     (stroke (width 0) (type default))
@@ -2252,10 +2253,6 @@
   (hierarchical_label "VOL_{DOWN}" (shape input) (at 177.8 83.82 180) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify right))
     (uuid fc62368d-4991-4413-953e-380397a36ec7)
-  )
-  (hierarchical_label "T_{IRQ}" (shape input) (at 228.6 63.5 0) (fields_autoplaced)
-    (effects (font (size 1.27 1.27)) (justify left))
-    (uuid fe036d27-c6d6-42c4-ac47-9c2bfd368b7e)
   )
 
   (symbol (lib_id "Device:Crystal_GND24") (at 38.1 177.8 0) (unit 1)
