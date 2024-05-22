@@ -146,8 +146,8 @@ static void __unused play_effect(int volume, int frequency, int length, effect_g
 
 static void new_round(void)
 {
-	paddle1.y = PADDLE_HEIGHT * 2;
-	paddle2.y = PADDLE_HEIGHT * 2;
+	paddle1.y = PADDLE_HEIGHT * 1;
+	paddle2.y = PADDLE_HEIGHT * 1;
 
 	ball.x = TFT_WIDTH / 2.0f;
 	ball.y = TFT_HEIGHT / 2.0f;
