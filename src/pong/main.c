@@ -13,6 +13,7 @@
 #define BALL_WIDTH 5
 #define BALL_HEIGHT 5
 
+#define BALL_SPEEDUP 1.05f
 #define BALL_SPEED 100
 #define BALL_SPEED_DIAG 70
 
@@ -32,6 +33,7 @@ struct ball {
 	float x, y;
 	float dx, dy;
 	uint8_t color;
+	float speed;
 };
 
 static struct paddle paddle1, paddle2;
@@ -150,8 +152,9 @@ static void new_round(void)
 	ball.x = TFT_WIDTH / 2.0f;
 	ball.y = TFT_HEIGHT / 2.0f;
 
-	ball.dx = BALL_SPEED_DIAG;
-	ball.dy = BALL_SPEED_DIAG;
+	ball.speed = BALL_SPEED;
+	ball.dx = (rand() & 1) ? BALL_SPEED_DIAG : -BALL_SPEED_DIAG;
+	ball.dy = (rand() & 1) ? BALL_SPEED_DIAG : -BALL_SPEED_DIAG;
 
 	ball.color = WHITE;
 }
@@ -212,8 +215,9 @@ void game_input(unsigned dt_usec)
 		float impact = (mid - ballmid) / (PADDLE_HEIGHT / 2.0f + BALL_HEIGHT) / 1.5f;
 		float refl = asinf(impact);
 
-		ball.dx = cosf(refl) * BALL_SPEED;
-		ball.dy = -sinf(refl) * BALL_SPEED;
+
+		ball.speed *= BALL_SPEEDUP;		ball.dx = cosf(refl) * ball.speed;
+		ball.dy = -sinf(refl) * ball.speed;
 
 		ball.x = PADDLE_WIDTH + 1;
 
@@ -236,8 +240,9 @@ void game_input(unsigned dt_usec)
 		float impact = (mid - ballmid) / (PADDLE_HEIGHT / 2.0f + BALL_HEIGHT) / 1.5f;
 		float refl = asinf(impact) + M_PI;
 
-		ball.dx = cosf(refl) * BALL_SPEED;
-		ball.dy = sinf(refl) * BALL_SPEED;
+		ball.speed *= BALL_SPEEDUP;		ball.dx = cosf(refl) * ball.speed;
+		ball.dx = cosf(refl) * ball.speed;
+		ball.dy = sinf(refl) * ball.speed;
 
 		ball.x = TFT_RIGHT - PADDLE_WIDTH - BALL_WIDTH - 1;
 
