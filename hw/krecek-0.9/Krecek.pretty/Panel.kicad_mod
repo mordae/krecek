@@ -1,0 +1,146 @@
+(footprint "Panel"
+	(version 20240108)
+	(generator "pcbnew")
+	(generator_version "8.0")
+	(layer "F.Cu")
+	(property "Reference" "REF**"
+		(at 0 -0.5 0)
+		(unlocked yes)
+		(layer "F.SilkS")
+		(uuid "f5b22d06-9ce4-47e2-8afd-6c00c4a9cfa1")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.1)
+			)
+		)
+	)
+	(property "Value" "Panel"
+		(at 0 1 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "02a996cb-683d-44cb-b381-3fc48d2c3bca")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Footprint" "Panel"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "86164822-e306-4d23-a2a3-f89875a44488")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "6bca4b6b-c4a5-4e2e-98fb-691f5a6425ad")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "38969de9-22a1-4f21-95e5-54fdc285baeb")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(fp_rect
+		(start -25.4 -34.925)
+		(end 25.4 34.925)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(fill none)
+		(layer "F.SilkS")
+		(uuid "0fc16559-dd01-4482-8469-6a3bfc706b0a")
+	)
+	(fp_line
+		(start -7.62 23.495)
+		(end 5.715 23.495)
+		(stroke
+			(width 0.05)
+			(type default)
+		)
+		(layer "Edge.Cuts")
+		(uuid "cfb2f07a-245f-4469-a204-c5b40018dc92")
+	)
+	(fp_line
+		(start 5.715 19.685)
+		(end -7.62 19.685)
+		(stroke
+			(width 0.05)
+			(type default)
+		)
+		(layer "Edge.Cuts")
+		(uuid "3e5c9fdc-c508-48d8-af50-028362bd635b")
+	)
+	(fp_arc
+		(start -7.62 23.495)
+		(mid -9.525 21.59)
+		(end -7.62 19.685)
+		(stroke
+			(width 0.05)
+			(type default)
+		)
+		(layer "Edge.Cuts")
+		(uuid "8d078a87-0408-45ce-a3d6-363ff0e73dad")
+	)
+	(fp_arc
+		(start 5.715 19.685)
+		(mid 7.62 21.59)
+		(end 5.715 23.495)
+		(stroke
+			(width 0.05)
+			(type default)
+		)
+		(layer "Edge.Cuts")
+		(uuid "5d32e8e7-e64f-4f4a-a8cb-bff77f0f343c")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 0 2.5 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "79770f0b-a731-490d-88db-fefa8d4e2919")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(model "${KIPRJMOD}/Krecek.3dshapes/panel.wrl"
+		(offset
+			(xyz 0 0 0.2)
+		)
+		(scale
+			(xyz 0.3937 0.3937 0.3937)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)
