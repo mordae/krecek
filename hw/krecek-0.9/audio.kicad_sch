@@ -11,108 +11,6 @@
 		(company "DDM Spirála")
 	)
 	(lib_symbols
-		(symbol "Connector:TestPoint"
-			(pin_numbers hide)
-			(pin_names
-				(offset 0.762) hide)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "TP"
-				(at 0 6.858 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "TestPoint"
-				(at 0 5.08 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 5.08 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "~"
-				(at 5.08 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" "test point"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_keywords" "test point tp"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "ki_fp_filters" "Pin* Test*"
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "TestPoint_0_1"
-				(circle
-					(center 0 3.302)
-					(radius 0.762)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "TestPoint_1_1"
-				(pin passive line
-					(at 0 0 90)
-					(length 2.54)
-					(name "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-		)
 		(symbol "Device:C_Small"
 			(pin_numbers hide)
 			(pin_names
@@ -2826,18 +2724,6 @@
 		(uuid "83effe61-8a8e-441a-ad7c-6cfaceef3c93")
 	)
 	(junction
-		(at 139.7 134.62)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "9073ebce-1768-4336-98ba-ebccc63826fa")
-	)
-	(junction
-		(at 139.7 132.08)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "93dbaf39-cf07-4ba1-bf75-f053b5639f97")
-	)
-	(junction
 		(at 146.05 38.1)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -2893,16 +2779,6 @@
 	)
 	(wire
 		(pts
-			(xy 139.7 127) (xy 152.4 127)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "05d00f0c-a627-4bbb-8f5f-9587a82d01cd")
-	)
-	(wire
-		(pts
 			(xy 50.8 34.29) (xy 50.8 39.37)
 		)
 		(stroke
@@ -2950,26 +2826,6 @@
 			(type default)
 		)
 		(uuid "0e50f5b2-92c1-4916-b483-2ba8aaabd0af")
-	)
-	(wire
-		(pts
-			(xy 139.7 134.62) (xy 139.7 139.7)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "0f3052b2-ab08-419b-a80d-dead0cab0b5f")
-	)
-	(wire
-		(pts
-			(xy 139.7 139.7) (xy 152.4 139.7)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "14af682e-8d28-422f-b4db-4db20cab933b")
 	)
 	(wire
 		(pts
@@ -3033,16 +2889,6 @@
 	)
 	(wire
 		(pts
-			(xy 129.54 134.62) (xy 139.7 134.62)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3babf2a2-2fdf-4a02-82c5-08e7f86c9999")
-	)
-	(wire
-		(pts
 			(xy 114.3 157.48) (xy 114.3 152.4)
 		)
 		(stroke
@@ -3080,16 +2926,6 @@
 			(type default)
 		)
 		(uuid "46cb0fbe-421f-4a9c-8d93-d4bc1933c74c")
-	)
-	(wire
-		(pts
-			(xy 139.7 127) (xy 139.7 132.08)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "4781b2ae-1d56-4651-8706-d2ecd85086b4")
 	)
 	(wire
 		(pts
@@ -3303,16 +3139,6 @@
 	)
 	(wire
 		(pts
-			(xy 139.7 132.08) (xy 205.74 132.08)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "a0355587-7d14-48b4-92aa-22a04b7f5b8b")
-	)
-	(wire
-		(pts
 			(xy 165.1 76.2) (xy 165.1 80.01)
 		)
 		(stroke
@@ -3433,7 +3259,7 @@
 	)
 	(wire
 		(pts
-			(xy 139.7 134.62) (xy 205.74 134.62)
+			(xy 129.54 134.62) (xy 205.74 134.62)
 		)
 		(stroke
 			(width 0)
@@ -3473,7 +3299,7 @@
 	)
 	(wire
 		(pts
-			(xy 129.54 132.08) (xy 139.7 132.08)
+			(xy 129.54 132.08) (xy 205.74 132.08)
 		)
 		(stroke
 			(width 0)
@@ -3673,7 +3499,7 @@
 		(uuid "6fa9dc43-2f2c-4278-9fa5-6345b5bf49e3")
 	)
 	(label "HP_{LEFT}"
-		(at 152.4 127 180)
+		(at 152.4 132.08 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -3739,7 +3565,7 @@
 		(uuid "bf118078-3e28-4021-a82c-e66c40039312")
 	)
 	(label "HP_{RIGHT}"
-		(at 152.4 139.7 180)
+		(at 152.4 134.62 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -4527,73 +4353,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Connector:TestPoint")
-		(at 152.4 127 270)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "41f8d02d-bfe3-493d-b13f-e58fa4253d7f")
-		(property "Reference" "TP1"
-			(at 157.48 125.73 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "TestPoint"
-			(at 157.48 128.27 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "TestPoint:TestPoint_Pad_D1.0mm"
-			(at 152.4 132.08 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 152.4 132.08 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "test point"
-			(at 152.4 127 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "15f6ec4c-090b-41b2-bd54-2eab77bda7d8")
-		)
-		(instances
-			(project "krecek-0.9"
-				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-					(reference "TP1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:GND")
 		(at 50.8 39.37 0)
 		(mirror y)
@@ -4667,7 +4426,6 @@
 		)
 	)
 	(symbol
-		(lib_name "LCSC:PAM8302AASCR")
 		(lib_id "LCSC:PAM8302AASCR")
 		(at 215.9 132.08 0)
 		(unit 1)
@@ -5164,73 +4922,6 @@
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
 					(reference "C45")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Connector:TestPoint")
-		(at 152.4 139.7 270)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "5ccd8af7-2f24-48ed-aa3e-39613fa4f304")
-		(property "Reference" "TP2"
-			(at 157.48 138.43 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "TestPoint"
-			(at 157.48 140.97 90)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "TestPoint:TestPoint_Pad_D1.0mm"
-			(at 152.4 144.78 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 152.4 144.78 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "test point"
-			(at 152.4 139.7 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "4b25f289-7e59-484e-be10-45275a021bdb")
-		)
-		(instances
-			(project "krecek-0.9"
-				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-					(reference "TP2")
 					(unit 1)
 				)
 			)

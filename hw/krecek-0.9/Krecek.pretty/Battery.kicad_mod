@@ -1,0 +1,116 @@
+(footprint "Battery"
+	(version 20240108)
+	(generator "pcbnew")
+	(generator_version "8.0")
+	(layer "F.Cu")
+	(property "Reference" "REF**"
+		(at 17.78 16.51 0)
+		(unlocked yes)
+		(layer "F.SilkS")
+		(uuid "1586c238-20a4-4078-9fc5-07ba8d2558af")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.1)
+			)
+		)
+	)
+	(property "Value" "Battery"
+		(at 18.288 18.034 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "92520a75-909a-4519-a78f-f1881f354a08")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Footprint" "Battery"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "b0cb6575-c352-4ccd-85b1-325bc0bce492")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "e0482b6c-b967-4ffb-897f-e039773c2def")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "afbf3457-63e6-462a-bcdc-fd1bed5c2007")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(fp_rect
+		(start 21.844 16.764)
+		(end 23.876 18.796)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(fill none)
+		(layer "F.SilkS")
+		(uuid "ecb141ee-f94b-4a00-82d4-845f070b63fc")
+	)
+	(fp_rect
+		(start -25 -20)
+		(end 25 20)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(fill none)
+		(layer "Cmts.User")
+		(uuid "e9ffb797-dadc-4c59-9c67-c054acb0c0b9")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 0 2.5 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "908e98f1-27bc-4e03-9f7e-63f315ebf537")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(model "${KIPRJMOD}/Krecek.3dshapes/battery.wrl"
+		(opacity 0.5000)
+		(offset
+			(xyz -25 -20 3)
+		)
+		(scale
+			(xyz 0.3937 0.3937 0.3937)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

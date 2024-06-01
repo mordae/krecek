@@ -3789,6 +3789,16 @@
 	)
 	(wire
 		(pts
+			(xy 269.24 114.3) (xy 279.4 114.3)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "35738005-aa09-4f14-922c-dceb12035966")
+	)
+	(wire
+		(pts
 			(xy 198.12 45.72) (xy 198.12 44.45)
 		)
 		(stroke
@@ -3899,7 +3909,7 @@
 	)
 	(wire
 		(pts
-			(xy 228.6 73.66) (xy 254 73.66)
+			(xy 228.6 71.12) (xy 254 71.12)
 		)
 		(stroke
 			(width 0)
@@ -3996,6 +4006,16 @@
 			(type default)
 		)
 		(uuid "4c337401-b0e1-4226-94e2-5e45e062ad51")
+	)
+	(wire
+		(pts
+			(xy 254 114.3) (xy 264.16 114.3)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4cd2d40b-f40e-4e83-895e-0d0ecdd350c8")
 	)
 	(wire
 		(pts
@@ -4519,7 +4539,7 @@
 	)
 	(wire
 		(pts
-			(xy 228.6 76.2) (xy 254 76.2)
+			(xy 228.6 68.58) (xy 254 68.58)
 		)
 		(stroke
 			(width 0)
@@ -4759,7 +4779,7 @@
 	)
 	(wire
 		(pts
-			(xy 228.6 68.58) (xy 254 68.58)
+			(xy 228.6 76.2) (xy 254 76.2)
 		)
 		(stroke
 			(width 0)
@@ -4819,7 +4839,7 @@
 	)
 	(wire
 		(pts
-			(xy 228.6 71.12) (xy 254 71.12)
+			(xy 228.6 73.66) (xy 254 73.66)
 		)
 		(stroke
 			(width 0)
@@ -5347,6 +5367,27 @@
 		)
 		(uuid "fe52cc25-dc77-45c0-8f43-01e8ebff5345")
 	)
+	(text "FM receiver :-)"
+		(exclude_from_sim no)
+		(at 266.446 118.11 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "4292cd15-4834-44bc-a3fe-e9b64477b7f0")
+	)
+	(label "AUX0"
+		(at 279.4 114.3 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "02b4f5e4-2d37-48fa-a9b8-dd8f21e7b70c")
+	)
 	(label "QSPI_SS"
 		(at 38.1 71.12 0)
 		(fields_autoplaced yes)
@@ -5381,7 +5422,7 @@
 		(uuid "0b6680c9-33f8-4975-8b05-dc75d89a1ad6")
 	)
 	(label "BUS0"
-		(at 254 68.58 180)
+		(at 254 76.2 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5612,7 +5653,7 @@
 		(uuid "9f0342b7-fa65-48c1-a12b-4e3622959f33")
 	)
 	(label "BUS1"
-		(at 254 71.12 180)
+		(at 254 73.66 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5645,7 +5686,7 @@
 		(uuid "abb8d5d0-1516-4a23-9d5e-cf20388f8f92")
 	)
 	(label "BUS3"
-		(at 254 76.2 180)
+		(at 254 68.58 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5656,7 +5697,7 @@
 		(uuid "ae69048d-eb58-4ee0-97bc-9e4cbcb665bb")
 	)
 	(label "BUS2"
-		(at 254 73.66 180)
+		(at 254 71.12 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5676,6 +5717,17 @@
 			(justify right bottom)
 		)
 		(uuid "bb1332e2-ccb3-4039-8aac-e3565b420223")
+	)
+	(label "AUX1"
+		(at 254 114.3 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "bd7953fd-c21f-4253-a682-9d7812d4fca8")
 	)
 	(label "QSPI_SD2"
 		(at 139.7 175.26 180)
@@ -5801,7 +5853,7 @@
 	)
 	(hierarchical_label "SD_{MISO}"
 		(shape input)
-		(at 101.6 73.66 0)
+		(at 101.6 53.34 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5969,7 +6021,7 @@
 	)
 	(hierarchical_label "CHG_{ISET2}"
 		(shape output)
-		(at 101.6 71.12 0)
+		(at 101.6 63.5 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -6065,7 +6117,7 @@
 	)
 	(hierarchical_label "TFT_{CS}"
 		(shape output)
-		(at 101.6 55.88 0)
+		(at 101.6 76.2 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -6089,7 +6141,7 @@
 	)
 	(hierarchical_label "SD_{CS}"
 		(shape output)
-		(at 101.6 76.2 0)
+		(at 101.6 55.88 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -6137,7 +6189,7 @@
 	)
 	(hierarchical_label "TFT_{MISO}"
 		(shape input)
-		(at 101.6 53.34 0)
+		(at 101.6 73.66 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -6149,7 +6201,7 @@
 	)
 	(hierarchical_label "TFT_{MOSI}"
 		(shape output)
-		(at 101.6 60.96 0)
+		(at 101.6 81.28 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -6185,7 +6237,7 @@
 	)
 	(hierarchical_label "SD_{MOSI}"
 		(shape output)
-		(at 101.6 81.28 0)
+		(at 101.6 60.96 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -6221,7 +6273,7 @@
 	)
 	(hierarchical_label "TFT_{SCK}"
 		(shape output)
-		(at 101.6 58.42 0)
+		(at 101.6 78.74 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -6245,7 +6297,7 @@
 	)
 	(hierarchical_label "SD_{SCLK}"
 		(shape output)
-		(at 101.6 78.74 0)
+		(at 101.6 58.42 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -6281,7 +6333,7 @@
 	)
 	(hierarchical_label "TFT_{RS}"
 		(shape output)
-		(at 101.6 63.5 0)
+		(at 101.6 71.12 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -10554,6 +10606,84 @@
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
 					(reference "J2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R_Small")
+		(at 266.7 114.3 90)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "c20e2db9-d359-4a72-8d43-4b784f45970c")
+		(property "Reference" "R40"
+			(at 266.7 109.22 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "1M"
+			(at 266.7 111.76 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 266.7 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 266.7 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor, small symbol"
+			(at 266.7 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part" "C26083"
+			(at 266.7 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "e1546dac-d516-4ea6-829f-d80d6d185fa2")
+		)
+		(pin "2"
+			(uuid "49fd728b-14fc-4cd2-9aa0-4d96743ccfba")
+		)
+		(instances
+			(project "krecek-0.9"
+				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
+					(reference "R40")
 					(unit 1)
 				)
 			)

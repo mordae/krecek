@@ -3755,7 +3755,7 @@
 				)
 			)
 		)
-		(property "Footprint" "LCSC:RES-ADJ-SMD_RDC506002A"
+		(property "Footprint" "Krecek:bracket_Left"
 			(at 120.65 100.33 0)
 			(effects
 				(font
@@ -4237,7 +4237,7 @@
 				)
 			)
 		)
-		(property "Footprint" "LCSC:RES-ADJ-SMD_RDC506002A"
+		(property "Footprint" "Krecek:bracket_Right"
 			(at 120.65 125.73 0)
 			(effects
 				(font
