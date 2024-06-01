@@ -29,8 +29,20 @@ struct wall {
 	float dy;
 };
 
+#define POWER_UP_LENGTH 15
+#define POWER_UP_SPAWN_TIME 2.0f
+#define POWER_UP_RESPAWN_TIME 15.0f
+#define POWER_UP_MIN (16 + POWER_UP_LENGTH)
+#define POWER_UP_MAX (TFT_BOTTOM - POWER_UP_LENGTH)
+
+struct power_up {
+	float y;
+	float spawn_time;
+};
+
 static struct hamster p1, p2;
 static struct wall wall;
+static struct power_up power_up;
 
 struct effect;
 
@@ -175,6 +187,9 @@ void game_reset(void)
 
 	wall.y = TFT_HEIGHT / 2;
 	wall.dy = -20.0f;
+
+	power_up.y = POWER_UP_MIN + (POWER_UP_MAX - POWER_UP_MIN) * ((float)rand() / RAND_MAX);
+	power_up.spawn_time = POWER_UP_SPAWN_TIME;
 }
 
 void game_input(unsigned __unused dt_usec)
@@ -226,7 +241,7 @@ void game_paint(unsigned dt_usec)
 		      TFT_WIDTH / 2 + WALL_WIDTH / 2,
 		      wall.y + WALL_HEIGHT / 2,
 		      WHITE);
-
+	
 	/*
 	 * Projectile-wall collissions
 	 */
@@ -267,6 +282,48 @@ void game_paint(unsigned dt_usec)
 	if (wall.y + WALL_HEIGHT / 2 >= TFT_BOTTOM) {
 		wall.dy *= -1;
 	}
+	
+	if (power_up.spawn_time <= 0) {
+		/*
+		 * Draw power_up
+		 */
+
+		tft_draw_rect(TFT_WIDTH / 2 - POWER_UP_LENGTH / 2, 							    power_up.y - POWER_UP_LENGTH / 2,								  TFT_WIDTH / 2 + POWER_UP_LENGTH / 2, 								power_up.y + POWER_UP_LENGTH / 2, 								      YELLOW);
+		
+		/*
+		 * projectile-power_up collisions
+		 */
+
+		float power_up_top = power_up.y - POWER_UP_LENGTH / 2;
+		float power_up_bottom = power_up.y + POWER_UP_LENGTH / 2;
+		float power_up_left = TFT_WIDTH / 2 - POWER_UP_LENGTH / 2;
+		float power_up_right = TFT_WIDTH / 2 + POWER_UP_LENGTH / 2;
+
+		if (p1.px >= 0) {
+			if (p1.py >= power_up_top && p1.py <= power_up_bottom &&
+			    p1.px >= power_up_left && p1.px <= power_up_right)
+			{
+				p1.hp = clamp(p1.hp + 1, 0, 3);
+				p1.px = -1;
+				power_up.spawn_time = POWER_UP_RESPAWN_TIME;
+				power_up.y = POWER_UP_MIN + (POWER_UP_MAX - POWER_UP_MIN) * ((float)rand() / RAND_MAX);
+			}
+		
+		}
+		
+		if (p2.px >= 0) {
+			if (p2.py >= power_up_top && p2.py <= power_up_bottom &&
+			    p2.px >= power_up_left && p2.px <= power_up_right)
+			{
+				p2.hp = clamp(p2.hp + 1, 0, 3);
+				p1.px = -1;
+				power_up.spawn_time = POWER_UP_RESPAWN_TIME;
+				power_up.y = POWER_UP_MIN + (POWER_UP_MAX - POWER_UP_MIN) * ((float)rand() / RAND_MAX);
+			}
+		}
+	}
+
+	power_up.spawn_time -= dt;
 
 	/*
 	 * Jumping
