@@ -542,10 +542,10 @@
 						)
 					)
 				)
-				(pin output line
-					(at 7.62 -1.27 180)
+				(pin power_in line
+					(at -7.62 -1.27 0)
 					(length 2.54)
-					(name "Y"
+					(name "GND"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -560,10 +560,10 @@
 						)
 					)
 				)
-				(pin power_in line
-					(at -7.62 -1.27 0)
+				(pin output line
+					(at 7.62 -1.27 180)
 					(length 2.54)
-					(name "GND"
+					(name "Y"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -571,24 +571,6 @@
 						)
 					)
 					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at -7.62 1.27 0)
-					(length 2.54) hide
-					(name "Vcc"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "4"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -606,25 +588,7 @@
 							)
 						)
 					)
-					(number "5"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin power_in line
-					(at -7.62 -1.27 0)
-					(length 2.54) hide
-					(name "GND"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "6"
+					(number "4"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1153,173 +1117,11 @@
 				)
 			)
 		)
-		(symbol "RDC506002A_1"
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "R"
-				(at 0 7.62 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "RDC506002A"
-				(at 0 -6.35 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" "LCSC:RES-ADJ-SMD_RDC506002A"
-				(at 0 -8.89 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" "https://lcsc.com/product-detail/Sensors_ALPS_RDC506002A_10kR_C115341.html"
-				(at 0 -11.43 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "LCSC Part" "C115341"
-				(at 0 -13.97 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(symbol "RDC506002A_1_0_1"
-				(rectangle
-					(start -3.81 3.81)
-					(end 3.81 1.27)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type background)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 1.27) (xy -0.51 -0.25)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 1.27) (xy 0.51 -0.25)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 3.81 -1.27) (xy 0 -1.27) (xy 0 1.27)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "RDC506002A_1_1_1"
-				(pin passive line
-					(at -8.89 2.54 0)
-					(length 5.08)
-					(name "1T"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 8.89 -1.27 180)
-					(length 5.08)
-					(name "2T"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 8.89 2.54 180)
-					(length 5.08)
-					(name "3T"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-		)
 		(symbol "power:+3.3V"
 			(power)
+			(pin_numbers hide)
 			(pin_names
-				(offset 0)
-			)
+				(offset 0) hide)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -1417,8 +1219,8 @@
 			(symbol "+3.3V_1_1"
 				(pin power_in line
 					(at 0 0 90)
-					(length 0) hide
-					(name "+3.3V"
+					(length 0)
+					(name "~"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1437,9 +1239,9 @@
 		)
 		(symbol "power:GND"
 			(power)
+			(pin_numbers hide)
 			(pin_names
-				(offset 0)
-			)
+				(offset 0) hide)
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
@@ -1513,8 +1315,8 @@
 			(symbol "GND_1_1"
 				(pin power_in line
 					(at 0 0 270)
-					(length 0) hide
-					(name "GND"
+					(length 0)
+					(name "~"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -2507,7 +2309,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "038d95df-73c7-44be-80ab-1de5dcc2f32c")
-		(property "Reference" "C73"
+		(property "Reference" "C72"
 			(at 53.34 81.2863 0)
 			(effects
 				(font
@@ -2543,7 +2345,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Unpolarized capacitor, small symbol"
 			(at 50.8 82.55 0)
 			(effects
 				(font
@@ -2570,7 +2372,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "C73")
+					(reference "C72")
 					(unit 1)
 				)
 			)
@@ -2672,7 +2474,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "0eab5d63-a129-4103-9978-3bd8cc43e765")
-		(property "Reference" "#PWR0104"
+		(property "Reference" "#PWR0101"
 			(at 50.8 95.25 0)
 			(effects
 				(font
@@ -2707,7 +2509,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 50.8 88.9 0)
 			(effects
 				(font
@@ -2722,7 +2524,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "#PWR0104")
+					(reference "#PWR0101")
 					(unit 1)
 				)
 			)
@@ -2738,7 +2540,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "0f231bd7-ad55-4f46-85be-03e7029f4b98")
-		(property "Reference" "#PWR0102"
+		(property "Reference" "#PWR099"
 			(at 180.34 83.82 0)
 			(effects
 				(font
@@ -2774,7 +2576,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
 			(at 176.53 83.82 0)
 			(effects
 				(font
@@ -2789,7 +2591,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "#PWR0102")
+					(reference "#PWR099")
 					(unit 1)
 				)
 			)
@@ -2805,7 +2607,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "19cdfc17-fd84-4cd4-b094-21a84c27d143")
-		(property "Reference" "R37"
+		(property "Reference" "R35"
 			(at 44.45 71.12 90)
 			(effects
 				(font
@@ -2839,7 +2641,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Resistor, small symbol"
 			(at 44.45 76.2 0)
 			(effects
 				(font
@@ -2866,7 +2668,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "R37")
+					(reference "R35")
 					(unit 1)
 				)
 			)
@@ -2882,7 +2684,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "20f3c781-6ca1-4872-be06-8c38edd212a2")
-		(property "Reference" "#PWR0106"
+		(property "Reference" "#PWR0103"
 			(at 135.89 88.9 0)
 			(effects
 				(font
@@ -2918,7 +2720,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 129.54 88.9 0)
 			(effects
 				(font
@@ -2933,7 +2735,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "#PWR0106")
+					(reference "#PWR0103")
 					(unit 1)
 				)
 			)
@@ -2949,7 +2751,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "239db98e-9a5a-4c18-850b-7ec12ebabf07")
-		(property "Reference" "U1"
+		(property "Reference" "U13"
 			(at 184.15 77.47 0)
 			(effects
 				(font
@@ -2992,9 +2794,6 @@
 				(hide yes)
 			)
 		)
-		(pin "5"
-			(uuid "f7e118d2-da5a-41d7-a64a-554777a3f6a8")
-		)
 		(pin "4"
 			(uuid "9566217e-0eee-4072-a489-a7b145b1343c")
 		)
@@ -3007,13 +2806,10 @@
 		(pin "2"
 			(uuid "6acca795-9486-4c67-96aa-2e0caec2281c")
 		)
-		(pin "6"
-			(uuid "90caa36d-63ba-49a2-ba25-ab2a676db463")
-		)
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "U1")
+					(reference "U13")
 					(unit 1)
 				)
 			)
@@ -3030,7 +2826,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "252604b6-d3e1-4c7b-8f10-ca5e04f082a5")
-		(property "Reference" "#PWR098"
+		(property "Reference" "#PWR095"
 			(at 146.05 58.42 0)
 			(effects
 				(font
@@ -3065,7 +2861,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 146.05 52.07 0)
 			(effects
 				(font
@@ -3080,7 +2876,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "#PWR098")
+					(reference "#PWR095")
 					(unit 1)
 				)
 			)
@@ -3096,7 +2892,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "2faf8613-6b3c-4702-a6bb-686e324e3c5b")
-		(property "Reference" "#PWR0105"
+		(property "Reference" "#PWR0102"
 			(at 115.57 88.9 0)
 			(effects
 				(font
@@ -3132,7 +2928,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
 			(at 111.76 88.9 0)
 			(effects
 				(font
@@ -3147,7 +2943,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "#PWR0105")
+					(reference "#PWR0102")
 					(unit 1)
 				)
 			)
@@ -3164,7 +2960,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "38dbc037-eb27-4153-b293-81dac5b0941d")
-		(property "Reference" "#PWR097"
+		(property "Reference" "#PWR094"
 			(at 107.95 58.42 0)
 			(effects
 				(font
@@ -3199,7 +2995,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 107.95 52.07 0)
 			(effects
 				(font
@@ -3214,7 +3010,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "#PWR097")
+					(reference "#PWR094")
 					(unit 1)
 				)
 			)
@@ -3230,7 +3026,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3a3aeb47-6a10-47d3-82c0-f86b77b3c88a")
-		(property "Reference" "#PWR0111"
+		(property "Reference" "#PWR0106"
 			(at 50.8 133.35 0)
 			(effects
 				(font
@@ -3265,7 +3061,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 50.8 127 0)
 			(effects
 				(font
@@ -3280,7 +3076,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "#PWR0111")
+					(reference "#PWR0106")
 					(unit 1)
 				)
 			)
@@ -3364,7 +3160,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "482ea74a-2822-4504-8e50-ba9f05de24c5")
-		(property "Reference" "#PWR0103"
+		(property "Reference" "#PWR0100"
 			(at 170.18 86.36 0)
 			(effects
 				(font
@@ -3400,7 +3196,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 176.53 86.36 0)
 			(effects
 				(font
@@ -3415,7 +3211,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "#PWR0103")
+					(reference "#PWR0100")
 					(unit 1)
 				)
 			)
@@ -3510,7 +3306,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "58a5411e-c743-4eed-a032-7b913f92bd22")
-		(property "Reference" "#PWR0100"
+		(property "Reference" "#PWR097"
 			(at 222.25 58.42 0)
 			(effects
 				(font
@@ -3545,7 +3341,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 222.25 52.07 0)
 			(effects
 				(font
@@ -3560,7 +3356,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "#PWR0100")
+					(reference "#PWR097")
 					(unit 1)
 				)
 			)
@@ -3576,7 +3372,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "5a7270fb-1a19-47e9-bb7e-0eccc07b642f")
-		(property "Reference" "#PWR0112"
+		(property "Reference" "#PWR0107"
 			(at 50.8 171.45 0)
 			(effects
 				(font
@@ -3611,7 +3407,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 50.8 165.1 0)
 			(effects
 				(font
@@ -3626,7 +3422,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "#PWR0112")
+					(reference "#PWR0107")
 					(unit 1)
 				)
 			)
@@ -3642,7 +3438,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "613f58f8-c12f-4b55-b446-dddc650d4238")
-		(property "Reference" "R40"
+		(property "Reference" "R37"
 			(at 44.45 109.22 90)
 			(effects
 				(font
@@ -3676,7 +3472,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Resistor, small symbol"
 			(at 44.45 114.3 0)
 			(effects
 				(font
@@ -3703,7 +3499,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "R40")
+					(reference "R37")
 					(unit 1)
 				)
 			)
@@ -3719,7 +3515,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6a18449b-9ef9-4b81-a118-1d70f798bc4f")
-		(property "Reference" "R42"
+		(property "Reference" "R39"
 			(at 44.45 147.32 90)
 			(effects
 				(font
@@ -3753,7 +3549,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Resistor, small symbol"
 			(at 44.45 152.4 0)
 			(effects
 				(font
@@ -3780,7 +3576,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "R42")
+					(reference "R39")
 					(unit 1)
 				)
 			)
@@ -3797,7 +3593,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6c80bc1e-cac8-4125-ab0d-e16c9ce93d97")
-		(property "Reference" "C75"
+		(property "Reference" "C73"
 			(at 53.34 119.3863 0)
 			(effects
 				(font
@@ -3833,7 +3629,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Unpolarized capacitor, small symbol"
 			(at 50.8 120.65 0)
 			(effects
 				(font
@@ -3860,7 +3656,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "C75")
+					(reference "C73")
 					(unit 1)
 				)
 			)
@@ -3877,7 +3673,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "78a7398f-cb38-4a74-a720-050c26fac2e1")
-		(property "Reference" "#PWR099"
+		(property "Reference" "#PWR096"
 			(at 184.15 58.42 0)
 			(effects
 				(font
@@ -3912,7 +3708,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 184.15 52.07 0)
 			(effects
 				(font
@@ -3927,14 +3723,13 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "#PWR099")
+					(reference "#PWR096")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_name "RDC506002A_1")
 		(lib_id "LCSC:RDC506002A")
 		(at 120.65 91.44 0)
 		(unit 1)
@@ -3944,7 +3739,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "8752806e-fd2a-4a92-ac50-0f4da3ee7a81")
-		(property "Reference" "R39"
+		(property "Reference" "R36"
 			(at 120.65 82.55 0)
 			(effects
 				(font
@@ -4008,7 +3803,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "R39")
+					(reference "R36")
 					(unit 1)
 				)
 			)
@@ -4024,7 +3819,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "8ea832b0-e7d2-4057-9dc9-30f1c8b7d360")
-		(property "Reference" "C69"
+		(property "Reference" "C68"
 			(at 149.86 43.1863 0)
 			(effects
 				(font
@@ -4060,7 +3855,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Unpolarized capacitor, small symbol"
 			(at 152.4 44.45 0)
 			(effects
 				(font
@@ -4087,7 +3882,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "C69")
+					(reference "C68")
 					(unit 1)
 				)
 			)
@@ -4104,7 +3899,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "90b3b8cd-da22-4f24-92c6-5a8b52401882")
-		(property "Reference" "#PWR0101"
+		(property "Reference" "#PWR098"
 			(at 260.35 58.42 0)
 			(effects
 				(font
@@ -4139,7 +3934,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 260.35 52.07 0)
 			(effects
 				(font
@@ -4154,7 +3949,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "#PWR0101")
+					(reference "#PWR098")
 					(unit 1)
 				)
 			)
@@ -4205,7 +4000,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 38.1 44.45 0)
 			(effects
 				(font
@@ -4252,7 +4047,7 @@
 			)
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "#PWR096")
+					(reference "#PWR093")
 					(unit 1)
 				)
 			)
@@ -4268,7 +4063,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "9c5f552b-c6f9-420a-a281-de9068cef0e3")
-		(property "Reference" "C71"
+		(property "Reference" "C70"
 			(at 226.06 43.1863 0)
 			(effects
 				(font
@@ -4304,7 +4099,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Unpolarized capacitor, small symbol"
 			(at 228.6 44.45 0)
 			(effects
 				(font
@@ -4331,7 +4126,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "C71")
+					(reference "C70")
 					(unit 1)
 				)
 			)
@@ -4347,7 +4142,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "a23bcce0-6c12-456d-b817-8d9c8b727c5e")
-		(property "Reference" "C72"
+		(property "Reference" "C71"
 			(at 264.16 43.1863 0)
 			(effects
 				(font
@@ -4383,7 +4178,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Unpolarized capacitor, small symbol"
 			(at 266.7 44.45 0)
 			(effects
 				(font
@@ -4410,7 +4205,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "C72")
+					(reference "C71")
 					(unit 1)
 				)
 			)
@@ -4426,7 +4221,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "a347993d-79db-46d6-a6fb-435bf5e25bba")
-		(property "Reference" "R41"
+		(property "Reference" "R38"
 			(at 120.65 107.95 0)
 			(effects
 				(font
@@ -4490,7 +4285,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "R41")
+					(reference "R38")
 					(unit 1)
 				)
 			)
@@ -4506,7 +4301,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "a6410bca-7b25-449a-b267-329b2cb61128")
-		(property "Reference" "#PWR0110"
+		(property "Reference" "#PWR0105"
 			(at 135.89 114.3 0)
 			(effects
 				(font
@@ -4542,7 +4337,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
 			(at 129.54 114.3 0)
 			(effects
 				(font
@@ -4557,7 +4352,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "#PWR0110")
+					(reference "#PWR0105")
 					(unit 1)
 				)
 			)
@@ -4573,7 +4368,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "bed24489-7184-4531-a438-a46ee11b914a")
-		(property "Reference" "C70"
+		(property "Reference" "C69"
 			(at 187.96 43.1863 0)
 			(effects
 				(font
@@ -4609,7 +4404,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Unpolarized capacitor, small symbol"
 			(at 190.5 44.45 0)
 			(effects
 				(font
@@ -4636,7 +4431,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "C70")
+					(reference "C69")
 					(unit 1)
 				)
 			)
@@ -4808,7 +4603,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "d4fe0faf-5716-4220-80ff-6ca29308cd91")
-		(property "Reference" "#PWR0109"
+		(property "Reference" "#PWR0104"
 			(at 115.57 114.3 0)
 			(effects
 				(font
@@ -4844,7 +4639,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
 			(at 111.76 114.3 0)
 			(effects
 				(font
@@ -4859,7 +4654,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "#PWR0109")
+					(reference "#PWR0104")
 					(unit 1)
 				)
 			)
@@ -4875,7 +4670,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "ef1c5f3e-4822-49b0-8633-441b4b7c8e41")
-		(property "Reference" "C68"
+		(property "Reference" "C67"
 			(at 111.76 43.1863 0)
 			(effects
 				(font
@@ -4911,7 +4706,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Unpolarized capacitor, small symbol"
 			(at 114.3 44.45 0)
 			(effects
 				(font
@@ -4938,7 +4733,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "C68")
+					(reference "C67")
 					(unit 1)
 				)
 			)
@@ -5033,7 +4828,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "ff826ac8-45e4-42b8-9692-9678aea72b76")
-		(property "Reference" "C76"
+		(property "Reference" "C74"
 			(at 53.34 157.4863 0)
 			(effects
 				(font
@@ -5069,7 +4864,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Unpolarized capacitor, small symbol"
 			(at 50.8 158.75 0)
 			(effects
 				(font
@@ -5096,7 +4891,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "C76")
+					(reference "C74")
 					(unit 1)
 				)
 			)

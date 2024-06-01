@@ -384,10 +384,10 @@
 					)
 				)
 			)
-			(pin output line
-				(at 7.62 -1.27 180)
+			(pin power_in line
+				(at -7.62 -1.27 0)
 				(length 2.54)
-				(name "Y"
+				(name "GND"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -402,10 +402,10 @@
 					)
 				)
 			)
-			(pin power_in line
-				(at -7.62 -1.27 0)
+			(pin output line
+				(at 7.62 -1.27 180)
 				(length 2.54)
-				(name "GND"
+				(name "Y"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -413,24 +413,6 @@
 					)
 				)
 				(number "3"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-			)
-			(pin power_in line
-				(at -7.62 1.27 0)
-				(length 2.54) hide
-				(name "Vcc"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-				(number "4"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -448,25 +430,7 @@
 						)
 					)
 				)
-				(number "5"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-			)
-			(pin power_in line
-				(at -7.62 -1.27 0)
-				(length 2.54) hide
-				(name "GND"
-					(effects
-						(font
-							(size 1.27 1.27)
-						)
-					)
-				)
-				(number "6"
+				(number "4"
 					(effects
 						(font
 							(size 1.27 1.27)
@@ -976,7 +940,7 @@
 					)
 				)
 			)
-			(pin tri_state line
+			(pin output line
 				(at -12.7 -7.62 0)
 				(length 2.54)
 				(name "MISO"

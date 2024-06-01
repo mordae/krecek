@@ -15,8 +15,8 @@
 			(pin_names
 				(offset 1.016)
 			)
-			(exclude_from_sim no)
-			(in_bom yes)
+			(exclude_from_sim yes)
+			(in_bom no)
 			(on_board yes)
 			(property "Reference" "H"
 				(at 0 5.08 0)
@@ -798,7 +798,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Mounting Hole without connection"
 			(at 50.8 177.8 0)
 			(effects
 				(font
@@ -862,7 +862,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Mounting Hole without connection"
 			(at 50.8 152.4 0)
 			(effects
 				(font
@@ -926,7 +926,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Mounting Hole without connection"
 			(at 25.4 152.4 0)
 			(effects
 				(font
@@ -990,7 +990,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Mounting Hole without connection"
 			(at 25.4 190.5 0)
 			(effects
 				(font
@@ -1054,7 +1054,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Mounting Hole without connection"
 			(at 50.8 165.1 0)
 			(effects
 				(font
@@ -1118,7 +1118,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Mounting Hole without connection"
 			(at 25.4 165.1 0)
 			(effects
 				(font
@@ -1182,7 +1182,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Mounting Hole without connection"
 			(at 25.4 177.8 0)
 			(effects
 				(font
@@ -1246,7 +1246,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Mounting Hole without connection"
 			(at 50.8 190.5 0)
 			(effects
 				(font
