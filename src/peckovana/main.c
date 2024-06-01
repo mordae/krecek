@@ -21,7 +21,16 @@ struct hamster {
 	int hp;
 };
 
+#define WALL_HEIGHT 32
+#define WALL_WIDTH 4
+
+struct wall {
+	float y;
+	float dy;
+};
+
 static struct hamster p1, p2;
+static struct wall wall;
 
 struct effect;
 
@@ -163,6 +172,9 @@ void game_reset(void)
 	p2.px = -1;
 	p2.py = -1;
 	p2.hp = 3;
+
+	wall.y = TFT_HEIGHT / 2;
+	wall.dy = -20.0f;
 }
 
 void game_input(unsigned __unused dt_usec)
@@ -204,6 +216,57 @@ void game_paint(unsigned dt_usec)
 
 	for (int i = 0; i < p2.hp; i++)
 		draw_sprite(TFT_WIDTH - 17 - (28 + 16 * i), 4, heart_sprite, GREEN, true);
+
+	/*
+	 * Draw wall 
+	 */
+
+	tft_draw_rect(TFT_WIDTH / 2 - WALL_WIDTH / 2,
+		      wall.y - WALL_HEIGHT / 2,
+		      TFT_WIDTH / 2 + WALL_WIDTH / 2,
+		      wall.y + WALL_HEIGHT / 2,
+		      WHITE);
+
+	/*
+	 * Projectile-wall collissions
+	 */
+
+	float wall_top = wall.y - WALL_HEIGHT / 2;
+	float wall_bottom = wall.y + WALL_HEIGHT / 2;
+	float wall_left = TFT_WIDTH / 2 - WALL_WIDTH / 2;
+	float wall_right = TFT_WIDTH / 2 + WALL_WIDTH / 2;
+
+	if (p1.px >= 0) {
+		if (p1.py >= wall_top && p1.py <= wall_bottom &&
+		    p1.px >= wall_left && p1.px <= wall_right)
+		{
+			p1.px = -1;
+			play_effect(INT16_MAX / 5, 0, 6000, noise);
+		}
+	
+	}
+	
+	if (p2.px >= 0) {
+		if (p2.py >= wall_top && p2.py <= wall_bottom &&
+		    p2.px >= wall_left && p2.px <= wall_right)
+		{
+			p2.px = -1;
+			play_effect(INT16_MAX / 5, 0, 6000, noise);
+		}
+	}
+
+	/*
+	 * Wall movement
+	 */
+	wall.y += wall.dy * dt;
+
+	if (wall.y - WALL_HEIGHT / 2 <= 0) {
+		wall.dy *= -1;
+	}
+
+	if (wall.y + WALL_HEIGHT / 2 >= TFT_BOTTOM) {
+		wall.dy *= -1;
+	}
 
 	/*
 	 * Jumping
