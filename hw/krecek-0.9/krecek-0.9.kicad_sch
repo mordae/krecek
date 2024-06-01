@@ -264,16 +264,6 @@
 	)
 	(wire
 		(pts
-			(xy 114.3 58.42) (xy 139.7 58.42)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "362788d0-56e4-445a-9dc0-28554490c0fe")
-	)
-	(wire
-		(pts
 			(xy 114.3 104.14) (xy 139.7 104.14)
 		)
 		(stroke
@@ -1364,16 +1354,6 @@
 			)
 			(uuid "f61fcfcc-e680-4047-83e9-bea6acf63e42")
 		)
-		(pin "JOY_{SW}" output
-			(at 114.3 58.42 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-			(uuid "91499c31-638e-4d63-8287-d6838c82a195")
-		)
 		(pin "BTN_{SELECT}" output
 			(at 114.3 63.5 0)
 			(effects
@@ -1827,16 +1807,6 @@
 				(justify left)
 			)
 			(uuid "dd39009c-ba62-4857-afff-57e62515165e")
-		)
-		(pin "JOY_{SW}" input
-			(at 139.7 58.42 180)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-			(uuid "5997eb00-a415-441f-b27b-8349d0397200")
 		)
 		(pin "BTN_{START}" input
 			(at 165.1 58.42 0)

@@ -3382,6 +3382,10 @@
 		(uuid "b4759100-6f4d-4a74-b0f5-8a64a0705456")
 	)
 	(no_connect
+		(at 177.8 76.2)
+		(uuid "e435fd25-760c-4288-a998-8846e22ca6b3")
+	)
+	(no_connect
 		(at 177.8 63.5)
 		(uuid "ee0b2527-8592-4a05-a1fd-a470fdabaf63")
 	)
@@ -6274,18 +6278,6 @@
 			(justify left)
 		)
 		(uuid "da5ef230-299f-4484-809e-9cef3d294ebe")
-	)
-	(hierarchical_label "JOY_{SW}"
-		(shape input)
-		(at 177.8 76.2 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "ddfe506d-8223-4c00-ae09-062786e012b6")
 	)
 	(hierarchical_label "TFT_{RS}"
 		(shape output)
