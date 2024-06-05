@@ -5935,7 +5935,7 @@
 	)
 	(hierarchical_label "DSP_{ASDOUT}"
 		(shape input)
-		(at 101.6 91.44 0)
+		(at 101.6 88.9 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -6163,7 +6163,7 @@
 	)
 	(hierarchical_label "DSP_{ASDIN}"
 		(shape output)
-		(at 101.6 88.9 0)
+		(at 101.6 91.44 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
