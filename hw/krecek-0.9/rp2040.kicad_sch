@@ -3789,7 +3789,7 @@
 	)
 	(wire
 		(pts
-			(xy 269.24 114.3) (xy 279.4 114.3)
+			(xy 281.94 114.3) (xy 292.1 114.3)
 		)
 		(stroke
 			(width 0)
@@ -4079,7 +4079,7 @@
 	)
 	(wire
 		(pts
-			(xy 260.35 152.4) (xy 279.4 152.4)
+			(xy 247.65 149.86) (xy 228.6 149.86)
 		)
 		(stroke
 			(width 0)
@@ -4409,7 +4409,7 @@
 	)
 	(wire
 		(pts
-			(xy 247.65 152.4) (xy 228.6 152.4)
+			(xy 247.65 157.48) (xy 228.6 157.48)
 		)
 		(stroke
 			(width 0)
@@ -4489,7 +4489,7 @@
 	)
 	(wire
 		(pts
-			(xy 247.65 157.48) (xy 228.6 157.48)
+			(xy 260.35 160.02) (xy 279.4 160.02)
 		)
 		(stroke
 			(width 0)
@@ -4859,6 +4859,16 @@
 	)
 	(wire
 		(pts
+			(xy 260.35 157.48) (xy 279.4 157.48)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b35162b7-626f-41fa-bb54-ed085e07c37d")
+	)
+	(wire
+		(pts
 			(xy 125.73 38.1) (xy 134.62 38.1)
 		)
 		(stroke
@@ -4989,7 +4999,17 @@
 	)
 	(wire
 		(pts
-			(xy 260.35 160.02) (xy 279.4 160.02)
+			(xy 269.24 114.3) (xy 276.86 114.3)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c78ae2d1-f3f3-42e6-9747-bb4526399715")
+	)
+	(wire
+		(pts
+			(xy 247.65 152.4) (xy 228.6 152.4)
 		)
 		(stroke
 			(width 0)
@@ -5029,7 +5049,7 @@
 	)
 	(wire
 		(pts
-			(xy 260.35 157.48) (xy 279.4 157.48)
+			(xy 260.35 152.4) (xy 279.4 152.4)
 		)
 		(stroke
 			(width 0)
@@ -5076,16 +5096,6 @@
 			(type default)
 		)
 		(uuid "d3998e10-40b3-4134-9251-cee829533b5c")
-	)
-	(wire
-		(pts
-			(xy 247.65 149.86) (xy 228.6 149.86)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d567528a-8162-4b4d-a589-bd0b464a978e")
 	)
 	(wire
 		(pts
@@ -5378,7 +5388,7 @@
 		(uuid "4292cd15-4834-44bc-a3fe-e9b64477b7f0")
 	)
 	(label "AUX0"
-		(at 279.4 114.3 180)
+		(at 292.1 114.3 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5455,13 +5465,13 @@
 		(uuid "28ce87fb-cae6-425e-88e2-dde36f874cf7")
 	)
 	(label "AUX6"
-		(at 228.6 157.48 0)
+		(at 279.4 160.02 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left bottom)
+			(justify right bottom)
 		)
 		(uuid "29e6b00b-67ea-4df3-be24-a60c313649a1")
 	)
@@ -5477,7 +5487,7 @@
 		(uuid "2bd5c4b0-566e-40b9-a1a5-524f6385401d")
 	)
 	(label "AUX5"
-		(at 228.6 152.4 0)
+		(at 228.6 157.48 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5499,7 +5509,7 @@
 		(uuid "324a5034-a911-44cd-8a47-2c249cdac0bd")
 	)
 	(label "AUX2"
-		(at 279.4 157.48 180)
+		(at 279.4 152.4 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5554,24 +5564,24 @@
 		(uuid "5cfe4446-2975-4455-99ac-e7c92f2710c5")
 	)
 	(label "AUX1"
-		(at 279.4 152.4 180)
+		(at 228.6 149.86 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "66e6290b-c4b0-4a1c-97fe-00e28714f0ae")
 	)
 	(label "AUX3"
-		(at 279.4 160.02 180)
+		(at 228.6 152.4 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "6f53e188-7813-47e4-802c-1aa3f7eb4a57")
 	)
@@ -5587,13 +5597,13 @@
 		(uuid "739b5d75-1de3-4695-9dd0-96a0b7499f8b")
 	)
 	(label "AUX4"
-		(at 228.6 149.86 0)
+		(at 279.4 157.48 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 1.27 1.27)
 			)
-			(justify left bottom)
+			(justify right bottom)
 		)
 		(uuid "7f030c1f-407c-4ef1-8e1c-e798775e7e29")
 	)
@@ -10106,6 +10116,84 @@
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
 					(reference "C13")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R_Small")
+		(at 279.4 114.3 90)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "b0b16d89-c2dc-4795-8f5d-66c7062c313a")
+		(property "Reference" "R41"
+			(at 279.4 109.22 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "1M"
+			(at 279.4 111.76 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 279.4 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 279.4 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor, small symbol"
+			(at 279.4 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part" "C26083"
+			(at 279.4 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "bc647256-c8c7-4c98-a123-f697fdde16ba")
+		)
+		(pin "2"
+			(uuid "019193b8-b101-4957-bb24-df7583350a30")
+		)
+		(instances
+			(project "krecek-0.9"
+				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/6537dbea-4e11-4137-b8a0-9ae6b128c4e4"
+					(reference "R41")
 					(unit 1)
 				)
 			)
