@@ -19,6 +19,7 @@ struct sdk_config sdk_config = {};
 void sdk_audio_init(void);
 void sdk_audio_start(void);
 void sdk_audio_task(void);
+void sdk_audio_flush(void);
 
 /* From video.c */
 void sdk_video_init(void);
@@ -127,6 +128,7 @@ void __noreturn sdk_main(const struct sdk_config *conf)
 
 		// Enqueue audio samples.
 		sdk_audio_task();
+		sdk_audio_flush();
 
 		// Track ellapsed time.
 		uint64_t this_frame = time_us_32();

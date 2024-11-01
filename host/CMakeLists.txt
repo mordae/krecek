@@ -8,6 +8,7 @@ find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
 
 pkg_check_modules(SDL2_Pango REQUIRED IMPORTED_TARGET SDL2_Pango)
 pkg_check_modules(freetype2 REQUIRED IMPORTED_TARGET freetype2)
+pkg_check_modules(PA REQUIRED libpulse-simple)
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   add_compile_options(-fsanitize=address)
