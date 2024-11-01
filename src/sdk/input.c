@@ -184,15 +184,24 @@ void sdk_input_task(void)
 		sdk_inputs_delta.x = sdk_inputs.x - prev_inputs.x;
 		sdk_inputs_delta.y = sdk_inputs.y - prev_inputs.y;
 
+		sdk_inputs_delta.joy_x = sdk_inputs.joy_x - prev_inputs.joy_x;
+		sdk_inputs_delta.joy_y = sdk_inputs.joy_y - prev_inputs.joy_y;
+		sdk_inputs_delta.joy_sw = sdk_inputs.joy_sw - prev_inputs.joy_sw;
+
 		sdk_inputs_delta.vol_up = sdk_inputs.vol_up - prev_inputs.vol_up;
 		sdk_inputs_delta.vol_down = sdk_inputs.vol_down - prev_inputs.vol_down;
 		sdk_inputs_delta.vol_sw = sdk_inputs.vol_sw - prev_inputs.vol_sw;
+
+		sdk_inputs_delta.brack_l = sdk_inputs.brack_l - prev_inputs.brack_l;
+		sdk_inputs_delta.brack_r = sdk_inputs.brack_r - prev_inputs.brack_r;
 
 		for (int i = 0; i < 8; i++)
 			sdk_inputs_delta.aux[i] = sdk_inputs.aux[i] - prev_inputs.aux[i];
 
 		sdk_inputs_delta.start = sdk_inputs.start - prev_inputs.start;
 		sdk_inputs_delta.select = sdk_inputs.select - prev_inputs.select;
+
+		prev_inputs = sdk_inputs;
 
 		sdk_inputs_delta.batt_mv = sdk_inputs.batt_mv - prev_inputs.batt_mv;
 

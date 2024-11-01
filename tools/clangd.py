@@ -15,17 +15,18 @@ def clangd():
     assert "PICO_SDK_PATH" in os.environ, "PICO_SDK_PATH not set"
 
     pico_sdk_path = os.path.realpath(os.environ["PICO_SDK_PATH"])
-    cwd = os.path.realpath(os.getcwd())
+    src = os.path.realpath(os.path.join(os.getcwd(), "src"))
+    build = os.path.realpath(os.path.join(os.getcwd(), "build"))
 
     includes = [
         *glob(f"{pico_sdk_path}/src/common/*/include"),
         *glob(f"{pico_sdk_path}/src/rp2040/*/include"),
         *glob(f"{pico_sdk_path}/src/rp2_common/*/include"),
         f"{pico_sdk_path}/lib/tinyusb/src",
-        *glob(f"{cwd}/src/**/include", recursive=True),
-        f"{cwd}/build/generated/pico_base",
-        f"{cwd}/build/sdk",
-        f"{cwd}/build/vendor/pico-tft",
+        *glob(f"{src}/**/include", recursive=True),
+        f"{build}/generated/pico_base",
+        f"{build}/sdk",
+        f"{build}/vendor/pico-tft",
     ]
 
     flags = [
