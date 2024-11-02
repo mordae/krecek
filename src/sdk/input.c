@@ -205,8 +205,6 @@ void sdk_input_task(void)
 
 		sdk_inputs_delta.batt_mv = sdk_inputs.batt_mv - prev_inputs.batt_mv;
 
-		prev_inputs = sdk_inputs;
-
 		if (sdk_config.off_on_select) {
 			if (sdk_inputs_delta.select > 0) {
 				puts("sdk: SELECT pressed, turning off...");
