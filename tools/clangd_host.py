@@ -16,7 +16,6 @@ def clangd():
     host = os.path.realpath(os.path.join(os.getcwd(), "host"))
 
     includes = [
-        *glob(f"{src}/**/include", recursive=True),
         f"{host}/sdk/include",
         f"{src}/sdk/include",
         f"{src}/vendor/pico-tft/include",
