@@ -21,12 +21,13 @@ def clangd():
     includes = [
         *glob(f"{pico_sdk_path}/src/common/*/include"),
         *glob(f"{pico_sdk_path}/src/rp2040/*/include"),
+        *glob(f"{pico_sdk_path}/src/rp2350/*/include"),
         *glob(f"{pico_sdk_path}/src/rp2_common/*/include"),
         f"{pico_sdk_path}/lib/tinyusb/src",
         *glob(f"{src}/**/include", recursive=True),
         f"{build}/generated/pico_base",
-        f"{build}/sdk",
-        f"{build}/vendor/pico-tft",
+        f"{build}/sdk/include",
+        f"{build}/vendor/pico-tft/include",
     ]
 
     flags = [
