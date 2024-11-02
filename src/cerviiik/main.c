@@ -139,10 +139,10 @@ void game_paint(unsigned __unused dt_usec)
 	if (sdk_inputs.vol_down)
 		worms[3].angle += ANGLE_DELTA;
 
-	bool anybody_alive = false;
+	int worms_alive = 0;
 
 	for (int i = 0; i < NUM_WORMS; i++) {
-		anybody_alive |= worms[i].alive;
+		worms_alive += worms[i].alive;
 
 		if (!worms[i].alive)
 			continue;
@@ -192,7 +192,7 @@ void game_paint(unsigned __unused dt_usec)
 			worms[i].alive = false;
 	}
 
-	if (!anybody_alive)
+	if (worms_alive <= 1)
 		game_reset();
 }
 
