@@ -13,12 +13,22 @@
 #define GRAY 8
 #define WHITE 15
 
+#define MAX_BULLETS 2
+#define BULLET_SPEED (TFT_WIDTH / 2)
+
+struct bullet {
+	float x, y;
+	float dx;
+	bool spawned;
+};
+
 struct hamster {
 	float y;
 	float dy;
 	uint8_t color;
-	float px, py;
 	int hp;
+
+	struct bullet bullets[MAX_BULLETS];
 };
 
 #define WALL_HEIGHT 32
@@ -174,16 +184,17 @@ void game_reset(void)
 	p1.color = RED;
 	p1.dy = 0;
 	p1.y = TFT_HEIGHT - 31;
-	p1.px = -1;
-	p1.py = -1;
 	p1.hp = 3;
 
 	p2.color = GREEN;
 	p2.dy = 0;
 	p2.y = TFT_HEIGHT - 31;
-	p2.px = -1;
-	p2.py = -1;
 	p2.hp = 3;
+
+	for (int i = 0; i < MAX_BULLETS; i++) {
+		p1.bullets[i].spawned = false;
+		p2.bullets[i].spawned = false;
+	}
 
 	wall.y = TFT_HEIGHT / 2;
 	wall.dy = -20.0f;
@@ -251,24 +262,30 @@ void game_paint(unsigned dt_usec)
 	float wall_left = TFT_WIDTH / 2 - WALL_WIDTH / 2;
 	float wall_right = TFT_WIDTH / 2 + WALL_WIDTH / 2;
 
-	if (p1.px >= 0) {
-		if (p1.py >= wall_top && p1.py <= wall_bottom &&
-		    p1.px >= wall_left && p1.px <= wall_right)
-		{
-			p1.px = -1;
-			play_effect(INT16_MAX / 5, 0, 6000, noise);
+	for (int i = 0; i < MAX_BULLETS; i++) {
+		if (p1.bullets[i].spawned) {
+			if (p1.bullets[i].y >= wall_top &&
+			    p1.bullets[i].y <= wall_bottom &&
+			    p1.bullets[i].x >= wall_left &&
+			    p1.bullets[i].x <= wall_right
+			) {
+				p1.bullets[i].spawned = false;
+				play_effect(INT16_MAX / 5, 0, 6000, noise);
+			}
 		}
-	
+
+		if (p2.bullets[i].spawned) {
+			if (p2.bullets[i].y >= wall_top &&
+			    p2.bullets[i].y <= wall_bottom &&
+			    p2.bullets[i].x >= wall_left &&
+			    p2.bullets[i].x <= wall_right
+			) {
+				p2.bullets[i].spawned = false;
+				play_effect(INT16_MAX / 5, 0, 6000, noise);
+			}
+		}
 	}
 	
-	if (p2.px >= 0) {
-		if (p2.py >= wall_top && p2.py <= wall_bottom &&
-		    p2.px >= wall_left && p2.px <= wall_right)
-		{
-			p2.px = -1;
-			play_effect(INT16_MAX / 5, 0, 6000, noise);
-		}
-	}
 
 	/*
 	 * Wall movement
@@ -299,26 +316,33 @@ void game_paint(unsigned dt_usec)
 		float power_up_left = TFT_WIDTH / 2 - POWER_UP_LENGTH / 2;
 		float power_up_right = TFT_WIDTH / 2 + POWER_UP_LENGTH / 2;
 
-		if (p1.px >= 0) {
-			if (p1.py >= power_up_top && p1.py <= power_up_bottom &&
-			    p1.px >= power_up_left && p1.px <= power_up_right)
-			{
-				p1.hp = clamp(p1.hp + 1, 0, 3);
-				p1.px = -1;
-				power_up.spawn_time = POWER_UP_RESPAWN_TIME;
-				power_up.y = POWER_UP_MIN + (POWER_UP_MAX - POWER_UP_MIN) * ((float)rand() / RAND_MAX);
+		for (int i = 0; i < MAX_BULLETS; i++) {
+			if (p1.bullets[i].spawned) {
+				if (p1.bullets[i].y >= power_up_top &&
+				    p1.bullets[i].y <= power_up_bottom &&
+				    p1.bullets[i].x >= power_up_left &&
+				    p1.bullets[i].x <= power_up_right
+				) {
+					p1.bullets[i].spawned = false;
+					p1.hp = clamp(p1.hp + 1, 0, 3);
+					power_up.spawn_time = POWER_UP_RESPAWN_TIME;
+					power_up.y = POWER_UP_MIN + (POWER_UP_MAX - POWER_UP_MIN) * ((float)rand() / RAND_MAX);
+					play_effect(INT16_MAX / 5, 880, 6000, square_wave);
+				}
 			}
-		
-		}
-		
-		if (p2.px >= 0) {
-			if (p2.py >= power_up_top && p2.py <= power_up_bottom &&
-			    p2.px >= power_up_left && p2.px <= power_up_right)
-			{
-				p2.hp = clamp(p2.hp + 1, 0, 3);
-				p1.px = -1;
-				power_up.spawn_time = POWER_UP_RESPAWN_TIME;
-				power_up.y = POWER_UP_MIN + (POWER_UP_MAX - POWER_UP_MIN) * ((float)rand() / RAND_MAX);
+
+			if (p2.bullets[i].spawned) {
+				if (p2.bullets[i].y >= power_up_top &&
+				    p2.bullets[i].y <= power_up_bottom &&
+				    p2.bullets[i].x >= power_up_left &&
+				    p2.bullets[i].x <= power_up_right
+				) {
+					p2.bullets[i].spawned = false;
+					p2.hp = clamp(p2.hp + 1, 0, 3);
+					power_up.spawn_time = POWER_UP_RESPAWN_TIME;
+					power_up.y = POWER_UP_MIN + (POWER_UP_MAX - POWER_UP_MIN) * ((float)rand() / RAND_MAX);
+					play_effect(INT16_MAX / 5, 880, 6000, square_wave);
+				}
 			}
 		}
 	}
@@ -332,18 +356,26 @@ void game_paint(unsigned dt_usec)
 	if ((p1.y >= TFT_HEIGHT - 31) && sdk_inputs.a)
 		p1.dy = -TFT_HEIGHT * 1.15;
 
-	if ((p1.px < 0) && sdk_inputs.x) {
-		p1.px = 24;
-		p1.py = p1.y + 16;
-		play_effect(INT16_MAX / 5, 440, 6000, square_wave);
-	}
-
 	if ((p2.y >= TFT_HEIGHT - 31) && sdk_inputs.y)
 		p2.dy = -TFT_HEIGHT * 1.15;
 
-	if ((p2.px < 0) && sdk_inputs.b) {
-		p2.px = TFT_WIDTH - 25;
-		p2.py = p2.y + 16;
+	/*
+	 * Shooting
+	 */
+
+	if (!p1.bullets[0].spawned && sdk_inputs.x) {
+		p1.bullets[0].spawned = true;
+		p1.bullets[0].x = 24;
+		p1.bullets[0].y = p1.y + 16;
+		p1.bullets[0].dx = BULLET_SPEED;
+		play_effect(INT16_MAX / 5, 440, 6000, square_wave);
+	}
+
+	if (!p2.bullets[0].spawned && sdk_inputs.b) {
+		p2.bullets[0].spawned = true;
+		p2.bullets[0].x = TFT_RIGHT - 24;
+		p2.bullets[0].y = p2.y + 16;
+		p2.bullets[0].dx = -BULLET_SPEED;
 		play_effect(INT16_MAX / 5, 440, 6000, square_wave);
 	}
 
@@ -393,25 +425,53 @@ void game_paint(unsigned dt_usec)
 	 * Draw projectiles
 	 */
 
-	if (p1.px >= 0)
-		tft_draw_rect(p1.px - 1, p1.py - 1, p1.px + 1, p1.py + 1, p1.color);
+	for (int i = 0; i < MAX_BULLETS; i++) {
+		if (p1.bullets[i].spawned) {
+			tft_draw_rect(p1.bullets[i].x - 1,
+			              p1.bullets[i].y - 1,
+			              p1.bullets[i].x + 1,
+			              p1.bullets[i].y + 1,
+			              p1.color);
+		}
 
-	if (p2.px >= 0)
-		tft_draw_rect(p2.px - 1, p2.py - 1, p2.px + 1, p2.py + 1, p2.color);
+		if (p2.bullets[i].spawned) {
+			tft_draw_rect(p2.bullets[i].x - 1,
+			              p2.bullets[i].y - 1,
+			              p2.bullets[i].x + 1,
+			              p2.bullets[i].y + 1,
+			              p2.color);
+		}
+	}
 
 	/*
 	 * Mid-air projectile collissions
 	 */
 
-	if (p1.px >= 0 && p2.px >= 0) {
-		if ((p1.py <= p2.py + 1) && (p1.py >= p2.py - 1)) {
-			/* Projectiles are at about the same height. */
+	for (int i = 0; i < MAX_BULLETS; i++) {
+		if (!p1.bullets[i].spawned)
+			continue;
 
-			if (p1.px >= p2.px) {
-				/* They must have collided. */
-				p1.px = -1;
-				p2.px = -1;
+		for (int j = 0; j < MAX_BULLETS; j++) {
+			if (!p1.bullets[j].spawned)
+				continue;
 
+			float p1b_top = p1.bullets[i].y - 1;
+			float p1b_bottom = p1.bullets[i].y + 1;
+			float p1b_left = p1.bullets[i].x - 1;
+			float p1b_right = p1.bullets[i].x + 1;
+
+			float p2b_top = p2.bullets[i].y - 1;
+			float p2b_bottom = p2.bullets[i].y + 1;
+			float p2b_left = p2.bullets[i].x - 1;
+			float p2b_right = p2.bullets[i].x + 1;
+
+			if (p1b_bottom >= p2b_top &&
+			    p1b_top <= p2b_bottom &&
+			    p1b_right >= p2b_left &&
+			    p1b_left <= p2b_right
+			) {
+				p1.bullets[i].spawned = false;
+				p2.bullets[j].spawned = false;
 				play_effect(INT16_MAX / 5, 0, 6000, noise);
 			}
 		}
@@ -421,24 +481,23 @@ void game_paint(unsigned dt_usec)
 	 * Horizontal projectile movement
 	 */
 
-	float pdistance = 0.5 * (float)TFT_WIDTH * dt;
+	for (int i = 0; i < MAX_BULLETS; i++) {
+		p1.bullets[i].x += p1.bullets[i].dx * dt;
+		p2.bullets[i].x += p2.bullets[i].dx * dt;
 
-	if (p1.px >= 0)
-		p1.px += pdistance;
+		if (p1.bullets[i].x > TFT_RIGHT)
+			p1.bullets[i].spawned = false;
 
-	if (p2.px >= 0)
-		p2.px -= pdistance;
-
-	if (p1.px >= TFT_WIDTH)
-		p1.px = -1;
-
-	if (p2.px < 0)
-		p2.px = -1;
+		if (p2.bullets[i].x < 0)
+			p2.bullets[i].spawned = false;
+	}
 
 	/*
 	 * Projectile-hamster collissions
 	 */
 
+	/* TODO */
+#if 0
 	if (p1.px >= 0) {
 		if (p1.py >= p2.y && p1.py < (p2.y + 32)) {
 			if (p1.px >= TFT_WIDTH - 24) {
@@ -466,6 +525,7 @@ void game_paint(unsigned dt_usec)
 			}
 		}
 	}
+#endif
 }
 
 int main()
