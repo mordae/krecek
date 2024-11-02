@@ -1217,7 +1217,7 @@
 			)
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a9ff151a-3813-42b7-837e-58004a43f525"
-					(reference "C76")
+					(reference "C74")
 					(unit 1)
 				)
 			)
@@ -1233,7 +1233,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3e771c86-122a-4d79-97d2-b598d208684a")
-		(property "Reference" "#PWR0110"
+		(property "Reference" "#PWR0109"
 			(at 198.12 78.74 0)
 			(effects
 				(font
@@ -1284,7 +1284,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a9ff151a-3813-42b7-837e-58004a43f525"
-					(reference "#PWR0110")
+					(reference "#PWR0109")
 					(unit 1)
 				)
 			)
@@ -1300,7 +1300,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "7ef3de76-c438-4b99-a3d5-e397c9c5723e")
-		(property "Reference" "#PWR0109"
+		(property "Reference" "#PWR0108"
 			(at 107.95 83.82 0)
 			(effects
 				(font
@@ -1350,7 +1350,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a9ff151a-3813-42b7-837e-58004a43f525"
-					(reference "#PWR0109")
+					(reference "#PWR0108")
 					(unit 1)
 				)
 			)
@@ -1366,7 +1366,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "a9242a2b-c9b6-467a-b97c-cb2153d98aba")
-		(property "Reference" "C75"
+		(property "Reference" "C73"
 			(at 104.14 68.0339 0)
 			(effects
 				(font
@@ -1429,7 +1429,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a9ff151a-3813-42b7-837e-58004a43f525"
-					(reference "C75")
+					(reference "C73")
 					(unit 1)
 				)
 			)
@@ -1445,7 +1445,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "ac18ea7e-42d8-43a0-b43f-89cfd553c8c7")
-		(property "Reference" "#PWR0108"
+		(property "Reference" "#PWR0107"
 			(at 142.24 68.58 0)
 			(effects
 				(font
@@ -1496,7 +1496,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a9ff151a-3813-42b7-837e-58004a43f525"
-					(reference "#PWR0108")
+					(reference "#PWR0107")
 					(unit 1)
 				)
 			)

@@ -529,13 +529,13 @@
 	)
 	(model "${KIPRJMOD}/LCSC.3dshapes/RES-ADJ-SMD_RDC506002A.wrl"
 		(offset
-			(xyz -0.03 -0.02 0)
+			(xyz -0.03 1.48 0)
 		)
 		(scale
 			(xyz 1 1 1)
 		)
 		(rotate
-			(xyz 0 0 0)
+			(xyz 0 0 180)
 		)
 	)
 )

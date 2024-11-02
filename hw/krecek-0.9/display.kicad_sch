@@ -1967,7 +1967,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "0ba2d643-c804-4894-9daa-5708660326f9")
-		(property "Reference" "#PWR0123"
+		(property "Reference" "#PWR0122"
 			(at 76.2 130.81 0)
 			(effects
 				(font
@@ -2017,7 +2017,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "#PWR0123")
+					(reference "#PWR0122")
 					(unit 1)
 				)
 			)
@@ -2033,7 +2033,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "13dbc5a4-7d69-4319-ba8a-3445927a5202")
-		(property "Reference" "#PWR0124"
+		(property "Reference" "#PWR0123"
 			(at 88.9 130.81 0)
 			(effects
 				(font
@@ -2083,7 +2083,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "#PWR0124")
+					(reference "#PWR0123")
 					(unit 1)
 				)
 			)
@@ -2100,7 +2100,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "1f902e14-4d94-4305-8d39-6518eb16a613")
-		(property "Reference" "C80"
+		(property "Reference" "C78"
 			(at 91.44 132.0863 0)
 			(effects
 				(font
@@ -2163,7 +2163,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "C80")
+					(reference "C78")
 					(unit 1)
 				)
 			)
@@ -2180,7 +2180,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "232b730e-67d0-4786-af29-ac04082c76b5")
-		(property "Reference" "C78"
+		(property "Reference" "C76"
 			(at 66.04 132.0863 0)
 			(effects
 				(font
@@ -2243,7 +2243,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "C78")
+					(reference "C76")
 					(unit 1)
 				)
 			)
@@ -2259,7 +2259,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "237a09fe-9ef1-458e-b308-245846847f4e")
-		(property "Reference" "#PWR0116"
+		(property "Reference" "#PWR0115"
 			(at 168.91 90.17 0)
 			(effects
 				(font
@@ -2310,7 +2310,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "#PWR0116")
+					(reference "#PWR0115")
 					(unit 1)
 				)
 			)
@@ -2326,7 +2326,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "2c3c9ad4-3283-44d5-ad9e-cf169c40ee44")
-		(property "Reference" "#PWR0122"
+		(property "Reference" "#PWR0121"
 			(at 63.5 130.81 0)
 			(effects
 				(font
@@ -2376,7 +2376,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "#PWR0122")
+					(reference "#PWR0121")
 					(unit 1)
 				)
 			)
@@ -2392,7 +2392,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "32c4b0b3-c32a-4017-9c0b-4dbb2c828a11")
-		(property "Reference" "#PWR0126"
+		(property "Reference" "#PWR0125"
 			(at 63.5 146.05 0)
 			(effects
 				(font
@@ -2442,7 +2442,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "#PWR0126")
+					(reference "#PWR0125")
 					(unit 1)
 				)
 			)
@@ -2458,7 +2458,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "42a8c4ab-edbb-4fcb-866b-97e02b2600e1")
-		(property "Reference" "#PWR0119"
+		(property "Reference" "#PWR0118"
 			(at 118.11 102.87 0)
 			(effects
 				(font
@@ -2509,7 +2509,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "#PWR0119")
+					(reference "#PWR0118")
 					(unit 1)
 				)
 			)
@@ -2525,7 +2525,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "46b2dcd6-32ff-47f4-bbdf-b569f2a01adc")
-		(property "Reference" "#PWR0118"
+		(property "Reference" "#PWR0117"
 			(at 76.2 107.95 0)
 			(effects
 				(font
@@ -2575,7 +2575,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "#PWR0118")
+					(reference "#PWR0117")
 					(unit 1)
 				)
 			)
@@ -2592,7 +2592,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "48f98195-919c-48e3-adfb-59e673b611c4")
-		(property "Reference" "C77"
+		(property "Reference" "C75"
 			(at 205.74 68.5863 0)
 			(effects
 				(font
@@ -2655,7 +2655,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "C77")
+					(reference "C75")
 					(unit 1)
 				)
 			)
@@ -2671,7 +2671,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "4c9a4f8b-04b4-44bd-a612-bc07148ac596")
-		(property "Reference" "U14"
+		(property "Reference" "U13"
 			(at 129.1941 95.25 0)
 			(effects
 				(font
@@ -2779,7 +2779,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "U14")
+					(reference "U13")
 					(unit 1)
 				)
 			)
@@ -2795,7 +2795,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "535e0c0e-5e4c-4e0b-862a-9158957a85d3")
-		(property "Reference" "#PWR0120"
+		(property "Reference" "#PWR0119"
 			(at 173.99 121.92 0)
 			(effects
 				(font
@@ -2845,7 +2845,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "#PWR0120")
+					(reference "#PWR0119")
 					(unit 1)
 				)
 			)
@@ -2861,7 +2861,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6895069a-6566-4165-8afa-5f4eddc0e551")
-		(property "Reference" "#PWR0112"
+		(property "Reference" "#PWR0111"
 			(at 158.75 67.31 0)
 			(effects
 				(font
@@ -2912,7 +2912,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "#PWR0112")
+					(reference "#PWR0111")
 					(unit 1)
 				)
 			)
@@ -2928,7 +2928,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6cdfd03e-34bb-4080-87e2-8970b804998b")
-		(property "Reference" "#PWR0128"
+		(property "Reference" "#PWR0127"
 			(at 88.9 146.05 0)
 			(effects
 				(font
@@ -2978,7 +2978,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "#PWR0128")
+					(reference "#PWR0127")
 					(unit 1)
 				)
 			)
@@ -2994,7 +2994,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "858a4ba1-436e-4b99-b6d7-8e10519b5f31")
-		(property "Reference" "#PWR0113"
+		(property "Reference" "#PWR0112"
 			(at 203.2 82.55 0)
 			(effects
 				(font
@@ -3044,7 +3044,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "#PWR0113")
+					(reference "#PWR0112")
 					(unit 1)
 				)
 			)
@@ -3060,7 +3060,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "878b814a-3f19-40af-a112-1cad9baf02cf")
-		(property "Reference" "#PWR0127"
+		(property "Reference" "#PWR0126"
 			(at 76.2 146.05 0)
 			(effects
 				(font
@@ -3110,7 +3110,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "#PWR0127")
+					(reference "#PWR0126")
 					(unit 1)
 				)
 			)
@@ -3126,7 +3126,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "97da04e0-6475-41e9-bf78-219f1db09811")
-		(property "Reference" "#PWR0115"
+		(property "Reference" "#PWR0114"
 			(at 168.91 87.63 0)
 			(effects
 				(font
@@ -3177,7 +3177,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "#PWR0115")
+					(reference "#PWR0114")
 					(unit 1)
 				)
 			)
@@ -3408,7 +3408,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "ba242712-56ba-4cb5-bb6b-230ec004426e")
-		(property "Reference" "#PWR0111"
+		(property "Reference" "#PWR0110"
 			(at 203.2 67.31 0)
 			(effects
 				(font
@@ -3458,7 +3458,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "#PWR0111")
+					(reference "#PWR0110")
 					(unit 1)
 				)
 			)
@@ -3475,7 +3475,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "bc4419de-d3f7-4b99-926c-43376b9e0019")
-		(property "Reference" "C79"
+		(property "Reference" "C77"
 			(at 78.74 132.0863 0)
 			(effects
 				(font
@@ -3538,7 +3538,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "C79")
+					(reference "C77")
 					(unit 1)
 				)
 			)
@@ -3554,7 +3554,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "ceb05dc5-8b2e-47d4-bb99-38de4ae70a46")
-		(property "Reference" "#PWR0125"
+		(property "Reference" "#PWR0124"
 			(at 128.27 142.24 0)
 			(effects
 				(font
@@ -3604,7 +3604,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "#PWR0125")
+					(reference "#PWR0124")
 					(unit 1)
 				)
 			)
@@ -3620,7 +3620,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "d824ded6-041d-4d21-add4-cd2ef152853a")
-		(property "Reference" "#PWR0117"
+		(property "Reference" "#PWR0116"
 			(at 127 101.6 0)
 			(effects
 				(font
@@ -3670,7 +3670,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "#PWR0117")
+					(reference "#PWR0116")
 					(unit 1)
 				)
 			)
@@ -3686,7 +3686,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "d944e0d1-9536-4153-9794-a3bbb7d950b4")
-		(property "Reference" "#PWR0114"
+		(property "Reference" "#PWR0113"
 			(at 158.75 85.09 0)
 			(effects
 				(font
@@ -3737,7 +3737,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "#PWR0114")
+					(reference "#PWR0113")
 					(unit 1)
 				)
 			)
@@ -3753,7 +3753,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "fbea901e-09d5-44bb-b949-88a3044692d4")
-		(property "Reference" "#PWR0121"
+		(property "Reference" "#PWR0120"
 			(at 118.11 125.73 0)
 			(effects
 				(font
@@ -3804,7 +3804,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/1e7e68f1-c5d4-4ff3-9e0f-8d242f7f0b14"
-					(reference "#PWR0121")
+					(reference "#PWR0120")
 					(unit 1)
 				)
 			)
