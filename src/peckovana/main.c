@@ -497,35 +497,37 @@ void game_paint(unsigned dt_usec)
 	 */
 
 	/* TODO */
-#if 0
-	if (p1.px >= 0) {
-		if (p1.py >= p2.y && p1.py < (p2.y + 32)) {
-			if (p1.px >= TFT_WIDTH - 24) {
-				p1.px = -1;
-				p2.hp -= 1;
+	
+	for (int i = 0; i < MAX_BULLETS; i++) {
+		if (p1.bullets[i].spawned) {
+			if (p1.bullets[i].y >= p2.y && p1.bullets[i].y < (p2.y + 32)) {
+				if (p1.bullets[i].x >= TFT_WIDTH - 24) {
+					p1.bullets[i].spawned = false;
+					p2.hp -= 1;
 
-				play_effect(INT16_MAX / 5, 220, 12000, square_wave);
+					play_effect(INT16_MAX / 5, 220, 12000, square_wave);
 
-				if (p2.hp < 1)
-					game_reset();
+					if (p2.hp < 1)
+						game_reset();
+				}
+			}
+		}
+
+		if (p2.bullets[i].spawned) {
+			if (p2.bullets[i].y >= p1.y && p2.bullets[i].y < (p1.y + 32)) {
+				if (p2.bullets[i].x < 24) {
+					p2.bullets[i].spawned = false;
+					p1.hp -= 1;
+
+					play_effect(INT16_MAX / 5, 220, 12000, square_wave);
+	
+					if (p1.hp < 1)
+						game_reset();
+				}
 			}
 		}
 	}
 
-	if (p2.px >= 0) {
-		if (p2.py >= p1.y && p2.py < (p1.y + 32)) {
-			if (p2.px < 24) {
-				p2.px = -1;
-				p1.hp -= 1;
-
-				play_effect(INT16_MAX / 5, 220, 12000, square_wave);
-
-				if (p1.hp < 1)
-					game_reset();
-			}
-		}
-	}
-#endif
 }
 
 int main()
