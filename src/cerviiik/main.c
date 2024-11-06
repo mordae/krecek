@@ -22,6 +22,7 @@ enum screen {
 
 static enum screen current_screen = GAME;
 static uint32_t start_time;
+static bool play_music = true;
 
 struct worm {
 	float x, y;
@@ -109,12 +110,23 @@ void game_reset(void)
 	}
 
 	memcpy(worms, worms_init, sizeof worms);
+	play_music = true;
 }
 
 void game_audio(int nsamples)
 {
 	static int ellapsed = 0;
 	static int tone_pos = 0;
+
+	if (!play_music) {
+		tone_pos = 0;
+		ellapsed = 0;
+
+		for (int s = 0; s < nsamples; s++)
+			sdk_write_sample(0);
+
+		return;
+	}
 
 	for (int s = 0; s < nsamples; s++) {
 		if (ellapsed > SDK_AUDIO_RATE / 4) {
@@ -283,6 +295,8 @@ static int pick_next_loser(uint32_t tod_better_than)
 
 static void paint_score()
 {
+	play_music = false;
+
 	if (sdk_inputs.start) {
 		game_reset();
 	}
