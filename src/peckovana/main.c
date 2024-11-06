@@ -275,8 +275,8 @@ void game_input(unsigned __unused dt_usec)
 		}
 	}
 
-	/*
- Laser krecek
+#if 0
+	// Laser krecek
 
 	if (sdk_inputs.x > 0) {
 		for (int i = 0; i < MAX_BULLETS; i++) {
@@ -305,7 +305,7 @@ void game_input(unsigned __unused dt_usec)
 			break;
 		}
 	}
-*/
+#endif
 }
 
 void game_paint(unsigned dt_usec)
