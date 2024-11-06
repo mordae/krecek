@@ -511,8 +511,6 @@ void game_paint(unsigned dt_usec)
 		p1.color = RED - 32;
 	}
 
-	printf("%f%f\n", p2.second_bullet_time, p1.second_bullet_time);
-
 	if (p2.second_bullet_time > 1) {
 		p2.max_bullets = 2;
 		p2.color = GREEN - 32;
@@ -612,6 +610,7 @@ void game_paint(unsigned dt_usec)
 				p1.bullets[i].spawned = false;
 				p2.bullets[j].spawned = false;
 				play_effect(INT16_MAX / 5, 0, 6000, noise);
+				puts("broke");
 			}
 		}
 	}
@@ -663,6 +662,10 @@ void game_paint(unsigned dt_usec)
 				}
 			}
 		}
+		//printy
+
+		//second bullet detector
+		//printf("%3.3f %3.3f\n", p2.second_bullet_time, p1.second_bullet_time);
 	}
 }
 
@@ -674,6 +677,7 @@ int main()
 		.off_on_select = true,
 		.fps_color = GRAY,
 	};
-
+	char bulletBreak[] = "a";
+	printf("%s", bulletBreak);
 	sdk_main(&config);
 }
