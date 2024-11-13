@@ -592,8 +592,12 @@ void game_paint(unsigned dt_usec)
 	for (int i = 0; i < MAX_BULLETS; i++) {
 		if (!p1.bullets[i].spawned)
 			continue;
+		if (!p2.bullets[i].spawned)
+			continue;
 
 		for (int j = 0; j < MAX_BULLETS; j++) {
+			if (!p1.bullets[j].spawned)
+				continue;
 			if (!p2.bullets[j].spawned)
 				continue;
 
@@ -668,6 +672,9 @@ void game_paint(unsigned dt_usec)
 
 		//second bullet detector
 		//printf("%3.3f %3.3f\n", p2.second_bullet_time, p1.second_bullet_time);
+
+		//players names
+		//puts("green = p2 // red = p1");
 	}
 }
 
