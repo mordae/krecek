@@ -590,14 +590,10 @@ void game_paint(unsigned dt_usec)
 	 */
 
 	for (int i = 0; i < MAX_BULLETS; i++) {
-		if (!p1.bullets[i].spawned)
-			continue;
-		if (!p2.bullets[i].spawned)
-			continue;
-
 		for (int j = 0; j < MAX_BULLETS; j++) {
-			if (!p1.bullets[j].spawned)
+			if (!p1.bullets[i].spawned)
 				continue;
+
 			if (!p2.bullets[j].spawned)
 				continue;
 
@@ -606,17 +602,16 @@ void game_paint(unsigned dt_usec)
 			float p1b_left = p1.bullets[i].x - 1;
 			float p1b_right = p1.bullets[i].x + 1;
 
-			float p2b_top = p2.bullets[i].y - 1;
-			float p2b_bottom = p2.bullets[i].y + 1;
-			float p2b_left = p2.bullets[i].x - 1;
-			float p2b_right = p2.bullets[i].x + 1;
+			float p2b_top = p2.bullets[j].y - 1;
+			float p2b_bottom = p2.bullets[j].y + 1;
+			float p2b_left = p2.bullets[j].x - 1;
+			float p2b_right = p2.bullets[j].x + 1;
 
 			if (p1b_bottom >= p2b_top && p1b_top <= p2b_bottom &&
 			    p1b_right >= p2b_left && p1b_left <= p2b_right) {
 				p1.bullets[i].spawned = false;
 				p2.bullets[j].spawned = false;
 				play_effect(INT16_MAX / 5, 0, 6000, noise);
-				puts("broke");
 			}
 		}
 	}
