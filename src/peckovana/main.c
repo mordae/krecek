@@ -247,6 +247,7 @@ void game_input(unsigned __unused dt_usec)
 	 * Shooting
 	 */
 
+#if 1
 	if (sdk_inputs_delta.x > 0) {
 		for (int i = 0; i < p1.max_bullets; i++) {
 			if (p1.bullets[i].spawned)
@@ -275,6 +276,7 @@ void game_input(unsigned __unused dt_usec)
 		}
 	}
 
+#endif
 #if 0
 	// Laser krecek
 
@@ -592,7 +594,7 @@ void game_paint(unsigned dt_usec)
 			continue;
 
 		for (int j = 0; j < MAX_BULLETS; j++) {
-			if (!p1.bullets[j].spawned)
+			if (!p2.bullets[j].spawned)
 				continue;
 
 			float p1b_top = p1.bullets[i].y - 1;
