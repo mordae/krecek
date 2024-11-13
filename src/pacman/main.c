@@ -30,40 +30,26 @@ typedef enum {
 } TileType;
 
 TileType map[15][20] = {
-	{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 0, 0 },
-	//	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-	//	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
-	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
-	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
-	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
-	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
-	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
-	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
-	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
-	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
-	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
-	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
-	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
-	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
+	{ 13, 4, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 4, 4, 8, 4, 4, 4, 4, 12 },
+	{ 5, 2, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1, 1, 2, 5 },
+	{ 5, 1, 13, 17, 1, 16, 1, 15, 4, 4, 4, 4, 17, 1, 16, 1, 15, 12, 1, 5 },
+	{ 5, 1, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 5 },
+	{ 5, 1, 16, 1, 15, 17, 1, 13, 17, 0, 0, 15, 12, 1, 15, 17, 1, 16, 1, 5 },
+	{ 5, 1, 1, 1, 1, 1, 1, 5, 0, 0, 0, 0, 5, 1, 1, 1, 1, 1, 1, 5 },
+	{ 9, 4, 4, 17, 1, 3, 1, 5, 0, 0, 0, 0, 5, 1, 3, 1, 15, 4, 4, 7 },
+	{ 5, 1, 1, 1, 1, 1, 1, 5, 0, 0, 0, 0, 5, 1, 1, 1, 1, 1, 1, 5 },
+	{ 5, 1, 14, 1, 15, 17, 1, 11, 4, 4, 4, 4, 10, 1, 15, 17, 1, 14, 1, 5 },
+	{ 5, 1, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 5 },
+	{ 5, 1, 11, 17, 1, 14, 1, 15, 4, 4, 4, 4, 17, 1, 14, 1, 15, 10, 1, 5 },
+	{ 5, 2, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1, 1, 2, 5 },
+	{ 11, 4, 4, 4, 4, 6, 4, 4, 4, 4, 4, 4, 4, 4, 6, 4, 4, 4, 4, 10 },
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
 	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
 	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
 };
 
-#define RED 240
+#define RED 255
 #define YELLOW 242
 #define GREEN 244
 #define BLUE 250
@@ -192,6 +178,10 @@ static void draw_tile(TileType type, int x, int y)
 		tft_draw_rect(x + 3, y + 3, x + 4, y + 4, WHITE);
 		break;
 
+	case CHERRY:
+		tft_draw_rect(x + 2, y + 2, x + 5, y + 5, RED);
+		break;
+
 	case WALL_H:
 		tft_draw_rect(x, y + 1, x + 7, y + 1, BLUE);
 		tft_draw_rect(x, y + 6, x + 7, y + 6, BLUE);
@@ -207,6 +197,90 @@ static void draw_tile(TileType type, int x, int y)
 		tft_draw_rect(x + 1, y + 6, x + 6, y + 6, BLUE);
 		tft_draw_rect(x + 1, y + 1, x + 1, y + 6, BLUE);
 		tft_draw_rect(x + 6, y + 1, x + 6, y + 6, BLUE);
+		break;
+
+	case WALL_T_E:
+		tft_draw_rect(x + 1, y, x + 1, y + 7, BLUE);
+		tft_draw_rect(x + 6, y, x + 6, y + 1, BLUE);
+		tft_draw_rect(x + 6, y + 1, x + 7, y + 1, BLUE);
+		tft_draw_rect(x + 6, y + 6, x + 6, y + 7, BLUE);
+		tft_draw_rect(x + 6, y + 6, x + 7, y + 6, BLUE);
+		break;
+
+	case WALL_T_N:
+		tft_draw_rect(x, y + 6, x + 7, y + 6, BLUE);
+		tft_draw_rect(x, y + 1, x + 1, y + 1, BLUE);
+		tft_draw_rect(x + 1, y + 1, x + 1, y, BLUE);
+		tft_draw_rect(x + 6, y, x + 6, y + 1, BLUE);
+		tft_draw_rect(x + 6, y + 1, x + 7, y + 1, BLUE);
+		break;
+
+	case WALL_T_S:
+		tft_draw_rect(x, y + 1, x + 7, y + 1, BLUE);
+		tft_draw_rect(x, y + 6, x + 1, y + 6, BLUE);
+		tft_draw_rect(x + 1, y + 6, x + 1, y + 7, BLUE);
+		tft_draw_rect(x + 6, y + 6, x + 6, y + 7, BLUE);
+		tft_draw_rect(x + 6, y + 6, x + 7, y + 6, BLUE);
+		break;
+
+	case WALL_T_W:
+		tft_draw_rect(x + 6, y, x + 6, y + 7, BLUE);
+		tft_draw_rect(x + 1, y, x + 1, y + 1, BLUE);
+		tft_draw_rect(x, y + 1, x + 1, y + 1, BLUE);
+		tft_draw_rect(x, y + 6, x + 1, y + 6, BLUE);
+		tft_draw_rect(x + 1, y + 6, x + 1, y + 7, BLUE);
+		break;
+
+	case EDGE_E:
+		tft_draw_rect(x + 6, y + 1, x, y + 1, BLUE);
+		tft_draw_rect(x + 6, y + 1, x + 6, y + 6, BLUE);
+		tft_draw_rect(x + 6, y + 6, x, y + 6, BLUE);
+		break;
+
+	case EDGE_W:
+		tft_draw_rect(x + 7, y + 1, x + 1, y + 1, BLUE);
+		tft_draw_rect(x + 1, y + 1, x + 1, y + 6, BLUE);
+		tft_draw_rect(x + 7, y + 6, x + 1, y + 6, BLUE);
+		break;
+
+	case EDGE_N:
+		tft_draw_rect(x + 1, y + 1, x + 6, y + 1, BLUE);
+		tft_draw_rect(x + 1, y + 1, x + 1, y + 7, BLUE);
+		tft_draw_rect(x + 6, y + 1, x + 6, y + 7, BLUE);
+		break;
+
+	case EDGE_S:
+		tft_draw_rect(x + 1, y + 6, x + 6, y + 6, BLUE);
+		tft_draw_rect(x + 1, y, x + 1, y + 6, BLUE);
+		tft_draw_rect(x + 6, y, x + 6, y + 6, BLUE);
+		break;
+
+	case CORNER_NE:
+		tft_draw_rect(x + 1, y, x + 1, y + 6, BLUE);
+		tft_draw_rect(x + 1, y + 6, x + 7, y + 6, BLUE);
+		tft_draw_rect(x + 6, y, x + 6, y + 1, BLUE);
+		tft_draw_rect(x + 6, y + 1, x + 7, y + 1, BLUE);
+		break;
+
+	case CORNER_NW:
+		tft_draw_rect(x, y + 6, x + 6, y + 6, BLUE);
+		tft_draw_rect(x + 6, y + 6, x + 6, y, BLUE);
+		tft_draw_rect(x, y + 1, x + 1, y + 1, BLUE);
+		tft_draw_rect(x + 1, y + 1, x + 1, y, BLUE);
+		break;
+
+	case CORNER_SE:
+		tft_draw_rect(x + 1, y + 1, x + 7, y + 1, BLUE);
+		tft_draw_rect(x + 1, y + 1, x + 1, y + 7, BLUE);
+		tft_draw_rect(x + 6, y + 6, x + 7, y + 6, BLUE);
+		tft_draw_rect(x + 6, y + 6, x + 6, y + 7, BLUE);
+		break;
+
+	case CORNER_SW:
+		tft_draw_rect(x, y + 1, x + 6, y + 1, BLUE);
+		tft_draw_rect(x + 6, y + 1, x + 6, y + 7, BLUE);
+		tft_draw_rect(x, y + 6, x + 1, y + 6, BLUE);
+		tft_draw_rect(x + 1, y + 6, x + 1, y + 7, BLUE);
 		break;
 
 	default:
