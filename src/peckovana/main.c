@@ -374,11 +374,11 @@ void game_paint(unsigned dt_usec)
 	 */
 	wall.y += wall.dy * dt;
 
-	if (wall.y - WALL_HEIGHT / 2 <= 0) {
+	if (wall.y - WALL_HEIGHT / 2 <= 1) {
 		wall.dy *= -1;
 	}
 
-	if (wall.y + WALL_HEIGHT / 2 >= TFT_BOTTOM) {
+	if (wall.y + WALL_HEIGHT / 2 >= TFT_BOTTOM - 1) {
 		wall.dy *= -1;
 	}
 
