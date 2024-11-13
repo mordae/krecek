@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <sdk.h>
 #include <tft.h>
@@ -374,12 +375,12 @@ void game_paint(unsigned dt_usec)
 	 */
 	wall.y += wall.dy * dt;
 
-	if (wall.y - WALL_HEIGHT / 2 <= 1) {
-		wall.dy *= -1;
+	if (wall.y - WALL_HEIGHT / 2 <= 0) {
+		wall.dy = fabs(wall.dy);
 	}
 
-	if (wall.y + WALL_HEIGHT / 2 >= TFT_BOTTOM - 1) {
-		wall.dy *= -1;
+	if (wall.y + WALL_HEIGHT / 2 >= TFT_BOTTOM) {
+		wall.dy = -fabs(wall.dy);
 	}
 
 	if (power_up.spawn_time <= 0) {
