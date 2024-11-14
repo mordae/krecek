@@ -45,13 +45,17 @@ static uint8_t board[200] = {
 	219, 219, 219, 0, 0, 0, 0, 0, 0, 0,
 };
 
-static int active_piece_color = 223;
+static int active_piece_color = 0;
 static int active_piece_x = 0;
 static int active_piece_y = 0;
 static int active_piece_orientation = 0;
 static bool active_piece_has_been_moved = false;
 
-static uint8_t piece_orientation[64] = {
+static int piece_colors[7] = {
+	RED, ORANGE, YELLOW, GREEN, CYAN, BLUE, PURPLE
+};
+
+static uint8_t piece_orientation[448] = {
 	1, 1, 0, 0,
 	0, 1, 1, 0,
 	0, 0, 0, 0,
@@ -70,6 +74,126 @@ static uint8_t piece_orientation[64] = {
 	0, 1, 0, 0,
 	1, 1, 0, 0,
 	1, 0, 0, 0,
+	0, 0, 0, 0,
+
+	0, 0, 1, 0,
+	1, 1, 1, 0,
+	0, 0, 0, 0,
+	0, 0, 0, 0,
+
+	0, 1, 0, 0,
+	0, 1, 0, 0,
+	0, 1, 1, 0,
+	0, 0, 0, 0,
+
+	0, 0, 0, 0,
+	1, 1, 1, 0,
+	1, 0, 0, 0,
+	0, 0, 0, 0,
+
+	1, 1, 0, 0,
+	0, 1, 0, 0,
+	0, 1, 0, 0,
+	0, 0, 0, 0,
+
+	0, 0, 0, 0,
+	0, 1, 1, 0,
+	0, 1, 1, 0,
+	0, 0, 0, 0,
+
+	0, 0, 0, 0,
+	0, 1, 1, 0,
+	0, 1, 1, 0,
+	0, 0, 0, 0,
+
+	0, 0, 0, 0,
+	0, 1, 1, 0,
+	0, 1, 1, 0,
+	0, 0, 0, 0,
+
+	0, 0, 0, 0,
+	0, 1, 1, 0,
+	0, 1, 1, 0,
+	0, 0, 0, 0,
+
+	0, 1, 1, 0,
+	1, 1, 0, 0,
+	0, 0, 0, 0,
+	0, 0, 0, 0,
+
+	0, 1, 0, 0,
+	0, 1, 1, 0,
+	0, 0, 1, 0,
+	0, 0, 0, 0,
+
+	0, 0, 0, 0,
+	0, 1, 1, 0,
+	1, 1, 0, 0,
+	0, 0, 0, 0,
+
+	1, 0, 0, 0,
+	1, 1, 0, 0,
+	0, 1, 0, 0,
+	0, 0, 0, 0,
+
+	0, 0, 0, 0,
+	1, 1, 1, 1,
+	0, 0, 0, 0,
+	0, 0, 0, 0,
+
+	0, 0, 1, 0,
+	0, 0, 1, 0,
+	0, 0, 1, 0,
+	0, 0, 1, 0,
+
+	0, 0, 0, 0,
+	0, 0, 0, 0,
+	1, 1, 1, 1,
+	0, 0, 0, 0,
+
+	0, 1, 0, 0,
+	0, 1, 0, 0,
+	0, 1, 0, 0,
+	0, 1, 0, 0,
+
+	1, 0, 0, 0,
+	1, 1, 1, 0,
+	0, 0, 0, 0,
+	0, 0, 0, 0,
+
+	0, 1, 1, 0,
+	0, 1, 0, 0,
+	0, 1, 0, 0,
+	0, 0, 0, 0,
+
+	0, 0, 0, 0,
+	1, 1, 1, 0,
+	0, 0, 1, 0,
+	0, 0, 0, 0,
+
+	0, 1, 0, 0,
+	0, 1, 0, 0,
+	1, 1, 0, 0,
+	0, 0, 0, 0,
+
+	0, 1, 0, 0,
+	1, 1, 1, 0,
+	0, 0, 0, 0,
+	0, 0, 0, 0,
+
+	0, 1, 0, 0,
+	0, 1, 1, 0,
+	0, 1, 0, 0,
+	0, 0, 0, 0,
+
+	0, 0, 0, 0,
+	1, 1, 1, 0,
+	0, 1, 0, 0,
+	0, 0, 0, 0,
+
+	0, 1, 0, 0,
+	1, 1, 0, 0,
+	0, 1, 0, 0,
 	0, 0, 0, 0,
 };
 
@@ -118,14 +242,23 @@ void game_input(unsigned __unused dt_usec)
 		}
 	}
 	
-	if (sdk_inputs_delta.a > 0)
-		active_piece_orientation++;
 	if (sdk_inputs_delta.b > 0)
+		active_piece_orientation++;
+	if (sdk_inputs_delta.a > 0)
 		active_piece_orientation--;
 	if (active_piece_orientation < 0)
 		active_piece_orientation = 3;
 	if (active_piece_orientation > 3)
 		active_piece_orientation = 0;
+
+	if (sdk_inputs_delta.y > 0)
+		active_piece_color++;
+	if (sdk_inputs_delta.x > 0)
+		active_piece_color--;
+	if (active_piece_color < 0)
+		active_piece_color = 6;
+	if (active_piece_color > 6)
+		active_piece_color = 0;
 }
 
 void game_paint(unsigned __unused dt_usec)
@@ -140,8 +273,8 @@ void game_paint(unsigned __unused dt_usec)
 
 	for (int y = 0; y <= 3; y++) {
 		for (int x = 0; x <= 3; x++) {
-			if (piece_orientation[active_piece_orientation * 16 + y * 4 + x] == 1)
-				draw_mino(active_piece_x + x, active_piece_y + y, active_piece_color);
+			if (piece_orientation[active_piece_color * 64 + active_piece_orientation * 16 + y * 4 + x] == 1)
+				draw_mino(active_piece_x + x, active_piece_y + y, piece_colors[active_piece_color]);
 		}
 	}
 }
