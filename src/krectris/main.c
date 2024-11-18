@@ -18,10 +18,14 @@
 #define BLUE 217
 #define PURPLE 219
 #define BLACK 0
+#define DARKGRAY 2
 #define GRAY 10
 #define WHITE 15
 
 #define SPACE_SIZE 5
+
+#define BOARD_OFFSET_X 20
+#define BOARD_OFFSET_Y 10
 
 static uint8_t board[200] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -258,12 +262,16 @@ static void draw_mino(int x, int y, int color) {
 	if (color == 0) {
 	tft_draw_rect(SPACE_SIZE * x, SPACE_SIZE * y,
 		      SPACE_SIZE * x + SPACE_SIZE - 1,
-		      SPACE_SIZE * y + SPACE_SIZE - 1, color + 16);
+		      SPACE_SIZE * y + SPACE_SIZE - 1, DARKGRAY);
 	
 	tft_draw_rect(SPACE_SIZE * x, SPACE_SIZE * y,
 		      SPACE_SIZE * x + SPACE_SIZE - 2,
-		      SPACE_SIZE * y + SPACE_SIZE - 2, color);
+		      SPACE_SIZE * y + SPACE_SIZE - 2, BLACK);
 	} else {
+	tft_draw_rect(SPACE_SIZE * x, SPACE_SIZE * y,
+		      SPACE_SIZE * x + SPACE_SIZE - 1,
+		      SPACE_SIZE * y + SPACE_SIZE - 1, BLACK);
+	
 	tft_draw_rect(SPACE_SIZE * x, SPACE_SIZE * y,
 		      SPACE_SIZE * x + SPACE_SIZE - 2,
 		      SPACE_SIZE * y + SPACE_SIZE - 2, color);
@@ -278,11 +286,11 @@ static int lookup_rotation_table(int x, int y, int shape, int orientation) {
 }
 
 static bool verify_piece_placement(int pos_x, int pos_y, int shape, int orientation) {
-	if (pos_x > 6 || pos_x < 0 || pos_y > 16 || pos_y < 0)
-		return false;
 	for (int y = 0; y <= 3; y++) {
 		for (int x = 0; x <= 3; x++) {
 			if (lookup_rotation_table(x, y, shape, orientation) != 0 && board[(pos_y + y) * 10 + pos_x + x] != 0)
+				return false;
+			if (lookup_rotation_table(x, y, shape, orientation) == 1 && (pos_x + x < 0 || pos_x + x > 9 || pos_y + y < 0 || pos_y + y > 19))
 				return false;
 		}
 	}
@@ -293,8 +301,6 @@ static void move_active_piece(int move_x, int move_y) {
 	if (verify_piece_placement(active_piece_x + move_x, active_piece_y + move_y, active_piece_shape, active_piece_orientation) == true) {
 		active_piece_x += move_x;
 		active_piece_y += move_y;
-		active_piece_x = clamp(active_piece_x, 0, 6);
-		active_piece_y = clamp(active_piece_y, 0, 16);
 	}
 }
 
