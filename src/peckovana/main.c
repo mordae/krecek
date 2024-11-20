@@ -7,6 +7,8 @@
 #include <sdk.h>
 #include <tft.h>
 
+embed_tileset(ts_left_hamster, 4, 24, 32, 237, "left.data");
+
 #define RED 240
 #define RED_POWER (RED - 31)
 #define YELLOW 242
@@ -34,6 +36,8 @@ struct hamster {
 	int hp;
 	int max_bullets;
 	float second_bullet_time;
+
+	sdk_sprite_t s;
 
 	struct bullet bullets[MAX_BULLETS];
 };
@@ -68,7 +72,17 @@ struct second_bullet {
 	float spawn_time;
 };
 
-static struct hamster p1, p2;
+static struct hamster p1 = {
+	.s = {
+		.ts = &ts_left_hamster,
+		.tile = 0,
+		.ox = 0,
+		.oy = 0,
+	},
+};
+
+static struct hamster p2;
+
 static struct wall wall;
 static struct power_up power_up;
 static struct second_bullet second_bullet;
@@ -203,6 +217,8 @@ void game_reset(void)
 	p1.color = RED;
 	p1.dy = 0;
 	p1.y = TFT_HEIGHT - 31;
+	p1.s.y = p1.y;
+	p1.s.x = 0;
 	p1.hp = 3;
 	p1.max_bullets = 1;
 	p1.second_bullet_time = 0;
@@ -323,7 +339,9 @@ void game_paint(unsigned dt_usec)
 	 * Draw hamsters
 	 */
 
-	tft_draw_rect(0, p1.y, 23, p1.y + 31, p1.color);
+	//tft_draw_rect(0, p1.y, 23, p1.y + 31, p1.color);
+	sdk_draw_sprite(&p1.s);
+
 	tft_draw_rect(TFT_WIDTH - 24, p2.y, TFT_WIDTH - 1, p2.y + 31, p2.color);
 
 	/*
@@ -533,6 +551,8 @@ void game_paint(unsigned dt_usec)
 	 */
 
 	p1.y += p1.dy * dt;
+	p1.s.y = p1.y;
+
 	p2.y += p2.dy * dt;
 
 	/*
@@ -564,8 +584,10 @@ void game_paint(unsigned dt_usec)
 	if (p2.dy > TFT_HEIGHT)
 		p2.dy = TFT_HEIGHT;
 
-	if (p1.y >= bottom)
+	if (p1.y >= bottom) {
 		p1.y = bottom;
+		p1.s.y = p1.y;
+	}
 
 	if (p2.y >= bottom)
 		p2.y = bottom;

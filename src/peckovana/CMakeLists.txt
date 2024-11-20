@@ -1,5 +1,5 @@
 add_executable(peckovana main.c)
-target_include_directories(peckovana PRIVATE include)
+target_include_directories(peckovana PRIVATE include tiles)
 target_link_libraries(peckovana krecek)
 pico_add_extra_outputs(peckovana)
 krecek_set_target_options(peckovana)
