@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include <sdk.h>
 #include <stdlib.h>
@@ -54,14 +55,18 @@ static int active_piece_shape = 0;
 static int active_piece_x = 0;
 static int active_piece_y = 0;
 static int active_piece_orientation = 0;
-static bool active_piece_has_been_moved = false;
+static int movement_lr_das = 150000;
+static int movement_lr_arr =  33333;
+static int movement_d_arr =   33333;
+static int time_moved_lr = 0;
+static int time_moved_d = 0;
 
 static int piece_colors[7] = {
 	RED, ORANGE, YELLOW, GREEN, CYAN, BLUE, PURPLE
 };
 
 static uint8_t piece_rotation[448] = { //todo: store in a more space efficient format
-	1, 1, 0, 0,
+	1, 1, 0, 0, // z
 	0, 1, 1, 0,
 	0, 0, 0, 0,
 	0, 0, 0, 0,
@@ -81,7 +86,7 @@ static uint8_t piece_rotation[448] = { //todo: store in a more space efficient f
 	1, 0, 0, 0,
 	0, 0, 0, 0,
 
-	0, 0, 1, 0,
+	0, 0, 1, 0, // l
 	1, 1, 1, 0,
 	0, 0, 0, 0,
 	0, 0, 0, 0,
@@ -101,7 +106,7 @@ static uint8_t piece_rotation[448] = { //todo: store in a more space efficient f
 	0, 1, 0, 0,
 	0, 0, 0, 0,
 
-	0, 0, 0, 0,
+	0, 0, 0, 0, // o
 	0, 1, 1, 0,
 	0, 1, 1, 0,
 	0, 0, 0, 0,
@@ -121,7 +126,7 @@ static uint8_t piece_rotation[448] = { //todo: store in a more space efficient f
 	0, 1, 1, 0,
 	0, 0, 0, 0,
 
-	0, 1, 1, 0,
+	0, 1, 1, 0, // s
 	1, 1, 0, 0,
 	0, 0, 0, 0,
 	0, 0, 0, 0,
@@ -141,7 +146,7 @@ static uint8_t piece_rotation[448] = { //todo: store in a more space efficient f
 	0, 1, 0, 0,
 	0, 0, 0, 0,
 
-	0, 0, 0, 0,
+	0, 0, 0, 0, // i
 	1, 1, 1, 1,
 	0, 0, 0, 0,
 	0, 0, 0, 0,
@@ -161,7 +166,7 @@ static uint8_t piece_rotation[448] = { //todo: store in a more space efficient f
 	0, 1, 0, 0,
 	0, 1, 0, 0,
 
-	1, 0, 0, 0,
+	1, 0, 0, 0, // j
 	1, 1, 1, 0,
 	0, 0, 0, 0,
 	0, 0, 0, 0,
@@ -181,7 +186,7 @@ static uint8_t piece_rotation[448] = { //todo: store in a more space efficient f
 	1, 1, 0, 0,
 	0, 0, 0, 0,
 
-	0, 1, 0, 0,
+	0, 1, 0, 0, // t
 	1, 1, 1, 0,
 	0, 0, 0, 0,
 	0, 0, 0, 0,
@@ -279,6 +284,10 @@ static void draw_mino(int x, int y, int color) {
 }
 
 static int lookup_rotation_table(int x, int y, int shape, int orientation) {
+	assert(shape >= 0 && shape <= 6);
+	assert(orientation >= 0 && orientation <= 3);
+	assert(x >= 0 && x <= 3);
+	assert(y >= 0 && y <= 3);
 	if (piece_rotation[shape * 64 + orientation * 16 + y * 4 + x] == 1)
 		return 1;
 	else
@@ -288,9 +297,11 @@ static int lookup_rotation_table(int x, int y, int shape, int orientation) {
 static bool verify_piece_placement(int pos_x, int pos_y, int shape, int orientation) {
 	for (int y = 0; y <= 3; y++) {
 		for (int x = 0; x <= 3; x++) {
-			if (lookup_rotation_table(x, y, shape, orientation) != 0 && board[(pos_y + y) * 10 + pos_x + x] != 0)
-				return false;
+			if (lookup_rotation_table(x, y, shape, orientation) == 0 && (pos_x + x < 0 || pos_x + x > 9 || pos_y + y < 0 || pos_y + y > 19))
+				continue;
 			if (lookup_rotation_table(x, y, shape, orientation) == 1 && (pos_x + x < 0 || pos_x + x > 9 || pos_y + y < 0 || pos_y + y > 19))
+				return false;
+			if (lookup_rotation_table(x, y, shape, orientation) == 1 && board[(pos_y + y) * 10 + pos_x + x] != 0)
 				return false;
 		}
 	}
@@ -310,7 +321,7 @@ static void rotate_active_piece_clockwise() {
 	if (new_orientation > 3)
 		new_orientation = 0;
 	for (int i = 0; i <= 4; i++) {
-		if (verify_piece_placement(active_piece_x + kick_table_x_clockwise[active_piece_orientation * 5 + i], active_piece_y + kick_table_y_clockwise[active_piece_orientation * 5 + i], active_piece_shape, active_piece_orientation + 1) == true) {
+		if (verify_piece_placement(active_piece_x + kick_table_x_clockwise[active_piece_orientation * 5 + i], active_piece_y + kick_table_y_clockwise[active_piece_orientation * 5 + i], active_piece_shape, new_orientation) == true) {
 			active_piece_x += kick_table_x_clockwise[active_piece_orientation * 5 + i];
 			active_piece_y += kick_table_y_clockwise[active_piece_orientation * 5 + i];
 			active_piece_orientation = new_orientation;
@@ -335,22 +346,30 @@ static void rotate_active_piece_counterclockwise() {
 }
 
 static void rotate_active_piece_I_clockwise() {
+	static int new_orientation;
+	new_orientation = active_piece_orientation + 1;
+	if (new_orientation > 3)
+		new_orientation = 0;
 	for (int i = 0; i <= 4; i++) {
-		if (verify_piece_placement(active_piece_x + kick_table_I_x_clockwise[active_piece_orientation * 5 + i], active_piece_y + kick_table_I_y_clockwise[active_piece_orientation * 5 + i], active_piece_shape, active_piece_orientation + 1) == true) {
+		if (verify_piece_placement(active_piece_x + kick_table_I_x_clockwise[active_piece_orientation * 5 + i], active_piece_y + kick_table_I_y_clockwise[active_piece_orientation * 5 + i], active_piece_shape, new_orientation) == true) {
 			active_piece_x += kick_table_I_x_clockwise[active_piece_orientation * 5 + i];
 			active_piece_y += kick_table_I_y_clockwise[active_piece_orientation * 5 + i];
-			active_piece_orientation++;
+			active_piece_orientation = new_orientation;
 			return;
 		}
 	}
 }
 
 static void rotate_active_piece_I_counterclockwise() {
+	static int new_orientation;
+	new_orientation = active_piece_orientation - 1;
+	if (new_orientation < 0)
+		new_orientation = 3;
 	for (int i = 0; i <= 4; i++) {
-		if (verify_piece_placement(active_piece_x + kick_table_I_x_counterclockwise[active_piece_orientation * 5 + i], active_piece_y + kick_table_I_y_counterclockwise[active_piece_orientation * 5 + i], active_piece_shape, active_piece_orientation - 1) == true) {
+		if (verify_piece_placement(active_piece_x + kick_table_I_x_counterclockwise[active_piece_orientation * 5 + i], active_piece_y + kick_table_I_y_counterclockwise[active_piece_orientation * 5 + i], active_piece_shape, new_orientation) == true) {
 			active_piece_x += kick_table_I_x_counterclockwise[active_piece_orientation * 5 + i];
 			active_piece_y += kick_table_I_y_counterclockwise[active_piece_orientation * 5 + i];
-			active_piece_orientation--;
+			active_piece_orientation = new_orientation;
 			return;
 		}
 	}
@@ -379,27 +398,43 @@ void game_audio(int __unused nsamples)
 {
 }
 
-void game_input(unsigned __unused dt_usec)
+void game_input(unsigned dt_usec)
 {
-	if (active_piece_has_been_moved == false) {
-		active_piece_has_been_moved = true;
-		if (sdk_inputs.joy_x > 1024)
-			move_active_piece(1, 0);
-		else if (sdk_inputs.joy_x < -1024)
-			move_active_piece(-1, 0);
-		else if (sdk_inputs.joy_y > 1024)
-			move_active_piece(0, 1);
-		else if (sdk_inputs.joy_y < -1024)
-			move_active_piece(0, -1);
-		else 
-			active_piece_has_been_moved = false;
-	} else {
-		if (sdk_inputs.joy_x < 1024 && sdk_inputs.joy_x > -1024) {
-			if (sdk_inputs.joy_y < 1024 && sdk_inputs.joy_y > -1024)
-				active_piece_has_been_moved = false;
+	if (sdk_inputs.joy_x > 1024 || sdk_inputs.joy_x < -1024) {
+		if (time_moved_lr == 0) {
+			if (sdk_inputs.joy_x > 0)
+				move_active_piece(1, 0);
+			else
+				move_active_piece(-1, 0);
+			time_moved_lr++;
+		} else {
+			if (time_moved_lr > movement_lr_das && time_moved_lr - movement_lr_das > movement_lr_arr) {
+				if (sdk_inputs.joy_x > 0)
+					move_active_piece(1, 0);
+				else
+					move_active_piece(-1, 0);
+				time_moved_lr -= movement_lr_arr + dt_usec;
+				
+			}
 		}
-	}
+		time_moved_lr += dt_usec;
+	} else
+		time_moved_lr = 0;
 	
+	if (sdk_inputs.joy_y > 1024) {
+		if (time_moved_d == 0) {
+			move_active_piece(0, 1);
+			time_moved_d++;
+		} else {
+			if (time_moved_d > movement_d_arr) {
+				move_active_piece(0, 1);
+				time_moved_d -= movement_d_arr = dt_usec;
+			}
+		}
+		time_moved_d += dt_usec;
+	} else
+		time_moved_d = 0;
+
 	if (sdk_inputs_delta.b > 0) {
 		if (active_piece_shape != 4) // isn't I piece
 			rotate_active_piece_clockwise();
