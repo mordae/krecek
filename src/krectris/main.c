@@ -55,11 +55,16 @@ static int active_piece_shape = 0;
 static int active_piece_x = 0;
 static int active_piece_y = 0;
 static int active_piece_orientation = 0;
+
 static int movement_lr_das = 150000;
 static int movement_lr_arr =  33333;
 static int movement_d_arr =   33333;
 static int time_moved_lr = 0;
 static int time_moved_d = 0;
+
+static int lines_to_remove[20];
+static int lines_to_remove_count = 0;
+static int lines_already_removed = 0;
 
 static int piece_colors[7] = {
 	RED, ORANGE, YELLOW, GREEN, CYAN, BLUE, PURPLE
@@ -385,8 +390,20 @@ static void lock_active_piece() {
 	}
 }
 
+static bool is_row_full(int row) {
+	assert(row >= 0 && row <= 19);
+	for (int x = 0; x <= 9; x++) {
+		if (board[row * 10 + x] == 0)
+			return false;
+	}
+	return true;
+}
+
 void game_reset(void)
 {
+	for (int i = 0; i <= 19; i++) {
+		lines_to_remove[i] = 0;
+	}
 }
 
 void game_start(void)
@@ -457,6 +474,29 @@ void game_input(unsigned dt_usec)
 		lock_active_piece();
 		active_piece_x = 0;
 		active_piece_y = 0;
+		active_piece_orientation = 0;
+
+		lines_to_remove_count = 0;
+		for (int row = 0; row <= 19; row++) {
+			if (is_row_full(row)) {
+				lines_to_remove[lines_to_remove_count] = row;
+				lines_to_remove_count++;
+			}
+		}
+		if (lines_to_remove_count > 0) {
+			lines_to_remove_count--;
+			lines_already_removed = 0;
+			for (int y = 19; y >= 0; y--) {
+				assert(lines_to_remove_count >= 0);
+				if (lines_to_remove[lines_to_remove_count] == y) {
+					lines_already_removed++;
+					lines_to_remove_count--;
+				}
+				for (int x = 0; x <= 9; x++) {
+					board[y * 10 + x] = board[(y - lines_already_removed) * 10 + x];
+				}
+			}
+		}
 	}
 }
 
