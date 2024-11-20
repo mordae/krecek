@@ -23,39 +23,41 @@ typedef const struct sdk_tileset sdk_tileset_t;
 
 #if defined(PICO_NO_HARDWARE)
 #define SDK_EMBED_SECTION ".section \".rodata\"\n"
+#define SDK_EMBED_POINTER ".quad"
 #else
 #define SDK_EMBED_SECTION ".section \".flashdata.files\"\n"
 asm(".section \".flashdata.files\", \"a\"");
 asm(".section \".flashdata.tiles\", \"a\"");
+#define SDK_EMBED_POINTER ".int"
 #endif
 
 #define SDK_TO_STRING_(x) #x
 #define SDK_TO_STRING(x) SDK_TO_STRING_((x))
 
-#define embed_file(name, path)             \
-	extern const struct sdk_file name; \
-	asm(".align 4\n");                 \
-	asm(SDK_EMBED_SECTION);            \
-	asm("_" #name "_start:\n");        \
-	asm(".incbin \"" path "\"\n");     \
-	asm("_" #name "_end:\n");          \
-	asm(".align 4\n");                 \
-	asm(#name ":\n");                  \
-	asm(".int _" #name "_start\n");    \
-	asm(".int _" #name "_end - _" #name "_start\n")
+#define embed_file(name, path)                        \
+	extern const struct sdk_file name;            \
+	asm(".align 4\n");                            \
+	asm(SDK_EMBED_SECTION);                       \
+	asm("_" #name "_start:\n");                   \
+	asm(".incbin \"" path "\"\n");                \
+	asm("_" #name "_end:\n");                     \
+	asm(".align 4\n");                            \
+	asm(#name ":\n");                             \
+	asm(SDK_EMBED_POINTER " _" #name "_start\n"); \
+	asm(SDK_EMBED_POINTER " _" #name "_end - _" #name "_start\n")
 
-#define embed_tileset(name, c, w, h, t, path)      \
-	extern const struct sdk_tileset name;      \
-	asm(".align 4\n");                         \
-	asm(SDK_EMBED_SECTION);                    \
-	asm("_" #name "_start:\n");                \
-	asm(".incbin \"" path "\"\n");             \
-	asm(".align 4\n");                         \
-	asm(#name ":\n");                          \
-	asm(".int _" #name "_start\n");            \
-	asm(".byte " SDK_TO_STRING((c) - 1) "\n"); \
-	asm(".byte " SDK_TO_STRING((w)) "\n");     \
-	asm(".byte " SDK_TO_STRING((h)) "\n");     \
+#define embed_tileset(name, c, w, h, t, path)         \
+	extern const struct sdk_tileset name;         \
+	asm(".align 4\n");                            \
+	asm(SDK_EMBED_SECTION);                       \
+	asm("_" #name "_start:\n");                   \
+	asm(".incbin \"" path "\"\n");                \
+	asm(".align 4\n");                            \
+	asm(#name ":\n");                             \
+	asm(SDK_EMBED_POINTER " _" #name "_start\n"); \
+	asm(".byte " SDK_TO_STRING((c) - 1) "\n");    \
+	asm(".byte " SDK_TO_STRING((w)) "\n");        \
+	asm(".byte " SDK_TO_STRING((h)) "\n");        \
 	asm(".byte " SDK_TO_STRING((t)) "\n")
 
 /* Get pointer to given tile inside the tileset. */
