@@ -10,6 +10,7 @@
 typedef enum {
 	EMPTY = 0,
 	SUGAR = 1,
+	POWERUP,
 	CHERRY,
 	WALL_SQUARE,
 	WALL_H,
@@ -26,23 +27,24 @@ typedef enum {
 	EDGE_W,
 	EDGE_S,
 	EDGE_E,
+	INVISIBLE_WALL,
 
 } TileType;
 
 TileType map[15][20] = {
-	{ 13, 4, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 4, 4, 8, 4, 4, 4, 4, 12 },
-	{ 5, 2, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1, 1, 2, 5 },
-	{ 5, 1, 13, 17, 1, 16, 1, 15, 4, 4, 4, 4, 17, 1, 16, 1, 15, 12, 1, 5 },
-	{ 5, 1, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 5 },
-	{ 5, 1, 16, 1, 15, 17, 1, 13, 17, 0, 0, 15, 12, 1, 15, 17, 1, 16, 1, 5 },
-	{ 5, 1, 1, 1, 1, 1, 1, 5, 0, 0, 0, 0, 5, 1, 1, 1, 1, 1, 1, 5 },
-	{ 9, 4, 4, 17, 1, 3, 1, 5, 0, 0, 0, 0, 5, 1, 3, 1, 15, 4, 4, 7 },
-	{ 5, 1, 1, 1, 1, 1, 1, 5, 0, 0, 0, 0, 5, 1, 1, 1, 1, 1, 1, 5 },
-	{ 5, 1, 14, 1, 15, 17, 1, 11, 4, 4, 4, 4, 10, 1, 15, 17, 1, 14, 1, 5 },
-	{ 5, 1, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 5 },
-	{ 5, 1, 11, 17, 1, 14, 1, 15, 4, 4, 4, 4, 17, 1, 14, 1, 15, 10, 1, 5 },
-	{ 5, 2, 1, 1, 1, 5, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1, 1, 2, 5 },
-	{ 11, 4, 4, 4, 4, 6, 4, 4, 4, 4, 4, 4, 4, 4, 6, 4, 4, 4, 4, 10 },
+	{ 14, 5, 5, 5, 5, 9, 5, 5, 5, 5, 5, 5, 5, 5, 9, 5, 5, 5, 5, 13 },
+	{ 6, 2, 1, 1, 1, 6, 1, 1, 1, 1, 1, 1, 1, 1, 6, 1, 1, 1, 2, 6 },
+	{ 6, 1, 14, 18, 1, 17, 1, 16, 5, 5, 5, 5, 18, 1, 17, 1, 16, 13, 1, 6 },
+	{ 6, 1, 6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 6, 1, 6 },
+	{ 6, 1, 17, 1, 16, 18, 1, 14, 18, 19, 19, 16, 13, 1, 16, 18, 1, 17, 1, 6 },
+	{ 6, 1, 1, 1, 1, 1, 1, 6, 0, 0, 0, 0, 6, 1, 1, 1, 1, 1, 1, 6 },
+	{ 10, 5, 5, 18, 1, 4, 1, 6, 0, 0, 0, 0, 6, 1, 4, 1, 16, 5, 5, 8 },
+	{ 6, 1, 1, 1, 1, 1, 1, 6, 0, 0, 0, 0, 6, 1, 1, 1, 1, 1, 1, 6 },
+	{ 6, 1, 15, 1, 16, 18, 1, 12, 5, 5, 5, 5, 11, 1, 16, 18, 1, 15, 1, 6 },
+	{ 6, 1, 6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 6, 1, 6 },
+	{ 6, 1, 12, 18, 1, 15, 1, 16, 5, 5, 5, 5, 18, 1, 15, 1, 16, 11, 1, 6 },
+	{ 6, 2, 1, 1, 1, 6, 1, 1, 1, 1, 1, 1, 1, 1, 6, 1, 1, 1, 2, 6 },
+	{ 12, 5, 5, 5, 5, 7, 5, 5, 5, 5, 5, 5, 5, 5, 7, 5, 5, 5, 5, 11 },
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
 	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
@@ -55,6 +57,20 @@ TileType map[15][20] = {
 #define BLUE 250
 #define GRAY 8
 #define WHITE 15
+
+#define PACMAN_WIDTH 7
+#define PACMAN_HEIGHT 7
+
+#define PACMAN_SPEED 1
+
+struct pacman {
+	float x, y;
+	float dx, dy;
+	uint8_t color;
+	float speed;
+};
+
+static struct pacman pacman;
 
 struct effect;
 
@@ -160,6 +176,8 @@ static void __unused play_effect(int volume, int frequency, int length, effect_g
 
 static void new_round(void)
 {
+	pacman.x = 15 * 8;
+	pacman.y = 6 * 8;
 }
 
 void game_reset(void)
@@ -176,6 +194,10 @@ static void draw_tile(TileType type, int x, int y)
 	switch (type) {
 	case SUGAR:
 		tft_draw_rect(x + 3, y + 3, x + 4, y + 4, WHITE);
+		break;
+
+	case POWERUP:
+		tft_draw_rect(x + 2, y + 2, x + 5, y + 5, WHITE);
 		break;
 
 	case CHERRY:
@@ -292,6 +314,9 @@ static void draw_tile(TileType type, int x, int y)
 void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
+
+	tft_draw_rect(pacman.x, pacman.y, pacman.x + PACMAN_WIDTH, pacman.y + PACMAN_HEIGHT,
+		      YELLOW);
 
 	for (int x = 0; x < TFT_WIDTH / 8; x++) {
 		for (int y = 0; y < TFT_HEIGHT / 8; y++) {
