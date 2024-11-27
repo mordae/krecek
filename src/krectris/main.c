@@ -25,7 +25,7 @@
 
 #define SPACE_SIZE 5
 
-#define BOARD_OFFSET_X 20
+#define BOARD_OFFSET_X 55
 #define BOARD_OFFSET_Y 10
 
 static uint8_t board[200] = {
@@ -58,13 +58,11 @@ static int active_piece_orientation = 0;
 
 static int movement_lr_das = 150000;
 static int movement_lr_arr =  33333;
-static int movement_d_arr =   33333;
 static int time_moved_lr = 0;
-static int time_moved_d = 0;
 
-static int lines_to_remove[20];
-static int lines_to_remove_count = 0;
-static int lines_already_removed = 0;
+static int gravity_speed = 1000000; // how much time passes before the active piece falls
+static int gravity_strength = 1; // how many spaces does the active piece fall
+static int time_after_falling = 0;
 
 static int piece_colors[7] = {
 	RED, ORANGE, YELLOW, GREEN, CYAN, BLUE, PURPLE
@@ -270,21 +268,21 @@ static int8_t kick_table_I_y_counterclockwise[20] = {
 
 static void draw_mino(int x, int y, int color) {
 	if (color == 0) {
-	tft_draw_rect(SPACE_SIZE * x, SPACE_SIZE * y,
-		      SPACE_SIZE * x + SPACE_SIZE - 1,
-		      SPACE_SIZE * y + SPACE_SIZE - 1, DARKGRAY);
+	tft_draw_rect(SPACE_SIZE * x + BOARD_OFFSET_X, SPACE_SIZE * y + BOARD_OFFSET_Y,
+		      (SPACE_SIZE * x + SPACE_SIZE - 1) + BOARD_OFFSET_X,
+		      (SPACE_SIZE * y + SPACE_SIZE - 1) + BOARD_OFFSET_Y, DARKGRAY);
 	
-	tft_draw_rect(SPACE_SIZE * x, SPACE_SIZE * y,
-		      SPACE_SIZE * x + SPACE_SIZE - 2,
-		      SPACE_SIZE * y + SPACE_SIZE - 2, BLACK);
+	tft_draw_rect(SPACE_SIZE * x + BOARD_OFFSET_X, SPACE_SIZE * y + BOARD_OFFSET_Y,
+		      (SPACE_SIZE * x + SPACE_SIZE - 2) + BOARD_OFFSET_X,
+		      (SPACE_SIZE * y + SPACE_SIZE - 2) + BOARD_OFFSET_Y, BLACK);
 	} else {
-	tft_draw_rect(SPACE_SIZE * x, SPACE_SIZE * y,
-		      SPACE_SIZE * x + SPACE_SIZE - 1,
-		      SPACE_SIZE * y + SPACE_SIZE - 1, BLACK);
+	tft_draw_rect(SPACE_SIZE * x + BOARD_OFFSET_X, SPACE_SIZE * y + BOARD_OFFSET_Y,
+		      (SPACE_SIZE * x + SPACE_SIZE - 1) + BOARD_OFFSET_X,
+		      (SPACE_SIZE * y + SPACE_SIZE - 1) + BOARD_OFFSET_Y, BLACK);
 	
-	tft_draw_rect(SPACE_SIZE * x, SPACE_SIZE * y,
-		      SPACE_SIZE * x + SPACE_SIZE - 2,
-		      SPACE_SIZE * y + SPACE_SIZE - 2, color);
+	tft_draw_rect(SPACE_SIZE * x + BOARD_OFFSET_X, SPACE_SIZE * y + BOARD_OFFSET_Y,
+		      (SPACE_SIZE * x + SPACE_SIZE - 2) + BOARD_OFFSET_X,
+		      (SPACE_SIZE * y + SPACE_SIZE - 2) + BOARD_OFFSET_Y, color);
 	}
 }
 
@@ -391,7 +389,8 @@ static void lock_active_piece() {
 }
 
 static bool is_row_full(int row) {
-	assert(row >= 0 && row <= 19);
+	assert(row >= 0);
+	assert(row <= 19);
 	for (int x = 0; x <= 9; x++) {
 		if (board[row * 10 + x] == 0)
 			return false;
@@ -401,9 +400,6 @@ static bool is_row_full(int row) {
 
 void game_reset(void)
 {
-	for (int i = 0; i <= 19; i++) {
-		lines_to_remove[i] = 0;
-	}
 }
 
 void game_start(void)
@@ -439,18 +435,14 @@ void game_input(unsigned dt_usec)
 		time_moved_lr = 0;
 	
 	if (sdk_inputs.joy_y > 1024) {
-		if (time_moved_d == 0) {
-			move_active_piece(0, 1);
-			time_moved_d++;
-		} else {
-			if (time_moved_d > movement_d_arr) {
-				move_active_piece(0, 1);
-				time_moved_d -= movement_d_arr = dt_usec;
-			}
-		}
-		time_moved_d += dt_usec;
-	} else
-		time_moved_d = 0;
+		time_after_falling += dt_usec * 20;
+	} else {
+		time_after_falling += dt_usec;
+	}
+	if (time_after_falling > gravity_speed) {
+		move_active_piece(0, gravity_strength);
+		time_after_falling = 0;
+	}
 
 	if (sdk_inputs_delta.b > 0) {
 		if (active_piece_shape != 4) // isn't I piece
@@ -471,30 +463,32 @@ void game_input(unsigned dt_usec)
 		active_piece_shape = 0;
 
 	if (sdk_inputs_delta.x > 0) {
+		for (int i = 0; i <= 19; i++) {
+			move_active_piece(0, 1);
+		}
 		lock_active_piece();
 		active_piece_x = 0;
 		active_piece_y = 0;
 		active_piece_orientation = 0;
 
-		lines_to_remove_count = 0;
-		for (int row = 0; row <= 19; row++) {
-			if (is_row_full(row)) {
-				lines_to_remove[lines_to_remove_count] = row;
-				lines_to_remove_count++;
+		for (int i = 0; i <= 3; i++) {
+			int row_to_remove = -1;
+			for (int row = 19; row >= 0; row--) {
+				if (is_row_full(row)) {
+					row_to_remove = row;
+					break;
+				}
 			}
-		}
-		if (lines_to_remove_count > 0) {
-			lines_to_remove_count--;
-			lines_already_removed = 0;
-			for (int y = 19; y >= 0; y--) {
-				assert(lines_to_remove_count >= 0);
-				if (lines_to_remove[lines_to_remove_count] == y) {
-					lines_already_removed++;
-					lines_to_remove_count--;
+			if (row_to_remove >= 0) {
+				for (int y = row_to_remove; y >= 1; y--) {
+					for (int x = 0; x <= 9; x++) {
+						board[y * 10 + x] = board[(y - 1) * 10 + x];
+					}
 				}
-				for (int x = 0; x <= 9; x++) {
-					board[y * 10 + x] = board[(y - lines_already_removed) * 10 + x];
-				}
+				for (int x = 0; x <= 9; x++)
+					board[x] = 0;
+			} else {
+				break;
 			}
 		}
 	}
