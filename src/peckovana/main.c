@@ -33,6 +33,7 @@ struct bullet {
 struct hamster {
 	float y;
 	float dy;
+	float ddt; //ddt (death delta time)
 	uint8_t color;
 	int hp;
 	int max_bullets;
@@ -231,6 +232,7 @@ void game_reset(void)
 	p1.hp = 3;
 	p1.max_bullets = 1;
 	p1.second_bullet_time = 0;
+	p1.ddt = 0;
 
 	p2.color = GREEN;
 	p2.dy = 0;
@@ -363,10 +365,10 @@ void game_paint(unsigned dt_usec)
 	 */
 
 	for (int i = 0; i < p1.hp; i++)
-		draw_sprite(28 + 16 * i, 4, heart_sprite, RED, true);
+		draw_sprite(28 + 16 * i, 4, heart_sprite, p1.color, true);
 
 	for (int i = 0; i < p2.hp; i++)
-		draw_sprite(TFT_WIDTH - 17 - (28 + 16 * i), 4, heart_sprite, GREEN, true);
+		draw_sprite(TFT_WIDTH - 17 - (28 + 16 * i), 4, heart_sprite, p2.color, true);
 
 	/*
 	 * Draw wall
@@ -531,15 +533,17 @@ void game_paint(unsigned dt_usec)
 		second_bullet.spawn_time = 0;
 	}
 
-	if (p1.second_bullet_time >= 0)
+	if (p1.second_bullet_time >= 0) {
 		p1.second_bullet_time -= dt;
-	p1.color = RED;
-	p1.max_bullets = 1;
+		p1.color = RED;
+		p1.max_bullets = 1;
+	}
 
-	if (p2.second_bullet_time >= 0)
+	if (p2.second_bullet_time >= 0) {
 		p2.second_bullet_time -= dt;
-	p2.color = GREEN;
-	p2.max_bullets = 1;
+		p2.color = GREEN;
+		p2.max_bullets = 1;
+	}
 
 	if (p1.second_bullet_time > 1) {
 		p1.max_bullets = 2;
@@ -702,6 +706,23 @@ void game_paint(unsigned dt_usec)
 	 * Projectile-hamster collissions
 	 */
 
+	p1.ddt -= dt;
+	if (p1.ddt > 0 && p1.ddt < 1)
+		game_reset();
+	if (p1.hp < 1 && p1.ddt < 0) {
+		p1.ddt = 5.0f;
+		p2.s.tile = 3;
+	}
+
+	if (p2.hp < 1 && p1.ddt < 0) {
+		p1.ddt = 5.0f;
+		p2.s.tile = 3;
+	}
+
+	//if (p1.ddt > 0) {
+	//	p2.s.tile = 3;
+	//}
+
 	for (int i = 0; i < MAX_BULLETS; i++) {
 		if (p1.bullets[i].spawned) {
 			if (p1.bullets[i].y >= p2.y && p1.bullets[i].y < (p2.y + 32)) {
@@ -710,9 +731,6 @@ void game_paint(unsigned dt_usec)
 					p2.hp -= 1;
 
 					play_effect(INT16_MAX / 5, 220, 12000, square_wave);
-
-					if (p2.hp < 1)
-						game_reset();
 				}
 			}
 		}
@@ -725,15 +743,15 @@ void game_paint(unsigned dt_usec)
 
 					play_effect(INT16_MAX / 5, 220, 12000, square_wave);
 
-					if (p1.hp < 1)
-						game_reset();
+					//if (p1.hp < 1)
+					//	game_reset();
 				}
 			}
 		}
 		//printy
 
 		//second bullet detector
-		//printf("%3.3f %3.3f\n", p2.second_bullet_time, p1.second_bullet_time);
+		printf("%3.3f %3.3f\n", p2.second_bullet_time, p1.ddt);
 
 		//players names
 		//puts("green = p2 // red = p1");
