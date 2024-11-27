@@ -133,6 +133,8 @@ static bool rects_overlap(int x0, int y0, int x1, int y1, int a0, int b0, int a1
 void game_start(void)
 {
 	sdk_set_output_gain_db(6);
+
+	pacman.speed = 10;
 }
 
 void game_audio(int nsamples)
@@ -187,6 +189,24 @@ void game_reset(void)
 
 void game_input(unsigned dt_usec)
 {
+	float dt = dt_usec / 1000000.0f;
+
+	if (sdk_inputs_delta.a > 0)
+		pacman.dy = 1, pacman.dx = 0;
+	else if (sdk_inputs_delta.y > 0)
+		pacman.dy = -1, pacman.dx = 0;
+	else if (sdk_inputs_delta.b > 0)
+		pacman.dx = 1, pacman.dy = 0;
+	else if (sdk_inputs_delta.x > 0)
+		pacman.dx = -1, pacman.dy = 0;
+
+	float future_x = clamp(pacman.x + pacman.dx * dt * pacman.speed, 0, TFT_WIDTH - 8);
+	float future_y = clamp(pacman.y + pacman.dy * dt * pacman.speed, 0, TFT_HEIGHT - 8 * 3);
+
+	// TODO
+
+	pacman.x = future_x;
+	pacman.y = future_y;
 }
 
 static void draw_tile(TileType type, int x, int y)
@@ -315,14 +335,13 @@ void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
 
-	tft_draw_rect(pacman.x, pacman.y, pacman.x + PACMAN_WIDTH, pacman.y + PACMAN_HEIGHT,
-		      YELLOW);
-
 	for (int x = 0; x < TFT_WIDTH / 8; x++) {
 		for (int y = 0; y < TFT_HEIGHT / 8; y++) {
 			draw_tile(map[y][x], x * 8, y * 8);
 		}
 	}
+	tft_draw_rect(pacman.x, pacman.y, pacman.x + PACMAN_WIDTH, pacman.y + PACMAN_HEIGHT,
+		      YELLOW);
 }
 
 int main()
