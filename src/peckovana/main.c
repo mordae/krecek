@@ -9,7 +9,7 @@
 
 embed_tileset(ts_left_hamster, 4, 24, 32, 237, "left.data");
 
-#define RED 240
+#define RED 255
 #define RED_POWER (RED - 31)
 #define YELLOW 242
 #define GREEN 244
