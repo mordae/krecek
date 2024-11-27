@@ -8,6 +8,7 @@
 #include <tft.h>
 
 embed_tileset(ts_left_hamster, 4, 24, 32, 237, "left.data");
+embed_tileset(ts_right_hamster, 4, 24, 32, 237, "right.data");
 
 #define RED 255
 #define RED_POWER (RED - 31)
@@ -81,7 +82,14 @@ static struct hamster p1 = {
 	},
 };
 
-static struct hamster p2;
+static struct hamster p2 = {
+	.s = {
+		.ts = &ts_right_hamster,
+		.tile = 0,
+		.ox = 0,
+		.oy = 0,
+	},
+};
 
 static struct wall wall;
 static struct power_up power_up;
@@ -226,6 +234,8 @@ void game_reset(void)
 	p2.color = GREEN;
 	p2.dy = 0;
 	p2.y = TFT_HEIGHT - 31;
+	p2.s.y = p2.y;
+	p2.s.x = TFT_RIGHT - 23;
 	p2.hp = 3;
 	p2.max_bullets = 1;
 	p2.second_bullet_time = 0;
@@ -342,7 +352,9 @@ void game_paint(unsigned dt_usec)
 	//tft_draw_rect(0, p1.y, 23, p1.y + 31, p1.color);
 	sdk_draw_sprite(&p1.s);
 
-	tft_draw_rect(TFT_WIDTH - 24, p2.y, TFT_WIDTH - 1, p2.y + 31, p2.color);
+	sdk_draw_sprite(&p2.s);
+
+	//tft_draw_rect(TFT_WIDTH - 24, p2.y, TFT_WIDTH - 1, p2.y + 31, p2.color);
 
 	/*
 	 * Draw hearts
@@ -554,6 +566,7 @@ void game_paint(unsigned dt_usec)
 	p1.s.y = p1.y;
 
 	p2.y += p2.dy * dt;
+	p2.s.y = p2.y;
 
 	/*
 	 * Gravitation
@@ -589,8 +602,13 @@ void game_paint(unsigned dt_usec)
 		p1.s.y = p1.y;
 	}
 
-	if (p2.y >= bottom)
+	if (p2.y >= bottom) {
 		p2.y = bottom;
+		p2.s.y = p2.y;
+	}
+
+	//	if (p2.y >= bottom)
+	//		p2.y = bottom;
 
 	/*
 	 * Draw projectiles
