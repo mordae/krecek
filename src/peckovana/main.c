@@ -227,6 +227,7 @@ void game_reset(void)
 	p1.y = TFT_HEIGHT - 31;
 	p1.s.y = p1.y;
 	p1.s.x = 0;
+	p1.s.tile = 0;
 	p1.hp = 3;
 	p1.max_bullets = 1;
 	p1.second_bullet_time = 0;
@@ -236,6 +237,7 @@ void game_reset(void)
 	p2.y = TFT_HEIGHT - 31;
 	p2.s.y = p2.y;
 	p2.s.x = TFT_RIGHT - 23;
+	p2.s.tile = 0;
 	p2.hp = 3;
 	p2.max_bullets = 1;
 	p2.second_bullet_time = 0;
@@ -552,12 +554,14 @@ void game_paint(unsigned dt_usec)
 	 * Jumping
 	 */
 
-	if ((p1.y >= TFT_HEIGHT - 31) && sdk_inputs.a)
+	if ((p1.y >= TFT_HEIGHT - 31) && sdk_inputs.a) {
 		p1.dy = -TFT_HEIGHT * 1.15;
-
-	if ((p2.y >= TFT_HEIGHT - 31) && sdk_inputs.y)
+		p1.s.tile = 1;
+	}
+	if ((p2.y >= TFT_HEIGHT - 31) && sdk_inputs.y) {
 		p2.dy = -TFT_HEIGHT * 1.15;
-
+		p2.s.tile = 1;
+	}
 	/*
 	 * Vertical movement
 	 */
@@ -581,11 +585,33 @@ void game_paint(unsigned dt_usec)
 
 	if (p1.dy > 0 && sdk_inputs.a) {
 		p1.dy += (float)TFT_HEIGHT * dt;
+		p1.s.tile = 2;
 	}
 
 	if (p2.dy > 0 && sdk_inputs.y) {
 		p2.dy += (float)TFT_HEIGHT * dt;
+		p2.s.tile = 2;
 	}
+
+	/*
+	 * Neutral hands
+	 */
+
+	if (p1.s.y > TFT_BOTTOM - 32)
+		p1.s.tile = 0;
+
+	if (p2.s.y > TFT_BOTTOM - 32)
+		p2.s.tile = 0;
+
+	/*
+	 * Hands up
+	 */
+
+	if (p1.y < 9)
+		p1.s.tile = 2;
+
+	if (p2.y < 9)
+		p2.s.tile = 2;
 
 	/*
 	 * Cap acceleration and keep hamsters above floor
