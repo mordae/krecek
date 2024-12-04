@@ -10,7 +10,7 @@
 embed_tileset(ts_left_hamster, 4, 24, 32, 237, "left.data");
 embed_tileset(ts_right_hamster, 4, 24, 32, 237, "right.data");
 embed_tileset(ts_hearts, 2, 16, 16, 237, "hearts.data");
-embed_tileset(ts_bullets, 2, 4, 4, 237, "bullets.data");
+embed_tileset(ts_bullets, 4, 4, 4, 237, "bullets.data");
 
 #define RED 255
 #define RED_POWER (RED - 31)
@@ -48,7 +48,7 @@ struct hamster {
 	struct bullet bullets[MAX_BULLETS];
 };
 
-#define WALL_HEIGHT 32
+#define WALL_HEIGHT 24
 #define WALL_WIDTH 4
 
 struct wall {
@@ -210,7 +210,7 @@ void game_reset(void)
 	p2.s.tile = 0;
 	p2.b.y = p2.y;
 	p2.b.x = TFT_RIGHT - 4;
-	p2.b.tile = 1;
+	p2.b.tile = 2;
 	p2.hp = 3;
 	p2.max_bullets = 1;
 	p2.second_bullet_time = 0;
@@ -508,22 +508,25 @@ void game_paint(unsigned dt_usec)
 		p1.second_bullet_time -= dt;
 		p1.color = RED;
 		p1.max_bullets = 1;
+		p1.b.tile = 0;
 	}
 
 	if (p2.second_bullet_time >= 0) {
 		p2.second_bullet_time -= dt;
 		p2.color = GREEN;
-		p2.max_bullets = 1;
+		p2.max_bullets = 2;
 	}
 
 	if (p1.second_bullet_time > 1) {
 		p1.max_bullets = 2;
 		p1.color = RED - 32;
+		p1.b.tile = 1;
 	}
 
 	if (p2.second_bullet_time > 1) {
 		p2.max_bullets = 2;
 		p2.color = GREEN - 32;
+		p2.b.tile = 3;
 	}
 	/*
 	 * Jumping
