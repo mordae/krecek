@@ -168,8 +168,8 @@ void game_input(unsigned dt_usec)
 	float dt = dt_usec / 1000000.0;
 
 	{
-		sdk_inputs.joy_x = clamp((sdk_inputs.joy_x + 64) * 5 / 4, -2047, 2047);
-		sdk_inputs.joy_y = clamp((sdk_inputs.joy_y + 64) * 5 / 4, -2047, 2047);
+		sdk_inputs.joy_x = clamp(sdk_inputs.joy_x, -2047, 2047);
+		sdk_inputs.joy_y = clamp(sdk_inputs.joy_y, -2047, 2047);
 
 		float joy_x = dt * sdk_inputs.joy_x / 2047.0f;
 		float joy_y = dt * sdk_inputs.joy_y / 2047.0f;
