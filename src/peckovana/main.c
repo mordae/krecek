@@ -9,6 +9,7 @@
 
 embed_tileset(ts_left_hamster, 4, 24, 32, 237, "left.data");
 embed_tileset(ts_right_hamster, 4, 24, 32, 237, "right.data");
+embed_tileset(ts_hearts, 2, 16, 16, 237, "hearts.data");
 
 #define RED 255
 #define RED_POWER (RED - 31)
@@ -122,59 +123,6 @@ static int16_t __unused square_wave(struct effect *eff)
 static int16_t __unused noise(struct effect *eff)
 {
 	return rand() % (2 * eff->volume) - eff->volume;
-}
-
-uint32_t heart_sprite[32] = {
-	0b00000000000000000000000000000000, /* do not wrap please */
-	0b00011100011100000000000000000000, /* do not wrap please */
-	0b00111110111110000000000000000000, /* do not wrap please */
-	0b01111111111111000000000000000000, /* do not wrap please */
-	0b01111111111111000000000000000000, /* do not wrap please */
-	0b01111111111111000000000000000000, /* do not wrap please */
-	0b01111111111111000000000000000000, /* do not wrap please */
-	0b00111111111110000000000000000000, /* do not wrap please */
-	0b00011111111100000000000000000000, /* do not wrap please */
-	0b00001111111000000000000000000000, /* do not wrap please */
-	0b00000111110000000000000000000000, /* do not wrap please */
-	0b00000011100000000000000000000000, /* do not wrap please */
-	0b00000001000000000000000000000000, /* do not wrap please */
-	0b00000000000000000000000000000000, /* do not wrap please */
-	0b00000000000000000000000000000000, /* do not wrap please */
-	0b00000000000000000000000000000000, /* do not wrap please */
-	0b00000000000000000000000000000000, /* do not wrap please */
-	0b00000000000000000000000000000000, /* do not wrap please */
-	0b00000000000000000000000000000000, /* do not wrap please */
-	0b00000000000000000000000000000000, /* do not wrap please */
-	0b00000000000000000000000000000000, /* do not wrap please */
-	0b00000000000000000000000000000000, /* do not wrap please */
-	0b00000000000000000000000000000000, /* do not wrap please */
-	0b00000000000000000000000000000000, /* do not wrap please */
-	0b00000000000000000000000000000000, /* do not wrap please */
-	0b00000000000000000000000000000000, /* do not wrap please */
-	0b00000000000000000000000000000000, /* do not wrap please */
-	0b00000000000000000000000000000000, /* do not wrap please */
-	0b00000000000000000000000000000000, /* do not wrap please */
-	0b00000000000000000000000000000000, /* do not wrap please */
-	0b00000000000000000000000000000000, /* do not wrap please */
-	0b00000000000000000000000000000000, /* do not wrap please */
-};
-
-static void draw_sprite(int x0, int y0, uint32_t sprite[32], int color, bool transp)
-{
-	int x1 = x0 + 32;
-	int y1 = y0 + 32;
-
-	for (int y = y0; y < y1; y++) {
-		for (int x = x0; x < x1; x++) {
-			bool visible = (sprite[(y - y0)] << (x - x0)) >> 31;
-
-			if (!visible && transp)
-				continue;
-
-			int c = color * visible;
-			tft_draw_pixel(x, y, c);
-		}
-	}
 }
 
 void game_start(void)
@@ -365,10 +313,10 @@ void game_paint(unsigned dt_usec)
 	 */
 
 	for (int i = 0; i < p1.hp; i++)
-		draw_sprite(28 + 16 * i, 4, heart_sprite, p1.color, true);
+		sdk_draw_tile(28 + 16 * i, 4, &ts_hearts, 0);
 
 	for (int i = 0; i < p2.hp; i++)
-		draw_sprite(TFT_WIDTH - 17 - (28 + 16 * i), 4, heart_sprite, p2.color, true);
+		sdk_draw_tile(TFT_WIDTH - 17 - (28 + 16 * i), 4, &ts_hearts, 1);
 
 	/*
 	 * Draw wall
@@ -748,10 +696,6 @@ void game_paint(unsigned dt_usec)
 				}
 			}
 		}
-		//printy
-
-		//second bullet detector
-		printf("%3.3f %3.3f\n", p2.second_bullet_time, p1.ddt);
 
 		//players names
 		//puts("green = p2 // red = p1");
