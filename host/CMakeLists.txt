@@ -15,6 +15,8 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
   add_link_options(-fsanitize=address)
 endif()
 
+
+add_compile_definitions(RUNNING_ON_HOST=1)
 # Screen to simulate:
 add_compile_definitions(TFT_DRIVER=TFT_DRIVER_ILI9341)
 add_compile_definitions(TFT_VSYNC=1)
