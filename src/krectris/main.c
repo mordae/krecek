@@ -23,12 +23,37 @@
 #define GRAY 10
 #define WHITE 15
 
-#define SPACE_SIZE 5
+#define SPACE_SIZE 4
+#define BOARD_WIDTH 10
+#define BOARD_HEIGHT 20
 
-#define BOARD_OFFSET_X 55
-#define BOARD_OFFSET_Y 10
+#define BOARD_OFFSET_X 60
+#define BOARD_OFFSET_Y -68
 
-static uint8_t board[200] = {
+#define NEXT_LIST_POS_X 11
+#define NEXT_LIST_POS_Y 20
+
+static uint8_t board[400] = {
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -53,7 +78,7 @@ static uint8_t board[200] = {
 
 static int active_piece_shape = 0;
 static int active_piece_x = 0;
-static int active_piece_y = 0;
+static int active_piece_y = BOARD_HEIGHT;
 static int active_piece_orientation = 0;
 
 static int movement_lr_das = 150000;
@@ -67,6 +92,10 @@ static int time_after_falling = 0;
 static int piece_colors[7] = {
 	RED, ORANGE, YELLOW, GREEN, CYAN, BLUE, PURPLE
 };
+
+static int active_bag[7] = {0, 1, 2, 3, 4, 5, 6};
+static int future_bag[7] = {0, 1, 2, 3, 4, 5, 6};
+static int next_piece_in_bag = 6;
 
 static uint8_t piece_rotation[448] = { //todo: store in a more space efficient format
 	1, 1, 0, 0, // z
@@ -268,13 +297,15 @@ static int8_t kick_table_I_y_counterclockwise[20] = {
 
 static void draw_mino(int x, int y, int color) {
 	if (color == 0) {
-	tft_draw_rect(SPACE_SIZE * x + BOARD_OFFSET_X, SPACE_SIZE * y + BOARD_OFFSET_Y,
-		      (SPACE_SIZE * x + SPACE_SIZE - 1) + BOARD_OFFSET_X,
-		      (SPACE_SIZE * y + SPACE_SIZE - 1) + BOARD_OFFSET_Y, DARKGRAY);
+		if (y >= BOARD_HEIGHT) {
+			tft_draw_rect(SPACE_SIZE * x + BOARD_OFFSET_X, SPACE_SIZE * y + BOARD_OFFSET_Y,
+				      (SPACE_SIZE * x + SPACE_SIZE - 1) + BOARD_OFFSET_X,
+				      (SPACE_SIZE * y + SPACE_SIZE - 1) + BOARD_OFFSET_Y, DARKGRAY);
 	
-	tft_draw_rect(SPACE_SIZE * x + BOARD_OFFSET_X, SPACE_SIZE * y + BOARD_OFFSET_Y,
-		      (SPACE_SIZE * x + SPACE_SIZE - 2) + BOARD_OFFSET_X,
-		      (SPACE_SIZE * y + SPACE_SIZE - 2) + BOARD_OFFSET_Y, BLACK);
+			tft_draw_rect(SPACE_SIZE * x + BOARD_OFFSET_X, SPACE_SIZE * y + BOARD_OFFSET_Y,
+				      (SPACE_SIZE * x + SPACE_SIZE - 2) + BOARD_OFFSET_X,
+				      (SPACE_SIZE * y + SPACE_SIZE - 2) + BOARD_OFFSET_Y, BLACK);
+		}
 	} else {
 	tft_draw_rect(SPACE_SIZE * x + BOARD_OFFSET_X, SPACE_SIZE * y + BOARD_OFFSET_Y,
 		      (SPACE_SIZE * x + SPACE_SIZE - 1) + BOARD_OFFSET_X,
@@ -300,11 +331,11 @@ static int lookup_rotation_table(int x, int y, int shape, int orientation) {
 static bool verify_piece_placement(int pos_x, int pos_y, int shape, int orientation) {
 	for (int y = 0; y <= 3; y++) {
 		for (int x = 0; x <= 3; x++) {
-			if (lookup_rotation_table(x, y, shape, orientation) == 0 && (pos_x + x < 0 || pos_x + x > 9 || pos_y + y < 0 || pos_y + y > 19))
+			if (lookup_rotation_table(x, y, shape, orientation) == 0 && (pos_x + x < 0 || pos_x + x > BOARD_WIDTH - 1 || pos_y + y < 0 || pos_y + y > BOARD_HEIGHT * 2 - 1))
 				continue;
-			if (lookup_rotation_table(x, y, shape, orientation) == 1 && (pos_x + x < 0 || pos_x + x > 9 || pos_y + y < 0 || pos_y + y > 19))
+			if (lookup_rotation_table(x, y, shape, orientation) == 1 && (pos_x + x < 0 || pos_x + x > BOARD_WIDTH - 1 || pos_y + y < 0 || pos_y + y > BOARD_HEIGHT * 2 - 1))
 				return false;
-			if (lookup_rotation_table(x, y, shape, orientation) == 1 && board[(pos_y + y) * 10 + pos_x + x] != 0)
+			if (lookup_rotation_table(x, y, shape, orientation) == 1 && board[(pos_y + y) * BOARD_WIDTH + pos_x + x] != 0)
 				return false;
 		}
 	}
@@ -319,7 +350,7 @@ static void move_active_piece(int move_x, int move_y) {
 }
 
 static void rotate_active_piece_clockwise() {
-	static int new_orientation;
+	int new_orientation;
 	new_orientation = active_piece_orientation + 1;
 	if (new_orientation > 3)
 		new_orientation = 0;
@@ -334,7 +365,7 @@ static void rotate_active_piece_clockwise() {
 }
 
 static void rotate_active_piece_counterclockwise() {
-	static int new_orientation;
+	int new_orientation;
 	new_orientation = active_piece_orientation - 1;
 	if (new_orientation < 0)
 		new_orientation = 3;
@@ -349,7 +380,7 @@ static void rotate_active_piece_counterclockwise() {
 }
 
 static void rotate_active_piece_I_clockwise() {
-	static int new_orientation;
+	int new_orientation;
 	new_orientation = active_piece_orientation + 1;
 	if (new_orientation > 3)
 		new_orientation = 0;
@@ -364,7 +395,7 @@ static void rotate_active_piece_I_clockwise() {
 }
 
 static void rotate_active_piece_I_counterclockwise() {
-	static int new_orientation;
+	int new_orientation;
 	new_orientation = active_piece_orientation - 1;
 	if (new_orientation < 0)
 		new_orientation = 3;
@@ -382,7 +413,7 @@ static void lock_active_piece() {
 	for (int y = 0; y <= 3; y++) {
 		for (int x = 0; x <= 3; x++) {
 			if (lookup_rotation_table(x, y, active_piece_shape, active_piece_orientation) == 1) {
-				board[(active_piece_y + y) * 10 + active_piece_x + x] = piece_colors[active_piece_shape];
+				board[(active_piece_y + y) * BOARD_WIDTH + active_piece_x + x] = piece_colors[active_piece_shape];
 			}
 		}
 	}
@@ -390,16 +421,37 @@ static void lock_active_piece() {
 
 static bool is_row_full(int row) {
 	assert(row >= 0);
-	assert(row <= 19);
+	assert(row <= BOARD_HEIGHT * 2 - 1);
 	for (int x = 0; x <= 9; x++) {
-		if (board[row * 10 + x] == 0)
+		if (board[row * BOARD_WIDTH + x] == 0)
 			return false;
 	}
 	return true;
 }
 
+static void swap_bag_entries(int a, int b) {
+	int s;
+	s = future_bag[b];
+	future_bag[b] = future_bag[a];
+	future_bag[a] = s;
+}
+
+static void generate_future_bag() {
+	for (int i = 0; i <= 6; i++) {
+		swap_bag_entries(i, rand() % 7);
+	}
+}
+
+
 void game_reset(void)
 {
+	generate_future_bag();
+	for (int i = 0; i <= 6; i++) {
+		active_bag[i] = future_bag[i];
+	}
+	generate_future_bag();
+	active_piece_shape = active_bag[next_piece_in_bag];
+	next_piece_in_bag--;
 }
 
 void game_start(void)
@@ -463,17 +515,29 @@ void game_input(unsigned dt_usec)
 		active_piece_shape = 0;
 
 	if (sdk_inputs_delta.x > 0) {
-		for (int i = 0; i <= 19; i++) {
+		for (int i = 0; i <= BOARD_HEIGHT * 2 - 1; i++) {
 			move_active_piece(0, 1);
 		}
 		lock_active_piece();
 		active_piece_x = 0;
-		active_piece_y = 0;
+		active_piece_y = BOARD_HEIGHT;
 		active_piece_orientation = 0;
+		active_piece_shape = active_bag[next_piece_in_bag];
+
+		next_piece_in_bag--;
+		
+		if (next_piece_in_bag < 0) {
+			next_piece_in_bag = 6;
+			for (int i = 0; i <= 6; i++) {
+				active_bag[i] = future_bag[i];
+			}
+			generate_future_bag();
+			next_piece_in_bag = 6;
+		}
 
 		for (int i = 0; i <= 3; i++) {
 			int row_to_remove = -1;
-			for (int row = 19; row >= 0; row--) {
+			for (int row = BOARD_HEIGHT * 2 - 1; row >= 0; row--) {
 				if (is_row_full(row)) {
 					row_to_remove = row;
 					break;
@@ -481,11 +545,11 @@ void game_input(unsigned dt_usec)
 			}
 			if (row_to_remove >= 0) {
 				for (int y = row_to_remove; y >= 1; y--) {
-					for (int x = 0; x <= 9; x++) {
-						board[y * 10 + x] = board[(y - 1) * 10 + x];
+					for (int x = 0; x <= BOARD_WIDTH - 1; x++) {
+						board[y * BOARD_WIDTH + x] = board[(y - 1) * BOARD_WIDTH + x];
 					}
 				}
-				for (int x = 0; x <= 9; x++)
+				for (int x = 0; x <= BOARD_WIDTH - 1; x++)
 					board[x] = 0;
 			} else {
 				break;
@@ -498,16 +562,53 @@ void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
 
-	for (int y = 0; y <= 19; y++) {
-		for (int x = 0; x <= 9; x++) {
-			draw_mino(x, y, board[y * 10 + x]);
+	for (int y = 0; y <= BOARD_HEIGHT * 2 - 1; y++) {
+		for (int x = 0; x <= BOARD_WIDTH - 1; x++) {
+			draw_mino(x, y, board[y * BOARD_WIDTH + x]);
 		}
 	}
+
+	tft_draw_rect(BOARD_OFFSET_X - 1, BOARD_OFFSET_Y - 1 + (BOARD_HEIGHT * SPACE_SIZE), BOARD_OFFSET_X + (BOARD_WIDTH * SPACE_SIZE), BOARD_OFFSET_Y - 1 + (BOARD_HEIGHT * SPACE_SIZE), 175);
+	tft_draw_rect(BOARD_OFFSET_X - 1, BOARD_OFFSET_Y - 1 + (BOARD_HEIGHT * SPACE_SIZE), BOARD_OFFSET_X -1, BOARD_OFFSET_Y + (BOARD_HEIGHT * SPACE_SIZE) + (BOARD_HEIGHT * SPACE_SIZE), 175);
+	tft_draw_rect(BOARD_OFFSET_X - 1, BOARD_OFFSET_Y + (BOARD_HEIGHT * SPACE_SIZE) + (BOARD_HEIGHT * SPACE_SIZE), BOARD_OFFSET_X + (BOARD_WIDTH * SPACE_SIZE), BOARD_OFFSET_Y + (BOARD_HEIGHT * SPACE_SIZE) + (BOARD_HEIGHT * SPACE_SIZE), 223);
+	tft_draw_rect(BOARD_OFFSET_X + (BOARD_WIDTH * SPACE_SIZE), BOARD_OFFSET_Y - 1 + (BOARD_HEIGHT * SPACE_SIZE), BOARD_OFFSET_X + (BOARD_WIDTH * SPACE_SIZE), BOARD_OFFSET_Y + (BOARD_HEIGHT * SPACE_SIZE) + (BOARD_HEIGHT * SPACE_SIZE), 223);
 
 	for (int y = 0; y <= 3; y++) {
 		for (int x = 0; x <= 3; x++) {
 			if (lookup_rotation_table(x, y, active_piece_shape, active_piece_orientation) == 1)
 				draw_mino(active_piece_x + x, active_piece_y + y, piece_colors[active_piece_shape]);
+		}
+	}
+
+	int next_piece = next_piece_in_bag;
+	for (int y = 0; y <= 3; y++) {
+		for (int x = 0; x <= 3; x++) {
+			if (lookup_rotation_table(x, y, active_bag[next_piece], active_piece_orientation) == 1)
+				draw_mino(NEXT_LIST_POS_X + x, NEXT_LIST_POS_Y + y, piece_colors[active_bag[next_piece]]);
+		}
+	}
+
+	bool use_future_bag = false;
+	for (int i = 1; i <= 3; i++) {
+		next_piece--;
+		if (next_piece < 0) {
+			next_piece = 6;
+			use_future_bag = true;
+		}
+		if (!use_future_bag) {
+			for (int y = 0; y <= 3; y++) {
+				for (int x = 0; x <= 3; x++) {
+					if (lookup_rotation_table(x, y, future_bag[next_piece], active_piece_orientation) == 1)
+						draw_mino(NEXT_LIST_POS_X + x, NEXT_LIST_POS_Y + y + (i * 4), piece_colors[future_bag[next_piece]]);
+				}
+			}
+		} else {
+			for (int y = 0; y <= 3; y++) {
+				for (int x = 0; x <= 3; x++) {
+					if (lookup_rotation_table(x, y, active_bag[next_piece], active_piece_orientation) == 1)
+						draw_mino(NEXT_LIST_POS_X + x, NEXT_LIST_POS_Y + y + (i * 4), piece_colors[active_bag[next_piece]]);
+				}
+			}
 		}
 	}
 }
