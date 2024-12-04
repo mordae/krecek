@@ -10,6 +10,7 @@
 embed_tileset(ts_left_hamster, 4, 24, 32, 237, "left.data");
 embed_tileset(ts_right_hamster, 4, 24, 32, 237, "right.data");
 embed_tileset(ts_hearts, 2, 16, 16, 237, "hearts.data");
+embed_tileset(ts_bullets, 2, 4, 4, 237, "bullets.data");
 
 #define RED 255
 #define RED_POWER (RED - 31)
@@ -30,6 +31,7 @@ struct bullet {
 };
 
 #define HAMSTER_SECOND_BULLET_TIME 10.0f
+#define HAMSTER_DEATH_DELTA_TIME 3.0f
 
 struct hamster {
 	float y;
@@ -41,6 +43,7 @@ struct hamster {
 	float second_bullet_time;
 
 	sdk_sprite_t s;
+	sdk_sprite_t b;
 
 	struct bullet bullets[MAX_BULLETS];
 };
@@ -82,11 +85,24 @@ static struct hamster p1 = {
 		.ox = 0,
 		.oy = 0,
 	},
+
+	.b = {
+		.ts = &ts_bullets,
+		.tile = 0,
+		.ox = 0,
+		.oy = 0,
+	},
 };
 
 static struct hamster p2 = {
 	.s = {
 		.ts = &ts_right_hamster,
+		.tile = 0,
+		.ox = 0,
+		.oy = 0,
+	},
+	.b = {
+		.ts = &ts_bullets,
 		.tile = 0,
 		.ox = 0,
 		.oy = 0,
@@ -173,21 +189,28 @@ void game_reset(void)
 {
 	p1.color = RED;
 	p1.dy = 0;
+	p1.ddt = 0;
 	p1.y = TFT_HEIGHT - 31;
 	p1.s.y = p1.y;
 	p1.s.x = 0;
 	p1.s.tile = 0;
+	p1.b.y = p1.y;
+	p1.b.x = 0;
+	p1.b.tile = 0;
 	p1.hp = 3;
 	p1.max_bullets = 1;
 	p1.second_bullet_time = 0;
-	p1.ddt = 0;
 
 	p2.color = GREEN;
 	p2.dy = 0;
+	p2.ddt = 0;
 	p2.y = TFT_HEIGHT - 31;
 	p2.s.y = p2.y;
 	p2.s.x = TFT_RIGHT - 23;
 	p2.s.tile = 0;
+	p2.b.y = p2.y;
+	p2.b.x = TFT_RIGHT - 4;
+	p2.b.tile = 1;
 	p2.hp = 3;
 	p2.max_bullets = 1;
 	p2.second_bullet_time = 0;
@@ -227,7 +250,7 @@ void game_input(unsigned __unused dt_usec)
 	 */
 
 #if 1
-	if (sdk_inputs_delta.x > 0) {
+	if (sdk_inputs_delta.x > 0 && p1.hp > 0) {
 		for (int i = 0; i < p1.max_bullets; i++) {
 			if (p1.bullets[i].spawned)
 				continue;
@@ -241,7 +264,7 @@ void game_input(unsigned __unused dt_usec)
 		}
 	}
 
-	if (sdk_inputs_delta.b > 0) {
+	if (sdk_inputs_delta.b > 0 && p2.hp > 0) {
 		for (int i = 0; i < p2.max_bullets; i++) {
 			if (p2.bullets[i].spawned)
 				continue;
@@ -506,11 +529,11 @@ void game_paint(unsigned dt_usec)
 	 * Jumping
 	 */
 
-	if ((p1.y >= TFT_HEIGHT - 31) && sdk_inputs.a) {
+	if ((p1.y >= TFT_HEIGHT - 31) && sdk_inputs.a && p1.hp > 0) {
 		p1.dy = -TFT_HEIGHT * 1.15;
 		p1.s.tile = 1;
 	}
-	if ((p2.y >= TFT_HEIGHT - 31) && sdk_inputs.y) {
+	if ((p2.y >= TFT_HEIGHT - 31) && sdk_inputs.y && p2.hp > 0) {
 		p2.dy = -TFT_HEIGHT * 1.15;
 		p2.s.tile = 1;
 	}
@@ -598,9 +621,19 @@ void game_paint(unsigned dt_usec)
 				      p1.bullets[i].y + 1, p1.color);
 		}
 
+		//sdk_draw_sprite(&p1.s);
+
+		if (p1.bullets[i].spawned) {
+			sdk_draw_sprite(&p1.b);
+		}
+
 		if (p2.bullets[i].spawned) {
 			tft_draw_rect(p2.bullets[i].x - 1, p2.bullets[i].y - 1, p2.bullets[i].x + 1,
 				      p2.bullets[i].y + 1, p2.color);
+		}
+
+		if (p2.bullets[i].spawned) {
+			sdk_draw_sprite(&p2.b);
 		}
 	}
 
@@ -654,22 +687,25 @@ void game_paint(unsigned dt_usec)
 	 * Projectile-hamster collissions
 	 */
 
-	p1.ddt -= dt;
-	if (p1.ddt > 0 && p1.ddt < 1)
+	if (p2.ddt > 0) {
+		p2.ddt -= dt;
+		p2.s.tile = 3;
+	}
+
+	if (p2.ddt > 0 && p2.ddt < 0.1) {
 		game_reset();
-	if (p1.hp < 1 && p1.ddt < 0) {
-		p1.ddt = 5.0f;
-		p2.s.tile = 3;
+		p2.hp = 3;
 	}
 
-	if (p2.hp < 1 && p1.ddt < 0) {
-		p1.ddt = 5.0f;
-		p2.s.tile = 3;
+	if (p1.ddt > 0) {
+		p1.ddt -= dt;
+		p1.s.tile = 3;
 	}
 
-	//if (p1.ddt > 0) {
-	//	p2.s.tile = 3;
-	//}
+	if (p1.ddt > 0 && p1.ddt < 0.1) {
+		game_reset();
+		p1.hp = 3;
+	}
 
 	for (int i = 0; i < MAX_BULLETS; i++) {
 		if (p1.bullets[i].spawned) {
@@ -679,6 +715,10 @@ void game_paint(unsigned dt_usec)
 					p2.hp -= 1;
 
 					play_effect(INT16_MAX / 5, 220, 12000, square_wave);
+					if (p2.hp < 1) {
+						p2.ddt = HAMSTER_DEATH_DELTA_TIME;
+						p2.hp = -1;
+					}
 				}
 			}
 		}
@@ -690,9 +730,10 @@ void game_paint(unsigned dt_usec)
 					p1.hp -= 1;
 
 					play_effect(INT16_MAX / 5, 220, 12000, square_wave);
-
-					//if (p1.hp < 1)
-					//	game_reset();
+					if (p1.hp < 1) {
+						p1.ddt = HAMSTER_DEATH_DELTA_TIME;
+						p1.hp = -1;
+					}
 				}
 			}
 		}
