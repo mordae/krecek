@@ -21,7 +21,7 @@ struct sdk_tileset {
 typedef const struct sdk_file sdk_file_t;
 typedef const struct sdk_tileset sdk_tileset_t;
 
-#if defined(PICO_NO_HARDWARE)
+#ifdef __linux__
 #define SDK_EMBED_SECTION ".section \".rodata\"\n"
 #define SDK_EMBED_POINTER ".quad"
 #else

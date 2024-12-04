@@ -1,5 +1,6 @@
 #include <pico/stdlib.h>
 #include <sys/time.h>
+#include <stdlib.h>
 
 uint32_t time_us_32()
 {
