@@ -583,7 +583,7 @@ void game_paint(unsigned __unused dt_usec)
 	int next_piece = next_piece_in_bag;
 	for (int y = 0; y <= 3; y++) {
 		for (int x = 0; x <= 3; x++) {
-			if (lookup_rotation_table(x, y, active_bag[next_piece], active_piece_orientation) == 1)
+			if (lookup_rotation_table(x, y, active_bag[next_piece], 0) == 1)
 				draw_mino(NEXT_LIST_POS_X + x, NEXT_LIST_POS_Y + y, piece_colors[active_bag[next_piece]]);
 		}
 	}
@@ -598,14 +598,14 @@ void game_paint(unsigned __unused dt_usec)
 		if (!use_future_bag) {
 			for (int y = 0; y <= 3; y++) {
 				for (int x = 0; x <= 3; x++) {
-					if (lookup_rotation_table(x, y, future_bag[next_piece], active_piece_orientation) == 1)
+					if (lookup_rotation_table(x, y, future_bag[next_piece], 0) == 1)
 						draw_mino(NEXT_LIST_POS_X + x, NEXT_LIST_POS_Y + y + (i * 4), piece_colors[future_bag[next_piece]]);
 				}
 			}
 		} else {
 			for (int y = 0; y <= 3; y++) {
 				for (int x = 0; x <= 3; x++) {
-					if (lookup_rotation_table(x, y, active_bag[next_piece], active_piece_orientation) == 1)
+					if (lookup_rotation_table(x, y, active_bag[next_piece], 0) == 1)
 						draw_mino(NEXT_LIST_POS_X + x, NEXT_LIST_POS_Y + y + (i * 4), piece_colors[active_bag[next_piece]]);
 				}
 			}
