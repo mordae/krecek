@@ -331,7 +331,6 @@ void game_paint(unsigned dt_usec)
 	float bottom = TFT_HEIGHT - 31;
 
 	//				--- GUI --- gui ---
-
 	// Draw hearts
 	for (int i = 0; i < p1.hp; i++)
 		sdk_draw_tile(28 + 16 * i, 4, &ts_hearts, 0);
@@ -340,7 +339,6 @@ void game_paint(unsigned dt_usec)
 		sdk_draw_tile(TFT_WIDTH - 17 - (28 + 16 * i), 4, &ts_hearts, 1);
 
 	//				--- Wall --- wall ---
-
 	// Draw wall
 	int wall_x = TFT_WIDTH / 2 - WALL_WIDTH / 2;
 	int wall_y = wall.y - WALL_HEIGHT / 2.0;
@@ -382,7 +380,6 @@ void game_paint(unsigned dt_usec)
 	}
 
 	//				--- Power UP --- power up ---
-
 	// --- Heal Boost ---
 	if (power_up.spawn_time <= 0) {
 		// Draw power_up
@@ -463,23 +460,30 @@ void game_paint(unsigned dt_usec)
 	if (p1.second_bullet_time >= 0) {
 		p1.second_bullet_time -= dt;
 		p1.max_bullets = 1;
+		for (int i = 0; i < MAX_BULLETS; i++)
+			p1.bullets[i].s.tile = 0;
 	}
 
 	if (p2.second_bullet_time >= 0) {
 		p2.second_bullet_time -= dt;
-		p2.max_bullets = 2;
+		p2.max_bullets = 1;
+		for (int i = 0; i < MAX_BULLETS; i++)
+			p2.bullets[i].s.tile = 2;
 	}
 
 	if (p1.second_bullet_time > 1) {
 		p1.max_bullets = 2;
+		for (int i = 0; i < MAX_BULLETS; i++)
+			p1.bullets[i].s.tile = 1;
 	}
 
 	if (p2.second_bullet_time > 1) {
 		p2.max_bullets = 2;
+		for (int i = 0; i < MAX_BULLETS; i++)
+			p2.bullets[i].s.tile = 3;
 	}
 
 	//				--- Hamsters --- hamsters ---
-
 	// Draw hamsters
 	sdk_draw_sprite(&p1.s);
 	sdk_draw_sprite(&p2.s);
@@ -533,7 +537,6 @@ void game_paint(unsigned dt_usec)
 	}
 
 	//			--- Movement --- movement ---
-
 	// Jumping
 	if ((p1.y >= TFT_HEIGHT - 31) && sdk_inputs.a && p1.hp > 0) {
 		p1.dy = -TFT_HEIGHT * 1.15;
@@ -585,7 +588,6 @@ void game_paint(unsigned dt_usec)
 	}
 
 	//	 --- Hands ---
-
 	// Neutral hands
 	if (p1.s.y > TFT_BOTTOM - 32)
 		p1.s.tile = 0;
