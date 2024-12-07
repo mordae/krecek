@@ -62,6 +62,7 @@ TileType map[15][20] = {
 struct pacman {
 	float x, y;
 	float dx, dy;
+	float fdx, fdy;
 	uint8_t color;
 	float speed;
 };
@@ -100,7 +101,7 @@ void game_start(void)
 {
 	sdk_set_output_gain_db(6);
 
-	pacman.speed = 10;
+	pacman.speed = 32;
 }
 
 void game_audio(int nsamples)
@@ -157,14 +158,49 @@ void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
 
-	if (sdk_inputs_delta.a > 0)
-		pacman.dy = 1, pacman.dx = 0;
-	else if (sdk_inputs_delta.y > 0)
-		pacman.dy = -1, pacman.dx = 0;
-	else if (sdk_inputs_delta.b > 0)
-		pacman.dx = 1, pacman.dy = 0;
-	else if (sdk_inputs_delta.x > 0)
-		pacman.dx = -1, pacman.dy = 0;
+	if (sdk_inputs_delta.a > 0) {
+		if (!pacman.dx) {
+			pacman.dy = 1;
+		} else {
+			pacman.fdy = 1, pacman.fdx = 0;
+		}
+	} else if (sdk_inputs_delta.y > 0) {
+		if (!pacman.dx) {
+			pacman.dy = -1;
+		} else {
+			pacman.fdy = -1, pacman.fdx = 0;
+		}
+	} else if (sdk_inputs_delta.b > 0) {
+		if (!pacman.dy) {
+			pacman.dx = 1;
+		} else {
+			pacman.fdx = 1, pacman.fdy = 0;
+		}
+	} else if (sdk_inputs_delta.x > 0) {
+		if (!pacman.dy) {
+			pacman.dx = -1;
+		} else {
+			pacman.fdx = -1, pacman.fdy = 0;
+		}
+	}
+
+	if (pacman.fdx || pacman.fdy) {
+		float dx = fabsf(fmodf(pacman.x, 8) / 8 - 0.5f);
+		float dy = fabsf(fmodf(pacman.y, 8) / 8 - 0.5f);
+		float d = MAX(dx, dy);
+
+		if (d < (2 * pacman.speed / (30 * 8))) {
+			int hx = pacman.x / 8 + pacman.fdx;
+			int hy = pacman.y / 8 + pacman.fdy;
+
+			if (hx >= 0 && hx < 20 && hy >= 0 && hy < 15 && map[hy][hx] <= CHERRY) {
+				pacman.dx = pacman.fdx;
+				pacman.dy = pacman.fdy;
+				pacman.fdx = 0;
+				pacman.fdy = 0;
+			}
+		}
+	}
 
 	if (pacman.dy || pacman.dx) {
 		float future_x = clamp(pacman.x + pacman.dx * dt * pacman.speed, 8 * 0.5,
@@ -176,22 +212,26 @@ void game_input(unsigned dt_usec)
 
 		if (pacman.dx > 0) {
 			// Moving right
-			future_y = (roundf(future_y / 8 - 0.5f)) * 8 + 0.5 * 8;
+			float ideal_y = (roundf(future_y / 8 - 0.5f)) * 8 + 0.5 * 8;
+			future_y = future_y * 0.8 + ideal_y * 0.2;
 			future_tile_x = (future_x + 0.5 * PACMAN_SIZE) / 8;
 			future_tile_y = future_y / 8;
 		} else if (pacman.dx < 0) {
 			// Moving left
-			future_y = (roundf(future_y / 8 - 0.5f)) * 8 + 0.5 * 8;
+			float ideal_y = (roundf(future_y / 8 - 0.5f)) * 8 + 0.5 * 8;
+			future_y = future_y * 0.8 + ideal_y * 0.2;
 			future_tile_x = (future_x - 0.5 * PACMAN_SIZE) / 8;
 			future_tile_y = future_y / 8;
 		} else if (pacman.dy > 0) {
 			// Moving down
-			future_x = (roundf(future_x / 8 - 0.5f)) * 8 + 0.5 * 8;
+			float ideal_x = (roundf(future_x / 8 - 0.5f)) * 8 + 0.5 * 8;
+			future_x = future_x * 0.8 + ideal_x * 0.2;
 			future_tile_y = (future_y + 0.5 * PACMAN_SIZE) / 8;
 			future_tile_x = future_x / 8;
 		} else if (pacman.dy < 0) {
 			// Moving up
-			future_x = (roundf(future_x / 8 - 0.5f)) * 8 + 0.5 * 8;
+			float ideal_x = (roundf(future_x / 8 - 0.5f)) * 8 + 0.5 * 8;
+			future_x = future_x * 0.8 + ideal_x * 0.2;
 			future_tile_y = (future_y - 0.5 * PACMAN_SIZE) / 8;
 			future_tile_x = future_x / 8;
 		}
