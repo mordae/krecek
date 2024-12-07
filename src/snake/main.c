@@ -30,7 +30,7 @@ static int snake_trail_y[200];
 static int fruit_x = 10;
 static int fruit_y = 10;
 static int fruit_color = RED;
-static int fruit_posible_colors[3] = {RED, YELLOW, BLUE};
+static int fruit_posible_colors[3] = { RED, YELLOW, BLUE };
 
 static int since_last_move = 0;
 
@@ -44,7 +44,7 @@ void game_reset(void)
 	snake_collided = false;
 	fruit_x = 10;
 	fruit_y = 10;
-	
+
 	// initialise the snake part possitions to a default value
 	for (int i = 0; i < 200; i++) {
 		snake_trail_x[i] = 0;
@@ -106,7 +106,8 @@ void game_input(unsigned dt_usec)
 		snake_head_y += snake_delta_y;
 
 		for (int snake_cell = 0; snake_cell <= score - 1; snake_cell++) {
-			if (snake_trail_x[snake_cell] == snake_head_x && snake_trail_y[snake_cell] == snake_head_y)
+			if (snake_trail_x[snake_cell] == snake_head_x &&
+			    snake_trail_y[snake_cell] == snake_head_y)
 				snake_collided = true;
 		}
 		if (snake_collided)
@@ -139,7 +140,6 @@ void game_input(unsigned dt_usec)
 		game_reset();
 	if (snake_head_y > 23)
 		game_reset();
-
 }
 
 void game_paint(unsigned __unused dt_usec)
@@ -153,15 +153,16 @@ void game_paint(unsigned __unused dt_usec)
 
 	// draw all snake parts
 	for (int snake_cell = 0; snake_cell <= score; snake_cell++) {
-		tft_draw_rect(SPACE_SIZE * snake_trail_x[snake_cell], SPACE_SIZE * snake_trail_y[snake_cell],
+		tft_draw_rect(SPACE_SIZE * snake_trail_x[snake_cell],
+			      SPACE_SIZE * snake_trail_y[snake_cell],
 			      SPACE_SIZE * snake_trail_x[snake_cell] + SPACE_SIZE - 1,
 			      SPACE_SIZE * snake_trail_y[snake_cell] + SPACE_SIZE - 1, GREEN);
 	}
 	// draw fruit
 	tft_draw_rect(SPACE_SIZE * fruit_x, SPACE_SIZE * fruit_y,
-		      SPACE_SIZE * fruit_x + SPACE_SIZE - 1,
-		      SPACE_SIZE * fruit_y + SPACE_SIZE - 1, fruit_color);
-	}
+		      SPACE_SIZE * fruit_x + SPACE_SIZE - 1, SPACE_SIZE * fruit_y + SPACE_SIZE - 1,
+		      fruit_color);
+}
 
 int main()
 {

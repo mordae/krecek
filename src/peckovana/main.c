@@ -10,7 +10,7 @@
 //Sprites
 embed_tileset(ts_left_hamster, 4, 24, 32, 237, "left.data");
 embed_tileset(ts_right_hamster, 4, 24, 32, 237, "right.data");
-embed_tileset(ts_hearts, 2, 16, 16, 237, "hearts.data");
+embed_tileset(ts_hearts, 4, 16, 16, 237, "hearts.data");
 embed_tileset(ts_bullets, 4, 4, 4, 237, "bullets.data");
 embed_tileset(ts_power_ups, 2, 16, 16, 237, "powerups.data");
 
@@ -41,6 +41,7 @@ struct hamster {
 	float dy;
 	float ddt; //ddt (death delta time)
 	int hp;
+	int hp_style;
 	int max_bullets;
 	float second_bullet_time;
 
@@ -188,6 +189,7 @@ void game_reset(void)
 	p1.hp = 3;
 	p1.max_bullets = 1;
 	p1.second_bullet_time = 0;
+	p1.hp_style = 0;
 
 	p2.dy = 0;
 	p2.ddt = 0;
@@ -198,6 +200,7 @@ void game_reset(void)
 	p2.hp = 3;
 	p2.max_bullets = 1;
 	p2.second_bullet_time = 0;
+	p2.hp_style = 2;
 
 	//Bullets deffine
 	for (int i = 0; i < MAX_BULLETS; i++) {
@@ -333,10 +336,10 @@ void game_paint(unsigned dt_usec)
 	//				--- GUI --- gui ---
 	// Draw hearts
 	for (int i = 0; i < p1.hp; i++)
-		sdk_draw_tile(28 + 16 * i, 4, &ts_hearts, 0);
+		sdk_draw_tile(28 + 16 * i, 4, &ts_hearts, p1.hp_style);
 
 	for (int i = 0; i < p2.hp; i++)
-		sdk_draw_tile(TFT_WIDTH - 17 - (28 + 16 * i), 4, &ts_hearts, 1);
+		sdk_draw_tile(TFT_WIDTH - 17 - (28 + 16 * i), 4, &ts_hearts, p2.hp_style);
 
 	//				--- Wall --- wall ---
 	// Draw wall
@@ -460,6 +463,7 @@ void game_paint(unsigned dt_usec)
 	if (p1.second_bullet_time >= 0) {
 		p1.second_bullet_time -= dt;
 		p1.max_bullets = 1;
+		p1.hp_style = 0;
 		for (int i = 0; i < MAX_BULLETS; i++)
 			p1.bullets[i].s.tile = 0;
 	}
@@ -467,18 +471,21 @@ void game_paint(unsigned dt_usec)
 	if (p2.second_bullet_time >= 0) {
 		p2.second_bullet_time -= dt;
 		p2.max_bullets = 1;
+		p2.hp_style = 2;
 		for (int i = 0; i < MAX_BULLETS; i++)
 			p2.bullets[i].s.tile = 2;
 	}
 
 	if (p1.second_bullet_time > 1) {
 		p1.max_bullets = 2;
+		p1.hp_style = 1;
 		for (int i = 0; i < MAX_BULLETS; i++)
 			p1.bullets[i].s.tile = 1;
 	}
 
 	if (p2.second_bullet_time > 1) {
 		p2.max_bullets = 2;
+		p2.hp_style = 3;
 		for (int i = 0; i < MAX_BULLETS; i++)
 			p2.bullets[i].s.tile = 3;
 	}
@@ -642,6 +649,14 @@ void game_paint(unsigned dt_usec)
 			}
 		}
 	}
+	/*
+	 * Game mods
+	 *  Base Game
+	 *  No Walls and Power up
+	 *  Low gravity
+	 *  One HP
+	 *  
+	 */
 }
 
 int main()
