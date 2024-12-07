@@ -61,8 +61,6 @@ TileType map[15][20] = {
 #define PACMAN_WIDTH 7
 #define PACMAN_HEIGHT 7
 
-#define PACMAN_SPEED 1
-
 struct pacman {
 	float x, y;
 	float dx, dy;
@@ -178,8 +176,8 @@ static void __unused play_effect(int volume, int frequency, int length, effect_g
 
 static void new_round(void)
 {
-	pacman.x = 15 * 8;
-	pacman.y = 6 * 8;
+	pacman.x = 15.5 * 8;
+	pacman.y = 6.5 * 8;
 }
 
 void game_reset(void)
@@ -200,8 +198,10 @@ void game_input(unsigned dt_usec)
 	else if (sdk_inputs_delta.x > 0)
 		pacman.dx = -1, pacman.dy = 0;
 
-	float future_x = clamp(pacman.x + pacman.dx * dt * pacman.speed, 0, TFT_WIDTH - 8);
-	float future_y = clamp(pacman.y + pacman.dy * dt * pacman.speed, 0, TFT_HEIGHT - 8 * 3);
+	float future_x = clamp(pacman.x + pacman.dx * dt * pacman.speed, PACMAN_WIDTH * 0.5,
+			       TFT_RIGHT - PACMAN_WIDTH * 0.5);
+	float future_y = clamp(pacman.y + pacman.dy * dt * pacman.speed, PACMAN_HEIGHT * 0.5,
+			       TFT_BOTTOM - PACMAN_HEIGHT * 0.5);
 
 	// TODO
 
@@ -340,8 +340,8 @@ void game_paint(unsigned __unused dt_usec)
 			draw_tile(map[y][x], x * 8, y * 8);
 		}
 	}
-	tft_draw_rect(pacman.x, pacman.y, pacman.x + PACMAN_WIDTH, pacman.y + PACMAN_HEIGHT,
-		      YELLOW);
+	tft_draw_rect(pacman.x - PACMAN_WIDTH * 0.5f, pacman.y - PACMAN_HEIGHT * 0.5f,
+		      pacman.x + PACMAN_WIDTH * 0.5f, pacman.y + PACMAN_HEIGHT * 0.5f, YELLOW);
 }
 
 int main()
