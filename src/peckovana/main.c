@@ -11,6 +11,7 @@ embed_tileset(ts_left_hamster, 4, 24, 32, 237, "left.data");
 embed_tileset(ts_right_hamster, 4, 24, 32, 237, "right.data");
 embed_tileset(ts_hearts, 2, 16, 16, 237, "hearts.data");
 embed_tileset(ts_bullets, 4, 4, 4, 237, "bullets.data");
+embed_tileset(ts_power_ups, 2, 16, 16, 237, "powerups.data");
 
 #define RED 255
 #define RED_POWER (RED - 31)
@@ -393,9 +394,12 @@ void game_paint(unsigned dt_usec)
 		 * Draw power_up
 		 */
 
-		tft_draw_rect(TFT_WIDTH / 2 - POWER_UP_LENGTH / 2, power_up.y - POWER_UP_LENGTH / 2,
-			      TFT_WIDTH / 2 + POWER_UP_LENGTH / 2, power_up.y + POWER_UP_LENGTH / 2,
-			      YELLOW);
+		//tft_draw_rect(TFT_WIDTH / 2 - POWER_UP_LENGTH / 2, power_up.y - POWER_UP_LENGTH / 2,
+		//	      TFT_WIDTH / 2 + POWER_UP_LENGTH / 2, power_up.y + POWER_UP_LENGTH / 2,
+		//	      YELLOW);
+
+		sdk_draw_tile(TFT_WIDTH / 2 - POWER_UP_LENGTH / 2, power_up.y - POWER_UP_LENGTH / 2,
+			      &ts_power_ups, 0);
 
 		/*
 		 * projectile-power_up collisions
@@ -446,10 +450,13 @@ void game_paint(unsigned dt_usec)
 		 * Draw second_bullet
 		 */
 
-		tft_draw_rect(TFT_WIDTH / 2 - SECOND_BULLET_LENGTH / 2,
-			      second_bullet.y - SECOND_BULLET_LENGTH / 2,
-			      TFT_WIDTH / 2 + SECOND_BULLET_LENGTH / 2,
-			      second_bullet.y + SECOND_BULLET_LENGTH / 2, BLUE);
+		//tft_draw_rect(TFT_WIDTH / 2 - SECOND_BULLET_LENGTH / 2,
+		//	      second_bullet.y - SECOND_BULLET_LENGTH / 2,
+		//	      TFT_WIDTH / 2 + SECOND_BULLET_LENGTH / 2,
+		//	      second_bullet.y + SECOND_BULLET_LENGTH / 2, BLUE);
+
+		sdk_draw_tile(TFT_WIDTH / 2 - SECOND_BULLET_LENGTH / 2,
+			      second_bullet.y - SECOND_BULLET_LENGTH / 2, &ts_power_ups, 1);
 
 		/*
 		 * projectile-second_bullet collisions
