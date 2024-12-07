@@ -1,6 +1,5 @@
 #include <pico/stdlib.h>
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
@@ -58,8 +57,7 @@ TileType map[15][20] = {
 #define GRAY 8
 #define WHITE 15
 
-#define PACMAN_WIDTH 7
-#define PACMAN_HEIGHT 7
+#define PACMAN_SIZE 7
 
 struct pacman {
 	float x, y;
@@ -98,36 +96,6 @@ static int16_t __unused noise(struct effect *eff)
 	return rand() % (2 * eff->volume) - eff->volume;
 }
 
-static bool rects_overlap(int x0, int y0, int x1, int y1, int a0, int b0, int a1, int b1)
-{
-	int tmp;
-
-	if (x0 > x1)
-		tmp = x1, x1 = x0, x0 = tmp;
-
-	if (a0 > a1)
-		tmp = a1, a1 = a0, a0 = tmp;
-
-	if (y0 > y1)
-		tmp = y1, y1 = y0, y0 = tmp;
-
-	if (b0 > b1)
-		tmp = b1, b1 = b0, b0 = tmp;
-
-	if (x1 < a0)
-		return false;
-
-	if (x0 > a1)
-		return false;
-
-	if (y1 < b0)
-		return false;
-
-	if (y0 > b1)
-		return false;
-
-	return true;
-}
 void game_start(void)
 {
 	sdk_set_output_gain_db(6);
@@ -198,15 +166,43 @@ void game_input(unsigned dt_usec)
 	else if (sdk_inputs_delta.x > 0)
 		pacman.dx = -1, pacman.dy = 0;
 
-	float future_x = clamp(pacman.x + pacman.dx * dt * pacman.speed, PACMAN_WIDTH * 0.5,
-			       TFT_RIGHT - PACMAN_WIDTH * 0.5);
-	float future_y = clamp(pacman.y + pacman.dy * dt * pacman.speed, PACMAN_HEIGHT * 0.5,
-			       TFT_BOTTOM - PACMAN_HEIGHT * 0.5);
+	if (pacman.dy || pacman.dx) {
+		float future_x = clamp(pacman.x + pacman.dx * dt * pacman.speed, 8 * 0.5,
+				       TFT_RIGHT - 8 * 0.5);
+		float future_y = clamp(pacman.y + pacman.dy * dt * pacman.speed, 8 * 0.5,
+				       TFT_BOTTOM - 8 * 0.5);
 
-	// TODO
+		int future_tile_x = 0, future_tile_y = 0;
 
-	pacman.x = future_x;
-	pacman.y = future_y;
+		if (pacman.dx > 0) {
+			// Moving right
+			future_y = (roundf(future_y / 8 - 0.5f)) * 8 + 0.5 * 8;
+			future_tile_x = (future_x + 0.5 * PACMAN_SIZE) / 8;
+			future_tile_y = future_y / 8;
+		} else if (pacman.dx < 0) {
+			// Moving left
+			future_y = (roundf(future_y / 8 - 0.5f)) * 8 + 0.5 * 8;
+			future_tile_x = (future_x - 0.5 * PACMAN_SIZE) / 8;
+			future_tile_y = future_y / 8;
+		} else if (pacman.dy > 0) {
+			// Moving down
+			future_x = (roundf(future_x / 8 - 0.5f)) * 8 + 0.5 * 8;
+			future_tile_y = (future_y + 0.5 * PACMAN_SIZE) / 8;
+			future_tile_x = future_x / 8;
+		} else if (pacman.dy < 0) {
+			// Moving up
+			future_x = (roundf(future_x / 8 - 0.5f)) * 8 + 0.5 * 8;
+			future_tile_y = (future_y - 0.5 * PACMAN_SIZE) / 8;
+			future_tile_x = future_x / 8;
+		}
+
+		int future_tile = map[future_tile_y][future_tile_x];
+
+		if (future_tile <= CHERRY) {
+			pacman.x = future_x;
+			pacman.y = future_y;
+		}
+	}
 }
 
 static void draw_tile(TileType type, int x, int y)
@@ -340,8 +336,8 @@ void game_paint(unsigned __unused dt_usec)
 			draw_tile(map[y][x], x * 8, y * 8);
 		}
 	}
-	tft_draw_rect(pacman.x - PACMAN_WIDTH * 0.5f, pacman.y - PACMAN_HEIGHT * 0.5f,
-		      pacman.x + PACMAN_WIDTH * 0.5f, pacman.y + PACMAN_HEIGHT * 0.5f, YELLOW);
+	tft_draw_rect(pacman.x - PACMAN_SIZE * 0.5f, pacman.y - PACMAN_SIZE * 0.5f,
+		      pacman.x + PACMAN_SIZE * 0.5f, pacman.y + PACMAN_SIZE * 0.5f, YELLOW);
 }
 
 int main()
