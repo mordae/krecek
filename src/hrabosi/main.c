@@ -70,8 +70,6 @@ inline static bool has_dirt(int wx, int wy);
 static int poke_hole(int gx, int gy, int radius);
 static int poke_sprite(const sdk_sprite_t *s);
 inline static int8_t get_angle(float rx, float ry);
-static int sprites_collide(const sdk_sprite_t *s1, const sdk_sprite_t *s2);
-static bool sprite_has_opaque_point(int sx, int sy, const sdk_sprite_t *s);
 static void move_and_slide(float wx, float wy, struct tank *t1, const struct tank *t2);
 static float angle_to_x(int angle);
 static float angle_to_y(int angle);
@@ -479,52 +477,6 @@ static int poke_sprite(const sdk_sprite_t *s)
 	return cells;
 }
 
-static int sprites_collide(const sdk_sprite_t *s1, const sdk_sprite_t *s2)
-{
-	int points = 0;
-
-	int s1x = s1->x;
-	int s1y = s1->y;
-	int s1w = s1->ts->w;
-	int s1h = s1->ts->h;
-
-	int s2x = s2->x;
-	int s2y = s2->y;
-	int s2w = s2->ts->w;
-	int s2h = s2->ts->h;
-
-	if (s1x + s1w < s2x || s2x + s2w < s1x)
-		return 0;
-
-	if (s1y + s1h < s2y || s2y + s2h < s1y)
-		return 0;
-
-	for (int y = 0; y < s1h; y++) {
-		for (int x = 0; x < s1w; x++) {
-			int x2 = s2x - s1x + x;
-			int y2 = s2y - s1y + y;
-
-			if (sprite_has_opaque_point(x, y, s1) &&
-			    sprite_has_opaque_point(x2, y2, s2))
-				points++;
-		}
-	}
-
-	return points;
-}
-
-static bool sprite_has_opaque_point(int sx, int sy, const sdk_sprite_t *s)
-{
-	if (sx < 0 || sx >= s->ts->w)
-		return false;
-
-	if (sy < 0 || sy >= s->ts->h)
-		return false;
-
-	const uint8_t *data = sdk_get_tile_data(s->ts, s->tile);
-	return data[sy * s->ts->w + sx] != s->ts->trsp;
-}
-
 inline static int8_t get_angle(float rx, float ry)
 {
 	int8_t angles[3][3] = {
@@ -545,7 +497,7 @@ static void move_and_slide(float wx, float wy, struct tank *t1, const struct tan
 	 * Calculate collission baseline.
 	 * We might be already colliding due to a rotation.
 	 */
-	int baseline = sprites_collide(&t1->s, &t2->s);
+	int baseline = sdk_sprites_collide(&t1->s, &t2->s);
 
 	/*
 	 * Try moving horizontally and if the collission gets worse,
@@ -553,7 +505,7 @@ static void move_and_slide(float wx, float wy, struct tank *t1, const struct tan
 	 */
 	float orig_x = t1->s.x;
 	t1->s.x = wx;
-	int h_score = sprites_collide(&t1->s, &t2->s);
+	int h_score = sdk_sprites_collide(&t1->s, &t2->s);
 	if (h_score && h_score > baseline)
 		t1->s.x = orig_x;
 
@@ -563,7 +515,7 @@ static void move_and_slide(float wx, float wy, struct tank *t1, const struct tan
 	 */
 	float orig_y = t1->s.y;
 	t1->s.y = wy;
-	int v_score = sprites_collide(&t1->s, &t2->s);
+	int v_score = sdk_sprites_collide(&t1->s, &t2->s);
 	if (v_score && v_score > baseline)
 		t1->s.y = orig_y;
 }
