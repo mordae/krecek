@@ -540,12 +540,14 @@ void game_paint(unsigned dt_usec)
 	// Jumping
 	if ((p1.y >= TFT_HEIGHT - 31) && sdk_inputs.a && p1.hp > 0) {
 		p1.dy = -TFT_HEIGHT * 1.15;
-		p1.s.tile = 1;
+		if (p1.hp > 0)
+			p1.s.tile = 1;
 	}
 
 	if ((p2.y >= TFT_HEIGHT - 31) && sdk_inputs.y && p2.hp > 0) {
 		p2.dy = -TFT_HEIGHT * 1.15;
-		p2.s.tile = 1;
+		if (p2.hp > 0)
+			p2.s.tile = 1;
 	}
 
 	// Vertical movement
@@ -560,12 +562,12 @@ void game_paint(unsigned dt_usec)
 	p2.dy += (float)TFT_HEIGHT * dt;
 
 	// Fall boosting
-	if (p1.dy > 0 && sdk_inputs.a) {
+	if (p1.dy > 0 && sdk_inputs.a && p1.hp > 0) {
 		p1.dy += (float)TFT_HEIGHT * dt;
 		p1.s.tile = 2;
 	}
 
-	if (p2.dy > 0 && sdk_inputs.y) {
+	if (p2.dy > 0 && sdk_inputs.y && p2.hp > 0) {
 		p2.dy += (float)TFT_HEIGHT * dt;
 		p2.s.tile = 2;
 	}
@@ -589,10 +591,10 @@ void game_paint(unsigned dt_usec)
 
 	//	 --- Hands ---
 	// Neutral hands
-	if (p1.s.y > TFT_BOTTOM - 32)
+	if (p1.s.y > TFT_BOTTOM - 32 && p1.hp > 0)
 		p1.s.tile = 0;
 
-	if (p2.s.y > TFT_BOTTOM - 32)
+	if (p2.s.y > TFT_BOTTOM - 32 && p2.hp > 0)
 		p2.s.tile = 0;
 
 	// Hands up
