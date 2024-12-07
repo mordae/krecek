@@ -7,12 +7,14 @@
 #include <sdk.h>
 #include <tft.h>
 
+//Sprites
 embed_tileset(ts_left_hamster, 4, 24, 32, 237, "left.data");
 embed_tileset(ts_right_hamster, 4, 24, 32, 237, "right.data");
 embed_tileset(ts_hearts, 2, 16, 16, 237, "hearts.data");
 embed_tileset(ts_bullets, 4, 4, 4, 237, "bullets.data");
 embed_tileset(ts_power_ups, 2, 16, 16, 237, "powerups.data");
 
+// Colors
 #define RED 255
 #define RED_POWER (RED - 31)
 #define YELLOW 242
@@ -22,18 +24,18 @@ embed_tileset(ts_power_ups, 2, 16, 16, 237, "powerups.data");
 #define GRAY 8
 #define WHITE 15
 
+// Bullets deffine
 #define MAX_BULLETS 2
 #define BULLET_SPEED (TFT_WIDTH / 2.0)
-
 struct bullet {
 	float dx;
 	bool spawned;
 	sdk_sprite_t s;
 };
 
+// Hamsters deffine
 #define HAMSTER_SECOND_BULLET_TIME 10.0f
 #define HAMSTER_DEATH_DELTA_TIME 3.0f
-
 struct hamster {
 	float y;
 	float dy;
@@ -47,14 +49,35 @@ struct hamster {
 	struct bullet bullets[MAX_BULLETS];
 };
 
+static struct hamster p1 = {
+	.s = {
+		.ts = &ts_left_hamster,
+		.tile = 0,
+		.ox = 0,
+		.oy = 0,
+	},
+};
+
+static struct hamster p2 = {
+	.s = {
+		.ts = &ts_right_hamster,
+		.tile = 0,
+		.ox = 0,
+		.oy = 0,
+	},
+};
+
+// Wall deffine
 #define WALL_HEIGHT 24
 #define WALL_WIDTH 4
-
 struct wall {
 	float y;
 	float dy;
 };
 
+static struct wall wall;
+
+// Power UP deffine
 #define POWER_UP_SIZE 15
 #define POWER_UP_SPAWN_TIME 2.0f
 #define POWER_UP_RESPAWN_TIME 15.0f
@@ -78,29 +101,9 @@ struct second_bullet {
 	float spawn_time;
 	sdk_sprite_t s;
 };
-
 static struct second_bullet second_bullet;
 
-static struct hamster p1 = {
-	.s = {
-		.ts = &ts_left_hamster,
-		.tile = 0,
-		.ox = 0,
-		.oy = 0,
-	},
-};
-
-static struct hamster p2 = {
-	.s = {
-		.ts = &ts_right_hamster,
-		.tile = 0,
-		.ox = 0,
-		.oy = 0,
-	},
-};
-
-static struct wall wall;
-
+//Audio
 struct effect;
 
 typedef int16_t (*effect_gen_fn)(struct effect *eff);
@@ -175,6 +178,7 @@ static void __unused play_effect(int volume, int frequency, int length, effect_g
 
 void game_reset(void)
 {
+	//Players set
 	p1.dy = 0;
 	p1.ddt = 0;
 	p1.y = TFT_HEIGHT - 31;
@@ -195,6 +199,7 @@ void game_reset(void)
 	p2.max_bullets = 1;
 	p2.second_bullet_time = 0;
 
+	//Bullets deffine
 	for (int i = 0; i < MAX_BULLETS; i++) {
 		p1.bullets[i].spawned = false;
 		p2.bullets[i].spawned = false;
@@ -214,9 +219,11 @@ void game_reset(void)
 		};
 	}
 
+	//wall deffine
 	wall.y = TFT_HEIGHT / 2.0;
 	wall.dy = -20.0f;
 
+	//Power UP deffine
 	power_up.s = (sdk_sprite_t){
 		.ts = &ts_power_ups,
 		.tile = 0,
@@ -225,7 +232,6 @@ void game_reset(void)
 		.ox = 7,
 		.oy = 7,
 	};
-
 	power_up.spawn_time = POWER_UP_SPAWN_TIME;
 
 	second_bullet.s = (sdk_sprite_t){
@@ -237,7 +243,6 @@ void game_reset(void)
 		.ox = 7,
 		.oy = 7,
 	};
-
 	second_bullet.spawn_time = SECOND_BULLET_SPAWN_TIME;
 }
 
@@ -256,7 +261,6 @@ void game_input(unsigned __unused dt_usec)
 	}
 
 	// Shooting
-
 	if (sdk_inputs_delta.x > 0 && p1.hp > 0) {
 		for (int i = 0; i < p1.max_bullets; i++) {
 			if (p1.bullets[i].spawned)
@@ -326,9 +330,7 @@ void game_paint(unsigned dt_usec)
 
 	float bottom = TFT_HEIGHT - 31;
 
-	// Draw hamsters
-	sdk_draw_sprite(&p1.s);
-	sdk_draw_sprite(&p2.s);
+	//				--- GUI --- gui ---
 
 	// Draw hearts
 	for (int i = 0; i < p1.hp; i++)
@@ -337,10 +339,23 @@ void game_paint(unsigned dt_usec)
 	for (int i = 0; i < p2.hp; i++)
 		sdk_draw_tile(TFT_WIDTH - 17 - (28 + 16 * i), 4, &ts_hearts, 1);
 
+	//				--- Wall --- wall ---
+
 	// Draw wall
 	int wall_x = TFT_WIDTH / 2 - WALL_WIDTH / 2;
 	int wall_y = wall.y - WALL_HEIGHT / 2.0;
 	tft_draw_rect(wall_x, wall_y, wall_x + WALL_WIDTH, wall_y + WALL_HEIGHT, WHITE);
+
+	// Wall movement
+	wall.y += wall.dy * dt;
+
+	if (wall.y - WALL_HEIGHT / 2.0 <= 0) {
+		wall.dy = fabs(wall.dy);
+	}
+
+	if (wall.y + WALL_HEIGHT / 2.0 >= TFT_BOTTOM) {
+		wall.dy = -fabs(wall.dy);
+	}
 
 	// Projectile-wall collissions
 	float wall_top = wall.y - WALL_HEIGHT / 2.0;
@@ -366,17 +381,9 @@ void game_paint(unsigned dt_usec)
 		}
 	}
 
-	// Wall movement
-	wall.y += wall.dy * dt;
+	//				--- Power UP --- power up ---
 
-	if (wall.y - WALL_HEIGHT / 2.0 <= 0) {
-		wall.dy = fabs(wall.dy);
-	}
-
-	if (wall.y + WALL_HEIGHT / 2.0 >= TFT_BOTTOM) {
-		wall.dy = -fabs(wall.dy);
-	}
-
+	// --- Heal Boost ---
 	if (power_up.spawn_time <= 0) {
 		// Draw power_up
 		sdk_draw_sprite(&power_up.s);
@@ -411,6 +418,7 @@ void game_paint(unsigned dt_usec)
 
 	power_up.spawn_time -= dt;
 
+	// --- Second Bullet ---
 	if (second_bullet.spawn_time <= 0) {
 		// Draw second bullet pickable
 		sdk_draw_sprite(&second_bullet.s);
@@ -445,6 +453,7 @@ void game_paint(unsigned dt_usec)
 		}
 	}
 
+	//Second Bullet delta time
 	second_bullet.spawn_time -= dt;
 
 	if (second_bullet.spawn_time < 0) {
@@ -469,136 +478,11 @@ void game_paint(unsigned dt_usec)
 		p2.max_bullets = 2;
 	}
 
-	// Jumping
+	//				--- Hamsters --- hamsters ---
 
-	if ((p1.y >= TFT_HEIGHT - 31) && sdk_inputs.a && p1.hp > 0) {
-		p1.dy = -TFT_HEIGHT * 1.15;
-		p1.s.tile = 1;
-	}
-
-	if ((p2.y >= TFT_HEIGHT - 31) && sdk_inputs.y && p2.hp > 0) {
-		p2.dy = -TFT_HEIGHT * 1.15;
-		p2.s.tile = 1;
-	}
-
-	// Vertical movement
-
-	p1.y += p1.dy * dt;
-	p1.s.y = p1.y;
-
-	p2.y += p2.dy * dt;
-	p2.s.y = p2.y;
-
-	// Gravitation
-
-	p1.dy += (float)TFT_HEIGHT * dt;
-	p2.dy += (float)TFT_HEIGHT * dt;
-
-	// Fall boosting
-
-	if (p1.dy > 0 && sdk_inputs.a) {
-		p1.dy += (float)TFT_HEIGHT * dt;
-		p1.s.tile = 2;
-	}
-
-	if (p2.dy > 0 && sdk_inputs.y) {
-		p2.dy += (float)TFT_HEIGHT * dt;
-		p2.s.tile = 2;
-	}
-
-	// Neutral hands
-
-	if (p1.s.y > TFT_BOTTOM - 32)
-		p1.s.tile = 0;
-
-	if (p2.s.y > TFT_BOTTOM - 32)
-		p2.s.tile = 0;
-
-	// Hands up
-
-	if (p1.y < 9)
-		p1.s.tile = 2;
-
-	if (p2.y < 9)
-		p2.s.tile = 2;
-
-	// Cap acceleration and keep hamsters above floor
-
-	if (p1.dy > TFT_HEIGHT)
-		p1.dy = TFT_HEIGHT;
-
-	if (p2.dy > TFT_HEIGHT)
-		p2.dy = TFT_HEIGHT;
-
-	if (p1.y >= bottom) {
-		p1.y = bottom;
-		p1.s.y = p1.y;
-	}
-
-	if (p2.y >= bottom) {
-		p2.y = bottom;
-		p2.s.y = p2.y;
-	}
-
-	// Draw projectiles
-	for (int i = 0; i < MAX_BULLETS; i++) {
-		if (p1.bullets[i].spawned)
-			sdk_draw_sprite(&p1.bullets[i].s);
-
-		if (p2.bullets[i].spawned)
-			sdk_draw_sprite(&p2.bullets[i].s);
-	}
-
-	// Mid-air projectile collissions
-	for (int i = 0; i < MAX_BULLETS; i++) {
-		for (int j = 0; j < MAX_BULLETS; j++) {
-			if (!p1.bullets[i].spawned)
-				continue;
-
-			if (!p2.bullets[j].spawned)
-				continue;
-
-			if (sdk_sprites_collide(&p1.bullets[i].s, &p2.bullets[j].s)) {
-				p1.bullets[i].spawned = false;
-				p2.bullets[j].spawned = false;
-				play_effect(INT16_MAX / 5, 0, 6000, noise);
-			}
-		}
-	}
-
-	// Horizontal projectile movement
-	for (int i = 0; i < MAX_BULLETS; i++) {
-		p1.bullets[i].s.x += p1.bullets[i].dx * dt;
-		p2.bullets[i].s.x += p2.bullets[i].dx * dt;
-
-		if (p1.bullets[i].s.x > TFT_RIGHT)
-			p1.bullets[i].spawned = false;
-
-		if (p2.bullets[i].s.x < 0)
-			p2.bullets[i].spawned = false;
-	}
-
-	// Dead timeout
-
-	if (p2.ddt > 0) {
-		p2.ddt -= dt;
-		p2.s.tile = 3;
-	}
-
-	if (p2.ddt > 0 && p2.ddt < 0.1) {
-		game_reset();
-		p2.hp = 3;
-	}
-
-	if (p1.ddt > 0) {
-		p1.ddt -= dt;
-		p1.s.tile = 3;
-	}
-
-	if (p1.ddt > 0 && p1.ddt < 0.1) {
-		game_reset();
-		p1.hp = 3;
-	}
+	// Draw hamsters
+	sdk_draw_sprite(&p1.s);
+	sdk_draw_sprite(&p2.s);
 
 	// Projectile-hamster collissions
 	for (int i = 0; i < MAX_BULLETS; i++) {
@@ -623,6 +507,134 @@ void game_paint(unsigned dt_usec)
 			if (p1.hp <= 0) {
 				p1.ddt = HAMSTER_DEATH_DELTA_TIME;
 				p1.hp = -1;
+			}
+		}
+	}
+
+	// Dead timeout
+	if (p2.ddt > 0) {
+		p2.ddt -= dt;
+		p2.s.tile = 3;
+	}
+
+	if (p2.ddt > 0 && p2.ddt < 0.1) {
+		game_reset();
+		p2.hp = 3;
+	}
+
+	if (p1.ddt > 0) {
+		p1.ddt -= dt;
+		p1.s.tile = 3;
+	}
+
+	if (p1.ddt > 0 && p1.ddt < 0.1) {
+		game_reset();
+		p1.hp = 3;
+	}
+
+	//			--- Movement --- movement ---
+
+	// Jumping
+	if ((p1.y >= TFT_HEIGHT - 31) && sdk_inputs.a && p1.hp > 0) {
+		p1.dy = -TFT_HEIGHT * 1.15;
+		p1.s.tile = 1;
+	}
+
+	if ((p2.y >= TFT_HEIGHT - 31) && sdk_inputs.y && p2.hp > 0) {
+		p2.dy = -TFT_HEIGHT * 1.15;
+		p2.s.tile = 1;
+	}
+
+	// Vertical movement
+	p1.y += p1.dy * dt;
+	p1.s.y = p1.y;
+
+	p2.y += p2.dy * dt;
+	p2.s.y = p2.y;
+
+	// Gravitation
+	p1.dy += (float)TFT_HEIGHT * dt;
+	p2.dy += (float)TFT_HEIGHT * dt;
+
+	// Fall boosting
+	if (p1.dy > 0 && sdk_inputs.a) {
+		p1.dy += (float)TFT_HEIGHT * dt;
+		p1.s.tile = 2;
+	}
+
+	if (p2.dy > 0 && sdk_inputs.y) {
+		p2.dy += (float)TFT_HEIGHT * dt;
+		p2.s.tile = 2;
+	}
+
+	// Cap acceleration and keep hamsters above floor
+	if (p1.dy > TFT_HEIGHT)
+		p1.dy = TFT_HEIGHT;
+
+	if (p2.dy > TFT_HEIGHT)
+		p2.dy = TFT_HEIGHT;
+
+	if (p1.y >= bottom) {
+		p1.y = bottom;
+		p1.s.y = p1.y;
+	}
+
+	if (p2.y >= bottom) {
+		p2.y = bottom;
+		p2.s.y = p2.y;
+	}
+
+	//	 --- Hands ---
+
+	// Neutral hands
+	if (p1.s.y > TFT_BOTTOM - 32)
+		p1.s.tile = 0;
+
+	if (p2.s.y > TFT_BOTTOM - 32)
+		p2.s.tile = 0;
+
+	// Hands up
+	if (p1.y < 9)
+		p1.s.tile = 2;
+
+	if (p2.y < 9)
+		p2.s.tile = 2;
+
+	//				--- Projectiles --- projectiles ---
+	// Draw projectiles
+	for (int i = 0; i < MAX_BULLETS; i++) {
+		if (p1.bullets[i].spawned)
+			sdk_draw_sprite(&p1.bullets[i].s);
+
+		if (p2.bullets[i].spawned)
+			sdk_draw_sprite(&p2.bullets[i].s);
+	}
+
+	// Horizontal projectile movement
+	for (int i = 0; i < MAX_BULLETS; i++) {
+		p1.bullets[i].s.x += p1.bullets[i].dx * dt;
+		p2.bullets[i].s.x += p2.bullets[i].dx * dt;
+
+		if (p1.bullets[i].s.x > TFT_RIGHT)
+			p1.bullets[i].spawned = false;
+
+		if (p2.bullets[i].s.x < 0)
+			p2.bullets[i].spawned = false;
+	}
+
+	// Mid-air projectile collissions
+	for (int i = 0; i < MAX_BULLETS; i++) {
+		for (int j = 0; j < MAX_BULLETS; j++) {
+			if (!p1.bullets[i].spawned)
+				continue;
+
+			if (!p2.bullets[j].spawned)
+				continue;
+
+			if (sdk_sprites_collide(&p1.bullets[i].s, &p2.bullets[j].s)) {
+				p1.bullets[i].spawned = false;
+				p2.bullets[j].spawned = false;
+				play_effect(INT16_MAX / 5, 0, 6000, noise);
 			}
 		}
 	}
