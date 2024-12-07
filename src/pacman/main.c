@@ -6,6 +6,8 @@
 #include <sdk.h>
 #include <tft.h>
 
+embed_tileset(ts_pacman, 2, 7, 7, 237, "pacman.data");
+
 typedef enum {
 	EMPTY = 0,
 	SUGAR = 1,
@@ -60,11 +62,11 @@ TileType map[15][20] = {
 #define PACMAN_SIZE 7
 
 struct pacman {
-	float x, y;
 	float dx, dy;
 	float fdx, fdy;
 	uint8_t color;
 	float speed;
+	sdk_sprite_t s;
 };
 
 static struct pacman pacman;
@@ -102,6 +104,12 @@ void game_start(void)
 	sdk_set_output_gain_db(6);
 
 	pacman.speed = 32;
+	pacman.s = (sdk_sprite_t){
+		.ts = &ts_pacman,
+		.ox = 3.5,
+		.oy = 3.5,
+		.tile = 0,
+	};
 }
 
 void game_audio(int nsamples)
@@ -145,8 +153,8 @@ static void __unused play_effect(int volume, int frequency, int length, effect_g
 
 static void new_round(void)
 {
-	pacman.x = 15.5 * 8;
-	pacman.y = 6.5 * 8;
+	pacman.s.x = 15.5 * 8;
+	pacman.s.y = 6.5 * 8;
 }
 
 void game_reset(void)
@@ -158,25 +166,25 @@ void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
 
-	if (sdk_inputs_delta.a > 0) {
+	if (sdk_inputs_delta.a > 0 || sdk_inputs.joy_y > 300) {
 		if (!pacman.dx) {
 			pacman.dy = 1;
 		} else {
 			pacman.fdy = 1, pacman.fdx = 0;
 		}
-	} else if (sdk_inputs_delta.y > 0) {
+	} else if (sdk_inputs_delta.y > 0 || sdk_inputs.joy_y < -300) {
 		if (!pacman.dx) {
 			pacman.dy = -1;
 		} else {
 			pacman.fdy = -1, pacman.fdx = 0;
 		}
-	} else if (sdk_inputs_delta.b > 0) {
+	} else if (sdk_inputs_delta.b > 0 || sdk_inputs.joy_x > 300) {
 		if (!pacman.dy) {
 			pacman.dx = 1;
 		} else {
 			pacman.fdx = 1, pacman.fdy = 0;
 		}
-	} else if (sdk_inputs_delta.x > 0) {
+	} else if (sdk_inputs_delta.x > 0 || sdk_inputs.joy_x < -300) {
 		if (!pacman.dy) {
 			pacman.dx = -1;
 		} else {
@@ -184,14 +192,14 @@ void game_input(unsigned dt_usec)
 		}
 	}
 
-	if (pacman.fdx || pacman.fdy) {
-		float dx = fabsf(fmodf(pacman.x, 8) / 8 - 0.5f);
-		float dy = fabsf(fmodf(pacman.y, 8) / 8 - 0.5f);
-		float d = MAX(dx, dy);
+	float dx = fabsf(fmodf(pacman.s.x, 8) / 8 - 0.5f);
+	float dy = fabsf(fmodf(pacman.s.y, 8) / 8 - 0.5f);
+	float d = MAX(dx, dy);
 
+	if (pacman.fdx || pacman.fdy) {
 		if (d < (2 * pacman.speed / (30 * 8))) {
-			int hx = pacman.x / 8 + pacman.fdx;
-			int hy = pacman.y / 8 + pacman.fdy;
+			int hx = pacman.s.x / 8 + pacman.fdx;
+			int hy = pacman.s.y / 8 + pacman.fdy;
 
 			if (hx >= 0 && hx < 20 && hy >= 0 && hy < 15 && map[hy][hx] <= CHERRY) {
 				pacman.dx = pacman.fdx;
@@ -202,10 +210,12 @@ void game_input(unsigned dt_usec)
 		}
 	}
 
+	bool moved = false;
+
 	if (pacman.dy || pacman.dx) {
-		float future_x = clamp(pacman.x + pacman.dx * dt * pacman.speed, 8 * 0.5,
+		float future_x = clamp(pacman.s.x + pacman.dx * dt * pacman.speed, 8 * 0.5,
 				       TFT_RIGHT - 8 * 0.5);
-		float future_y = clamp(pacman.y + pacman.dy * dt * pacman.speed, 8 * 0.5,
+		float future_y = clamp(pacman.s.y + pacman.dy * dt * pacman.speed, 8 * 0.5,
 				       TFT_BOTTOM - 8 * 0.5);
 
 		int future_tile_x = 0, future_tile_y = 0;
@@ -239,9 +249,33 @@ void game_input(unsigned dt_usec)
 		int future_tile = map[future_tile_y][future_tile_x];
 
 		if (future_tile <= CHERRY) {
-			pacman.x = future_x;
-			pacman.y = future_y;
+			moved = true;
+			pacman.s.x = future_x;
+			pacman.s.y = future_y;
 		}
+	}
+
+	if (pacman.dx > 0) {
+		pacman.s.angle = 0;
+	} else if (pacman.dx < 0) {
+		pacman.s.angle = 2;
+	} else if (pacman.dy > 0) {
+		pacman.s.angle = 1;
+	} else if (pacman.dy < 0) {
+		pacman.s.angle = 3;
+	}
+
+	if (moved) {
+		uint32_t now = time_us_32();
+		pacman.s.tile = (now >> 16) & 1;
+	} else {
+		pacman.s.tile = 0;
+	}
+
+	if (d < 0.25) {
+		int x = pacman.s.x / 8;
+		int y = pacman.s.y / 8;
+		map[y][x] = 0;
 	}
 }
 
@@ -376,8 +410,8 @@ void game_paint(unsigned __unused dt_usec)
 			draw_tile(map[y][x], x * 8, y * 8);
 		}
 	}
-	tft_draw_rect(pacman.x - PACMAN_SIZE * 0.5f, pacman.y - PACMAN_SIZE * 0.5f,
-		      pacman.x + PACMAN_SIZE * 0.5f, pacman.y + PACMAN_SIZE * 0.5f, YELLOW);
+
+	sdk_draw_sprite(&pacman.s);
 }
 
 int main()
