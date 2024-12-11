@@ -13,6 +13,7 @@ embed_tileset(ts_right_hamster, 4, 24, 32, 237, "right.data");
 embed_tileset(ts_hearts, 4, 16, 16, 237, "hearts.data");
 embed_tileset(ts_bullets, 4, 4, 4, 237, "bullets.data");
 embed_tileset(ts_power_ups, 2, 16, 16, 237, "powerups.data");
+embed_tileset(ts_background, 4, 160, 120, 237, "background.data");
 
 // Colors
 #define RED 255
@@ -103,6 +104,9 @@ struct second_bullet {
 	sdk_sprite_t s;
 };
 static struct second_bullet second_bullet;
+
+// Ambiance
+static int day = -1;
 
 //Audio
 struct effect;
@@ -247,6 +251,10 @@ void game_reset(void)
 		.oy = 7,
 	};
 	second_bullet.spawn_time = SECOND_BULLET_SPAWN_TIME;
+
+	day = day + 1;
+	if (day > 3)
+		day = 0;
 }
 
 void game_input(unsigned __unused dt_usec)
@@ -330,6 +338,7 @@ void game_paint(unsigned dt_usec)
 	float dt = dt_usec / 1000000.0f;
 
 	tft_fill(0);
+	sdk_draw_tile(0, 0, &ts_background, day);
 
 	float bottom = TFT_HEIGHT - 31;
 
