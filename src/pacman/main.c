@@ -7,6 +7,7 @@
 #include <tft.h>
 
 embed_tileset(ts_pacman, 2, 7, 7, 237, "pacman.data");
+embed_tileset(ts_tiles, 17, 8, 8, 237, "tiles.data");
 
 typedef enum {
 	EMPTY = 0,
@@ -37,7 +38,7 @@ TileType map[15][20] = {
 	{ 6, 2, 1, 1, 1, 6, 1, 1, 1, 1, 1, 1, 1, 1, 6, 1, 1, 1, 2, 6 },
 	{ 6, 1, 14, 18, 1, 17, 1, 16, 5, 5, 5, 5, 18, 1, 17, 1, 16, 13, 1, 6 },
 	{ 6, 1, 6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 6, 1, 6 },
-	{ 6, 1, 17, 1, 16, 18, 1, 14, 18, 19, 19, 16, 13, 1, 16, 18, 1, 17, 1, 6 },
+	{ 6, 1, 17, 1, 16, 18, 1, 14, 18, 3, 19, 16, 13, 1, 16, 18, 1, 17, 1, 6 },
 	{ 6, 1, 1, 1, 1, 1, 1, 6, 0, 0, 0, 0, 6, 1, 1, 1, 1, 1, 1, 6 },
 	{ 10, 5, 5, 18, 1, 4, 1, 6, 0, 0, 0, 0, 6, 1, 4, 1, 16, 5, 5, 8 },
 	{ 6, 1, 1, 1, 1, 1, 1, 6, 0, 0, 0, 0, 6, 1, 1, 1, 1, 1, 1, 6 },
@@ -291,110 +292,72 @@ static void draw_tile(TileType type, int x, int y)
 		break;
 
 	case CHERRY:
-		tft_draw_rect(x + 2, y + 2, x + 5, y + 5, RED);
+		sdk_draw_tile(x, y, &ts_tiles, 0);
 		break;
 
 	case WALL_H:
-		tft_draw_rect(x, y + 1, x + 7, y + 1, BLUE);
-		tft_draw_rect(x, y + 6, x + 7, y + 6, BLUE);
+		sdk_draw_tile(x, y, &ts_tiles, 2);
 		break;
 
 	case WALL_V:
-		tft_draw_rect(x + 1, y, x + 1, y + 7, BLUE);
-		tft_draw_rect(x + 6, y, x + 6, y + 7, BLUE);
+		sdk_draw_tile(x, y, &ts_tiles, 3);
 		break;
 
 	case WALL_SQUARE:
-		tft_draw_rect(x + 1, y + 1, x + 6, y + 1, BLUE);
-		tft_draw_rect(x + 1, y + 6, x + 6, y + 6, BLUE);
-		tft_draw_rect(x + 1, y + 1, x + 1, y + 6, BLUE);
-		tft_draw_rect(x + 6, y + 1, x + 6, y + 6, BLUE);
+		sdk_draw_tile(x, y, &ts_tiles, 1);
 		break;
 
 	case WALL_T_E:
-		tft_draw_rect(x + 1, y, x + 1, y + 7, BLUE);
-		tft_draw_rect(x + 6, y, x + 6, y + 1, BLUE);
-		tft_draw_rect(x + 6, y + 1, x + 7, y + 1, BLUE);
-		tft_draw_rect(x + 6, y + 6, x + 6, y + 7, BLUE);
-		tft_draw_rect(x + 6, y + 6, x + 7, y + 6, BLUE);
+		sdk_draw_tile(x, y, &ts_tiles, 7);
 		break;
 
 	case WALL_T_N:
-		tft_draw_rect(x, y + 6, x + 7, y + 6, BLUE);
-		tft_draw_rect(x, y + 1, x + 1, y + 1, BLUE);
-		tft_draw_rect(x + 1, y + 1, x + 1, y, BLUE);
-		tft_draw_rect(x + 6, y, x + 6, y + 1, BLUE);
-		tft_draw_rect(x + 6, y + 1, x + 7, y + 1, BLUE);
+		sdk_draw_tile(x, y, &ts_tiles, 4);
 		break;
 
 	case WALL_T_S:
-		tft_draw_rect(x, y + 1, x + 7, y + 1, BLUE);
-		tft_draw_rect(x, y + 6, x + 1, y + 6, BLUE);
-		tft_draw_rect(x + 1, y + 6, x + 1, y + 7, BLUE);
-		tft_draw_rect(x + 6, y + 6, x + 6, y + 7, BLUE);
-		tft_draw_rect(x + 6, y + 6, x + 7, y + 6, BLUE);
+		sdk_draw_tile(x, y, &ts_tiles, 6);
 		break;
 
 	case WALL_T_W:
-		tft_draw_rect(x + 6, y, x + 6, y + 7, BLUE);
-		tft_draw_rect(x + 1, y, x + 1, y + 1, BLUE);
-		tft_draw_rect(x, y + 1, x + 1, y + 1, BLUE);
-		tft_draw_rect(x, y + 6, x + 1, y + 6, BLUE);
-		tft_draw_rect(x + 1, y + 6, x + 1, y + 7, BLUE);
+		sdk_draw_tile(x, y, &ts_tiles, 5);
 		break;
 
 	case EDGE_E:
-		tft_draw_rect(x + 6, y + 1, x, y + 1, BLUE);
-		tft_draw_rect(x + 6, y + 1, x + 6, y + 6, BLUE);
-		tft_draw_rect(x + 6, y + 6, x, y + 6, BLUE);
+		sdk_draw_tile(x, y, &ts_tiles, 15);
 		break;
 
 	case EDGE_W:
-		tft_draw_rect(x + 7, y + 1, x + 1, y + 1, BLUE);
-		tft_draw_rect(x + 1, y + 1, x + 1, y + 6, BLUE);
-		tft_draw_rect(x + 7, y + 6, x + 1, y + 6, BLUE);
+		sdk_draw_tile(x, y, &ts_tiles, 13);
 		break;
 
 	case EDGE_N:
-		tft_draw_rect(x + 1, y + 1, x + 6, y + 1, BLUE);
-		tft_draw_rect(x + 1, y + 1, x + 1, y + 7, BLUE);
-		tft_draw_rect(x + 6, y + 1, x + 6, y + 7, BLUE);
+		sdk_draw_tile(x, y, &ts_tiles, 12);
 		break;
 
 	case EDGE_S:
-		tft_draw_rect(x + 1, y + 6, x + 6, y + 6, BLUE);
-		tft_draw_rect(x + 1, y, x + 1, y + 6, BLUE);
-		tft_draw_rect(x + 6, y, x + 6, y + 6, BLUE);
+		sdk_draw_tile(x, y, &ts_tiles, 14);
 		break;
 
 	case CORNER_NE:
-		tft_draw_rect(x + 1, y, x + 1, y + 6, BLUE);
-		tft_draw_rect(x + 1, y + 6, x + 7, y + 6, BLUE);
-		tft_draw_rect(x + 6, y, x + 6, y + 1, BLUE);
-		tft_draw_rect(x + 6, y + 1, x + 7, y + 1, BLUE);
+		sdk_draw_tile(x, y, &ts_tiles, 11);
 		break;
 
 	case CORNER_NW:
-		tft_draw_rect(x, y + 6, x + 6, y + 6, BLUE);
-		tft_draw_rect(x + 6, y + 6, x + 6, y, BLUE);
-		tft_draw_rect(x, y + 1, x + 1, y + 1, BLUE);
-		tft_draw_rect(x + 1, y + 1, x + 1, y, BLUE);
+		sdk_draw_tile(x, y, &ts_tiles, 8);
 		break;
 
 	case CORNER_SE:
-		tft_draw_rect(x + 1, y + 1, x + 7, y + 1, BLUE);
-		tft_draw_rect(x + 1, y + 1, x + 1, y + 7, BLUE);
-		tft_draw_rect(x + 6, y + 6, x + 7, y + 6, BLUE);
-		tft_draw_rect(x + 6, y + 6, x + 6, y + 7, BLUE);
+		sdk_draw_tile(x, y, &ts_tiles, 9);
 		break;
 
 	case CORNER_SW:
-		tft_draw_rect(x, y + 1, x + 6, y + 1, BLUE);
-		tft_draw_rect(x + 6, y + 1, x + 6, y + 7, BLUE);
-		tft_draw_rect(x, y + 6, x + 1, y + 6, BLUE);
-		tft_draw_rect(x + 1, y + 6, x + 1, y + 7, BLUE);
+		sdk_draw_tile(x, y, &ts_tiles, 10);
 		break;
 
+	case INVISIBLE_WALL:
+		sdk_draw_tile(x, y, &ts_tiles, 16);
+		break;
 	default:
 		// :shrug:
 		break;
