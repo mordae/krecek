@@ -61,7 +61,7 @@ int main()
 		.wait_for_usb = true,
 		.show_fps = true,
 		.off_on_select = true,
-		.fps_color = GRAY,
+		.fps_color = WHITE,
 	};
 
 	sdk_main(&config);
