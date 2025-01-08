@@ -614,10 +614,10 @@ void game_paint(unsigned dt_usec)
 		p2.s.tile = 0;
 
 	// Hands up
-	if (p1.y < 9)
+	if (p1.y < 9 && p1.hp > 0)
 		p1.s.tile = 2;
 
-	if (p2.y < 9)
+	if (p2.y < 9 && p2.hp > 0)
 		p2.s.tile = 2;
 
 	//				--- Projectiles --- projectiles ---
