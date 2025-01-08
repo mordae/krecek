@@ -567,7 +567,7 @@ void game_input(unsigned dt_usec)
 					move_active_piece(1, 0);
 				else
 					move_active_piece(-1, 0);
-				time_moved_lr -= movement_lr_arr + dt_usec;
+				time_moved_lr -= movement_lr_arr;
 				if (is_on_ground()) {
 					lock_movements_used++;
 					lock_time_elapsed = 0;
