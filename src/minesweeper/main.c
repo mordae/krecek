@@ -26,7 +26,7 @@
 
 #define SPACE_SIZE 8
 #define SPACE_COUNT_HOR 20
-#define SPACE_COUNT_VER 12
+#define SPACE_COUNT_VER 15
 
 static int movement_das = 150000;
 static int movement_arr =  33333;
@@ -39,13 +39,14 @@ static int space_colors[9] = {
 };
 
 static int mine_chance = 10; // inverse of the probability that a mine is going to spawn on a given space
+static bool initial_state = true;
 
 struct space {
 	uint8_t neighbour_mines : 4;
 	uint8_t has_mine : 1;
 	uint8_t is_explored : 1;
 	uint8_t is_flagged : 1;
-	uint8_t _unused : 1;
+	uint8_t triggered_neighbouring_cells : 1;
 };
 
 static struct space board[SPACE_COUNT_VER][SPACE_COUNT_HOR];
@@ -59,10 +60,9 @@ void draw_space(int x, int y, int c)
 
 void draw_cursor() 
 {
-	draw_space(cursor_x, cursor_y, WHITE);
-	tft_draw_rect(SPACE_SIZE * cursor_x + 1, SPACE_SIZE * cursor_y + 1, 
-	              SPACE_SIZE * cursor_x + SPACE_SIZE - 2, SPACE_SIZE * cursor_y + SPACE_SIZE - 2, 
-	              space_colors[board[cursor_y][cursor_x].neighbour_mines]);
+	tft_draw_rect(SPACE_SIZE * cursor_x + 3, SPACE_SIZE * cursor_y + 3, 
+	              SPACE_SIZE * cursor_x + SPACE_SIZE - 4, SPACE_SIZE * cursor_y + SPACE_SIZE - 4, 
+	              WHITE);
 }
 
 int get_neighbouring_mines(int x, int y) 
@@ -70,7 +70,7 @@ int get_neighbouring_mines(int x, int y)
 	int neighbour_count = 0;
 	for (int ay = -1; ay <= 1; ay++) {
 		for (int ax = -1; ax <= 1; ax++) {
-			if ((ax == 0 && ay == 0) || (x + ax < 0 || x + ax >= SPACE_COUNT_HOR || y + ay < 0 || y + ay >= SPACE_COUNT_VER)) {
+			if (x + ax < 0 || x + ax >= SPACE_COUNT_HOR || y + ay < 0 || y + ay >= SPACE_COUNT_VER) {
 				continue;
 			} else {
 				neighbour_count += board[y + ay][x + ax].has_mine;
@@ -89,13 +89,29 @@ int should_space_have_mine()
 		return 0;
 }
 
+void trigger_neighbouring_cells(int x, int y)
+{
+	for (int ay = -1; ay <= 1; ay++) {
+		for (int ax = -1; ax <= 1; ax++) {
+			if (x + ax < 0 || x + ax >= SPACE_COUNT_HOR || y + ay < 0 || y + ay >= SPACE_COUNT_VER) {
+				continue;
+			} else if (board[y + ay][x + ax].is_flagged == 0) {
+				board[y + ay][x + ax].is_explored = 1;
+			}
+		}
+	}
+	board[y][x].triggered_neighbouring_cells = 1;
+}
+
 void game_reset(void)
 {
+	initial_state = true;
 	for (int y = 0; y < SPACE_COUNT_VER; y++) {
 		for (int x = 0; x < SPACE_COUNT_HOR; x++) {
 			board[y][x].has_mine = should_space_have_mine();
 			board[y][x].is_explored = 0;
 			board[y][x].is_flagged = 0;
+			board[y][x].triggered_neighbouring_cells = 0;
 		}
 	}
 	for (int y = 0; y < SPACE_COUNT_VER; y++) {
@@ -159,23 +175,61 @@ void game_input(unsigned dt_usec)
 	}
 
 	if (sdk_inputs_delta.b > 0) {
-		board[cursor_y][cursor_x].neighbour_mines = clamp(board[cursor_y][cursor_x].neighbour_mines + 1, 0, 8);
+		if (board[cursor_y][cursor_x].is_explored == 1) {
+			trigger_neighbouring_cells(cursor_x, cursor_y);
+		}
+		if (board[cursor_y][cursor_x].is_flagged == 0) {
+			board[cursor_y][cursor_x].is_explored = 1;
+			if (initial_state) {
+				if (board[cursor_y][cursor_x].has_mine == 1) {
+					board[cursor_y][cursor_x].has_mine = 0;
+					board[cursor_y][cursor_x].neighbour_mines = get_neighbouring_mines(cursor_x, cursor_y);
+				}
+				initial_state = false;
+			}
+		}
+	}
+
+	if (sdk_inputs_delta.a > 0) {
+		if (board[cursor_y][cursor_x].is_flagged == 0)
+			board[cursor_y][cursor_x].is_flagged = 1;
+		else
+			board[cursor_y][cursor_x].is_flagged = 0;
+	}
+
+	if (sdk_inputs_delta.x > 0) {
+		game_reset();
 	}
 }
 
 void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
-	
-	for (int x = 0; x < SPACE_COUNT_HOR; x++) {
-		for (int y = 0; y < SPACE_COUNT_VER; y++) {
-			if (board[y][x].has_mine == 1) {
+
+	for (int y = 0; y < SPACE_COUNT_VER; y++) {
+		for (int x = 0; x < SPACE_COUNT_HOR; x++) {
+			if (board[y][x].is_explored == 1 && board[y][x].neighbour_mines == 0 && board[y][x].triggered_neighbouring_cells == 0) {
+				trigger_neighbouring_cells(x, y);
+			}
+			
+			if (board[y][x].has_mine == 1 && board[y][x].is_explored == 1) {
+				draw_space(x, y, WHITE);
+			}
+			
+			if (board[y][x].is_flagged == 1 && board[y][x].is_explored == 0) {
 				draw_space(x, y, SPACE_FLAG);
-			} else {
+			}
+
+			if (board[y][x].is_flagged == 0 && board[y][x].is_explored == 0) {
+				draw_space(x, y, SPACE_EMPTY);
+			}
+
+			if (board[y][x].has_mine == 0 && board[y][x].is_explored == 1) {
 				draw_space(x, y, space_colors[board[y][x].neighbour_mines]);
 			}
 		}
 	}
+
 	draw_cursor();
 }
 
