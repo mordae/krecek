@@ -1,3 +1,4 @@
+#include "sdk/input.h"
 #include "sys/types.h"
 #include <assert.h>
 #include <pico/stdlib.h>
@@ -20,17 +21,22 @@
 #define CELL_SIZE 6
 #define MAX_JOYSTICK_VALUE 2048
 
+#define SCREEN_POS_X 77
+#define SCREEN_POS_Y 57
+
 struct player_state {
 	int position_x;
 	int position_y;
-	float speed_x;
-	float speed_y;
-	float speed_max;
-	float power;
+	int speed_x;
+	int speed_y;
+	int speed_max;
+	int power;
 	float friction; // how much you slow down when coliding with a wall
 };
 
 static struct player_state smiley;
+static float push_x = 0.0f;
+static float push_y = 0.0f;
 
 static u_int32_t track[43] = {
 
@@ -97,13 +103,35 @@ void clamp_speed()
 	smiley.speed_y = speed_proportion_y * smiley.speed_max;
 }
 
+bool is_position_colliding(int x, int y) 
+{
+	int board_pos_x = x / CELL_SIZE;
+	int board_pos_y = y / CELL_SIZE;
+	int cell_position_x = x % CELL_SIZE;
+	int cell_position_y = y % CELL_SIZE;
+	
+	if (is_cell_full(board_pos_x, board_pos_y)) {
+		return true;
+	}
+	if (cell_position_x > 0 && is_cell_full(board_pos_x + 1, board_pos_y)) {
+		return true;
+	}
+	if (cell_position_y > 0 && is_cell_full(board_pos_x, board_pos_y + 1)) {
+		return true;
+	}
+	if (cell_position_x > 0 && cell_position_y > is_cell_full(board_pos_x + 1, board_pos_y + 1)) {
+		return true;
+	}
+	return false;
+}
+
 void game_reset(void)
 {
 	smiley.position_x = 3 * CELL_SIZE;
 	smiley.position_y = 17 * CELL_SIZE;
 	smiley.speed_x = 0; smiley.speed_y = 0;
-	smiley.speed_max = 3.0f * CELL_SIZE;
-	smiley.power = 0.5f;
+	smiley.speed_max = 1000;
+	smiley.power = 100;
 	smiley.friction = 0.8f;
 }
 
@@ -116,15 +144,51 @@ void game_audio(int __unused nsamples)
 {
 }
 
-void game_input(unsigned dt_usec)
+void game_input(unsigned __unused dt_usec)
 {
-	if (smiley.speed_x + smiley.speed_y > smiley.speed_max)
-		clamp_speed();
+	push_x = sdk_inputs.joy_x / MAX_JOYSTICK_VALUE;
+	push_y = sdk_inputs.joy_y / MAX_JOYSTICK_VALUE;
 }
 
 void game_paint(unsigned __unused dt_usec)
 {
+	smiley.speed_x += push_x * smiley.power;
+	smiley.speed_y += push_y * smiley.power;
+
+	if (smiley.speed_x + smiley.speed_y > smiley.speed_max)
+		clamp_speed();
+
+	if (!is_position_colliding(smiley.position_x + (smiley.speed_x / 100), smiley.position_y + (smiley.speed_y / 100))) {
+		smiley.position_x += smiley.speed_x;
+		smiley.position_y += smiley.speed_y;
+	}
+	
 	tft_fill(0);
+
+	int top_left_pixel_x = smiley.position_x - SCREEN_POS_X;
+	int top_left_pixel_y = smiley.position_y - SCREEN_POS_Y;
+	int top_left_cell_x = top_left_pixel_x / CELL_SIZE;
+	int top_left_cell_y = top_left_pixel_y / CELL_SIZE;
+	int pixel_offset_x = top_left_pixel_x % CELL_SIZE;
+	int pixel_offset_y = top_left_pixel_y % CELL_SIZE;
+
+	for (int y = 0; y < 20 + 1; y++) {
+		for (int x = 0; x < 28; x++) {
+			int cell_color = 8;
+			if (top_left_cell_x + x < 0 || top_left_cell_x + x > 31) {
+				cell_color = 0;
+			} else if (top_left_cell_y + y < 0 || top_left_cell_y > 42) {
+				cell_color = 0;
+			} else if (is_cell_full(top_left_cell_x + x, top_left_cell_y + y)) {
+				cell_color = 0;
+			}
+			tft_draw_rect(x * CELL_SIZE - pixel_offset_x, y * CELL_SIZE - pixel_offset_y, 
+			              (x + 1) * CELL_SIZE - pixel_offset_x, (y + 1) * CELL_SIZE - pixel_offset_y, 
+			              cell_color);
+		}
+	}
+
+	tft_draw_rect(SCREEN_POS_X, SCREEN_POS_Y, SCREEN_POS_X + CELL_SIZE, SCREEN_POS_Y + CELL_SIZE, GREEN);
 }
 
 int main()
