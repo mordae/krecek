@@ -1,5 +1,5 @@
 #include "sys/types.h"
-#include <cassert>
+#include <assert.h>
 #include <pico/stdlib.h>
 
 #include <stdbool.h>
