@@ -103,8 +103,11 @@ void trigger_neighbouring_cells(int x, int y)
 	board[y][x].triggered_neighbouring_cells = 1;
 }
 
+static bool victorious = false;
+
 void game_reset(void)
 {
+	victorious = false;
 	initial_state = true;
 	for (int y = 0; y < SPACE_COUNT_VER; y++) {
 		for (int x = 0; x < SPACE_COUNT_HOR; x++) {
@@ -121,13 +124,70 @@ void game_reset(void)
 	}
 }
 
+static uint16_t notes[256];
+static const char tune[] = " cegCEGB";
+
 void game_start(void)
 {
 	sdk_set_output_gain_db(6);
+
+	notes['c'] = 131;
+	notes['d'] = 147;
+	notes['e'] = 165;
+	notes['f'] = 175;
+	notes['g'] = 196;
+	notes['a'] = 220;
+	notes['b'] = 247;
+
+	notes['C'] = 261;
+	notes['D'] = 293;
+	notes['E'] = 329;
+	notes['F'] = 349;
+	notes['G'] = 392;
+	notes['A'] = 440;
+	notes['B'] = 494;
 }
 
-void game_audio(int __unused nsamples)
+void game_audio(int nsamples)
 {
+	static int ellapsed = 0;
+	static int tone_pos = 0;
+
+	if (!victorious) {
+		tone_pos = 0;
+		ellapsed = 0;
+
+		for (int s = 0; s < nsamples; s++)
+			sdk_write_sample(0);
+
+		return;
+	}
+
+	for (int s = 0; s < nsamples; s++) {
+		if (ellapsed > SDK_AUDIO_RATE / 6) {
+			tone_pos++;
+			ellapsed = 0;
+		}
+
+		if (!tune[tone_pos]) {
+			game_reset();
+			return;
+		}
+
+		int freq = notes[(unsigned)tune[tone_pos]];
+
+		if (freq) {
+			int period = SDK_AUDIO_RATE / freq;
+			int half_period = 2 * ellapsed / period;
+			int modulo = half_period & 1;
+
+			sdk_write_sample(4000 * (modulo ? 1 : -1));
+		} else {
+			sdk_write_sample(0);
+		}
+
+		ellapsed++;
+	}
 }
 
 void game_input(unsigned dt_usec)
@@ -206,6 +266,8 @@ void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
 
+	int cleared_cells = 0;
+
 	for (int y = 0; y < SPACE_COUNT_VER; y++) {
 		for (int x = 0; x < SPACE_COUNT_HOR; x++) {
 			if (board[y][x].is_explored == 1 && board[y][x].neighbour_mines == 0 && board[y][x].triggered_neighbouring_cells == 0) {
@@ -227,10 +289,18 @@ void game_paint(unsigned __unused dt_usec)
 			if (board[y][x].has_mine == 0 && board[y][x].is_explored == 1) {
 				draw_space(x, y, space_colors[board[y][x].neighbour_mines]);
 			}
+
+			if ((board[y][x].has_mine == 1 && board[y][x].is_explored == 0) ||
+		            (board[y][x].has_mine == 0 && board[y][x].is_explored == 1)) {
+				cleared_cells++;
+			}
 		}
 	}
 
 	draw_cursor();
+
+	if (cleared_cells >= SPACE_COUNT_HOR * SPACE_COUNT_VER) 
+		victorious = true;
 }
 
 int main()
