@@ -752,7 +752,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "0fce5eb1-954a-40aa-bcdc-453aaaa67b08")
-		(property "Reference" "H7"
+		(property "Reference" "H6"
 			(at 53.34 176.53 0)
 			(effects
 				(font
@@ -800,7 +800,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451"
-					(reference "H7")
+					(reference "H6")
 					(unit 1)
 				)
 			)
@@ -816,7 +816,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "19b8ec97-dbac-4e1d-b50e-969b56c5f2b5")
-		(property "Reference" "H3"
+		(property "Reference" "H2"
 			(at 53.34 151.13 0)
 			(effects
 				(font
@@ -864,7 +864,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451"
-					(reference "H3")
+					(reference "H2")
 					(unit 1)
 				)
 			)
@@ -880,7 +880,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3918ff49-44bb-434f-ac6b-fadf675aac8d")
-		(property "Reference" "H2"
+		(property "Reference" "H1"
 			(at 27.94 151.13 0)
 			(effects
 				(font
@@ -928,7 +928,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451"
-					(reference "H2")
+					(reference "H1")
 					(unit 1)
 				)
 			)
@@ -1008,7 +1008,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "a8b666c4-fb24-4cad-9c6e-147c70d85f75")
-		(property "Reference" "H8"
+		(property "Reference" "H7"
 			(at 27.94 189.23 0)
 			(effects
 				(font
@@ -1056,7 +1056,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451"
-					(reference "H8")
+					(reference "H7")
 					(unit 1)
 				)
 			)
@@ -1072,7 +1072,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "af40547a-c2fa-4683-bde1-38972cf9de26")
-		(property "Reference" "H5"
+		(property "Reference" "H4"
 			(at 53.34 163.83 0)
 			(effects
 				(font
@@ -1120,7 +1120,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451"
-					(reference "H5")
+					(reference "H4")
 					(unit 1)
 				)
 			)
@@ -1136,7 +1136,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "c67e9eb5-c3c0-4bb6-a46c-978972fefb5b")
-		(property "Reference" "H4"
+		(property "Reference" "H3"
 			(at 27.94 163.83 0)
 			(effects
 				(font
@@ -1184,7 +1184,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451"
-					(reference "H4")
+					(reference "H3")
 					(unit 1)
 				)
 			)
@@ -1200,7 +1200,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "ce1d0fbd-74c0-44b1-aa90-b3c6da64a889")
-		(property "Reference" "H6"
+		(property "Reference" "H5"
 			(at 27.94 176.53 0)
 			(effects
 				(font
@@ -1248,7 +1248,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451"
-					(reference "H6")
+					(reference "H5")
 					(unit 1)
 				)
 			)
@@ -1264,7 +1264,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e23998c4-0cf2-48c9-98ee-6672a6745149")
-		(property "Reference" "H9"
+		(property "Reference" "H8"
 			(at 53.34 189.23 0)
 			(effects
 				(font
@@ -1312,7 +1312,7 @@
 		(instances
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451"
-					(reference "H9")
+					(reference "H8")
 					(unit 1)
 				)
 			)

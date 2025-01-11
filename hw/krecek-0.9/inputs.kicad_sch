@@ -4036,12 +4036,12 @@
 				)
 			)
 			(project "pipi"
-				(path "/73d1f64b-b6d8-45c3-ab75-e79bce2c5a38/350168a7-ca84-4da6-868a-c5a486a494d0"
-					(reference "#PWR01")
-					(unit 1)
-				)
 				(path "/73d1f64b-b6d8-45c3-ab75-e79bce2c5a38/1fa16597-b559-4938-a2aa-ac08254e3132"
 					(reference "#PWR019")
+					(unit 1)
+				)
+				(path "/73d1f64b-b6d8-45c3-ab75-e79bce2c5a38/350168a7-ca84-4da6-868a-c5a486a494d0"
+					(reference "#PWR01")
 					(unit 1)
 				)
 			)
