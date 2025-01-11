@@ -5,6 +5,7 @@
 #include <pico/stdlib.h>
 #include <pico/multicore.h>
 #include <pico/stdio_usb.h>
+#include <pico/rand.h>
 
 #include <hardware/adc.h>
 #include <hardware/clocks.h>
@@ -172,4 +173,9 @@ __weak void game_input(unsigned __unused dt)
 
 __weak void game_paint(unsigned __unused dt)
 {
+}
+
+uint32_t sdk_random()
+{
+	return get_rand_32();
 }

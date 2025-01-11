@@ -23,3 +23,5 @@ inline static double __unused clampq(double x, double lo, double hi)
 {
 	return x < lo ? lo : (x > hi ? hi : x);
 }
+
+uint32_t sdk_random();

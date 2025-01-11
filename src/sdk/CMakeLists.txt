@@ -26,6 +26,7 @@ target_link_libraries(
   pico_multicore
   pico_stdlib
   pico_util
+  pico_rand
 
   hardware_adc
   hardware_divider

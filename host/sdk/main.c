@@ -205,3 +205,8 @@ __weak void game_input(unsigned __unused dt)
 __weak void game_paint(unsigned __unused dt)
 {
 }
+
+uint32_t sdk_random()
+{
+	return time_us_32();
+}
