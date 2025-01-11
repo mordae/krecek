@@ -5,6 +5,7 @@
 
 #include <sdk.h>
 #include <tft.h>
+#include <stdio.h>
 
 embed_tileset(ts_pacman, 2, 7, 7, 237, "pacman.data");
 embed_tileset(ts_tiles, 17, 8, 8, 237, "tiles.data");
@@ -68,6 +69,7 @@ struct pacman {
 	uint8_t color;
 	float speed;
 	sdk_sprite_t s;
+	int score;
 };
 
 static struct pacman pacman;
@@ -276,7 +278,14 @@ void game_input(unsigned dt_usec)
 	if (d < 0.25) {
 		int x = pacman.s.x / 8;
 		int y = pacman.s.y / 8;
+
+		int what_the_hell_was_there_before_i_set_it_to_0 = map[y][x];
 		map[y][x] = 0;
+
+		if (what_the_hell_was_there_before_i_set_it_to_0 == 1 /* why is this so hard*/) {
+			pacman.score += 100;
+			printf("%d", 8);
+		} /* send help */;
 	}
 }
 
@@ -386,5 +395,6 @@ int main()
 		.fps_color = GRAY,
 	};
 
+	printf("%d", 8);
 	sdk_main(&config);
 }
