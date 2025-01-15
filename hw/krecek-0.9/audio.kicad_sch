@@ -4560,6 +4560,7 @@
 	(symbol
 		(lib_id "LCSC:FS-1540")
 		(at 156.21 171.45 0)
+		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -4568,25 +4569,23 @@
 		(fields_autoplaced yes)
 		(uuid "7065a3b3-3dd3-446d-b120-96fd496b1267")
 		(property "Reference" "SPK1"
-			(at 161.29 170.18 0)
+			(at 157.355 162.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
 			)
 		)
 		(property "Value" "FS-1540"
-			(at 161.29 172.72 0)
+			(at 157.355 165.1 0)
 			(effects
 				(font
 					(size 1.27 1.27)
 				)
-				(justify left)
 			)
 		)
 		(property "Footprint" "LCSC:BUZ-SMD_5P-L15.0-W15.0-P13.7-BL"
-			(at 156.21 184.15 0)
+			(at 156.21 158.75 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4613,7 +4612,7 @@
 			)
 		)
 		(property "LCSC Part" "C482341"
-			(at 156.21 186.69 0)
+			(at 156.21 156.21 0)
 			(effects
 				(font
 					(size 1.27 1.27)
