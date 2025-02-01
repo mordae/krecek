@@ -367,4 +367,15 @@
 		(thermal_bridge_angle 45)
 		(uuid "9b672518-3ddf-4686-aeaf-d1756b719cdf")
 	)
+	(model "${KIPRJMOD}/Krecek.3dshapes/flat-joy-con.wrl"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 0.395256917 0.395256917 0.395256917)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
 )
