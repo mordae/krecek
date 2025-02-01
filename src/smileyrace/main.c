@@ -1,6 +1,9 @@
 #include "sdk/input.h"
+#include "sdk/util.h"
 #include "sys/types.h"
 #include <assert.h>
+#include <limits.h>
+#include <math.h>
 #include <pico/stdlib.h>
 
 #include <stdbool.h>
@@ -24,19 +27,21 @@
 #define SCREEN_POS_X 77
 #define SCREEN_POS_Y 57
 
-struct player_state {
-	int position_x;
-	int position_y;
-	int speed_x;
-	int speed_y;
-	int speed_max;
-	int power;
-	float friction; // how much you slow down when coliding with a wall
+struct vector2 {
+	float x;
+	float y;
 };
 
-static struct player_state smiley;
-static float push_x = 0.0f;
-static float push_y = 0.0f;
+struct smiley {
+	struct vector2 position;
+	struct vector2 direction;
+	float speed;
+	float power;
+	int color;
+	float max_speed;
+};
+
+static struct smiley player;
 
 static u_int32_t track[43] = {
 
@@ -87,52 +92,63 @@ static u_int32_t track[43] = {
 
 bool is_cell_full(int x, int y) 
 {
-	assert(x >= 0 && x <= 31);
-	assert(y >= 0 && y <= 42);
+	if (x < 0 || x > 31) {
+		return true;
+	}
+	if (y < 0 || y > 42) {
+		return true;
+	}
 	if ((track[y] & 1 << (31 - x)) > 0)
-		return true;
-	else
 		return false;
+	else
+		return true;
 }
 
-void clamp_speed() 
+float get_vector_magnitude(struct vector2 v) 
 {
-	float speed_proportion_x = smiley.speed_x / (smiley.speed_x + smiley.speed_y);
-	float speed_proportion_y = smiley.speed_y / (smiley.speed_x + smiley.speed_y);
-	smiley.speed_x = speed_proportion_x * smiley.speed_max;
-	smiley.speed_y = speed_proportion_y * smiley.speed_max;
+	return sqrtf(v.x * v.x + v.y * v.y);
 }
 
-bool is_position_colliding(int x, int y) 
+struct vector2 normalise(struct vector2 v) 
 {
-	int board_pos_x = x / CELL_SIZE;
-	int board_pos_y = y / CELL_SIZE;
-	int cell_position_x = x % CELL_SIZE;
-	int cell_position_y = y % CELL_SIZE;
-	
-	if (is_cell_full(board_pos_x, board_pos_y)) {
-		return true;
+	float m = get_vector_magnitude(v);
+	if (!m) {
+		return v;
 	}
-	if (cell_position_x > 0 && is_cell_full(board_pos_x + 1, board_pos_y)) {
-		return true;
+	struct vector2 ov;
+	ov.x = v.x / m;
+	ov.y = v.y / m;
+	return ov;
+}
+
+bool is_position_valid(struct vector2 pos) {
+	struct vector2 corner_positions[4];
+	corner_positions[0].x = pos.x;
+	corner_positions[0].y = pos.y;
+	corner_positions[1].x = pos.x + CELL_SIZE - 1;
+	corner_positions[1].y = pos.y;
+	corner_positions[2].x = pos.x;
+	corner_positions[2].y = pos.y + CELL_SIZE - 1;
+	corner_positions[3].x = pos.x + CELL_SIZE - 1;
+	corner_positions[3].y = pos.y + CELL_SIZE - 1;
+	for (int i = 0; i < 4; i++) {
+		if (is_cell_full(corner_positions[i].x / CELL_SIZE, corner_positions[i].y / CELL_SIZE)) {
+			return false;
+		}
 	}
-	if (cell_position_y > 0 && is_cell_full(board_pos_x, board_pos_y + 1)) {
-		return true;
-	}
-	if (cell_position_x > 0 && cell_position_y > is_cell_full(board_pos_x + 1, board_pos_y + 1)) {
-		return true;
-	}
-	return false;
+	return true;
 }
 
 void game_reset(void)
 {
-	smiley.position_x = 3 * CELL_SIZE;
-	smiley.position_y = 17 * CELL_SIZE;
-	smiley.speed_x = 0; smiley.speed_y = 0;
-	smiley.speed_max = 1000;
-	smiley.power = 100;
-	smiley.friction = 0.8f;
+	player.position.x = 3 * CELL_SIZE;
+	player.position.y = 17 * CELL_SIZE;
+	player.direction.x = 0;
+	player.direction.y = 0;
+	player.speed = 0.0;
+	player.power = 1.0;
+	player.color = GREEN;
+	player.max_speed = 0.5 * CELL_SIZE;
 }
 
 void game_start(void)
@@ -144,29 +160,41 @@ void game_audio(int __unused nsamples)
 {
 }
 
-void game_input(unsigned __unused dt_usec)
+void game_input(unsigned dt_usec)
 {
-	push_x = sdk_inputs.joy_x / MAX_JOYSTICK_VALUE;
-	push_y = sdk_inputs.joy_y / MAX_JOYSTICK_VALUE;
+	float dt = dt_usec / 1000000.0f;
+
+	struct vector2 push;
+	push.x = player.power * dt * sdk_inputs.joy_x / MAX_JOYSTICK_VALUE;
+	push.y = player.power * dt * sdk_inputs.joy_y / MAX_JOYSTICK_VALUE;
+
+	struct vector2 temp;
+	temp.x = player.direction.x * player.speed + push.x;
+	temp.y = player.direction.y * player.speed + push.y;
+
+	player.speed = get_vector_magnitude(temp);
+	player.direction = normalise(temp);
+
+	player.speed = clamp(player.speed, 0, player.max_speed);
+
+	struct vector2 target_position;
+	target_position.x = player.position.x + player.speed * player.direction.x;
+	target_position.y = player.position.y + player.speed * player.direction.y;
+	if (is_position_valid(target_position)) {
+		player.position.x = target_position.x;
+		player.position.y = target_position.y;
+	} else {
+		player.speed = 0;
+	}
+	printf("posX: %.3f | posY: %.3f | spd: %.3f\n", player.position.x, player.position.y, player.speed);
 }
 
 void game_paint(unsigned __unused dt_usec)
 {
-	smiley.speed_x += push_x * smiley.power;
-	smiley.speed_y += push_y * smiley.power;
-
-	if (smiley.speed_x + smiley.speed_y > smiley.speed_max)
-		clamp_speed();
-
-	if (!is_position_colliding(smiley.position_x + (smiley.speed_x / 100), smiley.position_y + (smiley.speed_y / 100))) {
-		smiley.position_x += smiley.speed_x;
-		smiley.position_y += smiley.speed_y;
-	}
-	
 	tft_fill(0);
 
-	int top_left_pixel_x = smiley.position_x - SCREEN_POS_X;
-	int top_left_pixel_y = smiley.position_y - SCREEN_POS_Y;
+	int top_left_pixel_x = player.position.x - SCREEN_POS_X;
+	int top_left_pixel_y = player.position.y - SCREEN_POS_Y;
 	int top_left_cell_x = top_left_pixel_x / CELL_SIZE;
 	int top_left_cell_y = top_left_pixel_y / CELL_SIZE;
 	int pixel_offset_x = top_left_pixel_x % CELL_SIZE;
@@ -174,13 +202,13 @@ void game_paint(unsigned __unused dt_usec)
 
 	for (int y = 0; y < 20 + 1; y++) {
 		for (int x = 0; x < 28; x++) {
-			int cell_color = 8;
+			int cell_color = 0;
 			if (top_left_cell_x + x < 0 || top_left_cell_x + x > 31) {
-				cell_color = 0;
+				cell_color = 8;
 			} else if (top_left_cell_y + y < 0 || top_left_cell_y > 42) {
-				cell_color = 0;
+				cell_color = 8;
 			} else if (is_cell_full(top_left_cell_x + x, top_left_cell_y + y)) {
-				cell_color = 0;
+				cell_color = 8;
 			}
 			tft_draw_rect(x * CELL_SIZE - pixel_offset_x, y * CELL_SIZE - pixel_offset_y, 
 			              (x + 1) * CELL_SIZE - pixel_offset_x, (y + 1) * CELL_SIZE - pixel_offset_y, 
@@ -188,7 +216,7 @@ void game_paint(unsigned __unused dt_usec)
 		}
 	}
 
-	tft_draw_rect(SCREEN_POS_X, SCREEN_POS_Y, SCREEN_POS_X + CELL_SIZE, SCREEN_POS_Y + CELL_SIZE, GREEN);
+	tft_draw_rect(SCREEN_POS_X, SCREEN_POS_Y, SCREEN_POS_X + CELL_SIZE -1, SCREEN_POS_Y + CELL_SIZE - 1, player.color);
 }
 
 int main()
