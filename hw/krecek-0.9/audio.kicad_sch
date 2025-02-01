@@ -2470,22 +2470,10 @@
 		(uuid "0493a61c-cc43-41cc-a920-03d5b27653ad")
 	)
 	(junction
-		(at 165.1 76.2)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "191e7688-43ac-46eb-8d87-d5ea5dcc2108")
-	)
-	(junction
 		(at 66.04 157.48)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "33e17e04-6cdc-4075-aea4-a583ae168db8")
-	)
-	(junction
-		(at 165.1 101.6)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "41ca3a3e-a1c1-4498-b87d-74eff2c695c4")
 	)
 	(junction
 		(at 50.8 152.4)
@@ -2645,7 +2633,7 @@
 	)
 	(wire
 		(pts
-			(xy 165.1 102.87) (xy 165.1 101.6)
+			(xy 165.1 100.33) (xy 165.1 102.87)
 		)
 		(stroke
 			(width 0)
@@ -2712,16 +2700,6 @@
 			(type default)
 		)
 		(uuid "50e4c890-f46f-41e1-a547-5a129674b71e")
-	)
-	(wire
-		(pts
-			(xy 177.8 91.44) (xy 177.8 101.6)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "50ed2f2f-5ba1-40a5-aa38-6ca69524b30e")
 	)
 	(wire
 		(pts
@@ -2815,16 +2793,6 @@
 	)
 	(wire
 		(pts
-			(xy 165.1 100.33) (xy 165.1 101.6)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "83e8d797-16c9-4ea0-8bc6-4690719eb9df")
-	)
-	(wire
-		(pts
 			(xy 66.04 170.18) (xy 66.04 157.48)
 		)
 		(stroke
@@ -2885,16 +2853,6 @@
 	)
 	(wire
 		(pts
-			(xy 177.8 101.6) (xy 165.1 101.6)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "936ca93a-a608-483b-8a4a-20c862b2fde0")
-	)
-	(wire
-		(pts
 			(xy 66.04 157.48) (xy 76.2 157.48)
 		)
 		(stroke
@@ -2905,7 +2863,7 @@
 	)
 	(wire
 		(pts
-			(xy 165.1 76.2) (xy 165.1 80.01)
+			(xy 165.1 74.93) (xy 165.1 80.01)
 		)
 		(stroke
 			(width 0)
@@ -3025,16 +2983,6 @@
 	)
 	(wire
 		(pts
-			(xy 177.8 86.36) (xy 177.8 76.2)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "e33cbf74-63ff-4c1e-b263-a0c92603da7e")
-	)
-	(wire
-		(pts
 			(xy 127 170.18) (xy 152.4 170.18)
 		)
 		(stroke
@@ -3082,16 +3030,6 @@
 			(type default)
 		)
 		(uuid "f0364a12-1476-45a9-bc05-9f7e281aa40e")
-	)
-	(wire
-		(pts
-			(xy 177.8 76.2) (xy 165.1 76.2)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f0be7cb4-1fa2-4f49-b97d-47cacaed544f")
 	)
 	(wire
 		(pts
@@ -3152,16 +3090,6 @@
 			(type default)
 		)
 		(uuid "f9facfb5-10e0-4165-b15d-e77f211947fe")
-	)
-	(wire
-		(pts
-			(xy 165.1 74.93) (xy 165.1 76.2)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "fbc60250-996f-4834-a0db-bf124283452b")
 	)
 	(label "HP_{LEFT}"
 		(at 152.4 132.08 180)
@@ -5087,118 +5015,6 @@
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
 					(reference "R32")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:C_Small")
-		(at 177.8 88.9 0)
-		(mirror y)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "8c2417a7-9912-4a63-a785-3ea4354326a8")
-		(property "Reference" "C6"
-			(at 180.34 87.6363 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "10u"
-			(at 180.34 90.1763 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
-			(at 177.8 88.9 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 177.8 88.9 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 177.8 88.9 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC Part" "C15525"
-			(at 177.8 88.9 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "d7a0b17b-8389-4a06-bf3b-3b6e77de1e7b")
-		)
-		(pin "2"
-			(uuid "05a4a565-e411-4e77-aa5e-2cdbea137ea6")
-		)
-		(instances
-			(project "barbecue"
-				(path "/12829710-d93a-4fa1-96c6-084c1af2e761"
-					(reference "C6")
-					(unit 1)
-				)
-			)
-			(project "bento-vna"
-				(path "/36176a8e-13d1-429b-8815-63472bc0665c"
-					(reference "C2")
-					(unit 1)
-				)
-			)
-			(project "pipi"
-				(path "/5de6f2b6-19be-45cf-b069-ee289a326d21"
-					(reference "C2")
-					(unit 1)
-				)
-				(path "/5de6f2b6-19be-45cf-b069-ee289a326d21/5b1ff778-5e2f-4eb6-acb1-23bd0a5149e9"
-					(reference "C2")
-					(unit 1)
-				)
-				(path "/5de6f2b6-19be-45cf-b069-ee289a326d21/882742c5-0484-4b86-b485-99790a82e2a9"
-					(reference "C2")
-					(unit 1)
-				)
-			)
-			(project "pipi"
-				(path "/73d1f64b-b6d8-45c3-ab75-e79bce2c5a38/350168a7-ca84-4da6-868a-c5a486a494d0"
-					(reference "C2")
-					(unit 1)
-				)
-			)
-			(project "krecek-0.9"
-				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-					(reference "C46")
 					(unit 1)
 				)
 			)

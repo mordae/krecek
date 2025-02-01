@@ -3382,6 +3382,10 @@
 		(uuid "a1175f94-9901-4345-9b63-af9592d5fcc1")
 	)
 	(no_connect
+		(at 101.6 109.22)
+		(uuid "af4a9a92-e5a6-4a59-a14d-62f4653745dc")
+	)
+	(no_connect
 		(at 177.8 109.22)
 		(uuid "b4759100-6f4d-4a74-b0f5-8a64a0705456")
 	)
@@ -3533,7 +3537,7 @@
 	)
 	(wire
 		(pts
-			(xy 101.6 104.14) (xy 127 104.14)
+			(xy 101.6 101.6) (xy 127 101.6)
 		)
 		(stroke
 			(width 0)
@@ -4253,7 +4257,7 @@
 	)
 	(wire
 		(pts
-			(xy 101.6 106.68) (xy 127 106.68)
+			(xy 101.6 104.14) (xy 127 104.14)
 		)
 		(stroke
 			(width 0)
@@ -4313,7 +4317,7 @@
 	)
 	(wire
 		(pts
-			(xy 101.6 101.6) (xy 127 101.6)
+			(xy 101.6 99.06) (xy 127 99.06)
 		)
 		(stroke
 			(width 0)
@@ -5303,7 +5307,7 @@
 	)
 	(wire
 		(pts
-			(xy 101.6 109.22) (xy 127 109.22)
+			(xy 101.6 106.68) (xy 127 106.68)
 		)
 		(stroke
 			(width 0)
@@ -5424,6 +5428,17 @@
 		)
 		(uuid "077ca187-2745-45b5-8597-ea276b3e1881")
 	)
+	(label "SWD"
+		(at 121.92 116.84 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "0ae3b3f1-fd9f-49d7-9018-c9cfe5de9f9f")
+	)
 	(label "QSPI_SCLK"
 		(at 38.1 86.36 0)
 		(fields_autoplaced yes)
@@ -5502,7 +5517,7 @@
 		(uuid "2f738a33-4014-48ec-89a9-c3546eb35cd0")
 	)
 	(label "BUS3"
-		(at 127 109.22 180)
+		(at 127 106.68 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5524,7 +5539,7 @@
 		(uuid "3c97ffce-8fd5-4a9e-b854-91f3c6d8a0d5")
 	)
 	(label "BUS1"
-		(at 127 104.14 180)
+		(at 127 101.6 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5535,7 +5550,7 @@
 		(uuid "430393ed-468c-4094-82d5-b964356f8abd")
 	)
 	(label "BUS2"
-		(at 127 106.68 180)
+		(at 127 104.14 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5634,7 +5649,7 @@
 		(uuid "939b9f28-160d-46fd-9b2b-67d1b32b929b")
 	)
 	(label "BUS0"
-		(at 127 101.6 180)
+		(at 127 99.06 180)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5643,6 +5658,17 @@
 			(justify right bottom)
 		)
 		(uuid "98d7bb21-d0da-4773-92d4-8ff987900873")
+	)
+	(label "XIN"
+		(at 121.92 111.76 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "99676a4c-1f2c-4ecb-9536-19832d35f9cd")
 	)
 	(label "QSPI_SD3"
 		(at 139.7 177.8 180)
@@ -5798,6 +5824,17 @@
 		)
 		(uuid "e486963a-9a6e-4166-ab71-76bc6cc4989f")
 	)
+	(label "SWCLK"
+		(at 121.92 114.3 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "eb214e90-3c6d-433e-9c59-5521b7b47aa0")
+	)
 	(label "QSPI_SD1"
 		(at 38.1 78.74 0)
 		(fields_autoplaced yes)
@@ -5853,18 +5890,6 @@
 		)
 		(uuid "f7dbfc49-8987-4052-98c5-e6a1ef55a618")
 	)
-	(hierarchical_label "TFT_{LED}"
-		(shape output)
-		(at 101.6 66.04 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "029b4508-cc55-4e2c-a302-beea447f4666")
-	)
 	(hierarchical_label "SD_{MISO}"
 		(shape input)
 		(at 101.6 53.34 0)
@@ -5879,7 +5904,7 @@
 	)
 	(hierarchical_label "JOY_{Y}"
 		(shape input)
-		(at 228.6 129.54 0)
+		(at 228.6 127 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5903,7 +5928,7 @@
 	)
 	(hierarchical_label "IR_{TX}"
 		(shape output)
-		(at 101.6 99.06 0)
+		(at 101.6 55.88 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5939,7 +5964,7 @@
 	)
 	(hierarchical_label "DSP_{ASDOUT}"
 		(shape input)
-		(at 101.6 88.9 0)
+		(at 101.6 91.44 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -5963,7 +5988,7 @@
 	)
 	(hierarchical_label "JOY_{X}"
 		(shape input)
-		(at 228.6 127 0)
+		(at 228.6 129.54 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -6071,7 +6096,7 @@
 	)
 	(hierarchical_label "BAT_{Vsense}"
 		(shape input)
-		(at 101.6 127 0)
+		(at 101.6 129.54 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -6143,7 +6168,7 @@
 	)
 	(hierarchical_label "SD_{CS}"
 		(shape output)
-		(at 101.6 55.88 0)
+		(at 101.6 66.04 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -6155,7 +6180,7 @@
 	)
 	(hierarchical_label "DSP_{ASDIN}"
 		(shape output)
-		(at 101.6 91.44 0)
+		(at 101.6 88.9 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -6167,7 +6192,7 @@
 	)
 	(hierarchical_label "BTN_{X}"
 		(shape input)
-		(at 228.6 111.76 0)
+		(at 240.03 113.03 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -6311,7 +6336,7 @@
 	)
 	(hierarchical_label "HP_{SENSE}"
 		(shape input)
-		(at 101.6 129.54 0)
+		(at 101.6 127 0)
 		(fields_autoplaced yes)
 		(effects
 			(font
@@ -6396,6 +6421,7 @@
 	(symbol
 		(lib_id "Device:Crystal_GND24")
 		(at 38.1 177.8 0)
+		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -6404,7 +6430,7 @@
 		(fields_autoplaced yes)
 		(uuid "04034130-348b-431f-8243-419662c7f5c5")
 		(property "Reference" "Y1"
-			(at 45.72 173.6091 0)
+			(at 45.72 171.4814 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6412,7 +6438,7 @@
 			)
 		)
 		(property "Value" "12MHz"
-			(at 45.72 176.1491 0)
+			(at 45.72 174.0214 0)
 			(effects
 				(font
 					(size 1.27 1.27)

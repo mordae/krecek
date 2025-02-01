@@ -3083,74 +3083,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Krecek:RubberButton")
-		(at 107.95 38.1 0)
-		(mirror y)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "3a9c387a-d492-44ac-a48b-8c762ccab637")
-		(property "Reference" "SW3"
-			(at 107.95 33.02 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "~"
-			(at 107.95 38.1 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Krecek:RubberButton"
-			(at 107.95 40.64 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 107.95 38.1 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 107.95 38.1 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "3c96569b-fb73-4776-9033-363dcee1f422")
-		)
-		(pin "C"
-			(uuid "38f67018-9ead-4653-9b17-7d52b9b83eb2")
-		)
-		(instances
-			(project "krecek-0.9"
-				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
-					(reference "SW3")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:GND")
 		(at 176.53 86.36 270)
 		(unit 1)
@@ -4588,6 +4520,74 @@
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
 					(reference "SW4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Krecek:RubberButton")
+		(at 107.95 38.1 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "d3848234-14c9-426c-8f1e-46020cb1370d")
+		(property "Reference" "SW2"
+			(at 107.95 31.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "~"
+			(at 107.95 33.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Krecek:RubberButton"
+			(at 107.95 40.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 107.95 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 107.95 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "e40480ae-fe2f-430a-870b-183ec350a6e5")
+		)
+		(pin "C"
+			(uuid "69d916a8-7d13-48f4-afa8-98bc7088d925")
+		)
+		(instances
+			(project "krecek-0.9"
+				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/11c64485-27fc-47ac-864e-0b013ddf7d3c"
+					(reference "SW2")
 					(unit 1)
 				)
 			)

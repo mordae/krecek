@@ -134,7 +134,7 @@
 	)
 	(wire
 		(pts
-			(xy 165.1 109.22) (xy 190.5 109.22)
+			(xy 165.1 106.68) (xy 190.5 106.68)
 		)
 		(stroke
 			(width 0)
@@ -501,16 +501,6 @@
 			(type default)
 		)
 		(uuid "9e965f87-0cca-429d-a758-f93194f231a6")
-	)
-	(wire
-		(pts
-			(xy 165.1 106.68) (xy 190.5 106.68)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "a1dd6fbb-0549-4c7a-bd9d-2f8d4e832f4d")
 	)
 	(wire
 		(pts
@@ -1557,7 +1547,7 @@
 			(uuid "1dec9e20-b95d-4ead-ae37-3723e7a1b7c2")
 		)
 		(pin "TFT_{MISO}" input
-			(at 190.5 109.22 180)
+			(at 190.5 106.68 180)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1605,16 +1595,6 @@
 				(justify right)
 			)
 			(uuid "d080e184-1a40-44d5-a0b4-201697416b40")
-		)
-		(pin "TFT_{LED}" input
-			(at 190.5 106.68 180)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-			(uuid "0e1f9682-9053-4124-bf7a-729535525d7c")
 		)
 		(instances
 			(project "krecek-0.9"
@@ -1762,16 +1742,6 @@
 			)
 			(uuid "1690bc44-5dff-4a56-abac-e0adfb7615ee")
 		)
-		(pin "TFT_{LED}" output
-			(at 165.1 106.68 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-			(uuid "0d71961b-18fd-4861-a01e-dae6d43d0ac7")
-		)
 		(pin "TFT_{SCK}" output
 			(at 165.1 104.14 0)
 			(effects
@@ -1793,7 +1763,7 @@
 			(uuid "39a8c0d2-4e28-482c-a2d8-944ccb4de67b")
 		)
 		(pin "TFT_{MISO}" input
-			(at 165.1 109.22 0)
+			(at 165.1 106.68 0)
 			(effects
 				(font
 					(size 1.27 1.27)
