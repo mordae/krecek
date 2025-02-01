@@ -13,7 +13,8 @@ embed_tileset(ts_right_hamster, 4, 24, 32, 237, "right.data");
 embed_tileset(ts_hearts, 4, 16, 16, 237, "hearts.data");
 embed_tileset(ts_bullets, 4, 4, 4, 237, "bullets.data");
 embed_tileset(ts_power_ups, 2, 16, 16, 237, "powerups.data");
-embed_tileset(ts_background, 4, 160, 120, 237, "background.data");
+embed_tileset(ts_background, 5, 160, 120, 237, "background.data");
+embed_tileset(ts_menubutton, 4, 50, 14, 237, "MenuButton.data");
 
 // Colors
 #define RED 255
@@ -92,7 +93,7 @@ struct power_up {
 };
 
 static struct power_up power_up;
-
+// Second Bullet deffine
 #define SECOND_BULLET_SIZE 15
 #define SECOND_BULLET_SPAWN_TIME 2.0f
 #define SECOND_BULLET_RESPAWN_TIME 15.0f
@@ -104,6 +105,13 @@ struct second_bullet {
 	sdk_sprite_t s;
 };
 static struct second_bullet second_bullet;
+
+// menu define
+struct menu {
+	int game_mode;
+};
+
+static struct menu menu;
 
 // Ambiance
 static int day = -1;
@@ -140,6 +148,7 @@ static int16_t __unused noise(struct effect *eff)
 void game_start(void)
 {
 	sdk_set_output_gain_db(6);
+	menu.game_mode = 3;
 }
 
 void game_audio(int nsamples)
@@ -206,7 +215,7 @@ void game_reset(void)
 	p2.second_bullet_time = 0;
 	p2.hp_style = 2;
 
-	//Bullets deffine
+	//Bullets define
 	for (int i = 0; i < MAX_BULLETS; i++) {
 		p1.bullets[i].spawned = false;
 		p2.bullets[i].spawned = false;
@@ -226,11 +235,11 @@ void game_reset(void)
 		};
 	}
 
-	//wall deffine
+	//wall define
 	wall.y = TFT_HEIGHT / 2.0;
 	wall.dy = -20.0f;
 
-	//Power UP deffine
+	//Power UP define
 	power_up.s = (sdk_sprite_t){
 		.ts = &ts_power_ups,
 		.tile = 0,
@@ -253,8 +262,12 @@ void game_reset(void)
 	second_bullet.spawn_time = SECOND_BULLET_SPAWN_TIME;
 
 	day = day + 1;
-	if (day > 3)
+	if (day > ts_bullets.last + 1) {
 		day = 0;
+		menu.game_mode = menu.game_mode + 1;
+		if (menu.game_mode == 4)
+			menu.game_mode = 1;
+	};
 }
 
 void game_input(unsigned __unused dt_usec)
@@ -272,6 +285,7 @@ void game_input(unsigned __unused dt_usec)
 	}
 
 	// Shooting
+#if 1
 	if (sdk_inputs_delta.x > 0 && p1.hp > 0) {
 		for (int i = 0; i < p1.max_bullets; i++) {
 			if (p1.bullets[i].spawned)
@@ -300,6 +314,7 @@ void game_input(unsigned __unused dt_usec)
 		}
 	}
 
+#endif
 #if 0
 	// Laser krecek
 
@@ -342,22 +357,18 @@ void game_paint(unsigned dt_usec)
 
 	float bottom = TFT_HEIGHT - 31;
 
-	//				--- GUI --- gui ---
-	// Draw hearts
-	for (int i = 0; i < p1.hp; i++)
-		sdk_draw_tile(28 + 16 * i, 4, &ts_hearts, p1.hp_style);
-
-	for (int i = 0; i < p2.hp; i++)
-		sdk_draw_tile(TFT_WIDTH - 17 - (28 + 16 * i), 4, &ts_hearts, p2.hp_style);
-
 	//				--- Wall --- wall ---
 	// Draw wall
 	int wall_x = TFT_WIDTH / 2 - WALL_WIDTH / 2;
 	int wall_y = wall.y - WALL_HEIGHT / 2.0;
-	tft_draw_rect(wall_x, wall_y, wall_x + WALL_WIDTH, wall_y + WALL_HEIGHT, WHITE);
+	if (day == 0)
+		wall_y = 25;
+	if (menu.game_mode != 2)
+		tft_draw_rect(wall_x, wall_y, wall_x + WALL_WIDTH, wall_y + WALL_HEIGHT, WHITE);
 
 	// Wall movement
-	wall.y += wall.dy * dt;
+	if (day != 0 && menu.game_mode != 2)
+		wall.y += wall.dy * dt;
 
 	if (wall.y - WALL_HEIGHT / 2.0 <= 0) {
 		wall.dy = fabs(wall.dy);
@@ -391,9 +402,35 @@ void game_paint(unsigned dt_usec)
 		}
 	}
 
+	//				--- GUI --- gui ---
+	// Draw hearts
+	for (int i = 0; i < p1.hp; i++)
+		sdk_draw_tile(28 + 16 * i, 4, &ts_hearts, p1.hp_style);
+
+	for (int i = 0; i < p2.hp; i++)
+		sdk_draw_tile(TFT_WIDTH - 17 - (28 + 16 * i), 4, &ts_hearts, p2.hp_style);
+
+	if (day == 0)
+		sdk_draw_tile(TFT_RIGHT / 2 - 25, TFT_BOTTOM - 25, &ts_menubutton, menu.game_mode);
+#if 0
+	if (day == 0) {
+		for (int i = 0; i < 4; i++) {
+			sdk_draw_tile(TFT_RIGHT / 2 - 25, TFT_BOTTOM - 25 - i * 15, &ts_menubutton,
+				      i);
+		}
+	}
+#endif
+
+	if (menu.game_mode == 3) {
+		if (p1.hp > 0)
+			p1.hp = 1;
+		if (p2.hp > 0)
+			p2.hp = 1;
+	};
+
 	//				--- Power UP --- power up ---
 	// --- Heal Boost ---
-	if (power_up.spawn_time <= 0) {
+	if (power_up.spawn_time <= 0 && day != 0 && menu.game_mode == 1) {
 		// Draw power_up
 		sdk_draw_sprite(&power_up.s);
 
@@ -428,7 +465,7 @@ void game_paint(unsigned dt_usec)
 	power_up.spawn_time -= dt;
 
 	// --- Second Bullet ---
-	if (second_bullet.spawn_time <= 0) {
+	if (second_bullet.spawn_time <= 0 && day != 0 && menu.game_mode != 2) {
 		// Draw second bullet pickable
 		sdk_draw_sprite(&second_bullet.s);
 
@@ -461,7 +498,7 @@ void game_paint(unsigned dt_usec)
 			}
 		}
 	}
-
+	//	int cnt = ts_background.last + 1;
 	//Second Bullet delta time
 	second_bullet.spawn_time -= dt;
 
@@ -660,11 +697,10 @@ void game_paint(unsigned dt_usec)
 	}
 	/*
 	 * Game mods
-	 *  Base Game
-	 *  No Walls and Power up
+	 *  Base Game = 1
+	 *  No Walls and Power up = 2
 	 *  Low gravity
-	 *  One HP
-	 *  
+	 *  One HP =3 
 	 */
 }
 
