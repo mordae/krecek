@@ -5659,7 +5659,7 @@
 		)
 		(uuid "98d7bb21-d0da-4773-92d4-8ff987900873")
 	)
-	(label "XIN"
+	(label "XIN2"
 		(at 121.92 111.76 0)
 		(fields_autoplaced yes)
 		(effects

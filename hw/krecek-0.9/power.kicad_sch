@@ -7408,8 +7408,7 @@
 	)
 	(symbol
 		(lib_id "Device:R_Small")
-		(at 139.7 120.65 0)
-		(mirror x)
+		(at 139.7 120.65 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -7417,7 +7416,7 @@
 		(dnp no)
 		(uuid "16509731-1052-4f35-b538-8a93c9b08f68")
 		(property "Reference" "R20"
-			(at 137.16 119.38 0)
+			(at 142.24 119.38 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7426,7 +7425,7 @@
 			)
 		)
 		(property "Value" "100k"
-			(at 137.16 121.92 0)
+			(at 142.24 121.92 0)
 			(effects
 				(font
 					(size 1.27 1.27)
