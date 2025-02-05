@@ -79,6 +79,8 @@ static const char tune[] =
 
 void game_start(void)
 {
+	current_screen = GAME;
+
 	sdk_set_output_gain_db(0);
 
 	tones['c'] = 131;
