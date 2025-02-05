@@ -3370,7 +3370,7 @@
 		(uuid "fb0e30ab-94a6-4c89-b8b7-a99ddf4aa36b")
 	)
 	(no_connect
-		(at 228.6 99.06)
+		(at 228.6 104.14)
 		(uuid "017e4b80-bcb8-4bbd-bbc5-788f7d3d6737")
 	)
 	(no_connect
@@ -6024,7 +6024,7 @@
 	)
 	(hierarchical_label "BTN_{START}"
 		(shape input)
-		(at 228.6 104.14 0)
+		(at 228.6 99.06 0)
 		(fields_autoplaced yes)
 		(effects
 			(font

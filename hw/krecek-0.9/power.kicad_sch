@@ -7080,6 +7080,85 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:C_Small")
+		(at 266.7 57.15 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "0c4fb8d7-a114-4f73-a3dd-ded834ae045b")
+		(property "Reference" "C31"
+			(at 269.24 55.8863 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1u"
+			(at 269.24 58.4263 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 266.7 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 266.7 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor, small symbol"
+			(at 266.7 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part" "C15849"
+			(at 266.7 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "cf1f34ef-2da8-4571-aaa8-16516e955cd1")
+		)
+		(pin "2"
+			(uuid "f74d3878-a01e-4d50-9fd9-8525a8af1950")
+		)
+		(instances
+			(project "krecek-0.9"
+				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
+					(reference "C31")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:R_Small")
 		(at 246.38 140.97 90)
 		(mirror x)
@@ -7407,9 +7486,87 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:C_Small")
+		(at 266.7 82.55 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "181c2c0a-67e1-43b1-aaf1-9382349c3dc3")
+		(property "Reference" "C33"
+			(at 269.24 81.2863 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1u"
+			(at 269.24 83.8263 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 266.7 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 266.7 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor, small symbol"
+			(at 266.7 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part" "C15849"
+			(at 266.7 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "6e804101-3437-4ca4-9592-d110d1f76a23")
+		)
+		(pin "2"
+			(uuid "5d4a8369-b8b2-4f79-9247-a47e3c4c6956")
+		)
+		(instances
+			(project "krecek-0.9"
+				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
+					(reference "C33")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Krecek:RubberButton")
 		(at 76.2 158.75 90)
-		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -7710,85 +7867,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C_Small")
-		(at 57.15 133.35 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "23205f28-36bf-413a-98f9-1b396a38c690")
-		(property "Reference" "C37"
-			(at 59.69 132.0863 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "1u"
-			(at 59.69 134.6263 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
-			(at 57.15 133.35 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 57.15 133.35 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 57.15 133.35 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC Part" "C28323"
-			(at 57.15 133.35 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "60e01589-fdcf-4f54-94a7-44491d6e7be4")
-		)
-		(pin "2"
-			(uuid "3514d972-519d-4594-a1aa-44afe1d54f62")
-		)
-		(instances
-			(project "krecek-0.9"
-				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
-					(reference "C37")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:+5V")
 		(at 139.7 88.9 90)
 		(unit 1)
@@ -7850,85 +7928,6 @@
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
 					(reference "#PWR048")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:C_Small")
-		(at 241.3 31.75 0)
-		(mirror y)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "28e40b18-4420-45a1-b6d8-e264c73fa92d")
-		(property "Reference" "C27"
-			(at 238.76 30.4863 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "1u"
-			(at 238.76 33.0263 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
-			(at 241.3 31.75 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 241.3 31.75 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 241.3 31.75 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC Part" "C28323"
-			(at 241.3 31.75 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "05aed466-9add-4169-b8a8-287e1708bda3")
-		)
-		(pin "2"
-			(uuid "7edc2875-aeec-4f93-a6ca-1d15349eeb61")
-		)
-		(instances
-			(project "krecek-0.9"
-				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
-					(reference "C27")
 					(unit 1)
 				)
 			)
@@ -8029,7 +8028,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
 			(at 76.2 33.02 0)
 			(effects
 				(font
@@ -8056,7 +8055,7 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC Part" "C28323"
+		(property "LCSC Part" "C15849"
 			(at 76.2 33.02 0)
 			(effects
 				(font
@@ -8241,6 +8240,85 @@
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
 					(reference "U7")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C_Small")
+		(at 266.7 31.75 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "357481d6-24a5-4d97-8726-f6f6a58cb6fe")
+		(property "Reference" "C28"
+			(at 269.24 30.4863 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1u"
+			(at 269.24 33.0263 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 266.7 31.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 266.7 31.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor, small symbol"
+			(at 266.7 31.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part" "C15849"
+			(at 266.7 31.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "96fd9031-5de5-4642-abdd-d1e75fd62e81")
+		)
+		(pin "2"
+			(uuid "e3f64ae2-9d3a-4a15-bf50-eabffdc044bc")
+		)
+		(instances
+			(project "krecek-0.9"
+				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
+					(reference "C28")
 					(unit 1)
 				)
 			)
@@ -9544,6 +9622,85 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:C_Small")
+		(at 241.3 31.75 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "6d3b13f3-8083-423e-aa24-5e928425bfa6")
+		(property "Reference" "C27"
+			(at 243.84 30.4863 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1u"
+			(at 243.84 33.0263 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 241.3 31.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 241.3 31.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor, small symbol"
+			(at 241.3 31.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part" "C15849"
+			(at 241.3 31.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "4a18eb5c-c3b9-4d1d-ae33-f50351bc9b5a")
+		)
+		(pin "2"
+			(uuid "f2643da2-6ee4-4603-83db-5c0eb79ea032")
+		)
+		(instances
+			(project "krecek-0.9"
+				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
+					(reference "C27")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:+5V")
 		(at 234.95 50.8 90)
 		(unit 1)
@@ -10652,164 +10809,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C_Small")
-		(at 241.3 82.55 0)
-		(mirror y)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "8a02b5ea-8f93-4979-b469-8298b3b71e00")
-		(property "Reference" "C32"
-			(at 238.76 81.2863 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "1u"
-			(at 238.76 83.8263 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
-			(at 241.3 82.55 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 241.3 82.55 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 241.3 82.55 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC Part" "C28323"
-			(at 241.3 82.55 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "5e50c1c6-bdd1-4b9b-bea4-2147d95d4111")
-		)
-		(pin "2"
-			(uuid "ffedcf3d-941a-4c54-93a0-d5ed372d4c6e")
-		)
-		(instances
-			(project "krecek-0.9"
-				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
-					(reference "C32")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:C_Small")
-		(at 266.7 31.75 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "8b1b5922-7de4-49a7-a2b2-3fbd3f0c71ef")
-		(property "Reference" "C28"
-			(at 269.24 30.4863 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "1u"
-			(at 269.24 33.0263 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
-			(at 266.7 31.75 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 266.7 31.75 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 266.7 31.75 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC Part" "C28323"
-			(at 266.7 31.75 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "219d0ec2-6ae5-4d96-9ec4-2c8da5cd6f0e")
-		)
-		(pin "2"
-			(uuid "c7638748-be92-4894-8b19-13c304e06bb6")
-		)
-		(instances
-			(project "krecek-0.9"
-				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
-					(reference "C28")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:R_Small")
 		(at 184.15 88.9 90)
 		(unit 1)
@@ -11391,164 +11390,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C_Small")
-		(at 241.3 57.15 0)
-		(mirror y)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "a46ed146-d845-43fb-9e7d-03fcf3dd14ef")
-		(property "Reference" "C30"
-			(at 238.76 55.8863 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "1u"
-			(at 238.76 58.4263 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
-			(at 241.3 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 241.3 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 241.3 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC Part" "C28323"
-			(at 241.3 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "e31b12bd-178b-4639-b578-fa970f0713d3")
-		)
-		(pin "2"
-			(uuid "ff278b04-bd57-4406-b12d-6ea8ec01ba2a")
-		)
-		(instances
-			(project "krecek-0.9"
-				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
-					(reference "C30")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:C_Small")
-		(at 266.7 82.55 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "ae746e83-8842-4abc-bd3f-78608f33dd32")
-		(property "Reference" "C33"
-			(at 269.24 81.2863 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "1u"
-			(at 269.24 83.8263 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
-			(at 266.7 82.55 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 266.7 82.55 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 266.7 82.55 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC Part" "C28323"
-			(at 266.7 82.55 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "39e24826-408c-4998-b7f4-8ed4bea38952")
-		)
-		(pin "2"
-			(uuid "c5517fdb-3468-4a2a-9707-b89f1933b0bd")
-		)
-		(instances
-			(project "krecek-0.9"
-				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
-					(reference "C33")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:+BATT")
 		(at 171.45 22.86 0)
 		(unit 1)
@@ -12012,6 +11853,85 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:C_Small")
+		(at 241.3 57.15 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "bb071a25-6f3b-4ce2-a525-79a6a23e6553")
+		(property "Reference" "C30"
+			(at 243.84 55.8863 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1u"
+			(at 243.84 58.4263 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 241.3 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 241.3 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor, small symbol"
+			(at 241.3 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part" "C15849"
+			(at 241.3 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "0d9b6578-f5b6-4d19-8308-7ce0eac5244c")
+		)
+		(pin "2"
+			(uuid "ab7b0d73-2fef-4478-a292-ccec64b9fe3f")
+		)
+		(instances
+			(project "krecek-0.9"
+				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
+					(reference "C30")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:GND")
 		(at 88.9 72.39 0)
 		(mirror y)
@@ -12211,85 +12131,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C_Small")
-		(at 171.45 30.48 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "c8a7b551-2701-4713-ab78-2b91cb107254")
-		(property "Reference" "C26"
-			(at 173.99 29.2163 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "1u"
-			(at 173.99 31.7563 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
-			(at 171.45 30.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 171.45 30.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 171.45 30.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC Part" "C28323"
-			(at 171.45 30.48 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "941d1403-32ed-4f66-8a4a-6ad917dd2e69")
-		)
-		(pin "2"
-			(uuid "b32f2043-b8c2-4d07-b8bb-e7386b6761f3")
-		)
-		(instances
-			(project "krecek-0.9"
-				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
-					(reference "C26")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Regulator_Linear:AMS1117-3.3")
 		(at 254 25.4 0)
 		(unit 1)
@@ -12448,85 +12289,6 @@
 		)
 	)
 	(symbol
-		(lib_id "Device:C_Small")
-		(at 266.7 57.15 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "ccd489b3-7e2c-4157-a1a0-7ad89cb03cac")
-		(property "Reference" "C31"
-			(at 269.24 55.8863 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "1u"
-			(at 269.24 58.4263 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
-			(at 266.7 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 266.7 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Unpolarized capacitor, small symbol"
-			(at 266.7 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC Part" "C28323"
-			(at 266.7 57.15 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "8e005cf9-293a-48ee-9faa-b231844393e5")
-		)
-		(pin "2"
-			(uuid "1aeb6427-54d2-4cfa-adbc-dc7dd5d96af8")
-		)
-		(instances
-			(project "krecek-0.9"
-				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
-					(reference "C31")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:VBUS")
 		(at 114.3 88.9 90)
 		(unit 1)
@@ -12588,6 +12350,85 @@
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
 					(reference "#PWR047")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C_Small")
+		(at 57.15 133.35 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "d0ec447b-7bc3-42b7-bf14-05e6d46ddbf6")
+		(property "Reference" "C37"
+			(at 59.69 132.0863 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1u"
+			(at 59.69 134.6263 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 57.15 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 57.15 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor, small symbol"
+			(at 57.15 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part" "C15849"
+			(at 57.15 133.35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "aa6e0ab3-df48-4c1b-9beb-5cabf46a7871")
+		)
+		(pin "2"
+			(uuid "9f6ef6b7-ae1f-433f-9234-bfbf75a48cdf")
+		)
+		(instances
+			(project "krecek-0.9"
+				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
+					(reference "C37")
 					(unit 1)
 				)
 			)
@@ -13217,9 +13058,166 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:C_Small")
+		(at 171.45 30.48 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "e00b879e-84fa-4943-890c-219e27183fa5")
+		(property "Reference" "C26"
+			(at 173.99 29.2163 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1u"
+			(at 173.99 31.7563 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 171.45 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 171.45 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor, small symbol"
+			(at 171.45 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part" "C15849"
+			(at 171.45 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "f1da8410-4244-451d-8d28-cf190953d383")
+		)
+		(pin "2"
+			(uuid "b4bf8aa4-1c78-461e-81c6-7b995193b910")
+		)
+		(instances
+			(project "krecek-0.9"
+				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
+					(reference "C26")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C_Small")
+		(at 241.3 82.55 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "e377c162-a87f-45eb-9c97-15b14c8dda07")
+		(property "Reference" "C32"
+			(at 243.84 81.2863 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "1u"
+			(at 243.84 83.8263 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+			(at 241.3 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 241.3 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor, small symbol"
+			(at 241.3 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part" "C15849"
+			(at 241.3 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "ec510bd9-5490-4c29-ae87-453475dc33be")
+		)
+		(pin "2"
+			(uuid "28a2c225-18a6-4389-aad5-fe6c530e8fb0")
+		)
+		(instances
+			(project "krecek-0.9"
+				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
+					(reference "C32")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Transistor_FET:AO3400A")
 		(at 124.46 146.05 0)
-		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -13228,7 +13226,7 @@
 		(fields_autoplaced yes)
 		(uuid "e88a7454-d89a-4d23-8ca8-ea3142b413cd")
 		(property "Reference" "Q3"
-			(at 130.81 144.78 0)
+			(at 130.81 144.7799 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13237,7 +13235,7 @@
 			)
 		)
 		(property "Value" "AO3400A"
-			(at 130.81 147.32 0)
+			(at 130.81 147.3199 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13246,7 +13244,7 @@
 			)
 		)
 		(property "Footprint" "Package_TO_SOT_SMD:SOT-23"
-			(at 129.54 144.145 0)
+			(at 129.54 147.955 0)
 			(effects
 				(font
 					(size 1.27 1.27)
