@@ -37,9 +37,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 0.0,
-          "height": 0.64,
-          "width": 0.54
+          "drill": 0.3,
+          "height": 0.5,
+          "width": 0.5
         },
         "silk_line_width": 0.15,
         "silk_text_italic": false,
@@ -58,7 +58,24 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        "clearance|174895000|91450000|7c09e90d-be8a-4996-a108-f4bd5230aa3a|bdb4c3d6-20ee-41a7-b574-2bb2b91b15ca",
+        "clearance|180695000|91710000|3d1d97ca-e3ba-46fc-b7b2-06deffa1578e|fc76e487-9613-456a-93f2-26343d9e62a4",
+        "clearance|58760000|67060000|7ba4c0c4-d9c2-4e7a-a51d-e6eb5e900197|ef427ed8-0a52-4c8d-82e6-32a3c6c886d4",
+        "clearance|64560000|67320000|d7db8729-448c-4cf2-a3bb-a27420e41128|12de1c52-d113-4cf9-a433-c334f969147c",
+        "clearance|73660000|58210000|509cd30d-d46d-4926-af30-80e289da3b7f|1144fab9-e1e2-4a81-b912-e98b0534745e",
+        "clearance|73680000|82230000|cca67905-208e-4780-9de5-baa634c581d0|f555e0f2-eea1-47ce-92fa-5ec0e7a3ab7d",
+        "clearance|73920000|52410000|65e885b1-2de3-4815-a48f-e8d755db7c4c|a70cffaa-5f0a-4065-8980-536067d082dc",
+        "clearance|73940000|76430000|88392542-6e38-4684-9aaa-6f1e212cd761|2cef10dc-ded7-40cc-beea-9405ce29ff4d",
+        "clearance|81550000|91450000|c291b56f-4755-46e0-9fb2-5add92081be4|045ee3db-ea34-4286-9578-68fa758abb67",
+        "clearance|82760000|67330000|36ce6597-54d0-43bb-8eef-0dcd85efc864|2eefd234-d46c-406d-a0e6-ae7fa92384d7",
+        "clearance|87350000|91710000|62a70238-ca79-4eff-9c34-dced03dd5b20|a1c77064-8014-4d0d-b95d-59778b0e48bc",
+        "clearance|88560000|67590000|f26f8496-90eb-4616-81af-982faee293bf|0dd587af-38c8-4727-b85c-d7e7b4db4b9e",
+        "lib_footprint_mismatch|129535000|38695000|31827290-9016-40b8-ba1d-ab1361867e91|00000000-0000-0000-0000-000000000000",
+        "lib_footprint_mismatch|137035000|38695000|aa3e139e-9d22-4a30-8630-9dd5d068c264|00000000-0000-0000-0000-000000000000",
+        "lib_footprint_mismatch|143505000|38695000|999862e5-b457-4131-b2eb-0add57e56c93|00000000-0000-0000-0000-000000000000",
+        "lib_footprint_mismatch|161673500|67305000|39c3a701-65f6-4ba9-8e8f-a8d1d1c18536|00000000-0000-0000-0000-000000000000"
+      ],
       "meta": {
         "version": 2
       },
@@ -549,11 +566,35 @@
           "label": "DNP",
           "name": "${DNP}",
           "show": true
+        },
+        {
+          "group_by": false,
+          "label": "#",
+          "name": "${ITEM_NUMBER}",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "LCSC",
+          "name": "LCSC",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "LCSC Part",
+          "name": "LCSC Part",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Description",
+          "name": "Description",
+          "show": false
         }
       ],
       "filter_string": "",
       "group_symbols": true,
-      "name": "Grouped By Value",
+      "name": "",
       "sort_asc": true,
       "sort_field": "Reference"
     },
