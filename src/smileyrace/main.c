@@ -61,20 +61,20 @@ static u_int32_t track[43] = {
 	0b01111110000001111110000000000000,
 	0b01111110000001111110000000000000,
 	0b01111110000001111100000000000000,
-	0b11111110000011111000000000000000,
-	0b11111110000011111000000000000000,
-	0b11111110000011111000000000000000,
-	0b11111110000011111000000000000000,
-	0b11111110000011111000000000000000,
-	0b11111110000001111000000000000000,
-	0b11111110000001111100000000000000,
-	0b11111110000001111100000000000000,
+	0b11111110000011111100000000000000,
+	0b11111110000011111100000000000000,
+	0b11111110000011111100000000000000,
+	0b11111110000011111100000000000000,
+	0b11111110000011111100000000000000,
 	0b11111110000001111110000000000000,
-	0b11111110000000111111100000000000,
-	0b11111111000000011111111000000000,
+	0b11111110000001111110000000000000,
+	0b11111110000001111111000000000000,
+	0b11111110000001111111100000000000,
+	0b11111110000000111111111000000000,
+	0b11111111000000011111111110000000,
 	0b11111111000000000111111111100000,
 	0b11111111000000000001111111111000,
-	0b11111111100000000000011111111100,
+	0b11111111100000000000111111111100,
 	0b11111111100000000000011111111110,
 	0b11111111100000000000011111111110,
 	0b11111111110000000000011111111111,
@@ -122,6 +122,9 @@ struct vector2 normalise(struct vector2 v)
 }
 
 bool is_position_valid(struct vector2 pos) {
+	if (pos.x < 0 || pos.y < 0) {
+		return false;
+	}
 	struct vector2 corner_positions[4];
 	corner_positions[0].x = pos.x;
 	corner_positions[0].y = pos.y;
@@ -132,7 +135,7 @@ bool is_position_valid(struct vector2 pos) {
 	corner_positions[3].x = pos.x + CELL_SIZE - 1;
 	corner_positions[3].y = pos.y + CELL_SIZE - 1;
 	for (int i = 0; i < 4; i++) {
-		if (is_cell_full(corner_positions[i].x / CELL_SIZE, corner_positions[i].y / CELL_SIZE)) {
+		if (is_cell_full((int)corner_positions[i].x / CELL_SIZE, (int)corner_positions[i].y / CELL_SIZE)) {
 			return false;
 		}
 	}
@@ -141,14 +144,14 @@ bool is_position_valid(struct vector2 pos) {
 
 void game_reset(void)
 {
-	player.position.x = 3 * CELL_SIZE;
-	player.position.y = 17 * CELL_SIZE;
-	player.direction.x = 0;
-	player.direction.y = 0;
-	player.speed = 0.0;
-	player.power = 1.0;
-	player.color = GREEN;
-	player.max_speed = 0.5 * CELL_SIZE;
+	player = (struct smiley) {
+		.position = (struct vector2){3 * CELL_SIZE, 17 * CELL_SIZE},
+		.direction = (struct vector2){0, 0},
+		.speed = 0,
+		.power = 1,
+		.color = 213,
+		.max_speed = 0.5 * CELL_SIZE
+	};
 }
 
 void game_start(void)
@@ -164,9 +167,19 @@ void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
 
+	if (!dt) {
+		return;
+	}
+
+	struct vector2 input = (struct vector2){sdk_inputs.joy_x, sdk_inputs.joy_y};
+	if (sdk_inputs.b > 0) {input.x = MAX_JOYSTICK_VALUE;}
+	if (sdk_inputs.x > 0) {input.x = -MAX_JOYSTICK_VALUE;}
+	if (sdk_inputs.a > 0) {input.y = MAX_JOYSTICK_VALUE;}
+	if (sdk_inputs.y > 0) {input.y = -MAX_JOYSTICK_VALUE;}
+
 	struct vector2 push;
-	push.x = player.power * dt * sdk_inputs.joy_x / MAX_JOYSTICK_VALUE;
-	push.y = player.power * dt * sdk_inputs.joy_y / MAX_JOYSTICK_VALUE;
+	push.x = player.power * dt * input.x / MAX_JOYSTICK_VALUE;
+	push.y = player.power * dt * input.y / MAX_JOYSTICK_VALUE;
 
 	struct vector2 temp;
 	temp.x = player.direction.x * player.speed + push.x;
@@ -185,8 +198,9 @@ void game_input(unsigned dt_usec)
 		player.position.y = target_position.y;
 	} else {
 		player.speed = 0;
+		// game_reset(); // harder game mode
 	}
-	printf("posX: %.3f | posY: %.3f | spd: %.3f\n", player.position.x, player.position.y, player.speed);
+	// printf("posX: %.3f | posY: %.3f | spd: %.3f\n", player.position.x, player.position.y, player.speed);
 }
 
 void game_paint(unsigned __unused dt_usec)
@@ -200,8 +214,8 @@ void game_paint(unsigned __unused dt_usec)
 	int pixel_offset_x = top_left_pixel_x % CELL_SIZE;
 	int pixel_offset_y = top_left_pixel_y % CELL_SIZE;
 
-	for (int y = 0; y < 20 + 1; y++) {
-		for (int x = 0; x < 28; x++) {
+	for (int y = -1; y < 20 + 1; y++) {
+		for (int x = -1; x < 28; x++) {
 			int cell_color = 0;
 			if (top_left_cell_x + x < 0 || top_left_cell_x + x > 31) {
 				cell_color = 8;
@@ -210,8 +224,12 @@ void game_paint(unsigned __unused dt_usec)
 			} else if (is_cell_full(top_left_cell_x + x, top_left_cell_y + y)) {
 				cell_color = 8;
 			}
-			tft_draw_rect(x * CELL_SIZE - pixel_offset_x, y * CELL_SIZE - pixel_offset_y, 
-			              (x + 1) * CELL_SIZE - pixel_offset_x, (y + 1) * CELL_SIZE - pixel_offset_y, 
+			int ox = x * CELL_SIZE - pixel_offset_x;
+			int oy = y * CELL_SIZE - pixel_offset_y;
+			if (ox < 0) {ox = 0;}
+			if (oy < 0) {oy = 0;}
+			tft_draw_rect(ox, oy, 
+			              ox + CELL_SIZE, oy + CELL_SIZE, 
 			              cell_color);
 		}
 	}
