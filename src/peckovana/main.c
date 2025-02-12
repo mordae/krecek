@@ -16,6 +16,9 @@ embed_tileset(ts_power_ups, 2, 16, 16, 237, "powerups.data");
 embed_tileset(ts_background, 5, 160, 120, 237, "background.data");
 embed_tileset(ts_menubutton, 4, 50, 14, 237, "MenuButton.data");
 
+//TFT_WIDTH
+//TFT_HEIGHT
+
 // Colors
 #define RED 255
 #define RED_POWER (RED - 31)
@@ -148,7 +151,7 @@ static int16_t __unused noise(struct effect *eff)
 void game_start(void)
 {
 	sdk_set_output_gain_db(6);
-	menu.game_mode = 3;
+	//menu.game_mode = 3;
 }
 
 void game_audio(int nsamples)
@@ -420,6 +423,7 @@ void game_paint(unsigned dt_usec)
 		}
 	}
 #endif
+#if 1
 
 	if (menu.game_mode == 3) {
 		if (p1.hp > 0)
@@ -427,6 +431,7 @@ void game_paint(unsigned dt_usec)
 		if (p2.hp > 0)
 			p2.hp = 1;
 	};
+#endif
 
 	//				--- Power UP --- power up ---
 	// --- Heal Boost ---

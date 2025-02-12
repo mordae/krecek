@@ -10,6 +10,10 @@
 embed_tileset(ts_pacman, 2, 7, 7, 237, "pacman.data");
 embed_tileset(ts_tiles, 17, 8, 8, 237, "tiles.data");
 embed_tileset(ts_ghost, 2, 7, 7, 237, "ghost.data");
+embed_tileset(ts_ghost_read, 4, 7, 7, 237, "ghost_read.data");
+embed_tileset(ts_ghost_orange, 4, 7, 7, 237, "ghost_orange.data");
+embed_tileset(ts_ghost_blue, 4, 7, 7, 237, "ghost_blue.data");
+embed_tileset(ts_ghost_pink, 4, 7, 7, 237, "ghost_pink.data");
 
 typedef enum {
 	EMPTY = 0,
