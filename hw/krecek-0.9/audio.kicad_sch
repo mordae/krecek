@@ -4382,6 +4382,15 @@
 				(hide yes)
 			)
 		)
+		(property "LCSC Part" "C390047"
+			(at 162.56 95.25 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "2f4969f8-3577-4db2-adfa-e3f8876dd249")
 		)
@@ -5612,6 +5621,15 @@
 				(hide yes)
 			)
 		)
+		(property "LCSC Part" "C841525"
+			(at 254 44.45 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "2753c3aa-5e5e-4267-9a3a-9f072a1fd256")
 		)
@@ -6541,6 +6559,15 @@
 		)
 		(property "Description" "Light emitting diode"
 			(at 254 31.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part" "C841525"
+			(at 254 31.75 90)
 			(effects
 				(font
 					(size 1.27 1.27)

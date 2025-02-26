@@ -4580,10 +4580,6 @@
 		(uuid "3458d7ef-7fed-4a69-8ccc-3222d31b63e5")
 	)
 	(no_connect
-		(at 143.51 27.94)
-		(uuid "346b21ac-597f-40c0-803a-1e49f6b3b355")
-	)
-	(no_connect
 		(at 38.1 53.34)
 		(uuid "3715941b-6c4d-45ee-839f-688b1d3d2982")
 	)
@@ -5959,6 +5955,16 @@
 	)
 	(wire
 		(pts
+			(xy 137.16 59.69) (xy 133.35 59.69)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ba7cffe0-695e-4e22-8fff-2b8476304705")
+	)
+	(wire
+		(pts
 			(xy 152.4 132.08) (xy 152.4 133.35)
 		)
 		(stroke
@@ -6159,6 +6165,16 @@
 	)
 	(wire
 		(pts
+			(xy 142.24 59.69) (xy 148.59 59.69)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d7cdb108-80ee-413b-8faa-b258fd743ec8")
+	)
+	(wire
+		(pts
 			(xy 57.15 114.3) (xy 57.15 130.81)
 		)
 		(stroke
@@ -6166,6 +6182,16 @@
 			(type default)
 		)
 		(uuid "d8ca55ed-1346-4574-aa5c-690d50d60f31")
+	)
+	(wire
+		(pts
+			(xy 143.51 27.94) (xy 153.67 27.94)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "db4e9ef7-c542-404f-a3ef-007df008abfe")
 	)
 	(wire
 		(pts
@@ -6552,6 +6578,28 @@
 			(justify left bottom)
 		)
 		(uuid "5ef6853c-9065-480f-9724-5f625b8b78b6")
+	)
+	(label "TS"
+		(at 153.67 27.94 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "8a6b6d8f-7d07-4eba-952c-4246ece6deb3")
+	)
+	(label "TS"
+		(at 148.59 59.69 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "9652cf11-029b-424c-8f02-97e2d6307813")
 	)
 	(label "vina"
 		(at 139.7 101.6 0)
@@ -8615,6 +8663,84 @@
 		)
 	)
 	(symbol
+		(lib_id "Device:R_Small")
+		(at 139.7 59.69 90)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "43f541ad-9f8e-45e7-bc30-f69f65f53ea1")
+		(property "Reference" "R42"
+			(at 139.7 54.61 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "10k"
+			(at 139.7 57.15 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 139.7 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 139.7 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor, small symbol"
+			(at 139.7 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part" "C25744"
+			(at 139.7 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "d84d7337-95ee-437a-82dd-9d0739a3ef28")
+		)
+		(pin "2"
+			(uuid "19b5cfe8-60e6-4e51-ab21-0a63ea2ff91d")
+		)
+		(instances
+			(project "krecek-0.9"
+				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
+					(reference "R42")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Diode:BAT54C")
 		(at 76.2 127 0)
 		(unit 1)
@@ -9083,7 +9209,16 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C72038"
+		(property "LCSC" ""
+			(at 171.45 53.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part" "C72038"
 			(at 171.45 53.34 0)
 			(effects
 				(font
@@ -9886,7 +10021,7 @@
 				)
 			)
 		)
-		(property "Footprint" "LED_SMD:LED_0603_1608Metric"
+		(property "Footprint" "Diode_SMD:D_SMA"
 			(at 31.75 114.3 90)
 			(effects
 				(font
@@ -10849,8 +10984,17 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C25905"
+		(property "LCSC" ""
 			(at 184.15 88.9 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part" "C25905"
+			(at 184.15 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11631,8 +11775,17 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C25905"
+		(property "LCSC" ""
 			(at 184.15 76.2 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part" "C25905"
+			(at 184.15 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12252,7 +12405,16 @@
 				(hide yes)
 			)
 		)
-		(property "LCSC" "C2286"
+		(property "LCSC" ""
+			(at 171.45 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part" "C2286"
 			(at 171.45 66.04 0)
 			(effects
 				(font
@@ -13349,6 +13511,74 @@
 			(project "krecek-0.9"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
 					(reference "#PWR056")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 133.35 59.69 270)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "f3a9cb49-0c51-4f07-8f08-de1f4b6a3e1f")
+		(property "Reference" "#PWR091"
+			(at 127 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 129.54 59.6899 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" ""
+			(at 133.35 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 133.35 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 133.35 59.69 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "65576688-f1c9-4c50-9b78-0f1ed67518ec")
+		)
+		(instances
+			(project "krecek-0.9"
+				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/bd29cd8c-9207-416a-90c1-7bdf6b5cfb97"
+					(reference "#PWR091")
 					(unit 1)
 				)
 			)
