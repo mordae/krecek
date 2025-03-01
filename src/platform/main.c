@@ -1,6 +1,8 @@
 #include <pico/stdlib.h>
 #include <sdk.h>
 #include <tft.h>
+#include <math.h>
+#include <string.h>
 
 #define SCREEN_WIDTH 140
 #define SCREEN_HEIGHT 120
@@ -8,8 +10,8 @@
 #define PLAYER_WIDTH 8
 #define PLAYER_HEIGHT 10
 #define GROUND_Y (SCREEN_HEIGHT - 10)
-#define GRAVITY 0.5f
-#define JUMP_STRENGTH -5.5f
+#define GRAVITY 0.3f
+#define JUMP_STRENGTH -4.5f
 #define MOVE_SPEED 2
 
 #define NUM_PLATFORMS 5
@@ -36,6 +38,11 @@ static struct player mario;
 static struct platform platforms[NUM_PLATFORMS];
 static struct enemy enemies[NUM_ENEMIES];
 
+static uint16_t tones[256];
+static const char tune[] =
+	" ggahC g C g C g CChag D g D g D ggahC g C g C g CCDEF C F C F C FFEDC g C g C g CChag D g D g D";
+static bool play_music = true;
+
 void game_start(void)
 {
 	sdk_set_output_gain_db(6);
@@ -59,18 +66,66 @@ void game_start(void)
 
 	enemies[0] = (struct enemy){ 60, GROUND_Y - 10, 10, 10, 1 };
 	enemies[1] = (struct enemy){ 110, 50, 10, 10, -1 };
+
+	tones['c'] = 131;
+	tones['d'] = 147;
+	tones['e'] = 165;
+	tones['f'] = 175;
+	tones['g'] = 196;
+	tones['a'] = 220;
+	tones['h'] = 247;
+	tones['C'] = 261;
+	tones['D'] = 293;
+	tones['E'] = 329;
+	tones['F'] = 349;
+	tones['G'] = 392;
+	tones['A'] = 440;
+	tones['H'] = 494;
 }
 
-void game_reset(void)
+void game_audio(int nsamples)
 {
-	game_start();
+	static int elapsed = 0;
+	static int tone_pos = 0;
+
+	if (!play_music) {
+		tone_pos = 0;
+		elapsed = 0;
+		for (int s = 0; s < nsamples; s++)
+			sdk_write_sample(0);
+		return;
+	}
+
+	for (int s = 0; s < nsamples; s++) {
+		if (elapsed > SDK_AUDIO_RATE / 4) {
+			tone_pos++;
+			elapsed = 0;
+		}
+
+		if (!tune[tone_pos]) {
+			tone_pos = 0;
+		}
+
+		int freq = tones[(unsigned)tune[tone_pos]];
+
+		if (freq) {
+			int period = SDK_AUDIO_RATE / freq;
+			int half_period = 2 * elapsed / period;
+			int modulo = half_period & 1;
+			sdk_write_sample(4000 * (modulo ? 1 : -1));
+		} else {
+			sdk_write_sample(0);
+		}
+
+		elapsed++;
+	}
 }
 
 void game_input(unsigned __unused dt_usec)
 {
 	if (!mario.alive || mario.won) {
 		if (sdk_inputs.start) {
-			game_reset();
+			game_start();
 		}
 		return;
 	}
@@ -92,64 +147,12 @@ void game_input(unsigned __unused dt_usec)
 		mario.dy = 0;
 		mario.on_ground = 1;
 	}
-
-	for (int i = 0; i < NUM_PLATFORMS; i++) {
-		if (mario.x + PLAYER_WIDTH > platforms[i].x &&
-		    mario.x < platforms[i].x + platforms[i].width &&
-		    mario.y + PLAYER_HEIGHT >= platforms[i].y &&
-		    mario.y + PLAYER_HEIGHT <= platforms[i].y + platforms[i].height) {
-			mario.y = platforms[i].y - PLAYER_HEIGHT;
-			mario.dy = 0;
-			mario.on_ground = 1;
-		}
-	}
-
-	for (int i = 0; i < NUM_ENEMIES; i++) {
-		if (mario.x + PLAYER_WIDTH > enemies[i].x &&
-		    mario.x < enemies[i].x + enemies[i].width &&
-		    mario.y + PLAYER_HEIGHT > enemies[i].y &&
-		    mario.y < enemies[i].y + enemies[i].height) {
-			mario.alive = 0;
-		}
-	}
-
-	if (mario.x > SCREEN_WIDTH - 15) {
-		mario.won = 1;
-	}
 }
 
 void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
-
-	if (!mario.alive) {
-		tft_draw_rect(30, 50, 110, 70, 1);
-		return;
-	}
-
-	if (mario.won) {
-		tft_draw_rect(30, 50, 110, 70, 3);
-		return;
-	}
-
-	tft_draw_rect(0, GROUND_Y, SCREEN_WIDTH, SCREEN_HEIGHT, 2);
-
-	for (int i = 0; i < NUM_PLATFORMS; i++) {
-		tft_draw_rect(platforms[i].x, platforms[i].y, platforms[i].x + platforms[i].width,
-			      platforms[i].y + platforms[i].height, 2);
-	}
-
-	for (int i = 0; i < NUM_ENEMIES; i++) {
-		enemies[i].x += enemies[i].direction;
-		if (enemies[i].x < 50 || enemies[i].x > 120)
-			enemies[i].direction *= -1;
-		tft_draw_rect(enemies[i].x, enemies[i].y, enemies[i].x + enemies[i].width,
-			      enemies[i].y + enemies[i].height, 4);
-	}
-
 	tft_draw_rect(mario.x, mario.y, mario.x + PLAYER_WIDTH, mario.y + PLAYER_HEIGHT, 1);
-
-	tft_draw_rect(SCREEN_WIDTH - 10, GROUND_Y - 20, SCREEN_WIDTH - 5, GROUND_Y, 3);
 }
 
 int main()
