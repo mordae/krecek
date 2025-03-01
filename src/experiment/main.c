@@ -1,8 +1,5 @@
 #include <pico/stdlib.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #include <sdk.h>
 #include <tft.h>
 
@@ -30,6 +27,7 @@ void game_start(void)
 
 void game_audio(int nsamples)
 {
+	(void)nsamples;
 }
 
 void game_paint(unsigned __unused dt_usec)
