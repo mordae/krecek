@@ -1,16 +1,27 @@
+#include "sdk/game.h"
+#include "sdk/input.h"
+#include "sdk/util.h"
 #include <math.h>
 #include <pico/stdlib.h>
 
 #include <sdk.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <tft.h>
 
 #define PADDLE_HEIGHT 4
-#define PADDLE_WIDTH 30
+#define PADDLE_WIDTH 30.0
+#define BLOCK_COUNT_X 12
+#define BLOCK_COUNT_Y 12
+#define BLOCK_HEIGHT 5
+#define BLOCK_WIDTH 10
 
-#define RED 240
-#define YELLOW 242
-#define GREEN 244
-#define BLUE 250
+#define BALL_MOVEMENT_SUBSTEPS 4
+
+#define RED 239
+#define YELLOW 226
+#define GREEN 228
+#define BLUE 233
 #define GRAY 8
 #define WHITE 15
 
@@ -32,6 +43,14 @@ struct ball {
 };
 static struct ball ball;
 
+static int blocks[BLOCK_COUNT_Y][BLOCK_COUNT_X];
+static int block_colors[4] = {RED, YELLOW, GREEN, BLUE};
+
+static struct vector_2 block_position = {
+	.x = (float)(TFT_WIDTH - BLOCK_WIDTH * BLOCK_COUNT_X) / 2,
+	.y = (float)(TFT_WIDTH - BLOCK_WIDTH * BLOCK_COUNT_X) / 2
+};
+
 float get_vector_magnitude(struct vector_2 v) {
 	return sqrtf(v.x * v.x + v.y * v.y);
 }
@@ -51,7 +70,28 @@ bool is_position_full(struct vector_2 p) {
 	if (p.x < 0 || p.x >= TFT_WIDTH) {
 		return true;
 	}
-	if (p.y < 0 || p.y >= TFT_HEIGHT) {
+	if (p.y < 0) {
+		return true;
+	}
+	if (p.y >= TFT_HEIGHT) {
+		game_reset();
+	}
+	if (abs((int)(p.x - paddle.position)) < PADDLE_WIDTH / 2 && p.y > TFT_BOTTOM - PADDLE_HEIGHT) {
+		ball.direction.y = -1 + abs((int)(p.x - paddle.position)) / PADDLE_WIDTH;
+		ball.direction.x = (p.x - paddle.position) / PADDLE_WIDTH;
+		return false;
+	}
+	if (p.x - block_position.x < 0 || p.y - block_position.y < 0) {
+		return false;
+	}
+	p.x = (int)((p.x - block_position.x) / BLOCK_WIDTH);
+	p.y = (int)((p.y - block_position.y) / BLOCK_HEIGHT);
+	if (p.x > BLOCK_COUNT_X - 1 || p.y > BLOCK_COUNT_Y - 1) {
+		return false;
+	}
+	if (blocks[(int) p.y][(int) p.x]) {
+		blocks[(int) p.y][(int) p.x] = 0;
+		ball.speed += 1;
 		return true;
 	}
 	return false;
@@ -78,12 +118,20 @@ void handle_ball_collision() {
 
 void game_reset(void)
 {
-	paddle.position = TFT_WIDTH / 2;
+	paddle.position = (float)TFT_WIDTH / 2;
 	paddle.speed = 100;
 
-	ball.position.x = 40; ball.position.y = 10;
-	ball.direction.x = 0.2; ball.direction.y = 0.4;
-	ball.speed = 30;
+	ball = (struct ball){
+		.position = (struct vector_2){5, 5},
+		.direction = (struct vector_2){0.2, 0.4},
+		.speed = 60 
+	};
+
+	for (int y = 0; y < BLOCK_COUNT_Y; y++) {
+		for (int x = 0; x < BLOCK_COUNT_X; x++) {
+			blocks[y][x] = block_colors[rand() % 4];
+		}
+	}
 }
 
 void game_input(unsigned dt_usec)
@@ -92,9 +140,9 @@ void game_input(unsigned dt_usec)
 
 	/* Joys have value from -2048 to +2047. */
 	if (sdk_inputs.joy_x > 500)
-		paddle.position += paddle.speed * dt;
+		paddle.position += paddle.speed * dt * (sdk_inputs.b ? 2 : 1);
 	else if (sdk_inputs.joy_x < -500)
-		paddle.position -= paddle.speed * dt;
+		paddle.position -= paddle.speed * dt * (sdk_inputs.b ? 2 : 1);
 
 	if ((paddle.position - PADDLE_WIDTH / 2) < 0) {
 		paddle.position = 0 + PADDLE_WIDTH / 2;
@@ -103,10 +151,14 @@ void game_input(unsigned dt_usec)
 		paddle.position = TFT_RIGHT - PADDLE_WIDTH / 2;
 	}
 
-	ball.position.x = ball.direction.x * ball.speed * dt;
-	ball.position.y = ball.direction.y * ball.speed * dt;
-	handle_ball_collision();
-	ball.direction = normalise(ball.direction);
+	for (int i = 0; i < BALL_MOVEMENT_SUBSTEPS; i++) {
+		ball.position.x += ball.direction.x * ball.speed * dt / BALL_MOVEMENT_SUBSTEPS;
+		ball.position.y += ball.direction.y * ball.speed * dt / BALL_MOVEMENT_SUBSTEPS;
+		handle_ball_collision();
+		ball.direction = normalise(ball.direction);
+	}
+
+	// printf("x: %.2f, y: %.2f\n", ball.position.x, ball.position.y);
 
 }
 
@@ -119,6 +171,15 @@ void game_paint(unsigned __unused dt_usec)
 		      paddle.position + PADDLE_WIDTH / 2,
 		      TFT_BOTTOM,
 		      WHITE);
+
+	for (int y = 0; y < BLOCK_COUNT_Y; y++) {
+		for (int x = 0; x < BLOCK_COUNT_X; x++) {
+			tft_draw_rect(block_position.x + x * BLOCK_WIDTH, block_position.y + y * BLOCK_HEIGHT,
+			              block_position.x + (x + 1) * BLOCK_WIDTH - 1,
+			              block_position.y + (y + 1) * BLOCK_HEIGHT - 1,
+			              blocks[y][x]);
+		}
+	}
 
 	tft_draw_rect(ball.position.x - 1,
 		      ball.position.y - 1,
