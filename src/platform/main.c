@@ -1,81 +1,111 @@
 #include <pico/stdlib.h>
+#include <stdlib.h>
+#include <math.h>
 #include <sdk.h>
 #include <tft.h>
-#include <math.h>
+#include <stdio.h>
 #include <string.h>
 
+// Embed the tileset for drawing the map.
+//embed_tileset(ts_tiles, , , , , "tiles.data");
+
+// Screen and tile dimensions
 #define SCREEN_WIDTH 140
 #define SCREEN_HEIGHT 120
+#define TILE_SIZE 8
+#define MAP_ROWS 15
+#define MAP_COLS 20
 
-#define PLAYER_WIDTH 8
-#define PLAYER_HEIGHT 10
-#define GROUND_Y (SCREEN_HEIGHT - 10)
-#define GRAVITY 0.5f
-#define JUMP_STRENGTH -5.5f
-#define MOVE_SPEED 2.0f
-#define MAX_SPEED 3.0f
-#define FRICTION 0.95f
-#define SPEED_SCALE 100.0f // Scale factor to adjust movement speed
-#define ENEMY_SPEED 20.0f  // Enemy speed in pixels per second
+// Color definitions (using palette indices)
+#define RED 255
+#define YELLOW 242
+#define GREEN 244
+#define BLUE 250
+#define GRAY 8
+#define WHITE 15
 
-#define NUM_PLATFORMS 5
-#define NUM_ENEMIES 2
+// Define tile types using typedef enum
+typedef enum { EMPTY = 0, FLOOR = 1 } TileType;
 
-struct player {
-	float x, y;
-	float dx, dy;
-	int on_ground;
+// New tile map layout: all tiles are set to 0 (EMPTY)
+TileType map[MAP_ROWS][MAP_COLS] = {
+	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
+	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
+	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
+	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
+	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
+	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
+	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
+	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
+	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
+	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
+	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
+	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+	  EMPTY, 1,	EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
+	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
+	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
+	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY }
+};
+
+// --- Draw a single tile based on its type ---
+static void draw_tile(TileType type, int x, int y)
+{
+	switch (type) {
+	case FLOOR:
+		//sdk_draw_tile(x, y, &ts_tiles, 1);
+		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, GREEN);
+		break;
+	default: // For EMPTY and unknown types, draw a gray block
+		;
+		break;
+	}
+}
+
+// --- Mario's state in the tile map game ---
+typedef struct {
+	int x, y; // Tile coordinates
+	int score;
 	int alive;
 	int won;
-};
+} Mario;
 
-struct platform {
-	int x, y, width, height;
-};
+static Mario mario_p;
 
-struct enemy {
-	float x, y;
-	int width, height;
-	int direction;
-};
+void game_start_mario(void)
+{
+	mario_p.x = 2;	// Starting column
+	mario_p.y = 12; // Starting row
+	mario_p.score = 0;
+	mario_p.alive = 1;
+	mario_p.won = 0;
+}
 
-static struct player mario;
-static struct platform platforms[NUM_PLATFORMS];
-static struct enemy enemies[NUM_ENEMIES];
+void game_reset(void)
+{
+	game_start_mario();
+}
 
+// --- Audio: Mario-themed tune ---
 static uint16_t tones[256];
-static const char tune[] =
-	" ggahC g C g C g CChag D g D g D ggahC g C g C g CCDEF C F C F C FFEDC g C g C g CChag D g D g D";
+static const char tune[] = " ACGgbGA  ACEGgFD  ACGgBEC FGAGFED ";
 static bool play_music = true;
 
-void game_start(void)
+void tone_init(void)
 {
-	sdk_set_output_gain_db(6);
-	tft_palette[1] = rgb_to_rgb565(255, 0, 0);   // Mario color
-	tft_palette[2] = rgb_to_rgb565(0, 255, 0);   // Platform color
-	tft_palette[3] = rgb_to_rgb565(255, 255, 0); // Win screen color
-	tft_palette[4] = rgb_to_rgb565(0, 0, 255);   // Enemy color
-
-	mario.x = 10;
-	mario.y = GROUND_Y - PLAYER_HEIGHT;
-	mario.dx = 0;
-	mario.dy = 0;
-	mario.on_ground = 1;
-	mario.alive = 1;
-	mario.won = 0;
-
-	// Platforms as specified:
-	platforms[0] = (struct platform){ 30, 90, 40, 5 };
-	platforms[1] = (struct platform){ 80, 70, 40, 5 };
-	platforms[2] = (struct platform){ 50, 50, 30, 5 };
-	platforms[3] = (struct platform){ 100, 30, 30, 5 };
-	platforms[4] = (struct platform){ 120, 20, 20, 5 };
-
-	// Enemies
-	enemies[0] = (struct enemy){ 60, GROUND_Y - 10, 10, 10, 1 };
-	enemies[1] = (struct enemy){ 110, 50, 10, 10, -1 };
-
-	// Initialize tone frequencies for the song:
 	tones['c'] = 131;
 	tones['d'] = 147;
 	tones['e'] = 165;
@@ -124,116 +154,65 @@ void game_audio(int nsamples)
 	}
 }
 
-void game_input(unsigned dt_usec)
+// --- Game Input ---
+// Tile-based movement: x: left, a: right, y: up, b: down
+void game_input(unsigned __unused dt_usec)
 {
-	float dt = dt_usec / 1000000.0f; // Convert microseconds to seconds
-	if (!mario.alive || mario.won) {
-		if (sdk_inputs.start) {
-			game_start();
-		}
+	if (!mario_p.alive || mario_p.won) {
+		if (sdk_inputs.start)
+			game_reset();
 		return;
 	}
-
-	// Horizontal movement input:
-	if (sdk_inputs.x) {
-		mario.dx -= MOVE_SPEED * dt;
+	if (sdk_inputs_delta.x > 0) { // Left
+		mario_p.x -= 1;
+	} else if (sdk_inputs_delta.a > 0) { // Right
+		mario_p.x += 1;
+	} else if (sdk_inputs_delta.y > 0) { // Up
+		mario_p.y -= 1;
+	} else if (sdk_inputs_delta.b > 0) { // Down
+		mario_p.y += 1;
 	}
-	if (sdk_inputs.a) {
-		mario.dx += MOVE_SPEED * dt;
+	// Boundaries
+	if (mario_p.x < 0)
+		mario_p.x = 0;
+	if (mario_p.x > MAP_COLS - 1)
+		mario_p.x = MAP_COLS - 1;
+	if (mario_p.y < 0)
+		mario_p.y = 0;
+	if (mario_p.y > MAP_ROWS - 1)
+		mario_p.y = MAP_ROWS - 1;
+	// Win condition: reaching the rightmost tile
+	if (mario_p.x >= MAP_COLS - 1) {
+		mario_p.won = 1;
 	}
-	// Jump input:
-	if (sdk_inputs.y && mario.on_ground) {
-		mario.dy = JUMP_STRENGTH;
-		mario.on_ground = 0;
-	}
-
-	// Apply friction to horizontal velocity:
-	mario.dx *= FRICTION;
-	if (mario.dx > MAX_SPEED)
-		mario.dx = MAX_SPEED;
-	if (mario.dx < -MAX_SPEED)
-		mario.dx = -MAX_SPEED;
-
-	// Update Mario's position using time-based movement:
-	mario.x += mario.dx * dt * SPEED_SCALE;
-	mario.dy += GRAVITY * dt * SPEED_SCALE;
-	mario.y += mario.dy * dt * SPEED_SCALE;
-
-	// Ground collision:
-	if (mario.y >= GROUND_Y - PLAYER_HEIGHT) {
-		mario.y = GROUND_Y - PLAYER_HEIGHT;
-		mario.dy = 0;
-		mario.on_ground = 1;
-	}
-
-	// Platform collision:
-	for (int i = 0; i < NUM_PLATFORMS; i++) {
-		struct platform p = platforms[i];
-		if (mario.x + PLAYER_WIDTH > p.x && mario.x < p.x + p.width &&
-		    mario.y + PLAYER_HEIGHT >= p.y && mario.y + PLAYER_HEIGHT <= p.y + p.height) {
-			mario.y = p.y - PLAYER_HEIGHT;
-			mario.dy = 0;
-			mario.on_ground = 1;
-		}
-	}
-
-	// Update enemy positions (time-based):
-	for (int i = 0; i < NUM_ENEMIES; i++) {
-		enemies[i].x += enemies[i].direction * ENEMY_SPEED * dt;
-		if (enemies[i].x < 50 || enemies[i].x > 120) {
-			enemies[i].direction *= -1;
-		}
-		// Check enemy collision with Mario:
-		if (mario.x + PLAYER_WIDTH > enemies[i].x &&
-		    mario.x < enemies[i].x + enemies[i].width &&
-		    mario.y + PLAYER_HEIGHT > enemies[i].y &&
-		    mario.y < enemies[i].y + enemies[i].height) {
-			mario.alive = 0;
-		}
-	}
-
-	// Win condition: reaching the right side of the screen
-	if (mario.x > SCREEN_WIDTH - 15) {
-		mario.won = 1;
+	// Lose condition: stepping on a hazardous tile (using WALL_SQUARE as a hazard)
+	if (map[mario_p.y][mario_p.x] == FLOOR) {
+		mario_p.alive = 0;
 	}
 }
 
+// --- Game Paint ---
+// Draw the tile map and then draw Mario as a red 8x8 block.
 void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
-
-	// Draw win/lose screens:
-	if (!mario.alive) {
-		// Lose screen (red rectangle)
-		tft_draw_rect(30, 50, 110, 70, 1);
-		return;
+	// Draw tile map
+	for (int y = 0; y < MAP_ROWS; y++) {
+		for (int x = 0; x < MAP_COLS; x++) {
+			draw_tile(map[y][x], x * TILE_SIZE, y * TILE_SIZE);
+		}
 	}
-	if (mario.won) {
-		// Win screen (green rectangle)
-		tft_draw_rect(30, 50, 110, 70, 2);
-		return;
+	// Draw Mario as a red block
+	tft_draw_rect(mario_p.x * TILE_SIZE, mario_p.y * TILE_SIZE, (mario_p.x + 1) * TILE_SIZE,
+		      (mario_p.y + 1) * TILE_SIZE, RED);
+	// Display score (optional)
+	// Draw win/lose overlays
+	if (!mario_p.alive) {
+		tft_draw_rect(30, 50, 110, 70, RED);
 	}
-
-	// Draw ground:
-	tft_draw_rect(0, GROUND_Y, SCREEN_WIDTH, SCREEN_HEIGHT, 2);
-
-	// Draw platforms:
-	for (int i = 0; i < NUM_PLATFORMS; i++) {
-		tft_draw_rect(platforms[i].x, platforms[i].y, platforms[i].x + platforms[i].width,
-			      platforms[i].y + platforms[i].height, 2);
+	if (mario_p.won) {
+		tft_draw_rect(30, 50, 110, 70, GREEN);
 	}
-
-	// Draw enemies:
-	for (int i = 0; i < NUM_ENEMIES; i++) {
-		tft_draw_rect(enemies[i].x, enemies[i].y, enemies[i].x + enemies[i].width,
-			      enemies[i].y + enemies[i].height, 4);
-	}
-
-	// Draw Mario:
-	tft_draw_rect(mario.x, mario.y, mario.x + PLAYER_WIDTH, mario.y + PLAYER_HEIGHT, 1);
-
-	// Draw finish flag:
-	tft_draw_rect(SCREEN_WIDTH - 10, GROUND_Y - 20, SCREEN_WIDTH - 5, GROUND_Y, 3);
 }
 
 int main()
@@ -242,7 +221,9 @@ int main()
 		.wait_for_usb = true,
 		.show_fps = true,
 		.off_on_select = true,
-		.fps_color = 3,
+		.fps_color = GRAY,
 	};
+	game_start_mario();
+	tone_init();
 	sdk_main(&config);
 }
