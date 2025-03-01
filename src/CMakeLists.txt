@@ -5,6 +5,7 @@ list(APPEND PICO_BOARD_HEADER_DIRS ${CMAKE_CURRENT_LIST_DIR}/include/boards)
 
 set(PICO_SDK_PURE_C 1)
 include($ENV{PICO_SDK_PATH}/pico_sdk_init.cmake)
+include(../tools/png_to_header.cmake)
 
 project(krecek)
 
@@ -23,8 +24,8 @@ add_subdirectory(vendor)
 add_subdirectory(sdk)
 add_subdirectory(tecka)
 add_subdirectory(cerviiik)
-add_subdirectory(peckovana)
-add_subdirectory(hrabosi)
+# add_subdirectory(peckovana)
+# add_subdirectory(hrabosi)
 add_subdirectory(pong)
 add_subdirectory(snake)
 add_subdirectory(demolice)

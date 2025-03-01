@@ -222,8 +222,8 @@ void game_input(unsigned dt_usec)
 			b1->s.x += b1->dx * dt;
 			b1->s.y += b1->dy * dt;
 
-			float b1x = b1->s.x - b1->s.ts->w / 2.0f;
-			float b1y = b1->s.y - b1->s.ts->h / 2.0f;
+			float b1x = b1->s.x - b1->s.ts->width / 2.0f;
+			float b1y = b1->s.y - b1->s.ts->height / 2.0f;
 
 			if (has_dirt(b1x, b1y)) {
 				explode(b1x / CELL_SCALE, b1y / CELL_SCALE, 4);
@@ -238,8 +238,8 @@ void game_input(unsigned dt_usec)
 			b2->s.x += b2->dx * dt;
 			b2->s.y += b2->dy * dt;
 
-			float b2x = b2->s.x - b2->s.ts->w / 2.0f;
-			float b2y = b2->s.y - b2->s.ts->h / 2.0f;
+			float b2x = b2->s.x - b2->s.ts->width / 2.0f;
+			float b2y = b2->s.y - b2->s.ts->height / 2.0f;
 
 			if (has_dirt(b2->s.x, b2->s.y)) {
 				explode(b2x / CELL_SCALE, b2y / CELL_SCALE, 4);
@@ -436,12 +436,12 @@ static int poke_sprite(const sdk_sprite_t *s)
 	int cells = 0;
 
 	const sdk_tileset_t *ts = s->ts;
-	const uint8_t *data = sdk_get_tile_data(ts, s->tile);
+	const color_t *data = sdk_get_tile_data(ts, s->tile);
 
 	int wx = s->x - s->ox;
 	int wy = s->y - s->oy;
 
-	for (int sy = 0; sy < ts->h; sy++) {
+	for (int sy = 0; sy < ts->height; sy++) {
 		int gy = (wy + sy) / CELL_SCALE;
 
 		if (gy < 0)
@@ -450,8 +450,8 @@ static int poke_sprite(const sdk_sprite_t *s)
 		if (gy > GRID_BOTTOM)
 			continue;
 
-		for (int sx = 0; sx < ts->w; sx++) {
-			if (data[sy * ts->w + sx] == ts->trsp)
+		for (int sx = 0; sx < ts->width; sx++) {
+			if (data[sy * ts->width + sx] == TRANSPARENT)
 				continue;
 
 			int gx = (wx + sx) / CELL_SCALE;

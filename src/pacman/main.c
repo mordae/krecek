@@ -7,13 +7,13 @@
 #include <tft.h>
 #include <stdio.h>
 
-embed_tileset(ts_pacman, 2, 7, 7, 237, "pacman.data");
-embed_tileset(ts_tiles, 17, 8, 8, 237, "tiles.data");
-embed_tileset(ts_ghost, 2, 7, 7, 237, "ghost.data");
-embed_tileset(ts_ghost_read, 4, 7, 7, 237, "ghost_read.data");
-embed_tileset(ts_ghost_orange, 4, 7, 7, 237, "ghost_orange.data");
-embed_tileset(ts_ghost_blue, 4, 7, 7, 237, "ghost_blue.data");
-embed_tileset(ts_ghost_pink, 4, 7, 7, 237, "ghost_pink.data");
+#include <pacman.png.h>
+#include <tiles.png.h>
+#include <ghost.png.h>
+#include <ghost-red.png.h>
+#include <ghost-orange.png.h>
+#include <ghost-blue.png.h>
+#include <ghost-pink.png.h>
 
 typedef enum {
 	EMPTY = 0,
@@ -121,7 +121,7 @@ void game_start(void)
 
 	pacman.speed = 32;
 	pacman.s = (sdk_sprite_t){
-		.ts = &ts_pacman,
+		.ts = &ts_pacman_png,
 		.ox = 3.5,
 		.oy = 3.5,
 		.tile = 0,
@@ -129,7 +129,7 @@ void game_start(void)
 
 	ghost_blue.speed = 32;
 	ghost_blue.s = (sdk_sprite_t){
-		.ts = &ts_ghost,
+		.ts = &ts_ghost_png,
 		.ox = 3.5,
 		.oy = 3.5,
 		.tile = 0,
@@ -382,71 +382,71 @@ static void draw_tile(TileType type, int x, int y)
 		break;
 
 	case CHERRY:
-		sdk_draw_tile(x, y, &ts_tiles, 0);
+		sdk_draw_tile(x, y, &ts_tiles_png, 0);
 		break;
 
 	case WALL_H:
-		sdk_draw_tile(x, y, &ts_tiles, 2);
+		sdk_draw_tile(x, y, &ts_tiles_png, 2);
 		break;
 
 	case WALL_V:
-		sdk_draw_tile(x, y, &ts_tiles, 3);
+		sdk_draw_tile(x, y, &ts_tiles_png, 3);
 		break;
 
 	case WALL_SQUARE:
-		sdk_draw_tile(x, y, &ts_tiles, 1);
+		sdk_draw_tile(x, y, &ts_tiles_png, 1);
 		break;
 
 	case WALL_T_E:
-		sdk_draw_tile(x, y, &ts_tiles, 7);
+		sdk_draw_tile(x, y, &ts_tiles_png, 7);
 		break;
 
 	case WALL_T_N:
-		sdk_draw_tile(x, y, &ts_tiles, 4);
+		sdk_draw_tile(x, y, &ts_tiles_png, 4);
 		break;
 
 	case WALL_T_S:
-		sdk_draw_tile(x, y, &ts_tiles, 6);
+		sdk_draw_tile(x, y, &ts_tiles_png, 6);
 		break;
 
 	case WALL_T_W:
-		sdk_draw_tile(x, y, &ts_tiles, 5);
+		sdk_draw_tile(x, y, &ts_tiles_png, 5);
 		break;
 
 	case EDGE_E:
-		sdk_draw_tile(x, y, &ts_tiles, 15);
+		sdk_draw_tile(x, y, &ts_tiles_png, 15);
 		break;
 
 	case EDGE_W:
-		sdk_draw_tile(x, y, &ts_tiles, 13);
+		sdk_draw_tile(x, y, &ts_tiles_png, 13);
 		break;
 
 	case EDGE_N:
-		sdk_draw_tile(x, y, &ts_tiles, 12);
+		sdk_draw_tile(x, y, &ts_tiles_png, 12);
 		break;
 
 	case EDGE_S:
-		sdk_draw_tile(x, y, &ts_tiles, 14);
+		sdk_draw_tile(x, y, &ts_tiles_png, 14);
 		break;
 
 	case CORNER_NE:
-		sdk_draw_tile(x, y, &ts_tiles, 11);
+		sdk_draw_tile(x, y, &ts_tiles_png, 11);
 		break;
 
 	case CORNER_NW:
-		sdk_draw_tile(x, y, &ts_tiles, 8);
+		sdk_draw_tile(x, y, &ts_tiles_png, 8);
 		break;
 
 	case CORNER_SE:
-		sdk_draw_tile(x, y, &ts_tiles, 9);
+		sdk_draw_tile(x, y, &ts_tiles_png, 9);
 		break;
 
 	case CORNER_SW:
-		sdk_draw_tile(x, y, &ts_tiles, 10);
+		sdk_draw_tile(x, y, &ts_tiles_png, 10);
 		break;
 
 	case INVISIBLE_WALL:
-		sdk_draw_tile(x, y, &ts_tiles, 16);
+		sdk_draw_tile(x, y, &ts_tiles_png, 16);
 		break;
 	default:
 		// :shrug:

@@ -2,7 +2,7 @@
 #include <pico/stdlib.h>
 
 #include <sdk/audio.h>
-#include <sdk/embed.h>
+#include <sdk/image.h>
 #include <sdk/game.h>
 #include <sdk/input.h>
 #include <sdk/panic.h>
