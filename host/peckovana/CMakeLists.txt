@@ -3,7 +3,8 @@ add_executable(
   ../../src/peckovana/main.c
 )
 
-target_link_libraries(peckovana PRIVATE sdk m)
+generate_png_headers()
+target_link_libraries(peckovana PRIVATE sdk m ${PNG_HEADERS_TARGET})
 
 set_property(TARGET peckovana PROPERTY C_STANDARD 23)
 target_compile_options(peckovana PRIVATE -Wall -Wextra -Wnull-dereference)

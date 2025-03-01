@@ -7,14 +7,17 @@
 #include <sdk.h>
 #include <tft.h>
 
-//Sprites
-embed_tileset(ts_left_hamster, 4, 24, 32, 237, "left.data");
-embed_tileset(ts_right_hamster, 4, 24, 32, 237, "right.data");
-embed_tileset(ts_hearts, 4, 16, 16, 237, "hearts.data");
-embed_tileset(ts_bullets, 4, 4, 4, 237, "bullets.data");
-embed_tileset(ts_power_ups, 2, 16, 16, 237, "powerups.data");
-embed_tileset(ts_background, 5, 160, 120, 237, "background.data");
-embed_tileset(ts_menubutton, 4, 50, 14, 237, "MenuButton.data");
+#include <left-hamster.png.h>
+#include <right-hamster.png.h>
+#include <bullets.png.h>
+#include <hearts.png.h>
+#include <powerups.png.h>
+#include <background-00.png.h>
+#include <background-01.png.h>
+#include <background-02.png.h>
+#include <background-03.png.h>
+#include <background-04.png.h>
+#include <menu-button.png.h>
 
 // Colors
 #define RED rgb_to_rgb565(255, 0, 0)
@@ -25,6 +28,13 @@ embed_tileset(ts_menubutton, 4, 50, 14, 237, "MenuButton.data");
 #define BLUE rgb_to_rgb565(0, 0, 255)
 #define GRAY rgb_to_rgb565(127, 127, 127)
 #define WHITE rgb_to_rgb565(255, 255, 255)
+
+#define NUM_BACKGROUNDS 5
+
+const color_t *backgrounds[NUM_BACKGROUNDS] = {
+	image_background_00_png.data, image_background_01_png.data, image_background_02_png.data,
+	image_background_03_png.data, image_background_04_png.data,
+};
 
 // Bullets deffine
 #define MAX_BULLETS 2
@@ -54,7 +64,7 @@ struct hamster {
 
 static struct hamster p1 = {
 	.s = {
-		.ts = &ts_left_hamster,
+		.ts = &ts_left_hamster_png,
 		.tile = 0,
 		.ox = 0,
 		.oy = 0,
@@ -63,9 +73,9 @@ static struct hamster p1 = {
 
 static struct hamster p2 = {
 	.s = {
-		.ts = &ts_right_hamster,
+		.ts = &ts_right_hamster_png,
 		.tile = 0,
-		.ox = 0,
+		.ox = 8,
 		.oy = 0,
 	},
 };
@@ -221,14 +231,14 @@ void game_reset(void)
 		p2.bullets[i].spawned = false;
 
 		p1.bullets[i].s = (sdk_sprite_t){
-			.ts = &ts_bullets,
+			.ts = &ts_bullets_png,
 			.ox = 2,
 			.oy = 2,
 			.tile = 0,
 		};
 
 		p2.bullets[i].s = (sdk_sprite_t){
-			.ts = &ts_bullets,
+			.ts = &ts_bullets_png,
 			.ox = 2,
 			.oy = 2,
 			.tile = 2,
@@ -241,7 +251,7 @@ void game_reset(void)
 
 	//Power UP define
 	power_up.s = (sdk_sprite_t){
-		.ts = &ts_power_ups,
+		.ts = &ts_powerups_png,
 		.tile = 0,
 		.x = TFT_WIDTH / 2.0f,
 		.y = POWER_UP_MIN + (POWER_UP_MAX - POWER_UP_MIN) * (rand() / (float)RAND_MAX),
@@ -251,7 +261,7 @@ void game_reset(void)
 	power_up.spawn_time = POWER_UP_SPAWN_TIME;
 
 	second_bullet.s = (sdk_sprite_t){
-		.ts = &ts_power_ups,
+		.ts = &ts_powerups_png,
 		.tile = 1,
 		.x = TFT_WIDTH / 2.0f,
 		.y = SECOND_BULLET_MIN +
@@ -262,7 +272,7 @@ void game_reset(void)
 	second_bullet.spawn_time = SECOND_BULLET_SPAWN_TIME;
 
 	day = day + 1;
-	if (day > ts_bullets.last + 1) {
+	if (day > ts_bullets_png.count) {
 		day = 0;
 		menu.game_mode = menu.game_mode + 1;
 		if (menu.game_mode == 4)
@@ -353,7 +363,9 @@ void game_paint(unsigned dt_usec)
 	float dt = dt_usec / 1000000.0f;
 
 	tft_fill(0);
-	sdk_draw_tile(0, 0, &ts_background, day);
+
+	tft_draw_sprite(0, 0, TFT_WIDTH, TFT_HEIGHT, backgrounds[day % NUM_BACKGROUNDS],
+			TRANSPARENT);
 
 	float bottom = TFT_HEIGHT - 31;
 
@@ -405,13 +417,14 @@ void game_paint(unsigned dt_usec)
 	//				--- GUI --- gui ---
 	// Draw hearts
 	for (int i = 0; i < p1.hp; i++)
-		sdk_draw_tile(28 + 16 * i, 4, &ts_hearts, p1.hp_style);
+		sdk_draw_tile(28 + 16 * i, 4, &ts_hearts_png, p1.hp_style);
 
 	for (int i = 0; i < p2.hp; i++)
-		sdk_draw_tile(TFT_WIDTH - 17 - (28 + 16 * i), 4, &ts_hearts, p2.hp_style);
+		sdk_draw_tile(TFT_WIDTH - 17 - (28 + 16 * i), 4, &ts_hearts_png, p2.hp_style);
 
 	if (day == 0)
-		sdk_draw_tile(TFT_RIGHT / 2 - 25, TFT_BOTTOM - 25, &ts_menubutton, menu.game_mode);
+		sdk_draw_tile(TFT_RIGHT / 2 - 25, TFT_BOTTOM - 25, &ts_menu_button_png,
+			      menu.game_mode);
 #if 0
 	if (day == 0) {
 		for (int i = 0; i < 4; i++) {
