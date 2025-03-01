@@ -3,7 +3,8 @@ add_executable(
   ../../src/hrabosi/main.c
 )
 
-target_link_libraries(hrabosi PRIVATE sdk m)
+generate_png_headers()
+target_link_libraries(hrabosi PRIVATE sdk m ${PNG_HEADERS_TARGET})
 
 set_property(TARGET hrabosi PROPERTY C_STANDARD 23)
 target_compile_options(hrabosi PRIVATE -Wall -Wextra -Wnull-dereference)

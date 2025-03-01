@@ -14,11 +14,13 @@ def clangd():
 
     src = os.path.realpath(os.path.join(os.getcwd(), "src"))
     host = os.path.realpath(os.path.join(os.getcwd(), "host"))
+    build = os.path.realpath(os.path.join(os.getcwd(), "build"))
 
     includes = [
         f"{host}/sdk/include",
         f"{src}/sdk/include",
         f"{src}/vendor/pico-tft/include",
+        *glob(f"{build}/**/assets", recursive=True),
     ]
 
     flags = [

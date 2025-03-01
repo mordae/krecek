@@ -1,6 +1,7 @@
 add_executable(hrabosi main.c)
 target_include_directories(hrabosi PRIVATE include tiles)
-target_link_libraries(hrabosi krecek)
+generate_png_headers()
+target_link_libraries(hrabosi krecek ${PNG_HEADERS_TARGET})
 pico_add_extra_outputs(hrabosi)
 krecek_set_target_options(hrabosi)
 

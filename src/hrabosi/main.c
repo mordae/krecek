@@ -8,6 +8,10 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <bullet.png.h>
+#include <green-tank.png.h>
+#include <blue-tank.png.h>
+
 #define multiply332(x, f) \
 	rgb_to_rgb332(rgb332_red((x)) * f, rgb332_green((x)) * f, rgb332_blue((x)) * f)
 
@@ -41,10 +45,6 @@ static uint8_t sqrt_table[2 * SQRT_MAX_2 * SQRT_MAX_2];
 
 #define NUM_INITIAL_HOLES 128
 #define HOLE_MAX_RADIUS SQRT_MAX_2
-
-embed_tileset(ts_green_tank, 8, 16, 16, BLACK, "green_tank.data");
-embed_tileset(ts_blue_tank, 8, 16, 16, BLACK, "blue_tank.data");
-embed_tileset(ts_bullet, 8, 5, 5, BLACK, "bullet.data");
 
 #define NUM_BULLETS 6
 #define BULLET_SPEED (TANK_SPEED * 2.0f)
@@ -84,19 +84,19 @@ static struct tank tank1 = {
 	.s = {
 		.ox = 8.0f,
 		.oy = 8.0f,
-		.ts = &ts_green_tank,
+		.ts = &ts_green_tank_png,
 	},
 	.speed = TANK_SPEED,
-	.bullets = {{ .s = { .ts = &ts_bullet, .ox = 2.5f, .oy = 2.5f, } }},
+	.bullets = {{ .s = { .ts = &ts_bullet_png, .ox = 2.5f, .oy = 2.5f, } }},
 };
 static struct tank tank2 = {
 	.s = {
 		.ox = 8.0f,
 		.oy = 8.0f,
-		.ts = &ts_blue_tank,
+		.ts = &ts_blue_tank_png,
 	},
 	.speed = TANK_SPEED,
-	.bullets = {{ .s = { .ts = &ts_bullet, .ox = 2.5f, .oy = 2.5f, } }},
+	.bullets = {{ .s = { .ts = &ts_bullet_png, .ox = 2.5f, .oy = 2.5f, } }},
 };
 
 int main()

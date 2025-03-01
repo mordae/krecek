@@ -28,7 +28,7 @@ def clangd():
         f"{build}/generated/pico_base",
         f"{build}/sdk/include",
         *glob(f"{build}/vendor/*/include"),
-        *glob(f"{build}/**/assets"),
+        *glob(f"{build}/**/assets", recursive=True),
     ]
 
     flags = [
