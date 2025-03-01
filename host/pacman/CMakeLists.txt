@@ -3,7 +3,8 @@ add_executable(
   ../../src/pacman/main.c
 )
 
-target_link_libraries(pacman PRIVATE sdk m)
+generate_png_headers()
+target_link_libraries(pacman PRIVATE sdk m ${PNG_HEADERS_TARGET})
 
 set_property(TARGET pacman PROPERTY C_STANDARD 23)
 target_compile_options(pacman PRIVATE -Wall -Wextra -Wnull-dereference)

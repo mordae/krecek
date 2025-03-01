@@ -1,5 +1,6 @@
 #include <sdk.h>
 #include <text.h>
+#include <tft.h>
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -27,9 +28,6 @@ void sdk_video_init(void);
 /* From input.c */
 void sdk_input_init(void);
 void sdk_input_handle(const SDL_Event *event);
-
-/* From tft.c */
-extern uint8_t *tft_committed;
 
 void __attribute__((__noreturn__, __format__(printf, 1, 2))) sdk_panic(const char *fmt, ...)
 {
@@ -150,20 +148,19 @@ void __noreturn sdk_main(const struct sdk_config *conf)
 		game_paint(dt);
 
 		// Swap the buffers. Eh.
-		tft_swap_sync();
+		tft_swap_buffers();
+		tft_sync();
 
 		// Prepare to paint the texture.
 		int pitch;
 		if (SDL_LockTexture(texture, NULL, (void **)&pixels, &pitch))
 			sdl_error("SDL_LockTexture");
 
-		// Copy game's buffer into the texture, using the palette
-		// to expand 8 bit colors to 16 bit ones and translate the
-		// axes, because SDL2 has them the other way round.
+		// Copy game's buffer into the texture and translate the axes,
+		// because SDL2 has them the other way round.
 		for (int y = 0; y < TFT_HEIGHT; y++) {
 			for (int x = 0; x < TFT_WIDTH; x++) {
-				pixels[y * TFT_WIDTH + x] =
-					tft_palette[tft_committed[x * TFT_HEIGHT + y]];
+				pixels[y * TFT_WIDTH + x] = tft_active[x][y];
 			}
 		}
 

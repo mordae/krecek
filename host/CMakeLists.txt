@@ -15,6 +15,7 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
   add_link_options(-fsanitize=address)
 endif()
 
+include(../tools/png_to_header.cmake)
 
 add_compile_definitions(RUNNING_ON_HOST=1)
 # Screen to simulate:
@@ -26,8 +27,8 @@ add_compile_definitions(TFT_SCALE=2)
 add_subdirectory(sdk)
 add_subdirectory(tecka)
 add_subdirectory(cerviiik)
-add_subdirectory(peckovana)
-add_subdirectory(hrabosi)
+#add_subdirectory(peckovana)
+#add_subdirectory(hrabosi)
 add_subdirectory(pong)
 add_subdirectory(snake)
 add_subdirectory(demolice)

@@ -7,23 +7,10 @@
 #define __weak __attribute__((__weak__))
 #endif
 
-typedef uint16_t color_t;
-
-/*
- * We are using double buffering.
- *
- * One buffer is being written to by the client.
- * The other buffer is being transmitted.
- *
- * After every cycle the buffers are rotated.
- */
-static uint8_t buffer[2][TFT_HEIGHT * TFT_WIDTH];
-
-/* Currently inactive buffer that is to be sent to the display. */
-uint8_t *tft_committed;
-
-/* Current active buffer that is to be written into. */
-uint8_t *tft_input;
+/* Buffers. */
+color_t tft_buffers[2][TFT_RAW_HEIGHT][TFT_RAW_WIDTH];
+color_t (*tft_input)[TFT_RAW_WIDTH];
+color_t (*tft_active)[TFT_RAW_WIDTH];
 
 /* Clipping rectangle. */
 int tft_clip_x0 = 0;
@@ -49,14 +36,14 @@ void tft_control(uint8_t reg, const uint8_t *bstr, int len)
 
 void tft_init(void)
 {
-	tft_input = buffer[0];
-	tft_committed = buffer[1];
+	tft_input = tft_buffers[0];
+	tft_active = tft_buffers[1];
 }
 
 void tft_swap_buffers(void)
 {
-	uint8_t *tmp = tft_committed;
-	tft_committed = tft_input;
+	void *tmp = tft_input;
+	tft_active = tft_input;
 	tft_input = tmp;
 }
 
@@ -70,7 +57,7 @@ void tft_swap_sync(void)
 	tft_sync();
 }
 
-void tft_draw_rect(int x0, int y0, int x1, int y1, int color)
+void tft_draw_rect(int x0, int y0, int x1, int y1, color_t color)
 {
 	if (x0 > x1) {
 		int tmp = x0;
@@ -95,18 +82,20 @@ void tft_draw_rect(int x0, int y0, int x1, int y1, int color)
 #endif
 }
 
-void tft_fill(int color)
+void tft_fill(color_t color)
 {
-	memset(tft_input, color, TFT_WIDTH * TFT_HEIGHT);
+	for (int y = 0; y < TFT_RAW_HEIGHT; y++)
+		for (int x = 0; x < TFT_RAW_WIDTH; x++)
+			tft_input[y][x] = color;
 }
 
-void tft_draw_sprite(int x, int y, int w, int h, const uint8_t *data, int trsp)
+void tft_draw_sprite(int x, int y, int w, int h, const color_t *data, uint16_t trsp)
 {
 	tft_draw_sprite_flipped(x, y, w, h, data, trsp, false, false, false);
 }
 
-void tft_draw_sprite_flipped(int x, int y, int w, int h, const uint8_t *data, int trsp, bool flip_x,
-			     bool flip_y, bool swap_xy)
+void tft_draw_sprite_flipped(int x, int y, int w, int h, const color_t *data, uint16_t trsp,
+			     bool flip_x, bool flip_y, bool swap_xy)
 {
 #define loop                                   \
 	for (int sy = 0; sy < h; sy++)         \
@@ -138,9 +127,9 @@ void tft_draw_sprite_flipped(int x, int y, int w, int h, const uint8_t *data, in
 #undef loop
 }
 
-void tft_draw_glyph(int x, int y, int color, char c)
+void tft_draw_glyph(int x, int y, color_t color, char c)
 {
-	uint8_t *glyph = tft_font + (size_t)c * 16;
+	const uint8_t *glyph = tft_font + (size_t)c * 16;
 
 	for (int gx = 0; gx < 8; gx++) {
 		for (int gy = 0; gy < 16; gy++) {
@@ -151,7 +140,7 @@ void tft_draw_glyph(int x, int y, int color, char c)
 	}
 }
 
-void tft_draw_string(int x, int y, int color, const char *str)
+void tft_draw_string(int x, int y, color_t color, const char *str)
 {
 	int len = strlen(str);
 
@@ -159,7 +148,7 @@ void tft_draw_string(int x, int y, int color, const char *str)
 		tft_draw_glyph(x + i * 8, y, color, str[i]);
 }
 
-void tft_draw_string_right(int x, int y, int color, const char *str)
+void tft_draw_string_right(int x, int y, color_t color, const char *str)
 {
 	int len = strlen(str);
 
@@ -169,7 +158,7 @@ void tft_draw_string_right(int x, int y, int color, const char *str)
 		tft_draw_glyph(x + i * 8, y, color, str[i]);
 }
 
-void tft_draw_string_center(int x, int y, int color, const char *str)
+void tft_draw_string_center(int x, int y, color_t color, const char *str)
 {
 	int len = strlen(str);
 
