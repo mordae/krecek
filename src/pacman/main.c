@@ -59,12 +59,9 @@ TileType map[15][20] = {
 	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
 };
 
-#define RED 255
-#define YELLOW 242
-#define GREEN 244
-#define BLUE 250
-#define GRAY 8
-#define WHITE 15
+#define BLUE rgb_to_rgb565(0, 0, 255)
+#define GRAY rgb_to_rgb565(127, 127, 127)
+#define WHITE rgb_to_rgb565(255, 255, 255)
 
 #define PACMAN_SIZE 7
 

@@ -11,18 +11,15 @@
 #define multiply332(x, f) \
 	rgb_to_rgb332(rgb332_red((x)) * f, rgb332_green((x)) * f, rgb332_blue((x)) * f)
 
-#define RED rgb332(7, 0, 0)
-#define GREEN rgb332(0, 7, 0)
-#define BLUE rgb332(0, 0, 3)
+#define RED rgb_to_rgb565(255, 0, 0)
+#define GREEN rgb_to_rgb565(0, 255, 0)
+#define BLUE rgb_to_rgb565(0, 0, 255)
 
-#define YELLOW rgb332(7, 7, 0)
-#define ORANGE rgb332(7, 5, 0)
-#define BROWN rgb332(7, 3, 0)
+#define ORANGE rgb_to_rgb565(255, 191, 0)
+#define BROWN rgb_to_rgb565(255, 127, 0)
 
-#define WHITE rgb332(7, 7, 3)
-#define LGRAY rgb332(5, 5, 2)
-#define DGRAY rgb332(2, 2, 1)
-#define BLACK rgb332(0, 0, 0)
+#define GRAY rgb_to_rgb565(63, 63, 63)
+#define BLACK rgb_to_rgb565(0, 0, 0)
 
 #define GRID_WIDTH (640 >> 2)
 #define GRID_HEIGHT (480 >> 2)
@@ -108,7 +105,7 @@ int main()
 		.wait_for_usb = true,
 		.show_fps = true,
 		.off_on_select = false,
-		.fps_color = DGRAY,
+		.fps_color = GRAY,
 	};
 
 	sdk_main(&config);
@@ -119,10 +116,6 @@ void game_start(void)
 	/* Pre-calculate square roots. */
 	for (unsigned i = 0; i < sizeof(sqrt_table); i++)
 		sqrt_table[i] = roundf(sqrtf(i));
-
-	/* Use RGB332 palette arrangement. */
-	for (int i = 0; i < 256; i++)
-		tft_palette[i] = rgb332_to_rgb565(i);
 
 	/* Copy bullet template to other slots. */
 	for (int i = 1; i < NUM_BULLETS; i++) {
@@ -280,7 +273,7 @@ void game_paint(unsigned __unused dt_usec)
 	int t2x = tank2.s.x;
 	int t2y = tank2.s.y;
 
-	tft_draw_rect(pane_width, 0, pane_width + pane_gap, pane_height, DGRAY);
+	tft_draw_rect(pane_width, 0, pane_width + pane_gap, pane_height, GRAY);
 	tft_draw_rect(TFT_RIGHT, 0, TFT_RIGHT - 50, 50, BLACK);
 
 	{

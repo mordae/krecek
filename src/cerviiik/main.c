@@ -6,12 +6,12 @@
 #include <sdk.h>
 #include <tft.h>
 
-#define RED 255
-#define YELLOW 241
-#define GREEN 244
-#define BLUE 234
-#define GRAY 8
-#define WHITE 15
+#define RED rgb_to_rgb565(255, 0, 0)
+#define YELLOW rgb_to_rgb565(255, 255, 0)
+#define GREEN rgb_to_rgb565(0, 255, 0)
+#define BLUE rgb_to_rgb565(0, 0, 255)
+#define GRAY rgb_to_rgb565(63, 63, 63)
+#define WHITE rgb_to_rgb565(255, 255, 255)
 
 #define ANGLE_DELTA (5.0f / 180.0f * M_PI)
 
@@ -28,7 +28,7 @@ struct worm {
 	float x, y;
 	float angle;
 	float speed;
-	uint8_t color;
+	color_t color;
 	bool alive;
 	uint32_t tod;
 };

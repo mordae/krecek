@@ -7,19 +7,16 @@
 #include <pico/stdlib.h>
 
 #include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
 
 #include <sdk.h>
-#include <stdlib.h>
 #include <tft.h>
 
-#define RED 240
-#define YELLOW 242
-#define GREEN 244
-#define BLUE 250
-#define GRAY 8
-#define WHITE 15
+#define RED rgb_to_rgb565(255, 0, 0)
+#define YELLOW rgb_to_rgb565(255, 255, 0)
+#define GREEN rgb_to_rgb565(0, 255, 0)
+#define BLUE rgb_to_rgb565(0, 0, 255)
+#define GRAY rgb_to_rgb565(127, 127, 127)
+#define WHITE rgb_to_rgb565(255, 255, 255)
 
 #define CELL_SIZE 6
 #define MAX_JOYSTICK_VALUE 2048
@@ -44,53 +41,52 @@ struct smiley {
 static struct smiley player;
 
 static u_int32_t track[43] = {
-
-	0b00000000111111000000000000000000,
-	0b00000011111111111000000000000000,
-	0b00000111111111111110000000000000,
-	0b00001111111111111111000000000000,
-	0b00011111110001111111000000000000,
-	0b00011111100000111111100000000000,
-	0b00111111100000011111100000000000,
-	0b00111111100000011111100000000000,
-	0b01111111100000011111100000000000,
-	0b01111111000000011111100000000000,
-	0b01111111000000011111100000000000,
-	0b01111110000000111111100000000000,
-	0b01111110000001111111000000000000,
-	0b01111110000001111110000000000000,
-	0b01111110000001111110000000000000,
-	0b01111110000001111100000000000000,
-	0b11111110000011111100000000000000,
-	0b11111110000011111100000000000000,
-	0b11111110000011111100000000000000,
-	0b11111110000011111100000000000000,
-	0b11111110000011111100000000000000,
-	0b11111110000001111110000000000000,
-	0b11111110000001111110000000000000,
-	0b11111110000001111111000000000000,
-	0b11111110000001111111100000000000,
-	0b11111110000000111111111000000000,
-	0b11111111000000011111111110000000,
-	0b11111111000000000111111111100000,
-	0b11111111000000000001111111111000,
-	0b11111111100000000000111111111100,
-	0b11111111100000000000011111111110,
-	0b11111111100000000000011111111110,
-	0b11111111110000000000011111111111,
-	0b11111111111000000000111111111111,
-	0b11111111111100000001111111111111,
-	0b01111111111111111111111111111111,
-	0b01111111111111111111111111111110,
-	0b01111111111111111111111111111110,
-	0b00111111111111111111111111111110,
-	0b00011111111111111111111111111100,
-	0b00001111111111111111111111110000,
-	0b00000011111111111111111111000000,
-	0b00000000111111111111100000000000,
+	0b00000000111111000000000000000000, //
+	0b00000011111111111000000000000000, //
+	0b00000111111111111110000000000000, //
+	0b00001111111111111111000000000000, //
+	0b00011111110001111111000000000000, //
+	0b00011111100000111111100000000000, //
+	0b00111111100000011111100000000000, //
+	0b00111111100000011111100000000000, //
+	0b01111111100000011111100000000000, //
+	0b01111111000000011111100000000000, //
+	0b01111111000000011111100000000000, //
+	0b01111110000000111111100000000000, //
+	0b01111110000001111111000000000000, //
+	0b01111110000001111110000000000000, //
+	0b01111110000001111110000000000000, //
+	0b01111110000001111100000000000000, //
+	0b11111110000011111100000000000000, //
+	0b11111110000011111100000000000000, //
+	0b11111110000011111100000000000000, //
+	0b11111110000011111100000000000000, //
+	0b11111110000011111100000000000000, //
+	0b11111110000001111110000000000000, //
+	0b11111110000001111110000000000000, //
+	0b11111110000001111111000000000000, //
+	0b11111110000001111111100000000000, //
+	0b11111110000000111111111000000000, //
+	0b11111111000000011111111110000000, //
+	0b11111111000000000111111111100000, //
+	0b11111111000000000001111111111000, //
+	0b11111111100000000000111111111100, //
+	0b11111111100000000000011111111110, //
+	0b11111111100000000000011111111110, //
+	0b11111111110000000000011111111111, //
+	0b11111111111000000000111111111111, //
+	0b11111111111100000001111111111111, //
+	0b01111111111111111111111111111111, //
+	0b01111111111111111111111111111110, //
+	0b01111111111111111111111111111110, //
+	0b00111111111111111111111111111110, //
+	0b00011111111111111111111111111100, //
+	0b00001111111111111111111111110000, //
+	0b00000011111111111111111111000000, //
+	0b00000000111111111111100000000000, //
 };
 
-bool is_cell_full(int x, int y) 
+bool is_cell_full(int x, int y)
 {
 	if (x < 0 || x > 31) {
 		return true;
@@ -104,12 +100,12 @@ bool is_cell_full(int x, int y)
 		return true;
 }
 
-float get_vector_magnitude(struct vector2 v) 
+float get_vector_magnitude(struct vector2 v)
 {
 	return sqrtf(v.x * v.x + v.y * v.y);
 }
 
-struct vector2 normalise(struct vector2 v) 
+struct vector2 normalise(struct vector2 v)
 {
 	float m = get_vector_magnitude(v);
 	if (!m) {
@@ -121,7 +117,8 @@ struct vector2 normalise(struct vector2 v)
 	return ov;
 }
 
-bool is_position_valid(struct vector2 pos) {
+bool is_position_valid(struct vector2 pos)
+{
 	if (pos.x < 0 || pos.y < 0) {
 		return false;
 	}
@@ -135,7 +132,8 @@ bool is_position_valid(struct vector2 pos) {
 	corner_positions[3].x = pos.x + CELL_SIZE - 1;
 	corner_positions[3].y = pos.y + CELL_SIZE - 1;
 	for (int i = 0; i < 4; i++) {
-		if (is_cell_full((int)corner_positions[i].x / CELL_SIZE, (int)corner_positions[i].y / CELL_SIZE)) {
+		if (is_cell_full((int)corner_positions[i].x / CELL_SIZE,
+				 (int)corner_positions[i].y / CELL_SIZE)) {
 			return false;
 		}
 	}
@@ -144,14 +142,12 @@ bool is_position_valid(struct vector2 pos) {
 
 void game_reset(void)
 {
-	player = (struct smiley) {
-		.position = (struct vector2){3 * CELL_SIZE, 17 * CELL_SIZE},
-		.direction = (struct vector2){0, 0},
-		.speed = 0,
-		.power = 1,
-		.color = 213,
-		.max_speed = 0.5 * CELL_SIZE
-	};
+	player = (struct smiley){ .position = (struct vector2){ 3 * CELL_SIZE, 17 * CELL_SIZE },
+				  .direction = (struct vector2){ 0, 0 },
+				  .speed = 0,
+				  .power = 1,
+				  .color = 213,
+				  .max_speed = 0.5 * CELL_SIZE };
 }
 
 void game_start(void)
@@ -171,11 +167,19 @@ void game_input(unsigned dt_usec)
 		return;
 	}
 
-	struct vector2 input = (struct vector2){sdk_inputs.joy_x, sdk_inputs.joy_y};
-	if (sdk_inputs.b > 0) {input.x = MAX_JOYSTICK_VALUE;}
-	if (sdk_inputs.x > 0) {input.x = -MAX_JOYSTICK_VALUE;}
-	if (sdk_inputs.a > 0) {input.y = MAX_JOYSTICK_VALUE;}
-	if (sdk_inputs.y > 0) {input.y = -MAX_JOYSTICK_VALUE;}
+	struct vector2 input = (struct vector2){ sdk_inputs.joy_x, sdk_inputs.joy_y };
+	if (sdk_inputs.b > 0) {
+		input.x = MAX_JOYSTICK_VALUE;
+	}
+	if (sdk_inputs.x > 0) {
+		input.x = -MAX_JOYSTICK_VALUE;
+	}
+	if (sdk_inputs.a > 0) {
+		input.y = MAX_JOYSTICK_VALUE;
+	}
+	if (sdk_inputs.y > 0) {
+		input.y = -MAX_JOYSTICK_VALUE;
+	}
 
 	struct vector2 push;
 	push.x = player.power * dt * input.x / MAX_JOYSTICK_VALUE;
@@ -226,15 +230,18 @@ void game_paint(unsigned __unused dt_usec)
 			}
 			int ox = x * CELL_SIZE - pixel_offset_x;
 			int oy = y * CELL_SIZE - pixel_offset_y;
-			if (ox < 0) {ox = 0;}
-			if (oy < 0) {oy = 0;}
-			tft_draw_rect(ox, oy, 
-			              ox + CELL_SIZE, oy + CELL_SIZE, 
-			              cell_color);
+			if (ox < 0) {
+				ox = 0;
+			}
+			if (oy < 0) {
+				oy = 0;
+			}
+			tft_draw_rect(ox, oy, ox + CELL_SIZE, oy + CELL_SIZE, cell_color);
 		}
 	}
 
-	tft_draw_rect(SCREEN_POS_X, SCREEN_POS_Y, SCREEN_POS_X + CELL_SIZE -1, SCREEN_POS_Y + CELL_SIZE - 1, player.color);
+	tft_draw_rect(SCREEN_POS_X, SCREEN_POS_Y, SCREEN_POS_X + CELL_SIZE - 1,
+		      SCREEN_POS_Y + CELL_SIZE - 1, player.color);
 }
 
 int main()

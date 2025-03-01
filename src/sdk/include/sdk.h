@@ -19,7 +19,7 @@ struct sdk_config {
 	bool show_fps;	    // Testing: display FPS indicator
 	bool off_on_select; // Testing: turn off on SELECT button
 
-	uint8_t fps_color;  // Color of the FPS indicator
+	color_t fps_color;  // Color of the FPS indicator
 	unsigned backlight; // Brightness (1 to 256, default 128)
 };
 

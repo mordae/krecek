@@ -7,12 +7,12 @@
 #include <stdlib.h>
 #include <tft.h>
 
-#define RED 240
-#define YELLOW 242
-#define GREEN 244
-#define BLUE 250
-#define GRAY 8
-#define WHITE 15
+#define RED rgb_to_rgb565(255, 0, 0)
+#define YELLOW rgb_to_rgb565(255, 255, 0)
+#define GREEN rgb_to_rgb565(0, 255, 0)
+#define BLUE rgb_to_rgb565(0, 0, 255)
+#define GRAY rgb_to_rgb565(127, 127, 127)
+#define WHITE rgb_to_rgb565(255, 255, 255)
 
 #define SPACE_SIZE 5
 #define MOVE_WAIT 150000

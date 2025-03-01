@@ -9,18 +9,18 @@
 #include <stdlib.h>
 #include <tft.h>
 
-#define SPACE_EMPTY 2
-#define SPACE_0 4
-#define SPACE_1 239
-#define SPACE_2 224
-#define SPACE_3 226
-#define SPACE_4 228
-#define SPACE_5 230
-#define SPACE_6 234
-#define SPACE_7 235
-#define SPACE_8 237
-#define SPACE_FLAG 191
-#define WHITE 15
+#define SPACE_EMPTY rgb_to_rgb565(0, 0, 0)
+#define SPACE_0 rgb_to_rgb565(31, 31, 31)
+#define SPACE_1 rgb_to_rgb565(255, 0, 0)
+#define SPACE_2 rgb_to_rgb565(255, 127, 0)
+#define SPACE_3 rgb_to_rgb565(255, 255, 0)
+#define SPACE_4 rgb_to_rgb565(127, 255, 0)
+#define SPACE_5 rgb_to_rgb565(0, 255, 0)
+#define SPACE_6 rgb_to_rgb565(0, 255, 127)
+#define SPACE_7 rgb_to_rgb565(0, 127, 255)
+#define SPACE_8 rgb_to_rgb565(0, 0, 255)
+#define SPACE_FLAG rgb_to_rgb565(255, 0, 255)
+#define WHITE rgb_to_rgb565(255, 255, 255)
 
 #define SPACE_SIZE 8
 #define SPACE_COUNT_HOR 20

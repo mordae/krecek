@@ -17,12 +17,10 @@
 #define BALL_SPEED 100
 #define BALL_SPEED_DIAG 70
 
-#define RED 240
-#define YELLOW 242
-#define GREEN 244
-#define BLUE 250
-#define GRAY 8
-#define WHITE 15
+#define GREEN rgb_to_rgb565(0, 191, 0)
+#define BLUE rgb_to_rgb565(63, 63, 255)
+#define GRAY rgb_to_rgb565(63, 63, 63)
+#define WHITE rgb_to_rgb565(255, 255, 255)
 
 struct paddle {
 	float y;
@@ -32,7 +30,7 @@ struct paddle {
 struct ball {
 	float x, y;
 	float dx, dy;
-	uint8_t color;
+	uint16_t color;
 	float speed;
 };
 
@@ -100,9 +98,6 @@ static bool rects_overlap(int x0, int y0, int x1, int y1, int a0, int b0, int a1
 void game_start(void)
 {
 	sdk_set_output_gain_db(6);
-
-	tft_palette[BLUE] = rgb_to_rgb565(63, 63, 255);
-	tft_palette[GREEN] = rgb_to_rgb565(0, 191, 0);
 }
 
 void game_audio(int nsamples)
@@ -215,8 +210,8 @@ void game_input(unsigned dt_usec)
 		float impact = (mid - ballmid) / (PADDLE_HEIGHT / 2.0f + BALL_HEIGHT) / 1.5f;
 		float refl = asinf(impact);
 
-
-		ball.speed *= BALL_SPEEDUP;		ball.dx = cosf(refl) * ball.speed;
+		ball.speed *= BALL_SPEEDUP;
+		ball.dx = cosf(refl) * ball.speed;
 		ball.dy = -sinf(refl) * ball.speed;
 
 		ball.x = PADDLE_WIDTH + 1;
@@ -240,7 +235,8 @@ void game_input(unsigned dt_usec)
 		float impact = (mid - ballmid) / (PADDLE_HEIGHT / 2.0f + BALL_HEIGHT) / 1.5f;
 		float refl = asinf(impact) + M_PI;
 
-		ball.speed *= BALL_SPEEDUP;		ball.dx = cosf(refl) * ball.speed;
+		ball.speed *= BALL_SPEEDUP;
+		ball.dx = cosf(refl) * ball.speed;
 		ball.dx = cosf(refl) * ball.speed;
 		ball.dy = sinf(refl) * ball.speed;
 

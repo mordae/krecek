@@ -2,16 +2,17 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <sdk.h>
 #include <tft.h>
 
-#define RED 240
-#define YELLOW 242
-#define GREEN 244
-#define BLUE 250
-#define GRAY 8
-#define WHITE 15
+#define RED rgb_to_rgb565(255, 0, 0)
+#define YELLOW rgb_to_rgb565(255, 255, 0)
+#define GREEN rgb_to_rgb565(0, 255, 0)
+#define BLUE rgb_to_rgb565(0, 0, 255)
+#define GRAY rgb_to_rgb565(127, 127, 127)
+#define WHITE rgb_to_rgb565(255, 255, 255)
 
 static int ew;
 static int eh;
@@ -96,7 +97,8 @@ void game_paint(unsigned __unused dt_usec)
 		ey = clamp(ey, 0, TFT_HEIGHT - eh);
 	}
 
-	int ecolor = 249 + 6 - ehp / 10;
+	float frac = (float)ehp / (float)ehp_max;
+	color_t ecolor = hsv_to_rgb565(fmodf(0.666f + (1.0f - frac) * 0.333f, 1.0f), 1.0f, 1.0f);
 
 	/* draw THE enemy */
 	tft_draw_rect(ex, ey, ex + ew, ey + eh, ecolor);

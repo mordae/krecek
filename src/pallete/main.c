@@ -48,12 +48,12 @@ void game_paint(unsigned __unused dt_usec)
 
 	for (int y = 0; y <= 15; y++) {
 		for (int x = 0; x <= 15; x++) {
-		tft_draw_rect(SPACE_SIZE * x, SPACE_SIZE * y,
-			      SPACE_SIZE * x + SPACE_SIZE - 1,
-			      SPACE_SIZE * y + SPACE_SIZE - 1, (y * 16 + x));
+			tft_draw_rect(SPACE_SIZE * x, SPACE_SIZE * y,
+				      SPACE_SIZE * x + SPACE_SIZE - 1,
+				      SPACE_SIZE * y + SPACE_SIZE - 1, (y * 16 + x));
 		}
 	}
-	
+
 	tft_draw_rect(SPACE_SIZE * cursor_x + 2, SPACE_SIZE * cursor_y + 2,
 		      SPACE_SIZE * cursor_x + SPACE_SIZE - 3,
 		      SPACE_SIZE * cursor_y + SPACE_SIZE - 3, (cursor_y * 16 + cursor_x) ^ 0xff);

@@ -1,10 +1,6 @@
 #include <pico/stdlib.h>
-#include <stdlib.h>
-#include <math.h>
 #include <sdk.h>
 #include <tft.h>
-#include <stdio.h>
-#include <string.h>
 
 // Embed the tileset for drawing the map.
 //embed_tileset(ts_tiles, , , , , "tiles.data");

@@ -16,18 +16,15 @@ embed_tileset(ts_power_ups, 2, 16, 16, 237, "powerups.data");
 embed_tileset(ts_background, 5, 160, 120, 237, "background.data");
 embed_tileset(ts_menubutton, 4, 50, 14, 237, "MenuButton.data");
 
-//TFT_WIDTH
-//TFT_HEIGHT
-
 // Colors
-#define RED 255
-#define RED_POWER (RED - 31)
-#define YELLOW 242
-#define GREEN 244
-#define GREEN_POWER (GREEN - 32)
-#define BLUE 250
-#define GRAY 8
-#define WHITE 15
+#define RED rgb_to_rgb565(255, 0, 0)
+#define RED_POWER rgb_to_rgb565(255, 63, 63)
+#define YELLOW rgb_to_rgb565(255, 255, 0)
+#define GREEN rgb_to_rgb565(0, 255, 0)
+#define GREEN_POWER rgb_to_rgb565(63, 255, 63)
+#define BLUE rgb_to_rgb565(0, 0, 255)
+#define GRAY rgb_to_rgb565(127, 127, 127)
+#define WHITE rgb_to_rgb565(255, 255, 255)
 
 // Bullets deffine
 #define MAX_BULLETS 2
