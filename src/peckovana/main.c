@@ -715,7 +715,7 @@ void game_paint(unsigned dt_usec)
 	 *  Base Game = 1
 	 *  No Walls and Power up = 2
 	 *  Low gravity
-	 *  One HP =3 
+	 *  One HP =3
 	 */
 }
 
