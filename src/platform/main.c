@@ -1,6 +1,8 @@
 #include <pico/stdlib.h>
 #include <sdk.h>
 #include <tft.h>
+#include <sdk.h>
+#include <string.h>
 #include <stdio.h>
 #include <math.h> // Include math.h for fabs
 
@@ -11,23 +13,30 @@
 #define MAP_ROWS 15
 #define MAP_COLS 20
 
+#include <petr.png.h>
+#include <platforms.png.h>
+
 // Physics constants
 #define GRAVITY 1.5	  // Gravity for falling
-#define JUMP_STRENGTH -12 // Jump strength
+#define JUMP_STRENGTH -10 // Jump strength
 #define MAX_SPEED 2.0	  // Max speed for movement
 #define ACCELERATION 0.3  // Acceleration for movement
 #define FRICTION 0.7	  // Friction to stop sliding quickly
 
-// Color definitions (using palette indices)
-#define RED 255
-#define YELLOW 242
-#define GREEN 244
-#define BLUE 250
-#define GRAY 8
-#define WHITE 15
+#define multiply332 \
+	(x, f) rgb_to_rgb332(rgb332_red((x)) * f, rgb332_green((x)) * f, rgb332_blue((x)) * f)
 
+// Color definitions (using palette indices)
+#define RED rgb_to_rgb565(255, 0, 0)
+#define RED_POWER rgb_to_rgb565(255, 63, 63)
+#define YELLOW rgb_to_rgb565(255, 255, 0)
+#define GREEN rgb_to_rgb565(0, 255, 0)
+#define GREEN_POWER rgb_to_rgb565(63, 255, 63)
+#define BLUE rgb_to_rgb565(0, 0, 255)
+#define GRAY rgb_to_rgb565(127, 127, 127)
+#define WHITE rgb_to_rgb565(255, 255, 255)
 // Define tile types using typedef enum
-typedef enum { EMPTY = 0, FLOOR = 1 } TileType;
+typedef enum { EMPTY = 0, FLOOR_MID = 1, FLOOR_L, FLOOR_R } TileType;
 
 // New tile map layout: all tiles are set to 0 (EMPTY)
 TileType map[MAP_ROWS][MAP_COLS] = {
@@ -42,19 +51,19 @@ TileType map[MAP_ROWS][MAP_COLS] = {
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
 	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
+	  EMPTY, EMPTY, EMPTY, 0,     0,     0,	    0,	   EMPTY, EMPTY, EMPTY },
+	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, 2,
+	  1,	 1,	1,     1,     1,     1,	    3,	   EMPTY, EMPTY, EMPTY },
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
 	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
 	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
-	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, 2,	  1,	 1,
 	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
 	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
-	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-	  EMPTY, 1,	1,     EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
+	  EMPTY, 2,	1,     3,     EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
 	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
@@ -66,7 +75,15 @@ TileType map[MAP_ROWS][MAP_COLS] = {
 static void draw_tile(TileType type, int x, int y)
 {
 	switch (type) {
-	case FLOOR:
+	case FLOOR_MID:
+
+		break;
+
+	case FLOOR_L:
+		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, GREEN);
+		break;
+
+	case FLOOR_R:
 		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, GREEN);
 		break;
 	default: // For EMPTY and unknown types, draw a gray block
@@ -207,8 +224,7 @@ void game_input(unsigned __unused dt_usec)
 	int tile_y = mario_p.py / TILE_SIZE + 1.0f / TILE_SIZE;
 
 	// Check if Mario is standing on a FLOOR tile
-	if (FLOOR == map[tile_y][tile_x]) {
-		// Snap to the top of the tile
+	if (FLOOR_MID == map[tile_y][tile_x]) {
 		mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
 		mario_p.vy = 0;
 
@@ -217,6 +233,23 @@ void game_input(unsigned __unused dt_usec)
 		}
 	}
 
+	if (FLOOR_L == map[tile_y][tile_x]) {
+		mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+		mario_p.vy = 0;
+
+		if (sdk_inputs.y) {
+			mario_p.vy = JUMP_STRENGTH;
+		}
+	}
+
+	if (FLOOR_R == map[tile_y][tile_x]) {
+		mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+		mario_p.vy = 0;
+
+		if (sdk_inputs.y) {
+			mario_p.vy = JUMP_STRENGTH;
+		}
+	}
 	// Boundaries
 	if (mario_p.px < 0)
 		mario_p.px = 0;
@@ -246,8 +279,8 @@ void game_paint(unsigned __unused dt_usec)
 	}
 
 	// Draw Mario as a red block
-	tft_draw_rect(mario_p.px - TILE_SIZE / 2.0, mario_p.py, mario_p.px + TILE_SIZE / 2.0,
-		      mario_p.py - TILE_SIZE, RED);
+	sdk_draw_sprite(mario.p);
+
 	tft_draw_pixel(mario_p.px + 0.5, mario_p.py - 0.5, WHITE);
 }
 
