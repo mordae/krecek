@@ -13,13 +13,13 @@
 #define MAP_ROWS 15
 #define MAP_COLS 20
 
-#include <petr.png.h>
-#include <platforms.png.h>
+//#include <petr.png.h>
+//#include <platforms.png.h>
 
 // Physics constants
 #define GRAVITY 1.5	  // Gravity for falling
 #define JUMP_STRENGTH -10 // Jump strength
-#define MAX_SPEED 2.0	  // Max speed for movement
+#define MAX_SPEED 3.0	  // Max speed for movement
 #define ACCELERATION 0.3  // Acceleration for movement
 #define FRICTION 0.7	  // Friction to stop sliding quickly
 
@@ -36,8 +36,19 @@
 #define GRAY rgb_to_rgb565(127, 127, 127)
 #define WHITE rgb_to_rgb565(255, 255, 255)
 // Define tile types using typedef enum
-typedef enum { EMPTY = 0, FLOOR_MID = 1, FLOOR_L, FLOOR_R } TileType;
+typedef enum {
+	EMPTY = 0,
+	FLOOR_MID = 1,
+	FLOOR_L,
+	FLOOR_R,
+	FLOOR_WIN_MID,
+	FLOOR_WIN_L,
+	FLOOR_WIN_P,
+	FLOOR_JUMP_MID,
+	FLOOR_JUMP_L,
+	FLOOR_JUMP_R
 
+} TileType;
 // New tile map layout: all tiles are set to 0 (EMPTY)
 TileType map[MAP_ROWS][MAP_COLS] = {
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
@@ -48,7 +59,7 @@ TileType map[MAP_ROWS][MAP_COLS] = {
 	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
 	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
-	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+	{ 4,	 4,	6,     EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
 	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
 	  EMPTY, EMPTY, EMPTY, 0,     0,     0,	    0,	   EMPTY, EMPTY, EMPTY },
@@ -58,12 +69,12 @@ TileType map[MAP_ROWS][MAP_COLS] = {
 	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
 	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
-	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, 2,	  1,	 1,
+	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, 0,	  0,	 0,
 	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
 	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-	  EMPTY, 2,	1,     3,     EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
+	  EMPTY, 8,	7,     9,     EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
 	  EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY },
 	{ EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
@@ -71,12 +82,14 @@ TileType map[MAP_ROWS][MAP_COLS] = {
 	{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
 };
 
+enum screen { LEVEL_1_1 = 1, LEVEL_1_1_SCORE };
+
 // --- Draw a single tile based on its type ---
 static void draw_tile(TileType type, int x, int y)
 {
 	switch (type) {
 	case FLOOR_MID:
-
+		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, GREEN);
 		break;
 
 	case FLOOR_L:
@@ -85,6 +98,27 @@ static void draw_tile(TileType type, int x, int y)
 
 	case FLOOR_R:
 		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, GREEN);
+		break;
+
+	case FLOOR_WIN_MID:
+		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, WHITE);
+		break;
+
+	case FLOOR_WIN_L:
+		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, WHITE);
+		break;
+
+	case FLOOR_WIN_P:
+		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, WHITE);
+		break;
+	case FLOOR_JUMP_MID:
+		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, YELLOW);
+		break;
+	case FLOOR_JUMP_L:
+		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, YELLOW);
+		break;
+	case FLOOR_JUMP_R:
+		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, YELLOW);
 		break;
 	default: // For EMPTY and unknown types, draw a gray block
 		break;
@@ -98,6 +132,7 @@ typedef struct {
 	int score;
 	int alive;
 	int won;
+	sdk_sprite_t s;
 } Mario;
 
 static Mario mario_p;
@@ -182,6 +217,8 @@ void game_audio(int nsamples)
 // --- Game Input ---
 void game_input(unsigned __unused dt_usec)
 {
+	//float dt = dt_usec / 1000000.0f;
+
 	if (!mario_p.alive || mario_p.won) {
 		if (sdk_inputs.start)
 			game_reset();
@@ -215,7 +252,6 @@ void game_input(unsigned __unused dt_usec)
 	// Apply gravity
 	mario_p.vy += GRAVITY;
 
-	// Update pixel position
 	mario_p.px += mario_p.vx;
 	mario_p.py += mario_p.vy;
 
@@ -250,6 +286,51 @@ void game_input(unsigned __unused dt_usec)
 			mario_p.vy = JUMP_STRENGTH;
 		}
 	}
+
+	if (FLOOR_JUMP_MID == map[tile_y][tile_x]) {
+		mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+		mario_p.vy = 0;
+
+		if (sdk_inputs.y) {
+			mario_p.vy = 2 * JUMP_STRENGTH;
+		}
+	}
+
+	if (FLOOR_JUMP_L == map[tile_y][tile_x]) {
+		mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+		mario_p.vy = 0;
+
+		if (sdk_inputs.y) {
+			mario_p.vy = 2 * JUMP_STRENGTH;
+		}
+	}
+
+	if (FLOOR_JUMP_R == map[tile_y][tile_x]) {
+		mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+		mario_p.vy = 0;
+
+		if (sdk_inputs.y) {
+			mario_p.vy = 2 * JUMP_STRENGTH;
+		}
+	}
+
+	if (FLOOR_WIN_MID == map[tile_y][tile_x]) {
+		mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+		mario_p.vy = 0;
+		mario_p.won = 1;
+	}
+
+	if (FLOOR_WIN_L == map[tile_y][tile_x]) {
+		mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+		mario_p.vy = 0;
+		mario_p.won = 1;
+	}
+
+	if (FLOOR_WIN_P == map[tile_y][tile_x]) {
+		mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+		mario_p.vy = 0;
+		mario_p.won = 1;
+	}
 	// Boundaries
 	if (mario_p.px < 0)
 		mario_p.px = 0;
@@ -278,8 +359,9 @@ void game_paint(unsigned __unused dt_usec)
 		}
 	}
 
+	tft_draw_rect(mario_p.px, mario_p.py, mario_p.px + TILE_SIZE, mario_p.py + TILE_SIZE, RED);
 	// Draw Mario as a red block
-	sdk_draw_sprite(mario.p);
+	//sdk_draw_sprite(petr.p);
 
 	tft_draw_pixel(mario_p.px + 0.5, mario_p.py - 0.5, WHITE);
 }
