@@ -2,9 +2,7 @@
 #include <sdk.h>
 #include <tft.h>
 #include <sdk.h>
-#include <string.h>
-#include <stdio.h>
-#include <math.h> // Include math.h for fabs
+#include <math.h>
 
 // Screen and tile dimensions
 #define SCREEN_WIDTH 140
@@ -13,15 +11,16 @@
 #define MAP_ROWS 15
 #define MAP_COLS 20
 
-//#include <petr.png.h>
-//#include <platforms.png.h>
+#include <petr.png.h>
+#include <platforms.png.h>
+#include <spawners.png.h>
 
 // Physics constants
-#define GRAVITY 1.5	  // Gravity for falling
-#define JUMP_STRENGTH -12 // Jump strength
-#define MAX_SPEED 3.0	  // Max speed for movement
-#define ACCELERATION 0.3  // Acceleration for movement
-#define FRICTION 0.7	  // Friction to stop sliding quickly
+#define GRAVITY 90	  // Gravity for falling
+#define JUMP_STRENGTH -80 // Jump strength
+#define MAX_SPEED 180	  // Max speed for movement
+#define ACCELERATION 80	  // Acceleration for movement
+#define FRICTION 8	  // Friction to stop sliding quickly
 
 #define multiply332 \
 	(x, f) rgb_to_rgb332(rgb332_red((x)) * f, rgb332_green((x)) * f, rgb332_blue((x)) * f)
@@ -58,7 +57,7 @@ TileType map[MAP_ROWS][MAP_COLS] = {
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ 0, 0, 0, 0, 0, 2, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 3, 0, 0, 0 },
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 3, 0, 0, 0, 2, 3, 0, 0, 0 },
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -76,40 +75,43 @@ static void draw_tile(TileType type, int x, int y)
 {
 	switch (type) {
 	case FLOOR_MID:
-		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, GREEN);
+		sdk_draw_tile(x, y, &ts_platforms_png, 0);
 		break;
 
 	case FLOOR_L:
-		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, GREEN);
+		sdk_draw_tile(x, y, &ts_platforms_png, 1);
 		break;
 
 	case FLOOR_R:
-		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, GREEN);
+		sdk_draw_tile(x, y, &ts_platforms_png, 2);
 		break;
 
 	case FLOOR_WIN_MID:
-		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, WHITE);
+		sdk_draw_tile(x, y, &ts_platforms_png, 6);
 		break;
 
 	case FLOOR_WIN_L:
-		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, WHITE);
+		sdk_draw_tile(x, y, &ts_platforms_png, 7);
 		break;
 
 	case FLOOR_WIN_R:
-		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, WHITE);
+		sdk_draw_tile(x, y, &ts_platforms_png, 8);
 		break;
+
 	case FLOOR_JUMP_MID:
-		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, YELLOW);
+		sdk_draw_tile(x, y, &ts_platforms_png, 3);
 		break;
+
 	case FLOOR_JUMP_L:
-		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, YELLOW);
+		sdk_draw_tile(x, y, &ts_platforms_png, 4);
 		break;
+
 	case FLOOR_JUMP_R:
-		tft_draw_rect(x, y, x + TILE_SIZE, y + TILE_SIZE, YELLOW);
+		sdk_draw_tile(x, y, &ts_platforms_png, 5);
 		break;
 
 	case SPAWNER:
-		tft_draw_rect(x - 1, y - 1, x + TILE_SIZE - 1, y + TILE_SIZE - 1, BLUE);
+		sdk_draw_tile(x, y, &ts_spawners_png, 1);
 		break;
 
 	default: // For EMPTY and unknown types, draw a gray block
@@ -139,6 +141,13 @@ void game_start(void)
 	mario_p.score = 0;
 	mario_p.alive = 1;
 	mario_p.won = 0;
+
+	mario_p.s.ts = &ts_petr_png;
+	mario_p.s.x = mario_p.px;
+	mario_p.s.y = mario_p.py;
+	mario_p.s.ox = 3.5;
+	mario_p.s.oy = 7;
+	mario_p.s.tile = 0;
 }
 
 void game_reset(void)
@@ -207,9 +216,9 @@ void game_audio(int nsamples)
 }
 
 // --- Game Input ---
-void game_input(unsigned __unused dt_usec)
+void game_input(unsigned dt_usec)
 {
-	//float dt = dt_usec / 1000000.0f;
+	float dt = dt_usec / 1000000.0f;
 
 	if (!mario_p.alive || mario_p.won) {
 		if (sdk_inputs.start)
@@ -227,100 +236,72 @@ void game_input(unsigned __unused dt_usec)
 
 	// Horizontal movement
 	if (sdk_inputs.x > 0) { // Left
-		mario_p.vx -= ACCELERATION;
+		mario_p.vx -= ACCELERATION * dt;
 		if (mario_p.vx < -MAX_SPEED)
 			mario_p.vx = -MAX_SPEED;
 	} else if (sdk_inputs.a > 0) { // Right
-		mario_p.vx += ACCELERATION;
+		mario_p.vx += ACCELERATION * dt;
 		if (mario_p.vx > MAX_SPEED)
 			mario_p.vx = MAX_SPEED;
+
 	} else {
 		// Apply friction when no movement keys are pressed
-		mario_p.vx *= FRICTION;
+		mario_p.vx -= mario_p.vx * FRICTION * dt;
 		if (fabs(mario_p.vx) < 0.1)
 			mario_p.vx = 0; // Stop completely when velocity is very small
 	}
 
-	// Apply gravity
-	mario_p.vy += GRAVITY;
+	if (mario_p.vy != 0) {
+		mario_p.vx = mario_p.vx * 0.98;
+	}
 
-	mario_p.px += mario_p.vx;
-	mario_p.py += mario_p.vy;
+	// Apply gravity
+	mario_p.vy += GRAVITY * dt;
+
+	mario_p.px += mario_p.vx * dt;
+	mario_p.py += mario_p.vy * dt;
 
 	// Collision detection with floor tiles
-	int tile_x = mario_p.px / TILE_SIZE + 4.0f / TILE_SIZE;
+	int tile_x = mario_p.px / TILE_SIZE;
 	int tile_y = mario_p.py / TILE_SIZE + 1.0f / TILE_SIZE;
 
-	// Check if Mario is standing on a FLOOR tile
-	if (FLOOR_MID == map[tile_y][tile_x]) {
-		mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
-		mario_p.vy = 0;
+	if (mario_p.vy >= 0) {
+		switch (map[tile_y][tile_x]) {
+		case FLOOR_MID:
+		case FLOOR_R:
+		case FLOOR_L:
+			mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+			mario_p.vy = 0;
 
-		if (sdk_inputs.y) {
-			mario_p.vy = JUMP_STRENGTH;
-		}
-	}
+			if (sdk_inputs.y) {
+				mario_p.vy = JUMP_STRENGTH;
+			}
 
-	if (FLOOR_L == map[tile_y][tile_x]) {
-		mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
-		mario_p.vy = 0;
+			break;
 
-		if (sdk_inputs.y) {
-			mario_p.vy = JUMP_STRENGTH;
-		}
-	}
+		case FLOOR_JUMP_MID:
+		case FLOOR_JUMP_L:
+		case FLOOR_JUMP_R:
+			mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+			mario_p.vy = 0;
 
-	if (FLOOR_R == map[tile_y][tile_x]) {
-		mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
-		mario_p.vy = 0;
+			if (sdk_inputs.y) {
+				mario_p.vy = 1.2 * JUMP_STRENGTH;
+			}
 
-		if (sdk_inputs.y) {
-			mario_p.vy = JUMP_STRENGTH;
-		}
-	}
+			break;
 
-	if (FLOOR_WIN_MID == map[tile_y][tile_x]) {
-		mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
-		mario_p.vy = 0;
-		mario_p.won = 1;
-	}
+		case FLOOR_WIN_MID:
+		case FLOOR_WIN_L:
+		case FLOOR_WIN_R:
+			mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+			mario_p.vy = 0;
+			mario_p.won = 1;
+			break;
 
-	if (FLOOR_WIN_R == map[tile_y][tile_x]) {
-		mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
-		mario_p.vy = 0;
-		mario_p.won = 1;
-	}
-
-	if (FLOOR_WIN_L == map[tile_y][tile_x]) {
-		mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
-		mario_p.vy = 0;
-		mario_p.won = 1;
-	}
-
-	if (FLOOR_JUMP_MID == map[tile_y][tile_x]) {
-		mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
-		mario_p.vy = 0;
-
-		if (sdk_inputs.y) {
-			mario_p.vy = 1.1 * JUMP_STRENGTH;
-		}
-	}
-
-	if (FLOOR_JUMP_R == map[tile_y][tile_x]) {
-		mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
-		mario_p.vy = 0;
-
-		if (sdk_inputs.y) {
-			mario_p.vy = 1.1 * JUMP_STRENGTH;
-		}
-	}
-
-	if (FLOOR_JUMP_L == map[tile_y][tile_x]) {
-		mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
-		mario_p.vy = 0;
-
-		if (sdk_inputs.y) {
-			mario_p.vy = 1.1 * JUMP_STRENGTH;
+		case EMPTY:
+		case SPAWNER:
+			break;
 		}
 	}
 
@@ -341,8 +322,10 @@ void game_input(unsigned __unused dt_usec)
 }
 
 // --- Game Paint ---
-void game_paint(unsigned __unused dt_usec)
+void game_paint(unsigned dt_usec)
 {
+	(void)dt_usec;
+
 	tft_fill(0);
 
 	// Draw tile map
@@ -352,11 +335,19 @@ void game_paint(unsigned __unused dt_usec)
 		}
 	}
 
-	tft_draw_rect(mario_p.px, mario_p.py, mario_p.px + TILE_SIZE, mario_p.py - TILE_SIZE, RED);
-	// Draw Mario as a red block
-	//sdk_draw_sprite(petr.p);
+	//tft_draw_rect(mario_p.px, mario_p.py, mario_p.px + TILE_SIZE, mario_p.py - TILE_SIZE, RED);
 
-	tft_draw_pixel(mario_p.px + 0.5, mario_p.py - 0.5, WHITE);
+	mario_p.s.x = mario_p.px;
+	mario_p.s.y = mario_p.py;
+
+	if (mario_p.vx > 0)
+		mario_p.s.tile = 0;
+	else if (mario_p.vx < 0)
+		mario_p.s.tile = 1;
+
+	sdk_draw_sprite(&mario_p.s);
+
+	//tft_draw_pixel(mario_p.px + 0.5, mario_p.py - 0.5, WHITE);
 }
 
 int main()
