@@ -11,13 +11,20 @@
 #include <krecek-cards.png.h>
 
 #define GRAY rgb_to_rgb565(170, 170, 170)
+#define RED rgb_to_rgb565(255, 64, 64)
+#define HEARTS 0
+#define SPADES 1
+#define DIAMONDS 2
+#define CLUBS 3
 
-static int deck[52]; // -1 means card was defeated/used
-static int deck_position = 0;
+static int deck[52]; // -1 means card was dealt
+static int deck_position = 0; // -1 means card was played
 static int room_cards[4];
 static int cursor_position = 0;
 static int weapon;
-static int last_weapon_use; // -1 means that the weapon wasn't used yet
+static int last_weapon_use; // last card defeated with weapon. -1 means that the weapon wasn't used yet
+static int player_health;
+static bool using_weapon = false;
 
 
 void shuffle_deck() {
@@ -31,17 +38,29 @@ void shuffle_deck() {
 
 void new_room() {
 	for (int i = 0; i < 4; i++) {
-		room_cards[i] = deck[deck_position];
-		deck_position++;
-		if (deck_position >= 52) {
-			deck_position = 0;
+		while (deck[deck_position] < 0 || deck[deck_position] >= 52) {
+			deck_position++;
+			if (deck_position >= 52) {
+				deck_position = 0;
+			}
+		}
+		if (room_cards[i] < 0) {
+			room_cards[i] = deck[deck_position];
+			deck_position++;
+			if (deck_position >= 52) {
+				deck_position = 0;
+			}
 		}
 	}
 }
 
 // 0 = hearts | 1 = spades | 2 = diamonds | 3 = clubs | 4 = jokers
 int get_card_suit(int c) {
-	return c / 52;
+	return c / 13;
+}
+
+int get_card_value(int c) {
+	return c % 13 + 2;
 }
 
 void game_audio(int __unused nsamples)
@@ -50,6 +69,7 @@ void game_audio(int __unused nsamples)
 
 void game_reset(void)
 {
+	player_health = 20;
 	for (int c = 0; c < 52; c++) {
 		deck[c] = c;
 	}
@@ -88,7 +108,37 @@ void game_input(unsigned __unused dt_usec)
 		}
 	}
 	if (sdk_inputs_delta.y > 0) {
-		
+		const int card_value = get_card_value(room_cards[cursor_position]);
+		const int card_suit = get_card_suit(room_cards[cursor_position]);
+		printf("suit: %i | value: %i\n", card_suit, card_value);
+		if (card_suit == HEARTS) {
+			player_health += get_card_value(card_value);
+			room_cards[cursor_position] = -1;
+		} else if (card_suit == DIAMONDS) {
+			weapon = room_cards[cursor_position];
+			last_weapon_use = -1;
+			room_cards[cursor_position] = -1;
+		} else { // spades or clubs
+			if (using_weapon && get_card_value(last_weapon_use) >= card_value) {
+				player_health -= card_value - get_card_value(weapon);
+				last_weapon_use = room_cards[cursor_position];
+				room_cards[cursor_position] = -1;
+			} else if (!using_weapon) {
+				player_health -= card_value;
+				room_cards[cursor_position] = -1;
+			}
+		}
+	}
+	if (sdk_inputs_delta.x > 0) {
+		using_weapon = !using_weapon;
+	}
+	int used_cards = 0;
+	for (int i = 0; i < 4; i++) {
+		if (room_cards[i] < 0)
+			used_cards++;
+	}
+	if (used_cards >= 3) {
+		new_room();
 	}
 }
 
@@ -96,7 +146,16 @@ void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
 
-	sdk_draw_tile(10, 10, &ts_krecek_cards_png, 0);
+	char health_string[50];
+	snprintf(health_string, sizeof health_string, "%i", player_health);
+	tft_draw_string(100, 100, RED, health_string);
+
+	tft_draw_rect(8 + 30 * cursor_position, 8, 21 + 30 * cursor_position, 32, GRAY);
+	for (int i = 0; i < 4; i++) {
+		if (room_cards[i] > -1 && room_cards[i] < 52) {
+			sdk_draw_tile(10 + 30 * i, 10, &ts_krecek_cards_png, room_cards[i]);
+		}
+	}
 }
 
 int main()
