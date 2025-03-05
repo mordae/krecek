@@ -15,6 +15,7 @@
 #define YELLOW rgb_to_rgb565(255, 255, 0)
 #define GREEN rgb_to_rgb565(0, 255, 0)
 #define BLUE rgb_to_rgb565(0, 0, 255)
+#define BLACK rgb_to_rgb565(0, 0, 0)
 #define GRAY rgb_to_rgb565(127, 127, 127)
 #define WHITE rgb_to_rgb565(255, 255, 255)
 
@@ -146,7 +147,7 @@ void game_reset(void)
 				  .direction = (struct vector2){ 0, 0 },
 				  .speed = 0,
 				  .power = 1,
-				  .color = 213,
+				  .color = YELLOW,
 				  .max_speed = 0.5 * CELL_SIZE };
 }
 
@@ -220,13 +221,13 @@ void game_paint(unsigned __unused dt_usec)
 
 	for (int y = -1; y < 20 + 1; y++) {
 		for (int x = -1; x < 28; x++) {
-			int cell_color = 0;
+			int cell_color = rgb_to_rgb565(0, 0, 0);
 			if (top_left_cell_x + x < 0 || top_left_cell_x + x > 31) {
-				cell_color = 8;
+				cell_color = GRAY;
 			} else if (top_left_cell_y + y < 0 || top_left_cell_y > 42) {
-				cell_color = 8;
+				cell_color = GRAY;
 			} else if (is_cell_full(top_left_cell_x + x, top_left_cell_y + y)) {
-				cell_color = 8;
+				cell_color = GRAY;
 			}
 			int ox = x * CELL_SIZE - pixel_offset_x;
 			int oy = y * CELL_SIZE - pixel_offset_y;
