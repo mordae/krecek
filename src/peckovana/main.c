@@ -710,6 +710,9 @@ void game_paint(unsigned dt_usec)
 			}
 		}
 	}
+
+	puts(p1.hp)
+
 	/*
 	 * Game mods
 	 *  Base Game = 1

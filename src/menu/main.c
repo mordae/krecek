@@ -1,12 +1,13 @@
 #include <pico/stdlib.h>
 
-#include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <sdk.h>
 #include <tft.h>
+#include <stdio.h>
 
-embed_tileset(ts_icon, 6, 90, 90, 237, "icons.data");
+#include <icons.png.h>
 
 #define RED 240
 #define YELLOW 242
