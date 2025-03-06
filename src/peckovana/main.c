@@ -711,7 +711,7 @@ void game_paint(unsigned dt_usec)
 		}
 	}
 
-	puts(p1.hp)
+	printf("%i\n", p1.hp);
 
 	/*
 	 * Game mods
