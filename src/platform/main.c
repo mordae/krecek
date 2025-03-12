@@ -328,6 +328,8 @@ void game_paint(unsigned dt_usec)
 
 	tft_fill(0);
 
+	tft_set_origin(mario_p.px - TFT_WIDTH / 2.0 + 3.5, 0);
+
 	// Draw tile map
 	for (int y = 0; y < MAP_ROWS; y++) {
 		for (int x = 0; x < MAP_COLS; x++) {
