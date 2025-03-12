@@ -1,20 +1,11 @@
 #include <pico/stdlib.h>
 
-#include <stdlib.h>
-#include <math.h>
-
 #include <sdk.h>
 #include <tft.h>
-#include <stdio.h>
 
 #include <icons.png.h>
 
-#define RED 240
-#define YELLOW 242
-#define GREEN 244
-#define BLUE 250
-#define GRAY 8
-#define WHITE 15
+#define GRAY rgb_to_rgb565(63, 63, 63)
 
 struct b {
 	float s;
@@ -24,28 +15,24 @@ static struct b b;
 
 // gotta add tileset for tilemap
 
-typedef enum { floor = 0, wall = 1 } TileType;
+typedef enum {
+	FLOOR = 0,
+	WALL = 1,
+} TileType;
 
-TileType map[15][20] = { { 0, 0, 0, 0, 0 }, { 1, 1, 1, 1, 1 } };
+TileType map[15][20] = {
+	{ 0, 0, 0, 0, 0 },
+	{ 1, 1, 1, 1, 1 },
+};
 
 void game_reset(void)
 {
 	b.s = 0;
-	printf("%f/n", b.s);
-}
-
-void game_start(void)
-{
-	sdk_set_output_gain_db(6);
-}
-
-void game_audio(int nsamples)
-{
 }
 
 void game_paint(unsigned __unused dt_usec)
 {
-	printf("%f/n", b.s);
+	sdk_draw_tile(0, 0, &ts_icons_png, 0);
 }
 
 int main()
