@@ -237,7 +237,7 @@ void game_input(unsigned dt_usec)
 	float dt = dt_usec / 1000000.0f;
 
 	if (!mario_p.alive || mario_p.won) {
-		if (sdk_inputs.start)
+		if (sdk_inputs.start || sdk_inputs.select)
 			game_reset();
 		return;
 	}
