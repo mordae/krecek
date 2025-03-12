@@ -130,6 +130,7 @@ typedef struct {
 } Mario;
 
 static Mario mario_p;
+static float volume = 0;
 
 // --- Initialize the game ---
 void game_start(void)
@@ -148,6 +149,8 @@ void game_start(void)
 	mario_p.s.ox = 3.5;
 	mario_p.s.oy = 7;
 	mario_p.s.tile = 0;
+
+	sdk_set_output_gain_db(volume);
 }
 
 void game_reset(void)
@@ -226,20 +229,34 @@ void game_input(unsigned dt_usec)
 		return;
 	}
 
-	// Toggle music on/off with volume buttons
 	if (sdk_inputs.vol_up) {
-		play_music = true;
+		volume += 12.0 * dt;
 	}
+
 	if (sdk_inputs.vol_down) {
-		play_music = false;
+		volume -= 12.0 * dt;
+	}
+
+	if (sdk_inputs_delta.vol_sw > 0) {
+		if (volume < SDK_GAIN_MIN) {
+			volume = 0;
+		} else {
+			volume = SDK_GAIN_MIN - 1;
+		}
+	}
+
+	volume = clamp(volume, SDK_GAIN_MIN - 1.0, 6);
+
+	if (sdk_inputs.vol_up || sdk_inputs.vol_down || sdk_inputs.vol_sw) {
+		sdk_set_output_gain_db(volume);
 	}
 
 	// Horizontal movement
-	if (sdk_inputs.x > 0) { // Left
+	if (sdk_inputs.x > 0 || sdk_inputs.joy_x < -500) { // Left
 		mario_p.vx -= ACCELERATION * dt;
 		if (mario_p.vx < -MAX_SPEED)
 			mario_p.vx = -MAX_SPEED;
-	} else if (sdk_inputs.a > 0) { // Right
+	} else if (sdk_inputs.a > 0 || sdk_inputs.joy_x > 500) { // Right
 		mario_p.vx += ACCELERATION * dt;
 		if (mario_p.vx > MAX_SPEED)
 			mario_p.vx = MAX_SPEED;
@@ -348,6 +365,8 @@ void game_paint(unsigned dt_usec)
 		mario_p.s.tile = 1;
 
 	sdk_draw_sprite(&mario_p.s);
+
+	tft_set_origin(0, 0);
 
 	//tft_draw_pixel(mario_p.px + 0.5, mario_p.py - 0.5, WHITE);
 }
