@@ -91,8 +91,6 @@ def convert(input_file: BinaryIO, outdir: str):
 
                 f.write("};\n")
 
-        click.echo(f"{input_file.name} -> {output_file}")
-
     except Exception as e:
         click.echo(f"Error: {str(e)}", err=True)
         raise click.Abort()
