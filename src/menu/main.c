@@ -39,6 +39,8 @@ void game_reset(void)
 
 void game_input(unsigned dt_usec)
 {
+	(void)dt_usec;
+
 	if (sdk_inputs_delta.b > 0 || sdk_inputs.joy_x > 300) {
 		b.s += 1;
 	} else if (sdk_inputs_delta.x > 0 || sdk_inputs.joy_x < -300) {
