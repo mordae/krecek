@@ -711,8 +711,6 @@ void game_paint(unsigned dt_usec)
 		}
 	}
 
-	printf("%i\n", p1.hp);
-
 	/*
 	 * Game mods
 	 *  Base Game = 1
