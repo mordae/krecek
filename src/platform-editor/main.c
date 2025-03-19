@@ -3,6 +3,7 @@
 #include <tft.h>
 #include <sdk.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #define TILE_SIZE 8
 #define MAP_ROWS 15
@@ -62,6 +63,25 @@ void game_input(unsigned dt_usec)
 
 	if (sdk_inputs_delta.y > 0) {
 		map[sel_y][sel_x] = 0;
+	}
+
+	if (sdk_inputs_delta.start > 0) {
+		printf("Map dump:\n");
+		printf("---------\n");
+		printf("{\n");
+		for (int row = 0; row < MAP_ROWS; row++) {
+			printf("\t{");
+			for (int col = 0; col < MAP_COLS; col++) {
+				if (col) {
+					printf(", %i", map[row][col]);
+				} else {
+					printf("%i", map[row][col]);
+				}
+			}
+			printf("},\n");
+		}
+		printf("}\n");
+		printf("---------\n");
 	}
 }
 
