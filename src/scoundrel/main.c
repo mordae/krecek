@@ -1,5 +1,6 @@
 #include "sdk/image.h"
 #include "sdk/input.h"
+#include "sdk/util.h"
 #include <pico/stdlib.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -8,6 +9,7 @@
 #include <stdio.h>
 
 #include <krecek-cards.png.h>
+#include <health-counter.png.h>
 
 #define GRAY rgb_to_rgb565(170, 170, 170)
 #define RED rgb_to_rgb565(255, 64, 64)
@@ -145,9 +147,7 @@ void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
 
-	char health_string[50];
-	snprintf(health_string, sizeof health_string, "%i", player_health);
-	tft_draw_string(100, 100, RED, health_string);
+	sdk_draw_tile(100, 100, &ts_health_counter_png, clampi(player_health, 0, 20));
 
 	tft_draw_rect(8 + 30 * cursor_position, 8, 32 + 30 * cursor_position, 36, RED);
 	for (int i = 0; i < 4; i++) {
