@@ -1,9 +1,9 @@
 #include "sdk/image.h"
 #include "sdk/input.h"
+#include <pico/platform/compiler.h>
 #include <pico/stdlib.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <math.h>
 #include <sdk.h>
 #include <tft.h>
 #include <stdio.h>
@@ -19,7 +19,7 @@
 
 static int deck[52]; // -1 means card was dealt
 static int deck_position = 0; // -1 means card was played
-static int room_cards[4];
+static int room_cards[4] = {-1, -1, -1, -1};
 static int cursor_position = 0;
 static int weapon;
 static int last_weapon_use; // last card defeated with weapon. -1 means that the weapon wasn't used yet
@@ -75,8 +75,8 @@ void game_reset(void)
 	}
 	shuffle_deck();
 	new_room();
-	weapon = 0;
-	last_weapon_use = 0;
+	weapon = -1;
+	last_weapon_use = -1;
 }
 
 void game_input(unsigned __unused dt_usec)
@@ -112,15 +112,15 @@ void game_input(unsigned __unused dt_usec)
 		const int card_suit = get_card_suit(room_cards[cursor_position]);
 		printf("suit: %i | value: %i\n", card_suit, card_value);
 		if (card_suit == HEARTS) {
-			player_health += get_card_value(card_value);
+			player_health = MIN(player_health + card_value, 20);
 			room_cards[cursor_position] = -1;
 		} else if (card_suit == DIAMONDS) {
 			weapon = room_cards[cursor_position];
 			last_weapon_use = -1;
 			room_cards[cursor_position] = -1;
 		} else { // spades or clubs
-			if (using_weapon && get_card_value(last_weapon_use) >= card_value) {
-				player_health -= card_value - get_card_value(weapon);
+			if (using_weapon && (get_card_value(last_weapon_use) >= card_value || last_weapon_use == -1)) {
+				player_health -= MAX(card_value - get_card_value(weapon), 0);
 				last_weapon_use = room_cards[cursor_position];
 				room_cards[cursor_position] = -1;
 			} else if (!using_weapon) {
@@ -150,11 +150,16 @@ void game_paint(unsigned __unused dt_usec)
 	snprintf(health_string, sizeof health_string, "%i", player_health);
 	tft_draw_string(100, 100, RED, health_string);
 
-	tft_draw_rect(8 + 30 * cursor_position, 8, 21 + 30 * cursor_position, 32, GRAY);
+	tft_draw_rect(8 + 30 * cursor_position, 8, 32 + 30 * cursor_position, 36, RED);
 	for (int i = 0; i < 4; i++) {
 		if (room_cards[i] > -1 && room_cards[i] < 52) {
 			sdk_draw_tile(10 + 30 * i, 10, &ts_krecek_cards_png, room_cards[i]);
 		}
+	}
+	if (weapon != -1) {
+		sdk_draw_tile(10, 70, &ts_krecek_cards_png, weapon);
+		if (last_weapon_use != -1)
+			sdk_draw_tile(40, 70, &ts_krecek_cards_png, last_weapon_use);
 	}
 }
 
