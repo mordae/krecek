@@ -1,6 +1,5 @@
 #include "sdk/image.h"
 #include "sdk/input.h"
-#include <pico/platform/compiler.h>
 #include <pico/stdlib.h>
 #include <stdbool.h>
 #include <stdlib.h>
