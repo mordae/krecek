@@ -34,7 +34,7 @@ void game_reset(void)
 {
 	b.s = 0;
 	b.g = 7;
-	b.wp = 60;
+	b.wp = 70;
 }
 
 void game_input(unsigned dt_usec)
@@ -55,6 +55,7 @@ void game_paint(unsigned __unused dt_usec)
 	sdk_draw_tile(-65, 20, &ts_icons_png, b.s - 1);
 	sdk_draw_tile(135, 20, &ts_icons_png, b.s + 1);
 
+#if 0 //top bar
 	for (int i = b.wp; i < b.g * 4 + b.wp; i += 4) {
 		sdk_draw_tile(i, 1, &ts_select_png, 0);
 	}
@@ -64,6 +65,18 @@ void game_paint(unsigned __unused dt_usec)
 			sdk_draw_tile(i, 1, &ts_select_png, 1);
 		}
 	}
+#endif
+#if 1 //bot bar
+	for (int i = b.wp; i < b.g * 4 + b.wp; i += 4) {
+		sdk_draw_tile(i, 120 - 5, &ts_select_png, 0);
+	}
+
+	for (int i = b.wp; i < b.g * 4 + b.wp; i += 4) {
+		if (b.s * 4 + b.wp == i) {
+			sdk_draw_tile(i, 120 - 5, &ts_select_png, 1);
+		}
+	}
+#endif
 
 	if (b.s > b.g)
 		b.s = 0;
