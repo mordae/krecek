@@ -98,6 +98,30 @@ void game_paint(unsigned dt_usec)
 	tft_draw_rect(sel_x * TILE_SIZE + TILE_SIZE / 2.0 - 1,
 		      sel_y * TILE_SIZE + TILE_SIZE / 2.0 - 1, sel_x * TILE_SIZE + TILE_SIZE / 2.0,
 		      sel_y * TILE_SIZE + TILE_SIZE / 2.0, rgb_to_rgb565(255, 63, 63));
+
+	char text[32] = "";
+
+	snprintf(text, sizeof text, "%i", map[sel_y][sel_x]);
+
+	if (sel_x >= MAP_COLS / 2) {
+		if (sel_y >= MAP_ROWS / 2) {
+			tft_draw_string_right(sel_x * TILE_SIZE + TILE_SIZE,
+					      sel_y * TILE_SIZE - 2 * TILE_SIZE,
+					      rgb_to_rgb565(255, 63, 63), text);
+		} else {
+			tft_draw_string_right(sel_x * TILE_SIZE + TILE_SIZE,
+					      sel_y * TILE_SIZE + TILE_SIZE,
+					      rgb_to_rgb565(255, 63, 63), text);
+		}
+	} else {
+		if (sel_y >= MAP_ROWS / 2) {
+			tft_draw_string(sel_x * TILE_SIZE, sel_y * TILE_SIZE - 2 * TILE_SIZE,
+					rgb_to_rgb565(255, 63, 63), text);
+		} else {
+			tft_draw_string(sel_x * TILE_SIZE, sel_y * TILE_SIZE + TILE_SIZE,
+					rgb_to_rgb565(255, 63, 63), text);
+		}
+	}
 }
 
 int main()
