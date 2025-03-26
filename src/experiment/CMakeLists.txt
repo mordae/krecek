@@ -1,4 +1,4 @@
-add_executable(experiment main.c)
+add_executable(experiment main.c maps/map1.c)
 target_include_directories(experiment PRIVATE include)
 generate_png_headers()
 target_link_libraries(experiment krecek ${PNG_HEADERS_TARGET})
