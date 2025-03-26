@@ -86,55 +86,6 @@ TileType map[MAP_ROWS]
 
 enum screen { LEVEL_1_1 = 1, LEVEL_1_1_SCORE };
 
-// --- Draw a single tile based on its type ---
-static void draw_tile(TileType type, int x, int y)
-{
-	switch (type) {
-	case FLOOR_MID:
-		sdk_draw_tile(x, y, &ts_platforms_png, 0);
-		break;
-
-	case FLOOR_L:
-		sdk_draw_tile(x, y, &ts_platforms_png, 1);
-		break;
-
-	case FLOOR_R:
-		sdk_draw_tile(x, y, &ts_platforms_png, 2);
-		break;
-
-	case FLOOR_WIN_MID:
-		sdk_draw_tile(x, y, &ts_platforms_png, 6);
-		break;
-
-	case FLOOR_WIN_L:
-		sdk_draw_tile(x, y, &ts_platforms_png, 7);
-		break;
-
-	case FLOOR_WIN_R:
-		sdk_draw_tile(x, y, &ts_platforms_png, 8);
-		break;
-
-	case FLOOR_JUMP_MID:
-		sdk_draw_tile(x, y, &ts_platforms_png, 3);
-		break;
-
-	case FLOOR_JUMP_L:
-		sdk_draw_tile(x, y, &ts_platforms_png, 4);
-		break;
-
-	case FLOOR_JUMP_R:
-		sdk_draw_tile(x, y, &ts_platforms_png, 5);
-		break;
-
-	case SPAWNER:
-		sdk_draw_tile(x, y, &ts_spawners_png, 1);
-		break;
-
-	default: // For EMPTY and unknown types, draw a gray block
-		break;
-	}
-}
-
 // --- Mario's state in the tile map game ---
 typedef struct {
 	float px, py; // Pixel coordinates
@@ -364,10 +315,17 @@ void game_paint(unsigned dt_usec)
 	// Draw tile map
 	for (int y = 0; y < MAP_ROWS; y++) {
 		for (int x = 0; x < MAP_COLS; x++) {
-			draw_tile(map[y][x], x * TILE_SIZE, y * TILE_SIZE);
+			sdk_draw_tile(x * TILE_SIZE, y * TILE_SIZE, &ts_platforms_png,
+				      map[y][x] - 1);
+			if (!map[y][x]) {
+				tft_draw_rect(x * TILE_SIZE, y * TILE_SIZE,
+					      x * TILE_SIZE + TILE_SIZE - 1,
+					      y * TILE_SIZE + TILE_SIZE - 1,
+					      rgb_to_rgb565(0, 0, 0));
+				continue;
+			}
 		}
 	}
-
 	//tft_draw_rect(mario_p.px, mario_p.py, mario_p.px + TILE_SIZE, mario_p.py - TILE_SIZE, RED);
 
 	mario_p.s.x = mario_p.px;
