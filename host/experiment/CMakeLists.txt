@@ -2,6 +2,7 @@ add_executable(
   experiment
   ../../src/experiment/main.c
   ../../src/experiment/maps/map1.c
+  ../../src/experiment/maps/map2.c
 )
 
 generate_png_headers()
