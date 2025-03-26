@@ -40,12 +40,12 @@ typedef enum {
 	FLOOR_MID = 1,
 	FLOOR_L = 2,
 	FLOOR_R,
-	FLOOR_WIN_MID,
-	FLOOR_WIN_L,
-	FLOOR_WIN_R,
 	FLOOR_JUMP_MID,
 	FLOOR_JUMP_L,
 	FLOOR_JUMP_R,
+	FLOOR_WIN_MID,
+	FLOOR_WIN_L,
+	FLOOR_WIN_R,
 	SPAWNER = 10
 
 } TileType;
@@ -102,27 +102,27 @@ static void draw_tile(TileType type, int x, int y)
 		sdk_draw_tile(x, y, &ts_platforms_png, 2);
 		break;
 
-	case FLOOR_JUMP_MID:
+	case FLOOR_WIN_MID:
 		sdk_draw_tile(x, y, &ts_platforms_png, 6);
 		break;
 
-	case FLOOR_JUMP_L:
+	case FLOOR_WIN_L:
 		sdk_draw_tile(x, y, &ts_platforms_png, 7);
 		break;
 
-	case FLOOR_JUMP_R:
+	case FLOOR_WIN_R:
 		sdk_draw_tile(x, y, &ts_platforms_png, 8);
 		break;
 
-	case FLOOR_WIN_MID:
+	case FLOOR_JUMP_MID:
 		sdk_draw_tile(x, y, &ts_platforms_png, 3);
 		break;
 
-	case FLOOR_WIN_L:
+	case FLOOR_JUMP_L:
 		sdk_draw_tile(x, y, &ts_platforms_png, 4);
 		break;
 
-	case FLOOR_WIN_R:
+	case FLOOR_JUMP_R:
 		sdk_draw_tile(x, y, &ts_platforms_png, 5);
 		break;
 
@@ -342,11 +342,11 @@ void game_input(unsigned dt_usec)
 	//if (mario_p.px < 0)
 	//mario_p.px = 0;
 
-	if (mario_p.px >= MAP_COLS * TILE_SIZE - TILE_SIZE)
-		//mario_p.px = MAP_COLS * TILE_SIZE - TILE_SIZE;
+	//if (mario_p.px >= MAP_COLS * TILE_SIZE - TILE_SIZE)
+	//mario_p.px = MAP_COLS * TILE_SIZE - TILE_SIZE;
 
-		if (mario_p.py < 0)
-			mario_p.alive = false;
+	//if (mario_p.py < 0)
+	//		mario_p.alive = false;
 
 	if (mario_p.py >= MAP_ROWS * TILE_SIZE - TILE_SIZE + TILE_SIZE + TILE_SIZE) {
 		mario_p.alive = false;
