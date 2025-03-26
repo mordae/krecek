@@ -342,13 +342,13 @@ void game_input(unsigned dt_usec)
 	//if (mario_p.px < 0)
 	//mario_p.px = 0;
 
-	//if (mario_p.px >= MAP_COLS * TILE_SIZE - TILE_SIZE)
-	//mario_p.px = MAP_COLS * TILE_SIZE - TILE_SIZE;
+	if (mario_p.px >= MAP_COLS * TILE_SIZE - TILE_SIZE)
+		//mario_p.px = MAP_COLS * TILE_SIZE - TILE_SIZE;
 
-	if (mario_p.py < 0)
-		mario_p.alive = false;
+		if (mario_p.py < 0)
+			mario_p.alive = false;
 
-	if (mario_p.py >= MAP_ROWS * TILE_SIZE - TILE_SIZE) {
+	if (mario_p.py >= MAP_ROWS * TILE_SIZE - TILE_SIZE + TILE_SIZE + TILE_SIZE) {
 		mario_p.alive = false;
 	}
 }
