@@ -7,7 +7,7 @@
 
 #define TILE_SIZE 8
 #define MAP_ROWS 15
-#define MAP_COLS 30
+#define MAP_COLS 48
 
 #include <platforms.png.h>
 #include <spawners.png.h>

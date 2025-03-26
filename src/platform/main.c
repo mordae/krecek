@@ -9,7 +9,7 @@
 #define SCREEN_HEIGHT 120
 #define TILE_SIZE 8
 #define MAP_ROWS 15
-#define MAP_COLS 30
+#define MAP_COLS 48
 
 #include <petr.png.h>
 #include <platforms.png.h>
@@ -50,36 +50,39 @@ typedef enum {
 
 } TileType;
 // New tile map layout: all tiles are set to 0 (EMPTY)
-TileType map[MAP_ROWS][MAP_COLS] = { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-				     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-				     { 4, 4, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-				     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-				     { 0, 0, 0, 0, 0, 2, 1, 3, 0, 0, 0, 0, 0, 0, 0,
-				       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-				     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-				     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 3, 0, 0, 0,
-				       2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-				     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-				     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-				     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-				     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-				     { 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 7, 9, 0,
-				       0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-				     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-				     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				       0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-				     { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-				       1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 } };
+TileType map[MAP_ROWS]
+	    [MAP_COLS] = {
+		    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+		    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+		    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+		    { 0, 8, 7, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+		    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 4, 6, 0,
+		      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+		    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		      0, 0, 0, 2, 1, 1, 1, 3, 0, 0, 0, 0, 0, 0, 0 },
+		    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+		    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+		    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+		    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 4, 6, 0, 0 },
+		    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+		    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+		    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+		    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+		    { 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3 },
+	    };
 
 enum screen { LEVEL_1_1 = 1, LEVEL_1_1_SCORE };
 
@@ -99,27 +102,27 @@ static void draw_tile(TileType type, int x, int y)
 		sdk_draw_tile(x, y, &ts_platforms_png, 2);
 		break;
 
-	case FLOOR_WIN_MID:
+	case FLOOR_JUMP_MID:
 		sdk_draw_tile(x, y, &ts_platforms_png, 6);
 		break;
 
-	case FLOOR_WIN_L:
+	case FLOOR_JUMP_L:
 		sdk_draw_tile(x, y, &ts_platforms_png, 7);
 		break;
 
-	case FLOOR_WIN_R:
+	case FLOOR_JUMP_R:
 		sdk_draw_tile(x, y, &ts_platforms_png, 8);
 		break;
 
-	case FLOOR_JUMP_MID:
+	case FLOOR_WIN_MID:
 		sdk_draw_tile(x, y, &ts_platforms_png, 3);
 		break;
 
-	case FLOOR_JUMP_L:
+	case FLOOR_WIN_L:
 		sdk_draw_tile(x, y, &ts_platforms_png, 4);
 		break;
 
-	case FLOOR_JUMP_R:
+	case FLOOR_WIN_R:
 		sdk_draw_tile(x, y, &ts_platforms_png, 5);
 		break;
 
@@ -336,21 +339,19 @@ void game_input(unsigned dt_usec)
 	}
 
 	// Boundaries
-	if (mario_p.px < 0)
-		mario_p.px = 0;
+	//if (mario_p.px < 0)
+	//mario_p.px = 0;
 
-	if (mario_p.px >= MAP_COLS * TILE_SIZE - TILE_SIZE)
-		mario_p.px = MAP_COLS * TILE_SIZE - TILE_SIZE;
+	//if (mario_p.px >= MAP_COLS * TILE_SIZE - TILE_SIZE)
+	//mario_p.px = MAP_COLS * TILE_SIZE - TILE_SIZE;
 
 	if (mario_p.py < 0)
-		mario_p.py = 0;
+		mario_p.alive = false;
 
 	if (mario_p.py >= MAP_ROWS * TILE_SIZE - TILE_SIZE) {
-		mario_p.py = MAP_ROWS * TILE_SIZE - TILE_SIZE;
-		mario_p.vy = 0;
+		mario_p.alive = false;
 	}
 }
-
 // --- Game Paint ---
 void game_paint(unsigned dt_usec)
 {
