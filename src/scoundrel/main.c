@@ -20,6 +20,7 @@
 
 static int deck[52]; // -1 means card was dealt
 static int deck_position = 0; // -1 means card was played
+static int removed_cards[8] = {9, 10, 11, 12, 35, 36, 37, 38}; // cards taken out of the deck
 static int room_cards[4] = {-1, -1, -1, -1};
 static int cursor_position = 0;
 static int weapon;
@@ -28,7 +29,13 @@ static int player_health;
 static bool using_weapon = false;
 
 
-void shuffle_deck() {
+void init_deck() {
+	for (int c = 0; c < 52; c++) {
+		deck[c] = c;
+	}
+	for (int i = 0; i < 8; i++) {
+		deck[removed_cards[i]] = -1;
+	}
 	for (int c = 0; c < 52; c++) {
 		int s = arc4random() % 52;
 		int x = deck[c];
@@ -71,10 +78,7 @@ void game_audio(int __unused nsamples)
 void game_reset(void)
 {
 	player_health = 20;
-	for (int c = 0; c < 52; c++) {
-		deck[c] = c;
-	}
-	shuffle_deck();
+	init_deck();
 	new_room();
 	weapon = -1;
 	last_weapon_use = -1;
@@ -111,7 +115,6 @@ void game_input(unsigned __unused dt_usec)
 	if (sdk_inputs_delta.y > 0) {
 		const int card_value = get_card_value(room_cards[cursor_position]);
 		const int card_suit = get_card_suit(room_cards[cursor_position]);
-		printf("suit: %i | value: %i\n", card_suit, card_value);
 		if (card_suit == HEARTS) {
 			player_health = MIN(player_health + card_value, 20);
 			room_cards[cursor_position] = -1;
@@ -171,6 +174,5 @@ int main()
 		.fps_color = GRAY,
 	};
 
-	printf("%d", 8);
 	sdk_main(&config);
 }
