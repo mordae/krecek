@@ -3,6 +3,7 @@ add_executable(
   ../../src/platform/main.c
   ../../src/platform/maps/map1.c
   ../../src/platform/maps/map2.c
+  ../../src/platform/maps/map3.c
 )
 
 generate_png_headers()
