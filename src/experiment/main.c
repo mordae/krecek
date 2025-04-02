@@ -13,10 +13,10 @@
 
 #define TILE_SIZE 8
 
-extern int maps_map1[MAP_ROWS][MAP_COLS];
-extern int maps_map2[MAP_ROWS][MAP_COLS];
+extern uint32_t maps_map1[MAP_ROWS][MAP_COLS];
+extern uint32_t maps_map2[MAP_ROWS][MAP_COLS];
 
-static int (*map)[MAP_COLS] = maps_map1;
+static Tile (*map)[MAP_COLS] = (void *)maps_map2;
 
 struct character {
 	sdk_sprite_t s;
@@ -55,11 +55,11 @@ void game_input(unsigned dt_usec)
 	float dt = dt_usec / 1000000.0f;
 
 	if (sdk_inputs_delta.x > 0) {
-		map = maps_map1;
+		map = (void *)maps_map1;
 	}
 
 	if (sdk_inputs_delta.y > 0) {
-		map = maps_map2;
+		map = (void *)maps_map2;
 	}
 
 	float move_x = player.speed * sdk_inputs.joy_x / 2048.0f;
@@ -94,7 +94,8 @@ void game_paint(unsigned __unused dt_usec)
 
 	for (int y = 0; y < MAP_ROWS; y++) {
 		for (int x = 0; x < MAP_COLS; x++) {
-			sdk_draw_tile(x * TILE_SIZE, y * TILE_SIZE, &ts_tileset_png, map[y][x]);
+			sdk_draw_tile(x * TILE_SIZE, y * TILE_SIZE, &ts_tileset_png,
+				      map[y][x].tile_id);
 		}
 	}
 
