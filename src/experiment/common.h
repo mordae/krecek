@@ -9,6 +9,7 @@ typedef enum TileEffect {
 	TILE_EFFECT_NONE = 0,
 	TILE_EFFECT_TELEPORT = 1,
 	TILE_EFFECT_DAMAGE = 2,
+	NUM_TILE_EFFECTS,
 } TileEffect;
 
 typedef union Tile {

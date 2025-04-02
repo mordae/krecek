@@ -123,6 +123,21 @@ void game_input(unsigned dt_usec)
 		player.s.tile &= ~1;
 		player.s.tile |= (time_us_32() >> 16) & 1;
 	}
+
+	int pos_x = player.s.x / TILE_SIZE;
+	int pos_y = player.s.y / TILE_SIZE;
+
+	if (map[pos_y][pos_x].effect == TILE_EFFECT_TELEPORT) {
+		switch (map[pos_y][pos_x].parameter) {
+		case 0:
+			map = (void *)maps_map1;
+			break;
+
+		case 1:
+			map = (void *)maps_map2;
+			break;
+		}
+	}
 }
 
 void game_paint(unsigned __unused dt_usec)

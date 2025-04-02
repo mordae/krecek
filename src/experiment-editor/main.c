@@ -12,6 +12,8 @@
 
 #define GRAY rgb_to_rgb565(127, 127, 127)
 
+#define NUM_MAPS 2
+
 extern uint32_t maps_map1[MAP_ROWS][MAP_COLS];
 extern uint32_t maps_map2[MAP_ROWS][MAP_COLS];
 
@@ -83,6 +85,16 @@ void game_input(unsigned dt_usec)
 		map[sel_y][sel_x].collides_right = !map[sel_y][sel_x].collides_right;
 	}
 
+	if (sdk_inputs_delta.aux[5] > 0) {
+		map[sel_y][sel_x].effect = (map[sel_y][sel_x].effect + 1) % NUM_TILE_EFFECTS;
+	}
+
+	if (sdk_inputs_delta.aux[6] > 0) {
+		if (map[sel_y][sel_x].effect == TILE_EFFECT_TELEPORT) {
+			map[sel_y][sel_x].parameter = (map[sel_y][sel_x].parameter + 1) % NUM_MAPS;
+		}
+	}
+
 	if (sdk_inputs_delta.aux[0] > 0) {
 		if (last_map == 0) {
 			last_map = 1;
@@ -151,13 +163,21 @@ void game_paint(unsigned dt_usec)
 		}
 	}
 
+	Tile tile = map[sel_y][sel_x];
+
 	tft_draw_rect(sel_x * TILE_SIZE + TILE_SIZE / 2.0 - 1,
 		      sel_y * TILE_SIZE + TILE_SIZE / 2.0 - 1, sel_x * TILE_SIZE + TILE_SIZE / 2.0,
 		      sel_y * TILE_SIZE + TILE_SIZE / 2.0, rgb_to_rgb565(255, 63, 63));
 
 	char text[32] = "";
 
-	snprintf(text, sizeof text, "%i", map[sel_y][sel_x].tile_id);
+	if (tile.effect == TILE_EFFECT_TELEPORT) {
+		snprintf(text, sizeof text, "%i ->%i", tile.tile_id, tile.parameter);
+	} else if (tile.effect == TILE_EFFECT_DAMAGE) {
+		snprintf(text, sizeof text, "%i !%i", tile.tile_id, tile.parameter);
+	} else {
+		snprintf(text, sizeof text, "%i", tile.tile_id);
+	}
 
 	if (sel_x >= MAP_COLS / 2) {
 		if (sel_y >= MAP_ROWS / 2) {
