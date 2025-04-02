@@ -32,8 +32,8 @@ TileType map[15][20] = {
 
 void game_reset(void)
 {
-	b.s = 0;
-	b.g = 7;
+	b.s = 5;
+	b.g = 11;
 	b.wp = 70;
 }
 
@@ -48,9 +48,10 @@ void game_input(unsigned dt_usec)
 
 void game_paint(unsigned __unused dt_usec)
 {
-	tft_fill(0);
+	tft_fill(1);
 
-	sdk_draw_tile(0, 0, &ts_text_png, 0);
+	if (b.s != b.g)
+		sdk_draw_tile(1, 0, &ts_text_png, 0);
 	sdk_draw_tile(35, 15, &ts_icons_png, b.s);
 	sdk_draw_tile(-65, 20, &ts_icons_png, b.s - 1);
 	sdk_draw_tile(135, 20, &ts_icons_png, b.s + 1);
@@ -67,11 +68,11 @@ void game_paint(unsigned __unused dt_usec)
 	}
 #endif
 #if 1 //bot bar
-	for (int i = b.wp; i < b.g * 4 + b.wp; i += 4) {
+	for (int i = b.wp; i < b.g * 4 + b.wp + 4; i += 4) {
 		sdk_draw_tile(i, 120 - 5, &ts_select_png, 0);
 	}
 
-	for (int i = b.wp; i < b.g * 4 + b.wp; i += 4) {
+	for (int i = b.wp; i < b.g * 4 + b.wp + 4; i += 4) {
 		if (b.s * 4 + b.wp == i) {
 			sdk_draw_tile(i, 120 - 5, &ts_select_png, 1);
 		}
