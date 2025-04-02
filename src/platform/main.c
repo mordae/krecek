@@ -13,7 +13,7 @@
 // Physics constants
 #define GRAVITY 90	  // Gravity for falling
 #define JUMP_STRENGTH -80 // Jump strength
-#define MAX_SPEED 180	  // Max speed for movement
+#define MAX_SPEED 100	  // Max speed for movement
 #define ACCELERATION 80	  // Acceleration for movement
 #define FRICTION 8	  // Friction to stop sliding quickly
 
@@ -32,6 +32,9 @@
 
 extern TileType maps_map1[MAP_ROWS][MAP_COLS];
 extern TileType maps_map2[MAP_ROWS][MAP_COLS];
+extern TileType maps_map3[MAP_ROWS][MAP_COLS];
+extern TileType maps_map4[MAP_ROWS][MAP_COLS];
+extern TileType maps_mapwin[MAP_ROWS][MAP_COLS];
 
 TileType (*map)[MAP_COLS] = maps_map1;
 
@@ -150,6 +153,20 @@ void game_input(unsigned dt_usec)
 			mario_p.won = 0;
 			if (map == maps_map1) {
 				map = maps_map2;
+				mario_p.px = 3.5;
+				mario_p.py = 7;
+			} else if (map == maps_map2) {
+				map = maps_map3;
+				mario_p.px = 3.5;
+				mario_p.py = 7;
+			} else if (map == maps_map3) {
+				map = maps_map4;
+				mario_p.px = 3.5;
+				mario_p.py = 7;
+			} else if (map == maps_map4) {
+				map = maps_mapwin;
+				mario_p.px = 3.5;
+				mario_p.py = 7;
 			}
 		}
 	}
@@ -181,7 +198,7 @@ void game_input(unsigned dt_usec)
 		mario_p.vx -= ACCELERATION * dt;
 		if (mario_p.vx < -MAX_SPEED)
 			mario_p.vx = -MAX_SPEED;
-	} else if (sdk_inputs.a > 0 || sdk_inputs.joy_x > 500) { // Right
+	} else if (sdk_inputs.b > 0 || sdk_inputs.joy_x > 500) { // Right
 		mario_p.vx += ACCELERATION * dt;
 		if (mario_p.vx > MAX_SPEED)
 			mario_p.vx = MAX_SPEED;
