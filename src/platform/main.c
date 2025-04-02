@@ -31,10 +31,9 @@
 #define WHITE rgb_to_rgb565(255, 255, 255)
 
 extern TileType maps_map1[MAP_ROWS][MAP_COLS];
+extern TileType maps_map2[MAP_ROWS][MAP_COLS];
 
 TileType (*map)[MAP_COLS] = maps_map1;
-
-enum screen { LEVEL_1_1 = 1, LEVEL_1_1_SCORE };
 
 // --- Mario's state in the tile map game ---
 typedef struct {
@@ -59,6 +58,7 @@ void game_start(void)
 	mario_p.score = 0;
 	mario_p.alive = 1;
 	mario_p.won = 0;
+	map = maps_map1;
 
 	mario_p.s.ts = &ts_petr_png;
 	mario_p.s.x = mario_p.px;
@@ -140,10 +140,18 @@ void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
 
-	if (!mario_p.alive || mario_p.won) {
+	if (!mario_p.alive) {
 		if (sdk_inputs.start || sdk_inputs.select)
 			game_reset();
 		return;
+	}
+	if (mario_p.won) {
+		if (sdk_inputs.start || sdk_inputs.select) {
+			mario_p.won = 0;
+			if (map == maps_map1) {
+				map = maps_map2;
+			}
+		}
 	}
 
 	if (sdk_inputs.vol_up) {
