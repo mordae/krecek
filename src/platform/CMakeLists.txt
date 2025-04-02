@@ -1,4 +1,8 @@
-add_executable(platform main.c)
+add_executable(
+  platform
+  main.c
+  maps/map1.c
+)
 target_include_directories(platform PRIVATE include)
 generate_png_headers()
 target_link_libraries(platform krecek ${PNG_HEADERS_TARGET})
