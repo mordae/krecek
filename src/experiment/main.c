@@ -66,8 +66,45 @@ void game_input(unsigned dt_usec)
 	float move_y = player.speed * sdk_inputs.joy_y / 2048.0f;
 
 	if (fabsf(move_x) + fabs(move_y) > 0.1f) {
-		player.s.x += dt * move_x;
-		player.s.y += dt * move_y;
+		int pos_x = player.s.x / TILE_SIZE;
+		int pos_y = player.s.y / TILE_SIZE;
+
+		float next_x = player.s.x + dt * move_x;
+		float next_y = player.s.y + dt * move_y;
+
+		next_x = clamp(next_x, TILE_SIZE / 2.0f - 2, TFT_WIDTH - TILE_SIZE / 2.0f + 1);
+		next_y = clamp(next_y, TILE_SIZE / 2.0f, TFT_HEIGHT - 1 - TILE_SIZE / 2.0f);
+
+		// TODO: this does not work very well, fix it
+		int next_pos_x = (next_x + (move_x > 0 ? 2 : -2)) / TILE_SIZE;
+		int next_pos_y = (next_y + (move_y > 0 ? 4 : 0)) / TILE_SIZE;
+
+		if (pos_x != next_pos_x && move_x) {
+			if (move_x > 0) {
+				// going right, to the next tile
+				if (map[pos_y][next_pos_x].collides_left)
+					next_x = player.s.x;
+			} else {
+				// going left, to the next tile
+				if (map[pos_y][next_pos_x].collides_right)
+					next_x = player.s.x;
+			}
+		}
+
+		if (pos_y != next_pos_y && move_y) {
+			if (move_y > 0) {
+				// going down, to the next tile
+				if (map[next_pos_y][pos_x].collides_up)
+					next_y = player.s.y;
+			} else {
+				// going up, to the next tile
+				if (map[next_pos_y][pos_x].collides_down)
+					next_y = player.s.y;
+			}
+		}
+
+		player.s.x = next_x;
+		player.s.y = next_y;
 
 		if (fabsf(move_x) > fabsf(move_y)) {
 			if (move_x > 0) {

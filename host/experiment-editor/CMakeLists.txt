@@ -1,6 +1,8 @@
 add_executable(
   experiment_editor
   ../../src/experiment-editor/main.c
+  ../../src/experiment/maps/map1.c
+  ../../src/experiment/maps/map2.c
 )
 
 generate_png_headers()

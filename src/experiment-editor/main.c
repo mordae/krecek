@@ -4,6 +4,7 @@
 #include <sdk.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "../../src/experiment/common.h"
 
@@ -11,7 +12,12 @@
 
 #define GRAY rgb_to_rgb565(127, 127, 127)
 
+extern uint32_t maps_map1[MAP_ROWS][MAP_COLS];
+extern uint32_t maps_map2[MAP_ROWS][MAP_COLS];
+
 static Tile map[MAP_ROWS][MAP_COLS];
+
+static int last_map = 0;
 
 static int sel_x = 0;
 static int sel_y = 0;
@@ -75,6 +81,19 @@ void game_input(unsigned dt_usec)
 
 	if (sdk_inputs_delta.aux[4] > 0) {
 		map[sel_y][sel_x].collides_right = !map[sel_y][sel_x].collides_right;
+	}
+
+	if (sdk_inputs_delta.aux[0] > 0) {
+		if (last_map == 0) {
+			last_map = 1;
+			memcpy(map, maps_map1, sizeof map);
+		} else if (last_map == 1) {
+			last_map = 2;
+			memcpy(map, maps_map2, sizeof map);
+		} else {
+			last_map = 0;
+			memset(map, 0, sizeof map);
+		}
 	}
 
 	if (sdk_inputs_delta.start > 0) {
