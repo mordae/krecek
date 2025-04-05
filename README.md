@@ -1,5 +1,21 @@
 # Krecek
 
+## Development on Krecek
+
+```bash
+# Prepare build for Krecek
+cmake -B build src -G Ninja
+
+# Build all games for Krecek
+cmake --build build
+
+# Load the game we want
+picotool load -f build/pong/pong.uf2
+
+# Connect to virtual serial line for debugging messages
+minicom -c on -D /dev/ttyACM0
+```
+
 ## Development on PC
 
 ```bash
