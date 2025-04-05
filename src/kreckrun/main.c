@@ -3,11 +3,18 @@
 #include <sdk.h>
 #include <tft.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <krecek.png.h>
 #include <back.png.h>
 #include <extras.png.h>
 #include <walls.png.h>
+
+#define RED rgb_to_rgb565(255, 0, 0)
+struct game {
+	float score;
+};
+static struct game game;
 
 struct k {
 	sdk_sprite_t s;
@@ -21,7 +28,7 @@ static struct k k = {
 
 #define OBSTACLE_SPEED (TFT_WIDTH / 5.0f)
 
-#define NUM_OBSTACLES 3
+#define NUM_OBSTACLES 6
 static sdk_sprite_t obstacles[NUM_OBSTACLES] = {
 	{
 		.y = 18,
@@ -35,6 +42,19 @@ static sdk_sprite_t obstacles[NUM_OBSTACLES] = {
 		.y = 18 + 60,
 		.ts = &ts_walls_png,
 	},
+	{
+		.y = 18,
+		.ts = &ts_walls_png,
+	},
+	{
+		.y = 18 + 30,
+		.ts = &ts_walls_png,
+	},
+	{
+		.y = 18 + 60,
+		.ts = &ts_walls_png,
+	},
+
 };
 
 void game_reset(void)
@@ -43,7 +63,7 @@ void game_reset(void)
 		obstacles[i].tile = rand() % ts_walls_png.count;
 		obstacles[i].x = TFT_WIDTH + (rand() % TFT_WIDTH);
 	}
-
+	game.score = 0;
 	k.s.y = 18 + 30;
 }
 
@@ -86,6 +106,8 @@ void game_paint(unsigned __unused dt_usec)
 
 	tft_fill(0);
 
+	game.score = game.score + dt;
+
 	sdk_draw_tile(0, 0, &ts_back_png, 0);
 
 	k.s.tile = (time_us_32() >> 18) & 1;
@@ -105,6 +127,10 @@ void game_paint(unsigned __unused dt_usec)
 		if (sdk_sprites_collide(&k.s, &obstacles[i])) {
 			game_reset();
 		}
+
+		char buf[16];
+		snprintf(buf, sizeof buf, "%6.1f", game.score);
+		tft_draw_string(0, 0, RED, buf);
 	}
 }
 
