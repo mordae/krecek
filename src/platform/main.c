@@ -148,7 +148,6 @@ void game_audio(int nsamples)
 // --- Game Input ---
 void game_input(unsigned dt_usec)
 {
-	float dt = dt_usec / 1000000.0f;
 	if (map == maps_map0) {
 		if (sdk_inputs_delta.a > 0) {
 			menu.select += 1;
@@ -169,6 +168,7 @@ void game_input(unsigned dt_usec)
 		}
 
 	} else {
+		float dt = dt_usec / 1000000.0f;
 		if (!mario_p.alive) {
 			if (sdk_inputs.start)
 				game_reset();
@@ -312,7 +312,7 @@ void game_paint(unsigned dt_usec)
 
 	tft_fill(0);
 
-	tft_set_origin(mario_p.px - TFT_WIDTH / 2.0 + 3.5, menu.select);
+	tft_set_origin(mario_p.px - TFT_WIDTH / 2.0 + 3.5, 0);
 
 	//sdk_draw_tile(0, 0, &ts_menu_png, 0);
 
