@@ -116,9 +116,9 @@ void game_input(unsigned dt_usec)
 			printf("\t{");
 			for (int col = 0; col < MAP_COLS; col++) {
 				if (col) {
-					printf(", 0x%08x", map[row][col].u32);
+					printf(", 0x%08x", (unsigned)map[row][col].u32);
 				} else {
-					printf("0x%08x", map[row][col].u32);
+					printf("0x%08x", (unsigned)map[row][col].u32);
 				}
 			}
 			printf("},\n");
