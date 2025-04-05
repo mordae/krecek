@@ -27,7 +27,7 @@ void sdk_video_init(void);
 
 /* From input.c */
 void sdk_input_init(void);
-void sdk_input_handle(const SDL_Event *event);
+void sdk_input_handle(const SDL_Event *event, uint32_t dt);
 
 void __attribute__((__noreturn__, __format__(printf, 1, 2))) sdk_panic(const char *fmt, ...)
 {
@@ -111,6 +111,11 @@ void __noreturn sdk_main(const struct sdk_config *conf)
 	uint64_t last_frame = time_us_64();
 
 	while (!done) {
+		// Track ellapsed time.
+		uint64_t this_frame = time_us_32();
+		uint32_t dt = this_frame - last_frame;
+		last_frame = this_frame;
+
 		while (SDL_PollEvent(&event)) {
 			if (event.type == SDL_KEYDOWN &&
 			    event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
@@ -121,17 +126,12 @@ void __noreturn sdk_main(const struct sdk_config *conf)
 				done = true;
 			}
 
-			sdk_input_handle(&event);
+			sdk_input_handle(&event, dt);
 		}
 
 		// Enqueue audio samples.
 		sdk_audio_task();
 		sdk_audio_flush();
-
-		// Track ellapsed time.
-		uint64_t this_frame = time_us_32();
-		uint32_t dt = this_frame - last_frame;
-		last_frame = this_frame;
 
 		// Clear to gray
 		SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
