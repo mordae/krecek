@@ -181,7 +181,7 @@ void sdk_input_task(void)
 
 		sdk_inputs_delta.batt_mv = sdk_inputs.batt_mv - prev_inputs.batt_mv;
 
-		if (sdk_inputs.cc_mv < 200.0f) {
+		if (sdk_inputs.cc_mv < 250.0f) {
 			if (sdk_config.off_on_select && sdk_inputs.select) {
 				if (!select_held_since) {
 					select_held_since = time_us_32();
@@ -195,6 +195,36 @@ void sdk_input_task(void)
 				}
 			} else {
 				select_held_since = 0;
+			}
+		}
+
+		static int charging_mode = 0;
+
+		if (sdk_inputs.cc_mv > 700.0f) {
+			/* We can draw 1.5A, so max the charger at 1A. */
+			gpio_put(CHG_ISET2_PIN, 0);
+			gpio_set_dir(CHG_ISET2_PIN, GPIO_OUT);
+
+			if (charging_mode != 2) {
+				printf("\x1b[1;31msdk: charging at 1A\e[0m\n");
+				charging_mode = 2;
+			}
+		} else if (sdk_inputs.cc_mv > 250.0f) {
+			/* We can draw 500-900mA, so limit charger to 500mA. */
+			gpio_put(CHG_ISET2_PIN, 1);
+			gpio_set_dir(CHG_ISET2_PIN, GPIO_OUT);
+
+			if (charging_mode != 1) {
+				printf("\x1b[1;31msdk: charging at 500mA\e[0m\n");
+				charging_mode = 1;
+			}
+		} else {
+			/* Limit charger to 100mA. */
+			gpio_set_dir(CHG_ISET2_PIN, GPIO_IN);
+
+			if (charging_mode != 0) {
+				printf("\x1b[1;31msdk: charging at 100mA\e[0m\n");
+				charging_mode = 0;
 			}
 		}
 

@@ -214,7 +214,7 @@ void sdk_audio_start(void)
 
 void sdk_audio_report(void)
 {
-	printf("sdk: audio samples: min=%i, avg=%i, max=%i / buf=%i\n", min_samples,
+	printf("sdk: audio samples: min=%i avg=%i max=%i / buf=%i\n", min_samples,
 	       all_samples / num_wakeups, max_samples, I2S_BUF_LEN);
 
 	num_wakeups = 0;

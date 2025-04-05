@@ -135,7 +135,7 @@ void __noreturn sdk_main(const struct sdk_config *conf)
 	 * Tolerance on pull-up is 20%, so the range is 352-511 mV.
 	 * Voltage can also drop somewhat, especially with long cable.
 	 */
-	if (cc1 > 200 || cc2 > 200) {
+	if (cc1 > 250.0f || cc2 > 250.0f) {
 		/*
 		 * When connected over USB, wait for a bit for the host
 		 * to connect to us so that it doesn't miss early messages.
@@ -184,11 +184,18 @@ static void sdk_stats_task(void)
 	while (true) {
 		task_sleep_ms(10 * 1000);
 
+		printf("\x1b[1;32m");
+
 		for (unsigned i = 0; i < NUM_CORES; i++)
 			task_stats_report_reset(i);
 
-		sdk_audio_report();
+		printf("\x1b[1;33m");
 		task_stats_memory_reset();
+
+		printf("\x1b[1;36m");
+		sdk_audio_report();
+
+		printf("sdk: batt=%6.1f cc=%6.1f\n", sdk_inputs.batt_mv, sdk_inputs.cc_mv);
 
 		unsigned hit = xip_ctrl_hw->ctr_hit;
 		unsigned acc = xip_ctrl_hw->ctr_acc;
@@ -202,9 +209,12 @@ static void sdk_stats_task(void)
 		// Approximate cache miss cost.
 		float cost = 16 * PICO_FLASH_SPI_CLKDIV / (float)CLK_SYS_HZ;
 
+		printf("\x1b[1;36m");
 		printf("sdk: xip cache hits: %10u / %10u = %5.1f%%\n", hit, acc, 100.0f * ratio);
 		printf("sdk: misses / waits: %10u   %10s ~ %5.1f%%\n", misses, "",
 		       misses * cost * 10.0f);
+
+		printf("\x1b[0m");
 	}
 }
 
