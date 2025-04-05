@@ -342,7 +342,7 @@ void game_paint(unsigned dt_usec)
 
 	sdk_draw_sprite(&mario_p.s);
 
-	printf("%f" dt);
+	//printf("%f" dt);
 	tft_set_origin(0, 0);
 
 	if (map == maps_map0) {
