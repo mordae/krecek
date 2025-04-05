@@ -67,7 +67,7 @@ void game_input(unsigned dt_usec)
 
 	if (fabsf(move_x) + fabs(move_y) > 0.1f) {
 		int pos_x = player.s.x / TILE_SIZE;
-		int pos_y = player.s.y / TILE_SIZE;
+		int pos_y = (player.s.y + 4) / TILE_SIZE;
 
 		float next_x = player.s.x + dt * move_x;
 		float next_y = player.s.y + dt * move_y;
@@ -80,6 +80,7 @@ void game_input(unsigned dt_usec)
 		int next_pos_y = (next_y + (move_y > 0 ? 4 : 0)) / TILE_SIZE;
 
 		if (pos_x != next_pos_x && move_x) {
+			//if (map[pos_y][next_pos_x].collides_up == 1) {
 			if (move_x > 0) {
 				// going right, to the next tile
 				if (map[pos_y][next_pos_x].collides_left)
