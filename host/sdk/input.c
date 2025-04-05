@@ -99,18 +99,22 @@ static void on_keydown(SDL_Scancode code)
 		break;
 
 	case SDL_SCANCODE_W:
+	case SDL_SCANCODE_UP:
 		joy_up = 1;
 		break;
 
 	case SDL_SCANCODE_S:
+	case SDL_SCANCODE_DOWN:
 		joy_down = 1;
 		break;
 
 	case SDL_SCANCODE_A:
+	case SDL_SCANCODE_LEFT:
 		joy_left = 1;
 		break;
 
 	case SDL_SCANCODE_D:
+	case SDL_SCANCODE_RIGHT:
 		joy_right = 1;
 		break;
 
