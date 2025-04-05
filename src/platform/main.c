@@ -342,12 +342,12 @@ void game_paint(unsigned dt_usec)
 
 	sdk_draw_sprite(&mario_p.s);
 
+	printf("%f" dt);
 	tft_set_origin(0, 0);
 
 	if (map == maps_map0) {
 		sdk_draw_tile(0, 0, &ts_menu_png, menu.select);
 	}
-
 	//tft_draw_pixel(mario_p.px + 0.5, mario_p.py - 0.5, WHITE);
 }
 
