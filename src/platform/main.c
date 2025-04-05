@@ -9,9 +9,8 @@
 #include <petr.png.h>
 #include <platforms.png.h>
 #include <spawners.png.h>
-#include <menu1.png.h>
-#include <menu2.png.h>
-#include <menu3.png.h>
+#include <menu.png.h>
+
 // Physics constants
 #define GRAVITY 90	  // Gravity for falling
 #define JUMP_STRENGTH -80 // Jump strength
@@ -52,6 +51,11 @@ typedef struct {
 } Mario;
 
 static Mario mario_p;
+
+struct menu {
+	float select;
+};
+static struct menu menu;
 static float volume = 0;
 
 // --- Initialize the game ---
@@ -146,14 +150,17 @@ void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
 	if (map == maps_map0) {
+		if (sdk_inputs_delta.a > 0) {
+			menu.select += 1;
+		}
 	} else {
 		if (!mario_p.alive) {
-			if (sdk_inputs.start || sdk_inputs.select)
+			if (sdk_inputs.start)
 				game_reset();
 			return;
 		}
 		if (mario_p.won) {
-			if (sdk_inputs.start || sdk_inputs.select) {
+			if (sdk_inputs.start) {
 				mario_p.won = 0;
 				if (map == maps_map1) {
 					map = maps_map2;
@@ -183,6 +190,9 @@ void game_input(unsigned dt_usec)
 			volume -= 12.0 * dt;
 		}
 
+		if (sdk_inputs.select) {
+			map = maps_map0;
+		}
 		if (sdk_inputs_delta.vol_sw > 0) {
 			if (volume < SDK_GAIN_MIN) {
 				volume = 0;
@@ -287,7 +297,9 @@ void game_paint(unsigned dt_usec)
 
 	tft_fill(0);
 
-	tft_set_origin(mario_p.px - TFT_WIDTH / 2.0 + 3.5, 0);
+	tft_set_origin(mario_p.px - TFT_WIDTH / 2.0 + 3.5, menu.select);
+
+	//sdk_draw_tile(0, 0, &ts_menu_png, 0);
 
 	// Draw tile map
 	for (int y = 0; y < MAP_ROWS; y++) {
@@ -317,6 +329,10 @@ void game_paint(unsigned dt_usec)
 
 	tft_set_origin(0, 0);
 
+	if (map == maps_map0) {
+		sdk_draw_tile(0, 0, &ts_menu_png, menu.select);
+	}
+
 	//tft_draw_pixel(mario_p.px + 0.5, mario_p.py - 0.5, WHITE);
 }
 
@@ -325,7 +341,7 @@ int main()
 	struct sdk_config config = {
 		.wait_for_usb = true,
 		.show_fps = true,
-		.off_on_select = true,
+		.off_on_select = false,
 		.fps_color = GRAY,
 	};
 	tone_init();
