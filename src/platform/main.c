@@ -9,7 +9,9 @@
 #include <petr.png.h>
 #include <platforms.png.h>
 #include <spawners.png.h>
-
+#include <menu1.png.h>
+#include <menu2.png.h>
+#include <menu3.png.h>
 // Physics constants
 #define GRAVITY 90	  // Gravity for falling
 #define JUMP_STRENGTH -80 // Jump strength
@@ -30,6 +32,7 @@
 #define GRAY rgb_to_rgb565(127, 127, 127)
 #define WHITE rgb_to_rgb565(255, 255, 255)
 
+extern TileType maps_map0[MAP_ROWS][MAP_COLS];
 extern TileType maps_map1[MAP_ROWS][MAP_COLS];
 extern TileType maps_map2[MAP_ROWS][MAP_COLS];
 extern TileType maps_map3[MAP_ROWS][MAP_COLS];
@@ -142,140 +145,139 @@ void game_audio(int nsamples)
 void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
-
-	if (!mario_p.alive) {
-		if (sdk_inputs.start || sdk_inputs.select)
-			game_reset();
-		return;
-	}
-	if (mario_p.won) {
-		if (sdk_inputs.start || sdk_inputs.select) {
-			mario_p.won = 0;
-			if (map == maps_map1) {
-				map = maps_map2;
-				mario_p.px = 3.5;
-				mario_p.py = 7;
-			} else if (map == maps_map2) {
-				map = maps_map3;
-				mario_p.px = 3.5;
-				mario_p.py = 7;
-			} else if (map == maps_map3) {
-				map = maps_map4;
-				mario_p.px = 3.5;
-				mario_p.py = 7;
-			} else if (map == maps_map4) {
-				map = maps_mapwin;
-				mario_p.px = 3.5;
-				mario_p.py = 7;
-			}
-		}
-	}
-
-	if (sdk_inputs.vol_up) {
-		volume += 12.0 * dt;
-	}
-
-	if (sdk_inputs.vol_down) {
-		volume -= 12.0 * dt;
-	}
-
-	if (sdk_inputs_delta.vol_sw > 0) {
-		if (volume < SDK_GAIN_MIN) {
-			volume = 0;
-		} else {
-			volume = SDK_GAIN_MIN - 1;
-		}
-	}
-
-	volume = clamp(volume, SDK_GAIN_MIN - 1.0, 6);
-
-	if (sdk_inputs.vol_up || sdk_inputs.vol_down || sdk_inputs.vol_sw) {
-		sdk_set_output_gain_db(volume);
-	}
-
-	// Horizontal movement
-	if (sdk_inputs.x > 0 || sdk_inputs.joy_x < -500) { // Left
-		mario_p.vx -= ACCELERATION * dt;
-		if (mario_p.vx < -MAX_SPEED)
-			mario_p.vx = -MAX_SPEED;
-	} else if (sdk_inputs.b > 0 || sdk_inputs.joy_x > 500) { // Right
-		mario_p.vx += ACCELERATION * dt;
-		if (mario_p.vx > MAX_SPEED)
-			mario_p.vx = MAX_SPEED;
-
+	if (map == maps_map0) {
 	} else {
-		// Apply friction when no movement keys are pressed
-		mario_p.vx -= mario_p.vx * FRICTION * dt;
-		if (fabs(mario_p.vx) < 0.1)
-			mario_p.vx = 0; // Stop completely when velocity is very small
-	}
-
-	if (mario_p.vy != 0) {
-		mario_p.vx = mario_p.vx * 0.98;
-	}
-
-	// Apply gravity
-	mario_p.vy += GRAVITY * dt;
-
-	mario_p.px += mario_p.vx * dt;
-	mario_p.py += mario_p.vy * dt;
-
-	// Collision detection with floor tiles
-	int tile_x = mario_p.px / TILE_SIZE;
-	int tile_y = mario_p.py / TILE_SIZE + 1.0f / TILE_SIZE;
-
-	if (mario_p.vy >= 0) {
-		switch (map[tile_y][tile_x]) {
-		case FLOOR_MID:
-		case FLOOR_R:
-		case FLOOR_L:
-			mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
-			mario_p.vy = 0;
-
-			if (sdk_inputs.y) {
-				mario_p.vy = JUMP_STRENGTH;
-			}
-
-			break;
-
-		case FLOOR_JUMP_MID:
-		case FLOOR_JUMP_L:
-		case FLOOR_JUMP_R:
-			mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
-			mario_p.vy = 0;
-
-			if (sdk_inputs.y) {
-				mario_p.vy = 1.2 * JUMP_STRENGTH;
-			}
-
-			break;
-
-		case FLOOR_WIN_MID:
-		case FLOOR_WIN_L:
-		case FLOOR_WIN_R:
-			mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
-			mario_p.vy = 0;
-			mario_p.won = 1;
-			break;
-
-		case EMPTY:
-		case SPAWNER:
-			break;
+		if (!mario_p.alive) {
+			if (sdk_inputs.start || sdk_inputs.select)
+				game_reset();
+			return;
 		}
-	}
+		if (mario_p.won) {
+			if (sdk_inputs.start || sdk_inputs.select) {
+				mario_p.won = 0;
+				if (map == maps_map1) {
+					map = maps_map2;
+					mario_p.px = 3.5;
+					mario_p.py = 7;
+				} else if (map == maps_map2) {
+					map = maps_map3;
+					mario_p.px = 3.5;
+					mario_p.py = 7;
+				} else if (map == maps_map3) {
+					map = maps_map4;
+					mario_p.px = 3.5;
+					mario_p.py = 7;
+				} else if (map == maps_map4) {
+					map = maps_mapwin;
+					mario_p.px = 3.5;
+					mario_p.py = 7;
+				}
+			}
+		}
 
-	// Boundaries
-	//if (mario_p.px < 0)
-	//mario_p.px = 0;
+		if (sdk_inputs.vol_up) {
+			volume += 12.0 * dt;
+		}
 
-	//if (mario_p.px >= MAP_COLS * TILE_SIZE - TILE_SIZE)
-	//mario_p.px = MAP_COLS * TILE_SIZE - TILE_SIZE;
+		if (sdk_inputs.vol_down) {
+			volume -= 12.0 * dt;
+		}
 
-	//if (mario_p.py < 0)
-	//		mario_p.alive = false;
+		if (sdk_inputs_delta.vol_sw > 0) {
+			if (volume < SDK_GAIN_MIN) {
+				volume = 0;
+			} else {
+				volume = SDK_GAIN_MIN - 1;
+			}
+		}
 
-	if (mario_p.py >= MAP_ROWS * TILE_SIZE - TILE_SIZE + TILE_SIZE + TILE_SIZE) {
-		mario_p.alive = false;
+		volume = clamp(volume, SDK_GAIN_MIN - 1.0, 6);
+
+		if (sdk_inputs.vol_up || sdk_inputs.vol_down || sdk_inputs.vol_sw) {
+			sdk_set_output_gain_db(volume);
+		}
+
+		// Horizontal movement
+		if (sdk_inputs.x > 0 || sdk_inputs.joy_x < -500) { // Left
+			mario_p.vx -= ACCELERATION * dt;
+			if (mario_p.vx < -MAX_SPEED)
+				mario_p.vx = -MAX_SPEED;
+		} else if (sdk_inputs.b > 0 || sdk_inputs.joy_x > 500) { // Right
+			mario_p.vx += ACCELERATION * dt;
+			if (mario_p.vx > MAX_SPEED)
+				mario_p.vx = MAX_SPEED;
+
+		} else {
+			// Apply friction when no movement keys are pressed
+			mario_p.vx -= mario_p.vx * FRICTION * dt;
+			if (fabs(mario_p.vx) < 0.1)
+				mario_p.vx = 0; // Stop completely when velocity is very small
+		}
+
+		if (mario_p.vy != 0) {
+			mario_p.vx = mario_p.vx * 0.98;
+		}
+
+		// Apply gravity
+		mario_p.vy += GRAVITY * dt;
+
+		mario_p.px += mario_p.vx * dt;
+		mario_p.py += mario_p.vy * dt;
+
+		// Collision detection with floor tiles
+		int tile_x = mario_p.px / TILE_SIZE;
+		int tile_y = mario_p.py / TILE_SIZE + 1.0f / TILE_SIZE;
+
+		if (mario_p.vy >= 0) {
+			switch (map[tile_y][tile_x]) {
+			case FLOOR_MID:
+			case FLOOR_R:
+			case FLOOR_L:
+				mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+				mario_p.vy = 0;
+
+				if (sdk_inputs.y) {
+					mario_p.vy = JUMP_STRENGTH;
+				}
+
+				break;
+
+			case FLOOR_JUMP_MID:
+			case FLOOR_JUMP_L:
+			case FLOOR_JUMP_R:
+				mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+				mario_p.vy = 0;
+
+				if (sdk_inputs.y) {
+					mario_p.vy = 1.2 * JUMP_STRENGTH;
+				}
+
+				break;
+
+			case FLOOR_WIN_MID:
+			case FLOOR_WIN_L:
+			case FLOOR_WIN_R:
+				mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+				mario_p.vy = 0;
+				mario_p.won = 1;
+				break;
+
+			case EMPTY:
+			case SPAWNER:
+				break;
+			}
+		}
+
+		// Boundaries
+		if (mario_p.px < 0)
+			mario_p.px = 0;
+
+		if (mario_p.px >= MAP_COLS * TILE_SIZE - TILE_SIZE)
+			mario_p.px = MAP_COLS * TILE_SIZE - TILE_SIZE;
+
+		if (mario_p.py >= MAP_ROWS * TILE_SIZE - TILE_SIZE + TILE_SIZE + TILE_SIZE) {
+			mario_p.alive = false;
+		}
 	}
 }
 // --- Game Paint ---

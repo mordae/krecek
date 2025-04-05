@@ -1,6 +1,7 @@
 add_executable(
   platform
   main.c
+  maps/map0.c
   maps/map1.c
   maps/map2.c
   maps/map3.c
