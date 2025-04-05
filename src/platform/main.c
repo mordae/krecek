@@ -68,7 +68,7 @@ void game_start(void)
 	mario_p.score = 0;
 	mario_p.alive = 1;
 	mario_p.won = 0;
-	map = maps_map1;
+	map = maps_map0;
 
 	mario_p.s.ts = &ts_petr_png;
 	mario_p.s.x = mario_p.px;
@@ -153,6 +153,21 @@ void game_input(unsigned dt_usec)
 		if (sdk_inputs_delta.a > 0) {
 			menu.select += 1;
 		}
+		if (sdk_inputs_delta.y > 0) {
+			menu.select -= 1;
+		}
+		if (menu.select <= 4) {
+			menu.select = 0;
+		}
+
+		if (sdk_inputs_delta.select) {
+			if (menu.select == 0) {
+				map = maps_map1;
+			} else if (menu.select == 1) {
+			} else if (menu.select == 2) {
+			}
+		}
+
 	} else {
 		if (!mario_p.alive) {
 			if (sdk_inputs.start)
