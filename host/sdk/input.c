@@ -46,10 +46,6 @@ static void on_keydown(SDL_Scancode code)
 		sdk_inputs.vol_sw = 1;
 		break;
 
-	case SDL_SCANCODE_X:
-		sdk_inputs.joy_sw = 1;
-		break;
-
 	case SDL_SCANCODE_0:
 		sdk_inputs.aux[0] = 1;
 		break;
@@ -154,10 +150,6 @@ static void on_keyup(SDL_Scancode code)
 		sdk_inputs.vol_sw = 0;
 		break;
 
-	case SDL_SCANCODE_X:
-		sdk_inputs.joy_sw = 0;
-		break;
-
 	case SDL_SCANCODE_0:
 		sdk_inputs.aux[0] = 0;
 		break;
@@ -241,6 +233,11 @@ void sdk_input_handle(const SDL_Event *event, uint32_t dt)
 		on_keyup(event->key.keysym.scancode);
 	}
 
+	/* Dummy current control and temperature readings. */
+	sdk_inputs.batt_mv = 3900.0f;
+	sdk_inputs.cc_mv = 400.0f;
+	sdk_inputs.temp = 35.0f;
+
 	/* Calculate input deltas */
 	sdk_inputs_delta.a = sdk_inputs.a - prev_inputs.a;
 	sdk_inputs_delta.b = sdk_inputs.b - prev_inputs.b;
@@ -249,7 +246,6 @@ void sdk_input_handle(const SDL_Event *event, uint32_t dt)
 
 	sdk_inputs_delta.joy_x = sdk_inputs.joy_x - prev_inputs.joy_x;
 	sdk_inputs_delta.joy_y = sdk_inputs.joy_y - prev_inputs.joy_y;
-	sdk_inputs_delta.joy_sw = sdk_inputs.joy_sw - prev_inputs.joy_sw;
 
 	sdk_inputs_delta.vol_up = sdk_inputs.vol_up - prev_inputs.vol_up;
 	sdk_inputs_delta.vol_down = sdk_inputs.vol_down - prev_inputs.vol_down;
@@ -263,6 +259,9 @@ void sdk_input_handle(const SDL_Event *event, uint32_t dt)
 
 	sdk_inputs_delta.start = sdk_inputs.start - prev_inputs.start;
 	sdk_inputs_delta.select = sdk_inputs.select - prev_inputs.select;
+
+	sdk_inputs_delta.cc_mv = sdk_inputs.cc_mv - prev_inputs.cc_mv;
+	sdk_inputs_delta.temp = sdk_inputs.temp - prev_inputs.temp;
 
 	sdk_inputs.joy_x = 2047 * joy_right - 2047 * joy_left;
 	sdk_inputs.joy_y = 2047 * joy_down - 2047 * joy_up;

@@ -1,5 +1,6 @@
 #include <pico/stdlib.h>
 
+#include <hardware/i2c.h>
 #include <hardware/dma.h>
 
 #include <hardware/regs/io_qspi.h>
@@ -10,15 +11,15 @@
 #include <task.h>
 
 #include <sdk.h>
-#include <sdk/slave.h>
+#include <sdk/remote.h>
 
-#include "es8312.h"
+//#include "es8312.h"
 #include "i2s.pio.h"
 
-static struct es8312_driver dsp = {
-	.i2c = DSP_I2C,
-	.addr = ES8312_ADDR,
-};
+/*static struct es8312_driver dsp = {*/
+/*	.i2c = DSP_I2C,*/
+/*	.addr = ES8312_ADDR,*/
+/*};*/
 
 static int sm_i2s = -1;
 static int dma_i2s_rx = -1;
@@ -129,10 +130,8 @@ int sdk_read_samples(int16_t *buf, int len)
 
 static void set_amp_enabled(bool en)
 {
-	sdk_poke(IO_BANK0_BASE + IO_BANK0_GPIO0_CTRL_OFFSET + 8 * SLAVE_AMP_EN_PIN,
-		 (IO_QSPI_GPIO_QSPI_SCLK_CTRL_OEOVER_BITS |
-		  (en ? IO_QSPI_GPIO_QSPI_SCLK_CTRL_OUTOVER_BITS : 0) |
-		  IO_QSPI_GPIO_QSPI_SCLK_CTRL_FUNCSEL_BITS));
+	(void)en;
+	// TODO: Amplifier is now built into the DSP.
 }
 
 void sdk_audio_init(void)
@@ -149,11 +148,11 @@ void sdk_audio_init(void)
 	gpio_set_pulls(DSP_CDATA_PIN, true, false);
 	gpio_set_pulls(DSP_CCLK_PIN, true, false);
 
-	int id = es8312_identify(&dsp);
-
-	printf("sdk: DSP identified as ES%x r%x\n", id >> 8, id & 0xff);
-
-	es8312_reset(&dsp);
+	/*int id = es8312_identify(&dsp);*/
+	/**/
+	/*printf("sdk: DSP identified as ES%x r%x\n", id >> 8, id & 0xff);*/
+	/**/
+	/*es8312_reset(&dsp);*/
 
 	sm_i2s = pio_claim_unused_sm(SDK_PIO, true);
 
@@ -201,9 +200,9 @@ void sdk_audio_init(void)
 
 	puts("sdk: configured i2s");
 
-	es8312_start(&dsp);
-	es8312_set_output(&dsp, false, false);
-	es8312_set_output_gain(&dsp, 0);
+	/*es8312_start(&dsp);*/
+	/*es8312_set_output(&dsp, false, false);*/
+	/*es8312_set_output_gain(&dsp, 0);*/
 
 	puts("sdk: configured audio DSP");
 }
@@ -226,16 +225,17 @@ void sdk_audio_report(void)
 
 void sdk_set_output_gain_db(float gain)
 {
-	int gain_raw = 191 + gain * 2;
-
-	if (gain_raw < 0)
-		gain_raw = 0;
-
-	if (gain_raw > 255)
-		gain_raw = 255;
-
-	if (0 > es8312_set_output_gain(&dsp, gain_raw))
-		puts("sdk: failed to set output gain");
-
-	set_amp_enabled(!!gain_raw);
+	(void)gain;
+	/*int gain_raw = 191 + gain * 2;*/
+	/**/
+	/*if (gain_raw < 0)*/
+	/*	gain_raw = 0;*/
+	/**/
+	/*if (gain_raw > 255)*/
+	/*	gain_raw = 255;*/
+	/**/
+	/*if (0 > es8312_set_output_gain(&dsp, gain_raw))*/
+	/*	puts("sdk: failed to set output gain");*/
+	/**/
+	/*set_amp_enabled(!!gain_raw);*/
 }

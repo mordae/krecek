@@ -27,13 +27,13 @@
 #define TFT_SPI_DEV spi1
 #define TFT_BAUDRATE (70 * 1000 * 1000)
 #define TFT_SWAP_XY 1
-#define TFT_FLIP_X 1
+#define TFT_FLIP_X 0
 #define TFT_FLIP_Y 1
 #define TFT_SCALE 2
 #define TFT_DRIVER TFT_DRIVER_ST7789V
-#define TFT_RST_DELAY 5
+#define TFT_RST_DELAY 120
 #define TFT_HW_ACCEL 1
-#define TFT_VSYNC 1
+#define TFT_VSYNC 0
 #define TFT_PIO SDK_PIO
 
 /* Nuvoton DSP */
@@ -67,7 +67,7 @@
 #define BUS1_PIN 19
 #define BUS2_PIN 20
 #define BUS3_PIN 21
-// Unused 22
+#define UNUSED_GPIO22_PIN 22 // Unused
 #define CLK_OUT_PIN 23
 #define DAP_SWCLK_PIN 24
 #define DAP_SWDIO_PIN 25
@@ -81,7 +81,7 @@
 #define SLAVE_TOUCH_CS_PIN 1
 #define SLAVE_TOUCH_SCK_PIN 2
 #define SLAVE_TOUCH_MOSI_PIN 3
-// Unused 4
+#define SLAVE_UNUSED_GPIO4_PIN 4 // Unused
 #define SLAVE_RF_CS_PIN 5
 #define SLAVE_BUS3_PIN 6
 #define SLAVE_BUS2_PIN 7
@@ -97,19 +97,20 @@
 #define SLAVE_AUX7_PIN 17
 #define SLAVE_START_PIN 18
 #define SLAVE_OFF_PIN 19
-// Unused 20
+#define SLAVE_UNUSED_GPIO20_PIN 20 // Unused
 #define SLAVE_RF_XOSC_PIN 21
 #define SLAVE_Y_PIN 22
 #define SLAVE_B_PIN 23
 #define SLAVE_A_PIN 24
 #define SLAVE_X_PIN 25
-#define SLAVE_BRACK_R_PIN 26
-#define SLAVE_BRACK_L_PIN 27
-#define SLAVE_JOY_Y_PIN 28
-#define SLAVE_JOY_X_PIN 29
+#define SLAVE_BRACK_L_PIN 26
+#define SLAVE_BRACK_R_PIN 27
+#define SLAVE_JOY_X_PIN 28
+#define SLAVE_JOY_Y_PIN 29
 
-// Unused QSPI 0
-#define SLAVE_SELECT_QSPI_PIN 1
-#define SLAVE_VOL_UP_QSPI_PIN 2
-#define SLAVE_VOL_DOWN_QSPI_PIN 3
-#define SLAVE_VOL_SW_QSPI_PIN 4
+#define SLAVE_VOL_SW_QSPI_PIN 0	    // SCLK
+#define SLAVE_UNUSED_QSPI_SS_PIN 1  // Unused SS
+#define SLAVE_UNUSED_QSPI_SD0_PIN 2 // Unused SD0
+#define SLAVE_SELECT_QSPI_PIN 3	    // SD1
+#define SLAVE_VOL_DOWN_QSPI_PIN 4   // SD2
+#define SLAVE_VOL_UP_QSPI_PIN 5	    // SD3

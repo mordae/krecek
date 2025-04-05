@@ -5,6 +5,7 @@ add_library(
   video.c
   input.c
   slave.c
+  remote.c
   dap.c
   es8312.c
 )

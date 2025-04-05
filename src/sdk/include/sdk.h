@@ -37,3 +37,8 @@ void __noreturn sdk_main(const struct sdk_config *conf);
  * given number of microseconds since the last actual yield.
  */
 void sdk_yield_every_us(uint32_t us);
+
+/*
+ * Turn the console off.
+ */
+void sdk_turn_off(void);

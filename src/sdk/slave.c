@@ -8,28 +8,11 @@
 #include <hardware/regs/io_qspi.h>
 
 #include <sdk.h>
-#include <sdk/slave.h>
+#include <sdk/remote.h>
 
 #include <stdio.h>
 
 #include "dap.h"
-
-uint32_t sdk_peek(uint32_t addr)
-{
-	uint32_t out;
-
-	if (!dap_peek(addr, &out))
-		sdk_panic("sdk: dap_sdk_peek(0x%08x) failed\n", (unsigned)addr);
-
-	return out;
-}
-
-void sdk_poke(uint32_t addr, uint32_t value)
-{
-	if (!dap_poke(addr, value))
-		sdk_panic("sdk: dap_sdk_poke(0x%08x, 0x%08x) failed\n", (unsigned)addr,
-			  (unsigned)value);
-}
 
 static uint32_t unreset = RESETS_RESET_SYSINFO_BITS | RESETS_RESET_SYSCFG_BITS |
 			  RESETS_RESET_PWM_BITS | RESETS_RESET_PLL_SYS_BITS |
@@ -60,19 +43,13 @@ void sdk_slave_park()
 				 0);
 
 	/* Start XOSC */
-	sdk_poke(XOSC_BASE + XOSC_STARTUP_OFFSET, 0);
-	sdk_poke(XOSC_BASE + XOSC_CTRL_OFFSET,
-		 ((XOSC_CTRL_ENABLE_VALUE_ENABLE << XOSC_CTRL_ENABLE_LSB) |
-		  (XOSC_CTRL_FREQ_RANGE_VALUE_1_15MHZ << XOSC_CTRL_FREQ_RANGE_LSB)));
+	remote_poke(XOSC_BASE + XOSC_STARTUP_OFFSET, 0);
+	remote_poke(XOSC_BASE + XOSC_CTRL_OFFSET,
+		    ((XOSC_CTRL_ENABLE_VALUE_ENABLE << XOSC_CTRL_ENABLE_LSB) |
+		     (XOSC_CTRL_FREQ_RANGE_VALUE_1_15MHZ << XOSC_CTRL_FREQ_RANGE_LSB)));
 
 	/* Un-reset subsystems we wish to use */
-	sdk_poke(RESETS_BASE + RESETS_RESET_OFFSET, RESETS_RESET_BITS & ~unreset);
-
-	/* Prevent power-off */
-	sdk_poke(PADS_BANK0_BASE + PADS_BANK0_GPIO0_OFFSET + 4 * SLAVE_SELECT_PIN,
-		 (1 << 3) | (1 << 6));
-	sdk_poke(IO_QSPI_BASE + IO_QSPI_GPIO_QSPI_SCLK_CTRL_OFFSET + 8 * SLAVE_OFF_QSPI_PIN,
-		 IO_QSPI_GPIO_QSPI_SCLK_CTRL_FUNCSEL_BITS);
+	remote_poke(RESETS_BASE + RESETS_RESET_OFFSET, RESETS_RESET_BITS & ~unreset);
 }
 
 void sdk_slave_init()
@@ -80,45 +57,47 @@ void sdk_slave_init()
 	uint32_t status = 0;
 
 	while (true) {
-		status = sdk_peek(RESETS_BASE + RESETS_RESET_DONE_OFFSET);
+		status = remote_peek(RESETS_BASE + RESETS_RESET_DONE_OFFSET);
 		if ((status & unreset) == unreset)
 			break;
 	}
 
-	sdk_poke(PLL_SYS_BASE + PLL_FBDIV_INT_OFFSET, 132);
-	sdk_poke(PLL_SYS_BASE + PLL_PRIM_OFFSET, 0x62000);
+	remote_poke(PLL_SYS_BASE + PLL_FBDIV_INT_OFFSET, 132);
+	remote_poke(PLL_SYS_BASE + PLL_PRIM_OFFSET, 0x62000);
 
-	status = sdk_peek(PLL_SYS_BASE + PLL_PWR_OFFSET);
-	sdk_poke(PLL_SYS_BASE + PLL_PWR_OFFSET, status & ~(PLL_PWR_PD_BITS | PLL_PWR_VCOPD_BITS));
+	status = remote_peek(PLL_SYS_BASE + PLL_PWR_OFFSET);
+	remote_poke(PLL_SYS_BASE + PLL_PWR_OFFSET,
+		    status & ~(PLL_PWR_PD_BITS | PLL_PWR_VCOPD_BITS));
 
 	while (true) {
-		status = sdk_peek(PLL_SYS_BASE + PLL_CS_OFFSET);
+		status = remote_peek(PLL_SYS_BASE + PLL_CS_OFFSET);
 		if (status & PLL_CS_LOCK_BITS)
 			break;
 	}
 
-	sdk_poke(PLL_SYS_BASE + PLL_PWR_OFFSET, 0);
+	remote_poke(PLL_SYS_BASE + PLL_PWR_OFFSET, 0);
 
 	puts("sdk: slave PLL_SYS locked");
 
-	sdk_poke(CLOCKS_BASE + CLOCKS_CLK_SYS_CTRL_OFFSET,
-		 CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLKSRC_CLK_SYS_AUX);
+	remote_poke(CLOCKS_BASE + CLOCKS_CLK_SYS_CTRL_OFFSET,
+		    CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLKSRC_CLK_SYS_AUX);
 
-	sdk_poke(CLOCKS_BASE + CLOCKS_CLK_PERI_CTRL_OFFSET, CLOCKS_CLK_PERI_CTRL_ENABLE_BITS);
+	remote_poke(CLOCKS_BASE + CLOCKS_CLK_PERI_CTRL_OFFSET, CLOCKS_CLK_PERI_CTRL_ENABLE_BITS);
 
-	sdk_poke(CLOCKS_BASE + CLOCKS_CLK_REF_CTRL_OFFSET,
-		 CLOCKS_CLK_REF_CTRL_SRC_VALUE_XOSC_CLKSRC << CLOCKS_CLK_REF_CTRL_SRC_LSB);
+	remote_poke(CLOCKS_BASE + CLOCKS_CLK_REF_CTRL_OFFSET,
+		    CLOCKS_CLK_REF_CTRL_SRC_VALUE_XOSC_CLKSRC << CLOCKS_CLK_REF_CTRL_SRC_LSB);
 
-	sdk_poke(CLOCKS_BASE + CLOCKS_CLK_ADC_DIV_OFFSET, 3 << CLOCKS_CLK_ADC_DIV_INT_LSB);
-	sdk_poke(CLOCKS_BASE + CLOCKS_CLK_ADC_CTRL_OFFSET,
-		 CLOCKS_CLK_ADC_CTRL_ENABLE_BITS | (CLOCKS_CLK_ADC_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS
-						    << CLOCKS_CLK_ADC_CTRL_AUXSRC_LSB));
+	remote_poke(CLOCKS_BASE + CLOCKS_CLK_ADC_DIV_OFFSET, 3 << CLOCKS_CLK_ADC_DIV_INT_LSB);
+	remote_poke(CLOCKS_BASE + CLOCKS_CLK_ADC_CTRL_OFFSET,
+		    CLOCKS_CLK_ADC_CTRL_ENABLE_BITS |
+			    (CLOCKS_CLK_ADC_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS
+			     << CLOCKS_CLK_ADC_CTRL_AUXSRC_LSB));
 
 	unreset |= RESETS_RESET_ADC_BITS;
-	sdk_poke(RESETS_BASE + RESETS_RESET_OFFSET, RESETS_RESET_BITS & ~unreset);
+	remote_poke(RESETS_BASE + RESETS_RESET_OFFSET, RESETS_RESET_BITS & ~unreset);
 
 	while (true) {
-		status = sdk_peek(RESETS_BASE + RESETS_RESET_DONE_OFFSET);
+		status = remote_peek(RESETS_BASE + RESETS_RESET_DONE_OFFSET);
 		if ((status & unreset) == unreset)
 			break;
 	}

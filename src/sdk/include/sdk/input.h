@@ -4,14 +4,13 @@
 struct sdk_inputs {
 	int8_t a, b, x, y;
 	int8_t start, select;
-	int8_t joy_sw;
 	int8_t vol_up, vol_down, vol_sw;
 	int8_t aux[8];
 
 	int16_t joy_x, joy_y;
 	int16_t brack_l, brack_r;
 
-	float batt_mv;
+	float batt_mv, cc_mv, temp;
 };
 
 extern struct sdk_inputs sdk_inputs;

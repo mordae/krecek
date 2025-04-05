@@ -1,13 +1,10 @@
 #include <pico/stdlib.h>
 #include <pico/sync.h>
 
-#include <hardware/pwm.h>
 #include <hardware/dma.h>
 
-#include <hardware/regs/pwm.h>
-
 #include <sdk.h>
-#include <sdk/slave.h>
+#include <sdk/remote.h>
 
 #include <tft.h>
 #include <task.h>
@@ -18,15 +15,6 @@
 static semaphore_t paint_sema;
 static semaphore_t sync_sema;
 
-#define PWM_CHx_TOP_REG(x) \
-	(PWM_BASE + PWM_CH0_TOP_OFFSET + (x) * (PWM_CH1_TOP_OFFSET - PWM_CH0_TOP_OFFSET))
-
-#define PWM_EN_REG (PWM_BASE + PWM_EN_OFFSET)
-
-#define IO_BANK0_GPIOx_CTRL_REG(x)                    \
-	(IO_BANK0_BASE + IO_BANK0_GPIO0_CTRL_OFFSET + \
-	 (x) * (IO_BANK0_GPIO1_CTRL_OFFSET - IO_BANK0_GPIO0_CTRL_OFFSET))
-
 void sdk_video_init(void)
 {
 	/* Initialize the TFT panel. */
@@ -35,14 +23,6 @@ void sdk_video_init(void)
 	/* Prepare semaphores to guard buffer access. */
 	sem_init(&paint_sema, 0, 1);
 	sem_init(&sync_sema, 0, 1);
-
-	/* Enable backlight PWM control. */
-	int slice = pwm_gpio_to_slice_num(SLAVE_TFT_LED_PIN);
-	sdk_poke(IO_BANK0_GPIOx_CTRL_REG(SLAVE_TFT_LED_PIN),
-		 IO_BANK0_GPIO0_CTRL_FUNCSEL_VALUE_PWM_A_0 << IO_BANK0_GPIO0_CTRL_FUNCSEL_LSB);
-	sdk_poke(PWM_CHx_TOP_REG(slice), 256);
-	sdk_set_backlight(SDK_BACKLIGHT_STD);
-	sdk_poke(PWM_EN_REG, 1u << slice);
 }
 
 void sdk_set_backlight(unsigned level)
@@ -50,11 +30,7 @@ void sdk_set_backlight(unsigned level)
 	level = clamp(level, 0, 256);
 	sdk_config.backlight = level;
 
-	int slice = pwm_gpio_to_slice_num(SLAVE_TFT_LED_PIN);
-	int chan = pwm_gpio_to_channel(SLAVE_TFT_LED_PIN);
-
-	sdk_poke(PWM_BASE + (PWM_CH0_CC_OFFSET + slice * (PWM_CH1_CC_OFFSET - PWM_CH0_CC_OFFSET)),
-		 (uint32_t)level << (chan * PWM_CH0_CC_B_LSB));
+	// TODO: Backlight is now controlled via display registers.
 }
 
 void sdk_paint_task(void)

@@ -207,3 +207,8 @@ uint32_t sdk_random()
 {
 	return time_us_32();
 }
+
+void sdk_turn_off(void)
+{
+	exit(0);
+}

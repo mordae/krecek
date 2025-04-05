@@ -1,4 +1,5 @@
 #include <sdk.h>
+#include <sdk/remote.h>
 
 #include <task.h>
 
@@ -9,6 +10,8 @@
 
 #include <hardware/adc.h>
 #include <hardware/clocks.h>
+#include <hardware/structs/bus_ctrl.h>
+#include <hardware/structs/xip_ctrl.h>
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -69,43 +72,91 @@ void __attribute__((__noreturn__, __format__(printf, 1, 2))) sdk_panic(const cha
 
 void __noreturn sdk_main(const struct sdk_config *conf)
 {
-	set_sys_clock_khz(CLK_SYS_HZ / KHZ, true);
-	clock_configure(clk_peri, 0, CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS, CLK_SYS_HZ,
-			CLK_SYS_HZ);
-
+	/* Apply configuration. */
 	sdk_config = *conf;
 
 	if (!sdk_config.backlight)
 		sdk_config.backlight = SDK_BACKLIGHT_STD;
 
+	/*
+	 * Program charger current limit, where:
+	 *
+	 * - FLOAT =  100 mA max
+	 * - HIGH  =  500 mA max
+	 * - LOW   = 1000 mA max
+	 *
+	 * Use the most strict limit initially.
+	 */
+	gpio_init(CHG_ISET2_PIN);
+	gpio_set_pulls(CHG_ISET2_PIN, 0, 0);
+
+	/* Adjust system clock before we start doing anything. */
+	set_sys_clock_khz(CLK_SYS_HZ / KHZ, true);
+	clock_configure(clk_peri, 0, CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS, CLK_SYS_HZ,
+			CLK_SYS_HZ);
+
+	/* Park the slave chip. */
 	sdk_slave_park();
-	stdio_usb_init();
 
-	if (sdk_config.wait_for_usb) {
-		for (int i = 0; i < 30; i++) {
-			if (stdio_usb_connected())
-				break;
+	/* Prevent power-off. */
+	remote_gpio_pad_set(0, 1, 1, 1, 0, 1, 0, SLAVE_OFF_PIN);
+	remote_gpio_set(SLAVE_OFF_PIN, 1);
 
-			sleep_ms(100);
-		}
-	}
+	/* Park ICs connected to this chip over SPI. */
+	gpio_init(TFT_CS_PIN);
+	gpio_init(SD_CS_PIN);
+	gpio_set_pulls(TFT_CS_PIN, 1, 0);
+	gpio_set_pulls(SD_CS_PIN, 1, 0);
 
-	printf("sdk: Hello, welcome to Krecek!\n");
+	/* Park ICs connected to slave over SPI. */
+	remote_gpio_pad_set(0, 1, 1, 1, 0, 1, 0, SLAVE_RF_CS_PIN);
+	remote_gpio_pad_set(0, 1, 1, 1, 0, 1, 0, SLAVE_TOUCH_CS_PIN);
 
+	/* Initialize the ADC. */
 	adc_init();
-
+	adc_set_temp_sensor_enabled(true);
 	adc_gpio_init(USB_CC1_PIN);
 	adc_gpio_init(USB_CC2_PIN);
 	adc_gpio_init(BAT_VSENSE_PIN);
 	adc_gpio_init(HP_SENSE_PIN);
 
-	for (int i = 0; i < 16; i++)
-		srand(adc_read() + random());
+	/* Start USB stdio interface. */
+	stdio_usb_init();
 
-	/* Park the RF chip. */
-	gpio_init(RF_CS_PIN);
-	gpio_set_dir(RF_CS_PIN, GPIO_OUT);
-	gpio_set_dir(RF_CS_PIN, 1);
+	/* Detect USB power. */
+	adc_select_input(USB_CC1_PIN - 26);
+	int cc1 = (3300 * adc_read()) >> 12;
+
+	adc_select_input(USB_CC2_PIN - 26);
+	int cc2 = (3300 * adc_read()) >> 12;
+
+	/*
+	 * When connected to 5V VBUS we should see 417 mV.
+	 * Tolerance on pull-up is 20%, so the range is 352-511 mV.
+	 * Voltage can also drop somewhat, especially with long cable.
+	 */
+	if (cc1 > 200 || cc2 > 200) {
+		/*
+		 * When connected over USB, wait for a bit for the host
+		 * to connect to us so that it doesn't miss early messages.
+		 */
+		if (sdk_config.wait_for_usb) {
+			for (int i = 0; i < 30; i++) {
+				if (stdio_usb_connected())
+					break;
+
+				sleep_ms(100);
+			}
+		}
+	}
+
+	printf("sdk: Hello, welcome to Krecek!\n");
+
+	/* Seed random number generator from ADC. */
+	for (int i = 0; i < 16; i++) {
+		adc_select_input(i % 5);
+		srand(adc_read() + random());
+	}
 
 	task_init();
 
@@ -137,6 +188,23 @@ static void sdk_stats_task(void)
 			task_stats_report_reset(i);
 
 		sdk_audio_report();
+		task_stats_memory_reset();
+
+		unsigned hit = xip_ctrl_hw->ctr_hit;
+		unsigned acc = xip_ctrl_hw->ctr_acc;
+
+		xip_ctrl_hw->ctr_hit = 0;
+		xip_ctrl_hw->ctr_acc = 0;
+
+		float ratio = acc ? (float)hit / (float)acc : 1;
+		unsigned misses = acc - hit;
+
+		// Approximate cache miss cost.
+		float cost = 16 * PICO_FLASH_SPI_CLKDIV / (float)CLK_SYS_HZ;
+
+		printf("sdk: xip cache hits: %10u / %10u = %5.1f%%\n", hit, acc, 100.0f * ratio);
+		printf("sdk: misses / waits: %10u   %10s ~ %5.1f%%\n", misses, "",
+		       misses * cost * 10.0f);
 	}
 }
 
@@ -178,4 +246,9 @@ __weak void game_paint(unsigned __unused dt)
 uint32_t sdk_random()
 {
 	return get_rand_32();
+}
+
+void sdk_turn_off(void)
+{
+	//
 }
