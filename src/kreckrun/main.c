@@ -2,29 +2,64 @@
 
 #include <sdk.h>
 #include <tft.h>
+#include <stdlib.h>
 
 #include <krecek.png.h>
 #include <back.png.h>
+#include <extras.png.h>
+#include <walls.png.h>
 
 struct k {
-	int lp;
+	sdk_sprite_t s;
 };
-static struct k k;
+
+static struct k k = {
+	.s = {
+		.ts = &ts_krecek_png,
+	},
+};
+
+#define OBSTACLE_SPEED (TFT_WIDTH / 5.0f)
+
+#define NUM_OBSTACLES 3
+static sdk_sprite_t obstacles[NUM_OBSTACLES] = {
+	{
+		.y = 18,
+		.ts = &ts_walls_png,
+	},
+	{
+		.y = 18 + 30,
+		.ts = &ts_walls_png,
+	},
+	{
+		.y = 18 + 60,
+		.ts = &ts_walls_png,
+	},
+};
 
 void game_reset(void)
 {
+	for (int i = 0; i < NUM_OBSTACLES; i++) {
+		obstacles[i].tile = rand() % ts_walls_png.count;
+		obstacles[i].x = TFT_WIDTH + (rand() % TFT_WIDTH);
+	}
+
+	k.s.y = 18 + 30;
 }
 
-/*
-void game_input(unsigned dt_usec)
+void game_input(unsigned __unused dt_usec)
 {
+	if (sdk_inputs_delta.x > 0 && k.s.y < 18 + 30 + 30) {
+		k.s.y += 30;
+	}
+	if (sdk_inputs_delta.y > 0 && k.s.y >= 18 + 30) {
+		k.s.y -= 30;
+	}
 }
-*/
 
 void game_start(void)
 {
-	/*	sdk_set_output_gain_db(6); 
-*/
+	/* sdk_set_output_gain_db(6); */
 }
 
 /*
@@ -47,15 +82,30 @@ void game_audio(int nsamples)
 
 void game_paint(unsigned __unused dt_usec)
 {
-	tft_fill(0);
+	float __unused dt = dt_usec / 1000000.0f;
 
-	k.lp = (time_us_32() >> 18) & 1;
+	tft_fill(0);
 
 	sdk_draw_tile(0, 0, &ts_back_png, 0);
 
-	sdk_draw_tile(21, 18, &ts_krecek_png, k.lp);
-	sdk_draw_tile(21, 18 + 30, &ts_krecek_png, k.lp);
-	sdk_draw_tile(21, 18 + 60, &ts_krecek_png, k.lp);
+	k.s.tile = (time_us_32() >> 18) & 1;
+	sdk_draw_sprite(&k.s);
+
+	for (int i = 0; i < NUM_OBSTACLES; i++) {
+		obstacles[i].x -= OBSTACLE_SPEED * dt;
+
+		if (obstacles[i].x < -obstacles[i].ts->width) {
+			// Completely out of screen.
+			obstacles[i].tile = rand() % ts_walls_png.count;
+			obstacles[i].x = TFT_WIDTH + (rand() % TFT_WIDTH);
+		}
+
+		sdk_draw_sprite(&obstacles[i]);
+
+		if (sdk_sprites_collide(&k.s, &obstacles[i])) {
+			game_reset();
+		}
+	}
 }
 
 int main()
