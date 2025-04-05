@@ -4478,7 +4478,7 @@
 		(property ki_fp_filters "MountingHole*")
 		(path "/0fce5eb1-954a-40aa-bcdc-453aaaa67b08")
 		(sheetname "Root")
-		(sheetfile "krecek-0.9.kicad_sch")
+		(sheetfile "krecek.kicad_sch")
 		(attr through_hole)
 		(fp_text user "${REFERENCE}"
 			(at 0 5.08 180)
@@ -5936,7 +5936,7 @@
 		(property ki_fp_filters "MountingHole*")
 		(path "/c67e9eb5-c3c0-4bb6-a46c-978972fefb5b")
 		(sheetname "Root")
-		(sheetfile "krecek-0.9.kicad_sch")
+		(sheetfile "krecek.kicad_sch")
 		(attr exclude_from_pos_files)
 		(fp_circle
 			(center 0 0)
@@ -6757,7 +6757,7 @@
 		(property ki_fp_filters "MountingHole*")
 		(path "/ce1d0fbd-74c0-44b1-aa90-b3c6da64a889")
 		(sheetname "Root")
-		(sheetfile "krecek-0.9.kicad_sch")
+		(sheetfile "krecek.kicad_sch")
 		(attr exclude_from_pos_files)
 		(fp_circle
 			(center 0 0)
@@ -8714,7 +8714,7 @@
 		(property ki_fp_filters "MountingHole*")
 		(path "/3918ff49-44bb-434f-ac6b-fadf675aac8d")
 		(sheetname "Root")
-		(sheetfile "krecek-0.9.kicad_sch")
+		(sheetfile "krecek.kicad_sch")
 		(attr exclude_from_pos_files)
 		(fp_circle
 			(center 0 0)
@@ -9285,7 +9285,7 @@
 		(property ki_fp_filters "MountingHole*")
 		(path "/e23998c4-0cf2-48c9-98ee-6672a6745149")
 		(sheetname "Root")
-		(sheetfile "krecek-0.9.kicad_sch")
+		(sheetfile "krecek.kicad_sch")
 		(attr through_hole)
 		(fp_text user "${REFERENCE}"
 			(at 0 5.08 180)
@@ -19314,7 +19314,7 @@
 		(property ki_fp_filters "MountingHole*")
 		(path "/af40547a-c2fa-4683-bde1-38972cf9de26")
 		(sheetname "Root")
-		(sheetfile "krecek-0.9.kicad_sch")
+		(sheetfile "krecek.kicad_sch")
 		(attr through_hole)
 		(fp_text user "${REFERENCE}"
 			(at 0 5.08 180)
@@ -26231,7 +26231,7 @@
 		(property ki_fp_filters "MountingHole*")
 		(path "/a8b666c4-fb24-4cad-9c6e-147c70d85f75")
 		(sheetname "Root")
-		(sheetfile "krecek-0.9.kicad_sch")
+		(sheetfile "krecek.kicad_sch")
 		(attr exclude_from_pos_files)
 		(fp_circle
 			(center 0 0)
@@ -39622,7 +39622,7 @@
 		(property ki_fp_filters "MountingHole*")
 		(path "/19b8ec97-dbac-4e1d-b50e-969b56c5f2b5")
 		(sheetname "Root")
-		(sheetfile "krecek-0.9.kicad_sch")
+		(sheetfile "krecek.kicad_sch")
 		(attr through_hole)
 		(fp_text user "${REFERENCE}"
 			(at 0 5.08 90)
@@ -42679,7 +42679,7 @@
 		(property ki_fp_filters "MountingHole*")
 		(path "/8e13712b-e22a-4506-a4d9-936688f90697")
 		(sheetname "Root")
-		(sheetfile "krecek-0.9.kicad_sch")
+		(sheetfile "krecek.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -25.4508 35.0012)

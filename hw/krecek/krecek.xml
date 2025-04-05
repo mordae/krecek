@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <export version="E">
   <design>
-    <source>/home/mordae/work/smart/krecek/hw/krecek-0.9/krecek-0.9.kicad_sch</source>
+    <source>/home/mordae/work/smart/krecek/hw/krecek/krecek.kicad_sch</source>
     <date>2025-02-26T19:09:18+0100</date>
     <tool>Eeschema 8.0.7-1.fc41</tool>
     <sheet number="1" name="/" tstamps="/">
@@ -10,7 +10,7 @@
         <company>DDM Spirála</company>
         <rev>v0.9b</rev>
         <date>2024-03-06</date>
-        <source>krecek-0.9.kicad_sch</source>
+        <source>krecek.kicad_sch</source>
         <comment number="1" value=""/>
         <comment number="2" value=""/>
         <comment number="3" value=""/>
@@ -161,7 +161,7 @@
       </fields>
       <libsource lib="Mechanical" part="MountingHole" description="Mounting Hole without connection"/>
       <property name="Sheetname" value="Root"/>
-      <property name="Sheetfile" value="krecek-0.9.kicad_sch"/>
+      <property name="Sheetfile" value="krecek.kicad_sch"/>
       <property name="ki_keywords" value="mounting hole"/>
       <property name="ki_fp_filters" value="MountingHole*"/>
       <sheetpath names="/" tstamps="/"/>
@@ -178,7 +178,7 @@
       </fields>
       <libsource lib="Mechanical" part="MountingHole" description="Mounting Hole without connection"/>
       <property name="Sheetname" value="Root"/>
-      <property name="Sheetfile" value="krecek-0.9.kicad_sch"/>
+      <property name="Sheetfile" value="krecek.kicad_sch"/>
       <property name="ki_keywords" value="mounting hole"/>
       <property name="ki_fp_filters" value="MountingHole*"/>
       <sheetpath names="/" tstamps="/"/>
@@ -195,7 +195,7 @@
       </fields>
       <libsource lib="Mechanical" part="MountingHole" description="Mounting Hole without connection"/>
       <property name="Sheetname" value="Root"/>
-      <property name="Sheetfile" value="krecek-0.9.kicad_sch"/>
+      <property name="Sheetfile" value="krecek.kicad_sch"/>
       <property name="ki_keywords" value="mounting hole"/>
       <property name="ki_fp_filters" value="MountingHole*"/>
       <sheetpath names="/" tstamps="/"/>
@@ -212,7 +212,7 @@
       </fields>
       <libsource lib="Mechanical" part="MountingHole" description="Mounting Hole without connection"/>
       <property name="Sheetname" value="Root"/>
-      <property name="Sheetfile" value="krecek-0.9.kicad_sch"/>
+      <property name="Sheetfile" value="krecek.kicad_sch"/>
       <property name="ki_keywords" value="mounting hole"/>
       <property name="ki_fp_filters" value="MountingHole*"/>
       <sheetpath names="/" tstamps="/"/>
@@ -229,7 +229,7 @@
       </fields>
       <libsource lib="Mechanical" part="MountingHole" description="Mounting Hole without connection"/>
       <property name="Sheetname" value="Root"/>
-      <property name="Sheetfile" value="krecek-0.9.kicad_sch"/>
+      <property name="Sheetfile" value="krecek.kicad_sch"/>
       <property name="ki_keywords" value="mounting hole"/>
       <property name="ki_fp_filters" value="MountingHole*"/>
       <sheetpath names="/" tstamps="/"/>
@@ -246,7 +246,7 @@
       </fields>
       <libsource lib="Mechanical" part="MountingHole" description="Mounting Hole without connection"/>
       <property name="Sheetname" value="Root"/>
-      <property name="Sheetfile" value="krecek-0.9.kicad_sch"/>
+      <property name="Sheetfile" value="krecek.kicad_sch"/>
       <property name="ki_keywords" value="mounting hole"/>
       <property name="ki_fp_filters" value="MountingHole*"/>
       <sheetpath names="/" tstamps="/"/>
@@ -263,7 +263,7 @@
       </fields>
       <libsource lib="Mechanical" part="MountingHole" description="Mounting Hole without connection"/>
       <property name="Sheetname" value="Root"/>
-      <property name="Sheetfile" value="krecek-0.9.kicad_sch"/>
+      <property name="Sheetfile" value="krecek.kicad_sch"/>
       <property name="ki_keywords" value="mounting hole"/>
       <property name="ki_fp_filters" value="MountingHole*"/>
       <sheetpath names="/" tstamps="/"/>
@@ -280,7 +280,7 @@
       </fields>
       <libsource lib="Mechanical" part="MountingHole" description="Mounting Hole without connection"/>
       <property name="Sheetname" value="Root"/>
-      <property name="Sheetfile" value="krecek-0.9.kicad_sch"/>
+      <property name="Sheetfile" value="krecek.kicad_sch"/>
       <property name="ki_keywords" value="mounting hole"/>
       <property name="ki_fp_filters" value="MountingHole*"/>
       <sheetpath names="/" tstamps="/"/>
@@ -296,7 +296,7 @@
       </fields>
       <libsource lib="Mechanical" part="MountingHole" description="Mounting Hole without connection"/>
       <property name="Sheetname" value="Root"/>
-      <property name="Sheetfile" value="krecek-0.9.kicad_sch"/>
+      <property name="Sheetfile" value="krecek.kicad_sch"/>
       <property name="ki_keywords" value="mounting hole"/>
       <property name="ki_fp_filters" value="MountingHole*"/>
       <sheetpath names="/" tstamps="/"/>
@@ -4065,10 +4065,10 @@
       <uri>/usr/share/kicad/symbols//Diode.kicad_sym</uri>
     </library>
     <library logical="Krecek">
-      <uri>/home/mordae/work/smart/krecek/hw/krecek-0.9/Krecek.kicad_sym</uri>
+      <uri>/home/mordae/work/smart/krecek/hw/krecek/Krecek.kicad_sym</uri>
     </library>
     <library logical="LCSC">
-      <uri>/home/mordae/work/smart/krecek/hw/krecek-0.9/LCSC.kicad_sym</uri>
+      <uri>/home/mordae/work/smart/krecek/hw/krecek/LCSC.kicad_sym</uri>
     </library>
     <library logical="MCU_RaspberryPi">
       <uri>/usr/share/kicad/symbols//MCU_RaspberryPi.kicad_sym</uri>
