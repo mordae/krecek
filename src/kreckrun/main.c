@@ -18,6 +18,7 @@ static struct game game;
 
 struct k {
 	sdk_sprite_t s;
+	float pt;
 };
 
 static struct k k = {
@@ -65,6 +66,7 @@ void game_reset(void)
 	}
 	game.score = 0;
 	k.s.y = 18 + 30;
+	k.pt = -5.0f;
 }
 
 void game_input(unsigned __unused dt_usec)
@@ -74,6 +76,9 @@ void game_input(unsigned __unused dt_usec)
 	}
 	if (sdk_inputs_delta.y > 0 && k.s.y >= 18 + 30) {
 		k.s.y -= 30;
+	}
+	if (sdk_inputs_delta.a && k.pt <= -5.0f) {
+		k.pt = 1.5f;
 	}
 }
 
@@ -124,13 +129,22 @@ void game_paint(unsigned __unused dt_usec)
 
 		sdk_draw_sprite(&obstacles[i]);
 
-		if (sdk_sprites_collide(&k.s, &obstacles[i])) {
+		if (sdk_sprites_collide(&k.s, &obstacles[i]) && k.pt <= 0) {
 			game_reset();
 		}
 
 		char buf[16];
 		snprintf(buf, sizeof buf, "%6.1f", game.score);
 		tft_draw_string(0, 0, RED, buf);
+
+		snprintf(buf, sizeof buf, "%6.1f", k.pt);
+		tft_draw_string(50, 0, RED, buf);
+	}
+	if (k.pt > 0) {
+		k.pt = k.pt - dt;
+	}
+	if (k.pt <= -5.0f) {
+		k.pt = 5.0f;
 	}
 }
 
