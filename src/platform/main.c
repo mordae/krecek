@@ -3,6 +3,7 @@
 #include <tft.h>
 #include <sdk.h>
 #include <math.h>
+#include <stdio.h>
 
 #include "common.h"
 
@@ -10,7 +11,7 @@
 #include <platforms.png.h>
 #include <spawners.png.h>
 #include <menu.png.h>
-
+#include <levels.png.h>
 // Physics constants
 #define GRAVITY 90	  // Gravity for falling
 #define JUMP_STRENGTH -80 // Jump strength
@@ -47,13 +48,16 @@ typedef struct {
 	int score;
 	int alive;
 	int won;
+	char mode;
+	int time;
 	sdk_sprite_t s;
 } Mario;
 
 static Mario mario_p;
 
 struct menu {
-	float select;
+	char levels;
+	char select;
 };
 static struct menu menu;
 static float volume = 0;
@@ -61,14 +65,9 @@ static float volume = 0;
 // --- Initialize the game ---
 void game_start(void)
 {
-	mario_p.px = 1 * TILE_SIZE;
-	mario_p.py = 12 * TILE_SIZE;
-	mario_p.vx = 0;
-	mario_p.vy = 0;
-	mario_p.score = 0;
-	mario_p.alive = 1;
-	mario_p.won = 0;
 	map = maps_map0;
+	mario_p.mode = 0;
+	menu.select = 0;
 
 	mario_p.s.ts = &ts_petr_png;
 	mario_p.s.x = mario_p.px;
@@ -148,34 +147,64 @@ void game_audio(int nsamples)
 // --- Game Input ---
 void game_input(unsigned dt_usec)
 {
-	if (map == maps_map0) {
-		if (sdk_inputs_delta.a > 0) {
-			menu.select += 1;
-		}
-		if (sdk_inputs_delta.y > 0) {
+	float dt = dt_usec / 1000000.0f;
+	mario_p.time += dt;
+	if (mario_p.mode == 0) {
+		map = maps_map0;
+
+		if (sdk_inputs_delta.y || sdk_inputs.joy_y > 500) {
 			menu.select -= 1;
 		}
-		if (menu.select <= 4) {
+		if (sdk_inputs_delta.a || sdk_inputs.joy_y < -500) {
+			menu.select += 1;
+		}
+		if (menu.select >= 3) {
 			menu.select = 0;
 		}
-
-		if (sdk_inputs_delta.select) {
-			if (menu.select == 0) {
-				map = maps_map1;
-			} else if (menu.select == 1) {
-			} else if (menu.select == 2) {
-			}
+		if (menu.select == -1) {
+			menu.select = 2;
 		}
 
-	} else {
-		float dt = dt_usec / 1000000.0f;
+		if (sdk_inputs_delta.start) {
+			if (menu.select == 0) {
+				mario_p.px = 1 * TILE_SIZE;
+				mario_p.py = 12 * TILE_SIZE;
+				mario_p.vx = 0;
+				mario_p.vy = 0;
+				mario_p.score = 0;
+				mario_p.alive = 1;
+				mario_p.won = 0;
+				mario_p.mode = 1;
+				map = maps_map1;
+				return;
+			} else if (menu.select == 1) {
+				mario_p.time = 0;
+				mario_p.px = 1 * TILE_SIZE;
+				mario_p.py = 12 * TILE_SIZE;
+				mario_p.vx = 0;
+				mario_p.vy = 0;
+				mario_p.score = 0;
+				mario_p.alive = 1;
+				mario_p.won = 0;
+				mario_p.mode = 1;
+				map = maps_map1;
+				return;
+			}
+			if (menu.select == 2) {
+				mario_p.mode = 3;
+				menu.levels = 0;
+				return;
+			}
+		}
+	}
+	if (mario_p.mode == 1 || mario_p.mode == 2) {
 		if (!mario_p.alive) {
 			if (sdk_inputs.start)
 				game_reset();
 			return;
 		}
 		if (mario_p.won) {
-			if (sdk_inputs.start) {
+			if (sdk_inputs.select) {
 				mario_p.won = 0;
 				if (map == maps_map1) {
 					map = maps_map2;
@@ -205,8 +234,9 @@ void game_input(unsigned dt_usec)
 			volume -= 12.0 * dt;
 		}
 
-		if (sdk_inputs.select) {
-			map = maps_map0;
+		if (sdk_inputs_delta.select) {
+			game_reset();
+			return;
 		}
 		if (sdk_inputs_delta.vol_sw > 0) {
 			if (volume < SDK_GAIN_MIN) {
@@ -304,7 +334,53 @@ void game_input(unsigned dt_usec)
 			mario_p.alive = false;
 		}
 	}
+	if (mario_p.mode == 3) {
+		if (sdk_inputs_delta.y || sdk_inputs.joy_y > 500) {
+			menu.levels -= 1;
+		}
+		if (sdk_inputs_delta.a || sdk_inputs.joy_y < -500) {
+			menu.levels += 1;
+		}
+		if (menu.levels >= 4) {
+			menu.levels = 0;
+		}
+		if (menu.levels == -1) {
+			menu.levels = 2;
+		}
+
+		if (sdk_inputs.b) {
+			mario_p.px = 1 * TILE_SIZE;
+			mario_p.py = 12 * TILE_SIZE;
+			mario_p.vx = 0;
+			mario_p.vy = 0;
+			mario_p.score = 0;
+			mario_p.alive = 1;
+			mario_p.won = 0;
+			mario_p.mode = 1;
+			if (menu.levels == 0) {
+				map = maps_map1;
+			} else if (menu.levels == 1) {
+				map = maps_map2;
+			} else if (menu.levels == 2) {
+				map = maps_map3;
+			} else if (menu.levels == 3) {
+				map = maps_map4;
+			}
+		}
+	}
 }
+
+void draw_text(int x, int y, const char *text, sdk_tileset_t *font_tileset)
+{
+	for (int i = 0; text[i] != '\0'; i++) {
+		char c = text[i];
+		if (c >= 32 && c <= 126) {
+			int tile_index = c - 32;
+			sdk_draw_tile(x + i * 8, y, font_tileset, tile_index);
+		}
+	}
+}
+
 // --- Game Paint ---
 void game_paint(unsigned dt_usec)
 {
@@ -342,11 +418,13 @@ void game_paint(unsigned dt_usec)
 
 	sdk_draw_sprite(&mario_p.s);
 
-	//printf("%f" dt);
 	tft_set_origin(0, 0);
 
-	if (map == maps_map0) {
+	if (mario_p.mode == 0) {
 		sdk_draw_tile(0, 0, &ts_menu_png, menu.select);
+	}
+	if (mario_p.mode == 3) {
+		sdk_draw_tile(0, 0, &ts_levels_png, menu.levels);
 	}
 	//tft_draw_pixel(mario_p.px + 0.5, mario_p.py - 0.5, WHITE);
 }
