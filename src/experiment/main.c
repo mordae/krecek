@@ -74,13 +74,10 @@ void game_input(unsigned dt_usec)
 
 		next_x = clamp(next_x, TILE_SIZE / 2.0f - 2, TFT_WIDTH - TILE_SIZE / 2.0f + 1);
 		next_y = clamp(next_y, TILE_SIZE / 2.0f, TFT_HEIGHT - 1 - TILE_SIZE / 2.0f);
-
-		// TODO: this does not work very well, fix it
 		int next_pos_x = (next_x + (move_x > 0 ? 2 : -2)) / TILE_SIZE;
 		int next_pos_y = (next_y + (move_y > 0 ? 4 : 0)) / TILE_SIZE;
 
 		if (pos_x != next_pos_x && move_x) {
-			//if (map[pos_y][next_pos_x].collides_up == 1) {
 			if (move_x > 0) {
 				// going right, to the next tile
 				if (map[pos_y][next_pos_x].collides_left)
