@@ -12,6 +12,7 @@
 #define PADDLE_MID (PADDLE_HEIGHT / 2)
 #define BALL_WIDTH 5
 #define BALL_HEIGHT 5
+#define PADDLE_SPEED 100
 
 #define BALL_SPEEDUP 1.05f
 #define BALL_SPEED 100
@@ -167,9 +168,9 @@ void game_input(unsigned dt_usec)
 
 	/* Joys have value from -2048 to +2047. */
 	if (sdk_inputs.joy_y > 500)
-		paddle1.y += 1;
+		paddle1.y += PADDLE_SPEED * dt;
 	else if (sdk_inputs.joy_y < -500)
-		paddle1.y -= 1;
+		paddle1.y -= PADDLE_SPEED * dt;
 
 	if (paddle1.y < 0)
 		paddle1.y = 0;
@@ -177,9 +178,9 @@ void game_input(unsigned dt_usec)
 		paddle1.y = TFT_BOTTOM - PADDLE_HEIGHT;
 
 	if (sdk_inputs.a)
-		paddle2.y += 1;
+		paddle2.y += PADDLE_SPEED * dt;
 	else if (sdk_inputs.y)
-		paddle2.y -= 1;
+		paddle2.y -= PADDLE_SPEED * dt;
 
 	if (paddle2.y < 0)
 		paddle2.y = 0;
