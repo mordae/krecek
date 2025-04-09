@@ -145,9 +145,6 @@ void __noreturn sdk_main(const struct sdk_config *conf)
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		SDL_RenderFillRect(renderer, &viewport);
 
-		// Let the game process the inputs.
-		game_input(dt);
-
 		// Let the game paint into it's buffer.
 		game_paint(dt);
 
