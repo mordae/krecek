@@ -27,7 +27,8 @@ void sdk_video_init(void);
 
 /* From input.c */
 void sdk_input_init(void);
-void sdk_input_handle(const SDL_Event *event, uint32_t dt);
+void sdk_input_handle(const SDL_Event *event);
+void sdk_input_commit(uint32_t dt);
 
 void __attribute__((__noreturn__, __format__(printf, 1, 2))) sdk_panic(const char *fmt, ...)
 {
@@ -126,8 +127,11 @@ void __noreturn sdk_main(const struct sdk_config *conf)
 				done = true;
 			}
 
-			sdk_input_handle(&event, dt);
+			sdk_input_handle(&event);
 		}
+
+		// Let the game know.
+		sdk_input_commit(dt);
 
 		// Enqueue audio samples.
 		sdk_audio_task();

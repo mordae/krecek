@@ -15,6 +15,8 @@ static int joy_down = 0;
 static int joy_left = 0;
 static int joy_right = 0;
 
+static uint32_t select_held_since = 0;
+
 static void on_keydown(SDL_Scancode code)
 {
 	switch (code) {
@@ -223,7 +225,7 @@ static void on_keyup(SDL_Scancode code)
 	}
 }
 
-void sdk_input_handle(const SDL_Event *event, uint32_t dt)
+void sdk_input_handle(const SDL_Event *event)
 {
 	if (event->type == SDL_KEYDOWN) {
 		on_keydown(event->key.keysym.scancode);
@@ -232,7 +234,10 @@ void sdk_input_handle(const SDL_Event *event, uint32_t dt)
 	if (event->type == SDL_KEYUP) {
 		on_keyup(event->key.keysym.scancode);
 	}
+}
 
+void sdk_input_commit(uint32_t dt)
+{
 	/* Dummy current control and temperature readings. */
 	sdk_inputs.batt_mv = 3900.0f;
 	sdk_inputs.cc_mv = 400.0f;
@@ -268,10 +273,18 @@ void sdk_input_handle(const SDL_Event *event, uint32_t dt)
 
 	prev_inputs = sdk_inputs;
 
-	if (sdk_config.off_on_select) {
-		if (sdk_inputs_delta.select > 0) {
-			exit(0);
+	if (sdk_config.off_on_select && sdk_inputs.select) {
+		if (!select_held_since) {
+			select_held_since = time_us_32();
+		} else {
+			uint32_t select_held_for = time_us_32() - select_held_since;
+			if (select_held_for > 3000000) {
+				puts("sdk: SELECT held for 3s, turning off...");
+				exit(0);
+			}
 		}
+	} else {
+		select_held_since = 0;
 	}
 
 	game_input(dt);
