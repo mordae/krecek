@@ -3,7 +3,8 @@
 #include <tft.h>
 #include <sdk.h>
 #include <math.h>
-#include <stdio.h>
+//#include <stdlib.h>
+//#include <stdio.h>
 
 #include "common.h"
 
@@ -49,15 +50,15 @@ typedef struct {
 	int alive;
 	int won;
 	char mode;
-	int time;
+	float time;
 	sdk_sprite_t s;
 } Mario;
 
 static Mario mario_p;
 
 struct menu {
-	char levels;
-	char select;
+	int levels;
+	int select;
 };
 static struct menu menu;
 static float volume = 0;
@@ -158,11 +159,11 @@ void game_input(unsigned dt_usec)
 		if (sdk_inputs_delta.a || sdk_inputs.joy_y < -500) {
 			menu.select += 1;
 		}
-		if (menu.select >= 3) {
+		if (menu.select >= 4) {
 			menu.select = 0;
 		}
 		if (menu.select == -1) {
-			menu.select = 2;
+			menu.select = 0;
 		}
 
 		if (sdk_inputs_delta.start) {
@@ -204,7 +205,7 @@ void game_input(unsigned dt_usec)
 			return;
 		}
 		if (mario_p.won) {
-			if (sdk_inputs.select) {
+			if (sdk_inputs.start) {
 				mario_p.won = 0;
 				if (map == maps_map1) {
 					map = maps_map2;
@@ -345,7 +346,7 @@ void game_input(unsigned dt_usec)
 			menu.levels = 0;
 		}
 		if (menu.levels == -1) {
-			menu.levels = 2;
+			menu.levels = 3;
 		}
 
 		if (sdk_inputs.b) {
@@ -366,17 +367,6 @@ void game_input(unsigned dt_usec)
 			} else if (menu.levels == 3) {
 				map = maps_map4;
 			}
-		}
-	}
-}
-
-void draw_text(int x, int y, const char *text, sdk_tileset_t *font_tileset)
-{
-	for (int i = 0; text[i] != '\0'; i++) {
-		char c = text[i];
-		if (c >= 32 && c <= 126) {
-			int tile_index = c - 32;
-			sdk_draw_tile(x + i * 8, y, font_tileset, tile_index);
 		}
 	}
 }
@@ -417,7 +407,8 @@ void game_paint(unsigned dt_usec)
 		mario_p.s.tile = 1;
 
 	sdk_draw_sprite(&mario_p.s);
-
+	//char buf[16];
+	//snprintf(buf, sizeof buf, "%i", mario_p.time);
 	tft_set_origin(0, 0);
 
 	if (mario_p.mode == 0) {
