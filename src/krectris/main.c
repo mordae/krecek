@@ -1,3 +1,4 @@
+#include "sdk/image.h"
 #include "sdk/input.h"
 #include <pico/stdlib.h>
 
@@ -8,6 +9,8 @@
 #include <sdk.h>
 #include <stdlib.h>
 #include <tft.h>
+
+#include <pieces.png.h>
 
 #define RED rgb_to_rgb565(255, 0, 0)
 #define ORANGE rgb_to_rgb565(255, 191, 0)
@@ -102,7 +105,7 @@ static int lock_time_elapsed = 0;
 static int lock_movements_used = 0;
 static int lowest_row_reached = 0;
 
-static int piece_colors[7] = { RED, ORANGE, YELLOW, GREEN, CYAN, BLUE, PURPLE };
+static int piece_colors[7] = { 1, 2, 3, 4, 5, 6, 7 };
 static int piece_spawn_x[7] = { 3, 3, 3, 3, 3, 3, 3 };
 static int piece_spawn_y[7] = { 18, 18, 17, 18, 18, 18, 18 };
 
@@ -175,39 +178,11 @@ static int8_t kick_table_I_y_counterclockwise[20] = {
 
 static void draw_mino(int x, int y, int color, bool ghost)
 {
-	if (color == 0) {
-		if (y >= BOARD_HEIGHT) {
-			tft_draw_rect(SPACE_SIZE * x + BOARD_OFFSET_X,
-				      SPACE_SIZE * y + BOARD_OFFSET_Y,
-				      (SPACE_SIZE * x + SPACE_SIZE - 1) + BOARD_OFFSET_X,
-				      (SPACE_SIZE * y + SPACE_SIZE - 1) + BOARD_OFFSET_Y, DARKGRAY);
-
-			tft_draw_rect(SPACE_SIZE * x + BOARD_OFFSET_X,
-				      SPACE_SIZE * y + BOARD_OFFSET_Y,
-				      (SPACE_SIZE * x + SPACE_SIZE - 2) + BOARD_OFFSET_X,
-				      (SPACE_SIZE * y + SPACE_SIZE - 2) + BOARD_OFFSET_Y, BLACK);
-		}
-	} else {
+	if(color != 0) {
 		if (!ghost) {
-			tft_draw_rect(SPACE_SIZE * x + BOARD_OFFSET_X,
-				      SPACE_SIZE * y + BOARD_OFFSET_Y,
-				      (SPACE_SIZE * x + SPACE_SIZE - 1) + BOARD_OFFSET_X,
-				      (SPACE_SIZE * y + SPACE_SIZE - 1) + BOARD_OFFSET_Y, BLACK);
-
-			tft_draw_rect(SPACE_SIZE * x + BOARD_OFFSET_X,
-				      SPACE_SIZE * y + BOARD_OFFSET_Y,
-				      (SPACE_SIZE * x + SPACE_SIZE - 2) + BOARD_OFFSET_X,
-				      (SPACE_SIZE * y + SPACE_SIZE - 2) + BOARD_OFFSET_Y, color);
+			sdk_draw_tile(SPACE_SIZE * x + BOARD_OFFSET_X, SPACE_SIZE * y + BOARD_OFFSET_Y, &ts_pieces_png, color - 1);
 		} else {
-			tft_draw_rect(SPACE_SIZE * x + BOARD_OFFSET_X,
-				      SPACE_SIZE * y + BOARD_OFFSET_Y,
-				      (SPACE_SIZE * x + SPACE_SIZE - 1) + BOARD_OFFSET_X,
-				      (SPACE_SIZE * y + SPACE_SIZE - 1) + BOARD_OFFSET_Y, color);
-
-			tft_draw_rect(SPACE_SIZE * x + BOARD_OFFSET_X,
-				      SPACE_SIZE * y + BOARD_OFFSET_Y,
-				      (SPACE_SIZE * x + SPACE_SIZE - 2) + BOARD_OFFSET_X,
-				      (SPACE_SIZE * y + SPACE_SIZE - 2) + BOARD_OFFSET_Y, BLACK);
+			sdk_draw_tile(SPACE_SIZE * x + BOARD_OFFSET_X, SPACE_SIZE * y + BOARD_OFFSET_Y, &ts_pieces_png, 10);
 		}
 	}
 }

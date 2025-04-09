@@ -1,6 +1,7 @@
 add_executable(krectris main.c)
 target_include_directories(krectris PRIVATE include)
-target_link_libraries(krectris krecek)
+generate_png_headers()
+target_link_libraries(krectris krecek ${PNG_HEADERS_TARGET})
 pico_add_extra_outputs(krectris)
 krecek_set_target_options(krectris)
 
