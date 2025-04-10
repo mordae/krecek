@@ -61,6 +61,9 @@ void game_input(unsigned dt_usec)
 		map[sel_y][sel_x] = (map[sel_y][sel_x] + 1) % (ts_platforms_png.count + 1);
 	}
 
+	if (sdk_inputs_delta.b > 0) {
+		map[sel_y][sel_x] = (map[sel_y][sel_x] - 1) % (ts_platforms_png.count - 1);
+	}
 	if (sdk_inputs_delta.y > 0) {
 		map[sel_y][sel_x] = 0;
 	}

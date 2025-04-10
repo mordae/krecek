@@ -7,6 +7,7 @@ add_executable(
   ../../src/platform/maps/map3.c
   ../../src/platform/maps/map4.c
   ../../src/platform/maps/mapwin.c
+  ../../src/platform/maps/map1c.c
 )
 
 generate_png_headers()

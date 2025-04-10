@@ -4,7 +4,7 @@
 #include <sdk.h>
 #include <math.h>
 //#include <stdlib.h>
-//#include <stdio.h>
+#include <stdio.h>
 
 #include "common.h"
 
@@ -38,6 +38,7 @@ extern TileType maps_map1[MAP_ROWS][MAP_COLS];
 extern TileType maps_map2[MAP_ROWS][MAP_COLS];
 extern TileType maps_map3[MAP_ROWS][MAP_COLS];
 extern TileType maps_map4[MAP_ROWS][MAP_COLS];
+extern TileType maps_map1c[MAP_ROWS][MAP_COLS];
 extern TileType maps_mapwin[MAP_ROWS][MAP_COLS];
 
 TileType (*map)[MAP_COLS] = maps_map1;
@@ -49,8 +50,10 @@ typedef struct {
 	int score;
 	int alive;
 	int won;
+	int friction;
 	char mode;
 	float time;
+	int fast;
 	sdk_sprite_t s;
 } Mario;
 
@@ -149,24 +152,27 @@ void game_audio(int nsamples)
 void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
-	mario_p.time += dt;
+	if (map != maps_mapwin) {
+		mario_p.time += dt;
+	}
 	if (mario_p.mode == 0) {
+		mario_p.fast = 0;
 		map = maps_map0;
-
-		if (sdk_inputs_delta.y || sdk_inputs.joy_y > 500) {
+		if (sdk_inputs_delta.y > 0 || sdk_inputs.joy_y < -500) {
 			menu.select -= 1;
 		}
-		if (sdk_inputs_delta.a || sdk_inputs.joy_y < -500) {
+		if (sdk_inputs_delta.a > 0 || sdk_inputs.joy_y > 500) {
 			menu.select += 1;
 		}
+
 		if (menu.select >= 4) {
 			menu.select = 0;
 		}
 		if (menu.select == -1) {
-			menu.select = 0;
+			menu.select = 3;
 		}
 
-		if (sdk_inputs_delta.start) {
+		if (sdk_inputs_delta.start > 0) {
 			if (menu.select == 0) {
 				mario_p.px = 1 * TILE_SIZE;
 				mario_p.py = 12 * TILE_SIZE;
@@ -176,6 +182,7 @@ void game_input(unsigned dt_usec)
 				mario_p.alive = 1;
 				mario_p.won = 0;
 				mario_p.mode = 1;
+				mario_p.fast = 0;
 				map = maps_map1;
 				return;
 			} else if (menu.select == 1) {
@@ -188,6 +195,7 @@ void game_input(unsigned dt_usec)
 				mario_p.alive = 1;
 				mario_p.won = 0;
 				mario_p.mode = 1;
+				mario_p.fast = 1;
 				map = maps_map1;
 				return;
 			}
@@ -220,6 +228,10 @@ void game_input(unsigned dt_usec)
 					mario_p.px = 3.5;
 					mario_p.py = 7;
 				} else if (map == maps_map4) {
+					map = maps_map1c;
+					mario_p.px = 1;
+					mario_p.py = 7;
+				} else if (map == maps_map1c) {
 					map = maps_mapwin;
 					mario_p.px = 3.5;
 					mario_p.py = 7;
@@ -235,7 +247,7 @@ void game_input(unsigned dt_usec)
 			volume -= 12.0 * dt;
 		}
 
-		if (sdk_inputs_delta.select) {
+		if (sdk_inputs_delta.select > 0) {
 			game_reset();
 			return;
 		}
@@ -264,14 +276,19 @@ void game_input(unsigned dt_usec)
 				mario_p.vx = MAX_SPEED;
 
 		} else {
-			// Apply friction when no movement keys are pressed
-			mario_p.vx -= mario_p.vx * FRICTION * dt;
-			if (fabs(mario_p.vx) < 0.1)
-				mario_p.vx = 0; // Stop completely when velocity is very small
+			if (mario_p.friction == 0) {
+				mario_p.vx -= mario_p.vx * FRICTION * dt;
+				if (fabs(mario_p.vx) < 0.1) {
+					mario_p.vx = 0;
+				}
+			}
 		}
 
 		if (mario_p.vy != 0) {
 			mario_p.vx = mario_p.vx * 0.98;
+		}
+		if (sdk_inputs.a) {
+			mario_p.won = 1;
 		}
 
 		// Apply gravity
@@ -284,8 +301,11 @@ void game_input(unsigned dt_usec)
 		int tile_x = mario_p.px / TILE_SIZE;
 		int tile_y = mario_p.py / TILE_SIZE + 1.0f / TILE_SIZE;
 
+		mario_p.friction = 0;
+
 		if (mario_p.vy >= 0) {
 			switch (map[tile_y][tile_x]) {
+			case GRASS:
 			case FLOOR_MID:
 			case FLOOR_R:
 			case FLOOR_L:
@@ -318,8 +338,46 @@ void game_input(unsigned dt_usec)
 				mario_p.won = 1;
 				break;
 
+			case FLOOR_MID_COLD:
+			case FLOOR_R_COLD:
+			case FLOOR_CUBE_COLD:
+			case FLOOR_L_COLD:
+				mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+				mario_p.vy = 0;
+				mario_p.friction = 1;
+				if (sdk_inputs.y) {
+					mario_p.vy = JUMP_STRENGTH;
+				}
+
+				break;
+
+			case FLOOR_JUMP_MID_COLD:
+			case FLOOR_JUMP_L_COLD:
+			case FLOOR_JUMP_CUBE_COLD:
+			case FLOOR_JUMP_R_COLD:
+				mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+				mario_p.vy = 0;
+				mario_p.friction = 1;
+				if (sdk_inputs.y) {
+					mario_p.vy = 1.2 * JUMP_STRENGTH;
+				}
+
+				break;
+
+			case FLOOR_WIN_MID_COLD:
+			case FLOOR_WIN_L_COLD:
+			case FLOOR_WIN_CUBE_COLD:
+			case FLOOR_WIN_R_COLD:
+				mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+				mario_p.vy = 0;
+				mario_p.friction = 1;
+				mario_p.won = 1;
+				break;
+
 			case EMPTY:
-			case SPAWNER:
+			case SPAWNER_MARIO:
+			case SPAWNER_SONIC:
+			case CHEST:
 				break;
 			}
 		}
@@ -336,10 +394,10 @@ void game_input(unsigned dt_usec)
 		}
 	}
 	if (mario_p.mode == 3) {
-		if (sdk_inputs_delta.y || sdk_inputs.joy_y > 500) {
+		if (sdk_inputs_delta.y > 0 || sdk_inputs.joy_y < -500) {
 			menu.levels -= 1;
 		}
-		if (sdk_inputs_delta.a || sdk_inputs.joy_y < -500) {
+		if (sdk_inputs_delta.a > 0 || sdk_inputs.joy_y > 500) {
 			menu.levels += 1;
 		}
 		if (menu.levels >= 4) {
@@ -349,7 +407,7 @@ void game_input(unsigned dt_usec)
 			menu.levels = 3;
 		}
 
-		if (sdk_inputs.b) {
+		if (sdk_inputs_delta.start > 0) {
 			mario_p.px = 1 * TILE_SIZE;
 			mario_p.py = 12 * TILE_SIZE;
 			mario_p.vx = 0;
@@ -407,10 +465,13 @@ void game_paint(unsigned dt_usec)
 		mario_p.s.tile = 1;
 
 	sdk_draw_sprite(&mario_p.s);
-	//char buf[16];
-	//snprintf(buf, sizeof buf, "%i", mario_p.time);
 	tft_set_origin(0, 0);
 
+	char buf[16];
+	snprintf(buf, sizeof buf, "%-.2f", mario_p.time);
+	if (mario_p.fast) {
+		tft_draw_string(0, 0, rgb_to_rgb565(255, 255, 0), buf);
+	}
 	if (mario_p.mode == 0) {
 		sdk_draw_tile(0, 0, &ts_menu_png, menu.select);
 	}

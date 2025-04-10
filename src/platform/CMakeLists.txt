@@ -7,6 +7,7 @@ add_executable(
   maps/map3.c
   maps/map4.c
   maps/mapwin.c
+  maps/map1c.c
 )
 target_include_directories(platform PRIVATE include)
 generate_png_headers()
