@@ -56,3 +56,14 @@ git pull --rebase
 # Push our changes
 git push
 ```
+
+## Add New Game
+
+- Copy both `src/game` and `host/game`.
+- Rename game in `src/game/CMakeLists.txt` and `host/game/CMakeLists.txt`.
+- Adjust `src/CMakeLists.txt` and `host/CMakeLists.txt`.
+- Create symbolic link to assets, if needed:
+  ```bash
+  cd host/game
+  ln -svf ../../src/game/assets
+  ```
