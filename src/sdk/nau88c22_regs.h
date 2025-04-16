@@ -389,3 +389,110 @@ struct AlcEngancements2 {
 	uint16_t : 2;
 	uint16_t PKLIMENA : 1;
 };
+
+#define _192KHZ_SAMPLING_ADDR 0x48
+struct _192kHzSampling {
+	uint16_t ADC_OSR32x : 1;
+	uint16_t DAC_OSR32x : 1;
+	uint16_t PLL49MOUT : 1;
+	uint16_t : 2;
+	uint16_t ADCB_OVER : 1;
+	uint16_t : 3;
+	uint16_t addr : 7;
+};
+
+#define MISC_CONTROLS_ADDR 0x49
+struct MiscControls {
+	uint16_t DACOS256 : 1;
+	uint16_t PLLLOKBP : 1;
+	uint16_t : 2;
+	uint16_t FSERRENA : 1;
+	uint16_t FSERFLSH : 1;
+	uint16_t FSERRVAL : 2;
+	uint16_t _4WSPIENA : 1;
+	uint16_t addr : 7;
+};
+
+#define TIE_OFF_OVERRIDES_ADDR 0x4a
+struct TieOffOverrides {
+	uint16_t MANLMICP : 1;
+	uint16_t MANLMICN : 1;
+	uint16_t MANLLIN : 1;
+	uint16_t MANLAUX : 1;
+	uint16_t MANRMICP : 1;
+	uint16_t MANRMICN : 1;
+	uint16_t MANRLIN : 1;
+	uint16_t MANRAUX : 1;
+	uint16_t MANINENA : 1;
+	uint16_t addr : 7;
+};
+
+#define POWER_TIE_OFF_CTRL_ADDR 0x51
+struct PowerTieOffCtrl {
+	uint16_t MANVREFL : 1;
+	uint16_t MANVREFM : 1;
+	uint16_t MANVREFH : 1;
+	uint16_t MANINPAD : 1;
+	uint16_t MANINBBP : 1;
+	uint16_t IBT250DN : 1;
+	uint16_t IBT500UP : 1;
+	uint16_t : 1;
+	uint16_t IBTHALFI : 1;
+	uint16_t addr : 7;
+};
+
+#define P2P_DETECTOR_READ_ADDR 0x4c
+struct P2PDetectorRead {
+	uint16_t P2PVAL : 9;
+	uint16_t addr : 7;
+};
+
+#define PEAK_DETECTOR_READ_ADDR 0x4d
+struct PeakDetectorRead {
+	uint16_t PEAKVAL : 9;
+	uint16_t addr : 7;
+};
+
+#define CONTROL_AND_STATUS_ADDR 0xe4
+struct ControlAndStatus {
+	uint16_t FASTDEC : 1;
+	uint16_t DIGMUTER : 1;
+	uint16_t DIGMUTEL : 1;
+	uint16_t ANAMUTE : 1;
+	uint16_t NSGATE : 1;
+	uint16_t HVDET : 1;
+	uint16_t : 3;
+	uint16_t addr : 7;
+};
+
+#define OUTPUT_TIE_OFF_CONTROL_ADDR 0xef
+struct OutputTieOffControl {
+	uint16_t SHRTRHP : 1;
+	uint16_t SHRTLHP : 1;
+	uint16_t SHRTAUX2 : 1;
+	uint16_t SHRTAUX1 : 1;
+	uint16_t SHRTRSPK : 1;
+	uint16_t SHRTLSPK : 1;
+	uint16_t SHRTBUFL : 1;
+	uint16_t SHRTBUFH : 1;
+	uint16_t MANOUTEN : 1;
+	uint16_t addr : 7;
+};
+
+#define SPI1_ADDR 0x57
+struct SPI1 {
+	uint16_t SPI1 : 9;
+	uint16_t addr : 7;
+};
+
+#define SPI2_ADDR 0x6c
+struct SPI2 {
+	uint16_t SPI2 : 9;
+	uint16_t addr : 7;
+};
+
+#define SPI3_ADDR 0x73
+struct SPI3 {
+	uint16_t SPI3 : 9;
+	uint16_t addr : 7;
+};
