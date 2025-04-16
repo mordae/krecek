@@ -3,7 +3,6 @@
 #include <hardware/i2c.h>
 
 #define NAU88C22_ADDR 0x34
-#define NAU88C22_NUM_REGS 70
 
 struct nau88c22_driver {
 	/* Configured I2C peripheral to use: */

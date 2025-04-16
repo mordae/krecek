@@ -15,20 +15,6 @@
 		__res;                \
 	})
 
-struct state {
-	struct RESET reset;
-	struct CLOCKS clocks;
-	struct SDP sdp;
-	struct SYSTEM system;
-	struct ADC adc;
-	struct ADCEQ adceq;
-	struct DAC dac;
-	struct DACEQ daceq;
-	struct GPIO gpio;
-} __packed;
-
-static_assert(NAU88C22_NUM_REGS == sizeof(struct state), "BUG: invalid register map size");
-
 static int write_regs(nau88c22_driver_t drv, uint8_t base, const void *buf, size_t len)
 {
 	const uint8_t *bytes = buf;
@@ -72,16 +58,19 @@ fail:
 
 int nau88c22_identify(nau88c22_driver_t drv)
 {
+#if 0
 	struct CHIP chip;
 
 	if (0 > read_regs(drv, CHIP_REG_BASE, &chip, sizeof chip))
 		return -1;
 
 	return (chip.CHIP_ID1 << 16) | (chip.CHIP_ID2 << 8) | chip.CHIP_VER;
+#endif
 }
 
 int nau88c22_reset(nau88c22_driver_t drv)
 {
+#if 0
 	struct I2C iic = { .INI_REG = true };
 	return_on_error(write_regs(drv, I2C_REG_BASE, &iic, sizeof iic));
 
@@ -89,10 +78,12 @@ int nau88c22_reset(nau88c22_driver_t drv)
 	return_on_error(write_regs(drv, I2C_REG_BASE, &iic, sizeof iic));
 
 	return 0;
+#endif
 }
 
 int nau88c22_start(nau88c22_driver_t drv)
 {
+#if 0
 	struct state state;
 	return_on_error(read_regs(drv, 0, &state, sizeof state));
 
@@ -195,23 +186,28 @@ int nau88c22_start(nau88c22_driver_t drv)
 
 	return_on_error(write_regs(drv, 0, &state, sizeof state));
 	return 0;
+#endif
 }
 
 int nau88c22_set_output(nau88c22_driver_t drv, bool right, bool mute)
 {
+#if 0
 	struct SDP sdp;
 	return_on_error(read_regs(drv, SDP_REG_BASE, &sdp, sizeof sdp));
 	sdp.SDP_IN_SEL = right ? SDP_IN_SEL_RIGHT : SDP_IN_SEL_LEFT;
 	sdp.SDP_IN_MUTE = mute;
 	return_on_error(write_regs(drv, SDP_REG_BASE, &sdp, sizeof sdp));
 	return 0;
+#endif
 }
 
 int nau88c22_set_output_gain(nau88c22_driver_t drv, uint8_t gain)
 {
+#if 0
 	struct DAC dac;
 	return_on_error(read_regs(drv, DAC_REG_BASE, &dac, sizeof dac));
 	dac.DAC_VOLUME = gain;
 	return_on_error(write_regs(drv, DAC_REG_BASE, &dac, sizeof dac));
 	return 0;
+#endif
 }
