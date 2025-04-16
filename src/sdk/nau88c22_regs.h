@@ -322,3 +322,70 @@ struct PLLK3 {
 	uint16_t PLLK : 9;
 	uint16_t addr : 7;
 };
+
+#define POWER_MANAGEMENT_4_ADDR 0x3a
+struct PowerManagement4 {
+	uint16_t IBADJ : 2;
+	uint16_t REGVOLT : 2;
+	uint16_t MICBIASM : 1;
+	uint16_t LPSPKD : 1;
+	uint16_t LPADC : 1;
+	uint16_t LPIPBST : 1;
+	uint16_t LPDAC : 1;
+	uint16_t addr : 7;
+};
+
+#define LEFT_TIME_SLOT_ADDR 0x3b
+struct LeftTimeSlot {
+	uint16_t LTSLOT : 9;
+	uint16_t addr : 7;
+};
+
+#define MISC_ADDR 0x3c
+struct Misc {
+	uint16_t LTSLOT : 1;
+	uint16_t RTSLOT : 1;
+	uint16_t : 1;
+	uint16_t PUDPS : 1;
+	uint16_t PUDPE : 1;
+	uint16_t PUDEN : 1;
+	uint16_t PCM8BIT : 1;
+	uint16_t TRI : 1;
+	uint16_t PCMTSEN : 1;
+	uint16_t addr : 7;
+};
+
+#define RIGHT_TIME_SLOT_ADDR 0x3d
+struct RightTimeSlot {
+	uint16_t RTSLOT : 9;
+	uint16_t addr : 7;
+};
+
+#define DEVICE_REVISION_ADDR_ #0x3e
+struct DeviceRevision {
+	uint16_t REV : 8;
+	uint16_t : 1;
+	uint16_t addr : 7;
+};
+
+#define DEVICE_ID 0x3f
+struct DeviceId {
+	uint16_t ID : 9;
+	uint16_t addr : 7;
+};
+
+#define ALC_ENHANCEMENTS_1 0x46
+struct AlcEngancements1 {
+	uint16_t ALCGAINL : 6;
+	uint16_t ALCNGSEL : 1;
+	uint16_t ALCPKSEL : 1;
+	uint16_t ALCTBLSEL : 1;
+	uint16_t addr : 7;
+};
+
+#define ALC_ENHANCEMENTS_2 0x47
+struct AlcEngancements2 {
+	uint16_t ALCGAINR : 6;
+	uint16_t : 2;
+	uint16_t PKLIMENA : 1;
+};
