@@ -11,6 +11,8 @@ struct Reset {
 	uint16_t addr;
 } __packed;
 
+// Power Management
+
 #define POWER_MANAGEMENT_1_ADDR 0x01
 struct PowerManagement1 {
 	uint16_t REFIMP : 2;
@@ -51,6 +53,8 @@ struct PowerManagement3 {
 	uint16_t AUXOUT1EN : 1;
 	uint16_t addr : 7;
 };
+
+// General Audio Controls
 
 #define AUDIO_INTERFACE_ADDR 0x04
 struct AudioInterface {
@@ -171,6 +175,8 @@ struct RightADCVolume {
 	uint16_t addr : 7;
 };
 
+// Equalizer
+
 #define EQ1_LOW_CUTOFF_ADDR 0x12
 struct EQ1LowCutoff {
 	uint16_t EQ1GC : 5;
@@ -215,6 +221,8 @@ struct EQ5HighCutoff {
 	uint16_t addr : 7;
 };
 
+// DAC Limiter
+
 #define DAC_LIMITER_1_ADDR 0x18
 struct DACLimiter1 {
 	uint16_t DACLIMATK : 4;
@@ -230,6 +238,8 @@ struct DACLimiter2 {
 	uint16_t : 2;
 	uint16_t addr : 7;
 };
+
+// Notch Filter
 
 #define NOTCH_FILTER_1_ADDR 0x1b
 struct NotchFilter1 {
@@ -262,6 +272,8 @@ struct NotchFilter4 {
 	uint16_t NFCU4 : 1;
 	uint16_t addr : 7;
 };
+
+// ALC and Noise Gate Control
 
 #define ALC_CONTROL_1_ADDR 0x20
 struct ALCControl1 {
@@ -296,6 +308,8 @@ struct NoiseGate {
 	uint16_t addr : 7;
 };
 
+// Phase Locked Loop
+
 #define PLL_N_ADDR 0x24
 struct PLLN {
 	uint16_t PLLN : 4;
@@ -322,6 +336,8 @@ struct PLLK3 {
 	uint16_t PLLK : 9;
 	uint16_t addr : 7;
 };
+
+// Miscellaneous
 
 #define LSPKOUT_VOLUME_ADDR 0x36
 struct LSPKOutVolume {
@@ -366,6 +382,8 @@ struct AUX1Mixer {
 	uint16_t addr : 7;
 };
 
+// NAU88C22 Proprietary Register Space
+
 #define POWER_MANAGEMENT_4_ADDR 0x3a
 struct PowerManagement4 {
 	uint16_t IBADJ : 2;
@@ -377,6 +395,8 @@ struct PowerManagement4 {
 	uint16_t LPDAC : 1;
 	uint16_t addr : 7;
 };
+
+// PCM Time Slot and ADCOUT Impedance Option Control
 
 #define LEFT_TIME_SLOT_ADDR 0x3b
 struct LeftTimeSlot {
@@ -403,6 +423,8 @@ struct RightTimeSlot {
 	uint16_t RTSLOT : 9;
 	uint16_t addr : 7;
 };
+
+// Silicon Revision and Device ID
 
 #define DEVICE_REVISION_ADDR_ #0x3e
 struct DeviceRevision {
