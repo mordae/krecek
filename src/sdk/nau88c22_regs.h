@@ -339,6 +339,123 @@ struct PLLK3 {
 
 // Miscellaneous
 
+#define _3D_CONTROL 0x29
+struct _3Dcontrol {
+	uint16_t _3DDEPTH : 4;
+	uint16_t : 5;
+	uint16_t addr : 7;
+};
+
+#define RIGHT_SPEAKER_SOBMIX 0x2a
+struct RightSpeakerSubmix {
+	uint16_t RAUXSMUT : 1;
+	uint16_t RAUXRSUBG : 3;
+	uint16_t RSUBBYP : 1;
+	uint16_t RMIXMUT : 1;
+	uint16_t : 1;
+	uint16_t addr : 7;
+};
+
+#define INPUT_CONTROL 0x2c
+struct InputControl {
+	uint16_t LMICPLPGA : 1;
+	uint16_t LMICNLPGA : 1;
+	uint16_t LLINLPGA : 1;
+	uint16_t : 1;
+	uint16_t RMICPRPGA : 1;
+	uint16_t RMICNRPGA : 1;
+	uint16_t RLINRPGA : 1;
+	uint16_t MICBIASV : 2;
+	uint16_t addr : 7;
+};
+
+#define LEFT_INPUT_GPA_GAIN 0x2d
+struct LeftInputPGAGain {
+	uint16_t LPGAGAIN : 6;
+	uint16_t LPGAMT : 1;
+	uint16_t LPGAZC : 1;
+	uint16_t LPGAU : 1;
+	uint16_t addr : 7;
+};
+
+#define RIGHT_INPUT_GPA_GAIN 0x2e
+struct RightInputPGAGain {
+	uint16_t RPGAGAIN : 6;
+	uint16_t RPGAMT : 1;
+	uint16_t RPGAZC : 1;
+	uint16_t RPGAU : 1;
+	uint16_t addr : 7;
+};
+
+#define LEFT_ADC_BOOST 0x2f
+struct LeftADCBoost {
+	uint16_t LAUXBSTGAIN : 3;
+	uint16_t : 2;
+	uint16_t LPGABSTGAIN : 3;
+	uint16_t LPGABST : 1;
+	uint16_t addr : 7;
+};
+
+#define RIGHT_ADC_BOOST 0x30
+struct RightADCBoost {
+	uint16_t RAUXBSTGAIN : 3;
+	uint16_t : 2;
+	uint16_t RPGABSTGAIN : 3;
+	uint16_t RPGABST : 1;
+	uint16_t addr : 7;
+};
+
+#define OUTPUT_CONTROL 0x31
+struct OutputControl {
+	uint16_t AOUTIMP : 1;
+	uint16_t TSEN : 1;
+	uint16_t SPKBST : 1;
+	uint16_t AUX2BST : 1;
+	uint16_t AUX1BST : 1;
+	uint16_t RDACLMX : 1;
+	uint16_t LDACRMX : 1;
+	uint16_t : 2;
+	uint16_t addr : 7;
+};
+
+#define LEFT_MIXER 0x32
+struct LeftMixer {
+	uint16_t LDACLMX : 1;
+	uint16_t LBYPLMX : 1;
+	uint16_t LBYPMXGAIN : 3;
+	uint16_t LAUXLMX : 1;
+	uint16_t LAUXMXGAIN : 3;
+	uint16_t addr : 7;
+};
+
+#define RIGHT_MIXER 0x33
+struct RightMixer {
+	uint16_t RDACRMX : 1;
+	uint16_t RBYPRMX : 1;
+	uint16_t RBYPMXGAIN : 3;
+	uint16_t RAUXRMX : 1;
+	uint16_t RAUXMXGAIN : 3;
+	uint16_t addr : 7;
+};
+
+#define LHP_VOLUME 0x34
+struct LHPVolume {
+	uint16_t LHPGAIN : 6;
+	uint16_t LHPMUTE : 1;
+	uint16_t LHPZC : 1;
+	uint16_t LHPVU : 1;
+	uint16_t addr : 7;
+};
+
+#define RHP_VOLUME 0x35
+struct RHPVolume {
+	uint16_t RHPGAIN : 6;
+	uint16_t RHPMUTE : 1;
+	uint16_t RHPZC : 1;
+	uint16_t RHPVU : 1;
+	uint16_t addr : 7;
+};
+
 #define LSPKOUT_VOLUME_ADDR 0x36
 struct LSPKOutVolume {
 	uint16_t LSPKGAIN : 5;
@@ -559,122 +676,5 @@ struct SPI2 {
 #define SPI3_ADDR 0x73
 struct SPI3 {
 	uint16_t SPI3 : 9;
-	uint16_t addr : 7;
-};
-
-#define _3D_CONTROL 0x29
-struct _3Dcontrol {
-	uint16_t _3DDEPTH : 4;
-	uint16_t : 5;
-	uint16_t addr : 7;
-};
-
-#define RIGHT_SPEAKER_SOBMIX 0x2a
-struct RightSpeakerSubmix {
-	uint16_t RAUXSMUT : 1;
-	uint16_t RAUXRSUBG : 3;
-	uint16_t RSUBBYP : 1;
-	uint16_t RMIXMUT : 1;
-	uint16_t : 1;
-	uint16_t addr : 7;
-};
-
-#define INPUT_CONTROL 0x2c
-struct InputControl {
-	uint16_t LMICPLPGA : 1;
-	uint16_t LMICNLPGA : 1;
-	uint16_t LLINLPGA : 1;
-	uint16_t : 1;
-	uint16_t RMICPRPGA : 1;
-	uint16_t RMICNRPGA : 1;
-	uint16_t RLINRPGA : 1;
-	uint16_t MICBIASV : 2;
-	uint16_t addr : 7;
-};
-
-#define LEFT_INPUT_GPA_GAIN 0x2d
-struct LeftInputPGAGain {
-	uint16_t LPGAGAIN : 6;
-	uint16_t LPGAMT : 1;
-	uint16_t LPGAZC : 1;
-	uint16_t LPGAU : 1;
-	uint16_t addr : 7;
-};
-
-#define RIGHT_INPUT_GPA_GAIN 0x2e
-struct RightInputPGAGain {
-	uint16_t RPGAGAIN : 6;
-	uint16_t RPGAMT : 1;
-	uint16_t RPGAZC : 1;
-	uint16_t RPGAU : 1;
-	uint16_t addr : 7;
-};
-
-#define LEFT_ADC_BOOST 0x2f
-struct LeftADCBoost {
-	uint16_t LAUXBSTGAIN : 3;
-	uint16_t : 2;
-	uint16_t LPGABSTGAIN : 3;
-	uint16_t LPGABST : 1;
-	uint16_t addr : 7;
-};
-
-#define RIGHT_ADC_BOOST 0x30
-struct RightADCBoost {
-	uint16_t RAUXBSTGAIN : 3;
-	uint16_t : 2;
-	uint16_t RPGABSTGAIN : 3;
-	uint16_t RPGABST : 1;
-	uint16_t addr : 7;
-};
-
-#define OUTPUT_CONTROL 0x31
-struct OutputControl {
-	uint16_t AOUTIMP : 1;
-	uint16_t TSEN : 1;
-	uint16_t SPKBST : 1;
-	uint16_t AUX2BST : 1;
-	uint16_t AUX1BST : 1;
-	uint16_t RDACLMX : 1;
-	uint16_t LDACRMX : 1;
-	uint16_t : 2;
-	uint16_t addr : 7;
-};
-
-#define LEFT_MIXER 0x32
-struct LeftMixer {
-	uint16_t LDACLMX : 1;
-	uint16_t LBYPLMX : 1;
-	uint16_t LBYPMXGAIN : 3;
-	uint16_t LAUXLMX : 1;
-	uint16_t LAUXMXGAIN : 3;
-	uint16_t addr : 7;
-};
-
-#define RIGHT_MIXER 0x33
-struct RightMixer {
-	uint16_t RDACRMX : 1;
-	uint16_t RBYPRMX : 1;
-	uint16_t RBYPMXGAIN : 3;
-	uint16_t RAUXRMX : 1;
-	uint16_t RAUXMXGAIN : 3;
-	uint16_t addr : 7;
-};
-
-#define LHP_VOLUME 0x34
-struct LHPVolume {
-	uint16_t LHPGAIN : 6;
-	uint16_t LHPMUTE : 1;
-	uint16_t LHPZC : 1;
-	uint16_t LHPVU : 1;
-	uint16_t addr : 7;
-};
-
-#define RHP_VOLUME 0x35
-struct RHPVolume {
-	uint16_t RHPGAIN : 6;
-	uint16_t RHPMUTE : 1;
-	uint16_t RHPZC : 1;
-	uint16_t RHPVU : 1;
 	uint16_t addr : 7;
 };
