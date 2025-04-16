@@ -144,3 +144,181 @@ struct JackDetect2 {
 	uint16_t : 1;
 	uint16_t addr : 7;
 };
+
+#define ADC_CONTROL_ADDR 0x0e
+struct ADCControl {
+	uint16_t LADCPL : 1;
+	uint16_t RADCPL : 1;
+	uint16_t : 1;
+	uint16_t ADCOS : 1;
+	uint16_t HPF : 3;
+	uint16_t HPFAM : 1;
+	uint16_t HPFEN : 1;
+	uint16_t addr : 7;
+};
+
+#define LEFT_ADC_VOLUME_ADDR 0x0f
+struct LeftADCVolume {
+	uint16_t LADCGAIN : 8;
+	uint16_t LADCVU : 1;
+	uint16_t addr : 7;
+};
+
+#define RIGHT_ADC_VOLUME_ADDR 0x10
+struct RightADCVolume {
+	uint16_t RADCGAIN : 8;
+	uint16_t RADCVU : 1;
+	uint16_t addr : 7;
+};
+
+#define EQ1_LOW_CUTOFF_ADDR 0x12
+struct EQ1LowCutoff {
+	uint16_t EQ1GC : 5;
+	uint16_t EQ1CF : 2;
+	uint16_t : 1;
+	uint16_t EQM : 1;
+	uint16_t addr : 7;
+};
+
+#define EQ2_PEAK_1_ADDR 0x13
+struct EQ2Peak1 {
+	uint16_t EQ2GC : 5;
+	uint16_t EQ2CF : 2;
+	uint16_t : 1;
+	uint16_t EQ2BW : 1;
+	uint16_t addr : 7;
+};
+
+#define EQ3_PEAK_2_ADDR 0x14
+struct EQ3Peak2 {
+	uint16_t EQ3GC : 5;
+	uint16_t EQ3CF : 3;
+	uint16_t : 1;
+	uint16_t EQ3BW : 1;
+	uint16_t addr : 7;
+};
+
+#define EQ4_PEAK_3_ADDR 0x15
+struct EQ4Peak3 {
+	uint16_t EQ4GC : 5;
+	uint16_t EQ4CF : 3;
+	uint16_t : 1;
+	uint16_t EQ4BW : 1;
+	uint16_t addr : 7;
+};
+
+#define EQ5_HIGH_CUTOFF_ADDR 0x16
+struct EQ5HighCutoff {
+	uint16_t EQ5GC : 5;
+	uint16_t EQ5CF : 3;
+	uint16_t : 2;
+	uint16_t addr : 7;
+};
+
+#define DAC_LIMITER_1_ADDR 0x18
+struct DACLimiter1 {
+	uint16_t DACLIMATK : 4;
+	uint16_t DACLIMDCY : 4;
+	uint16_t DACLIMEN : 1;
+	uint16_t addr : 7;
+};
+
+#define DAC_LIMITER_2_ADDR 0x19
+struct DACLimiter2 {
+	uint16_t DACLIMBST : 4;
+	uint16_t DACLIMTHL : 3;
+	uint16_t : 2;
+	uint16_t addr : 7;
+};
+
+#define NOTCH_FILTER_1_ADDR 0x1b
+struct NotchFilter1 {
+	uint16_t NFCA0 : 7;
+	uint16_t NFCEN : 1;
+	uint16_t NFCU1 : 1;
+	uint16_t addr : 7;
+};
+
+#define NOTCH_FILTER_2_ADDR 0x1c
+struct NotchFilter2 {
+	uint16_t NFCA0 : 7;
+	uint16_t : 1;
+	uint16_t NFCU2 : 1;
+	uint16_t addr : 7;
+};
+
+#define NOTCH_FILTER_3_ADDR 0x1d
+struct NotchFilter3 {
+	uint16_t NFCA1 : 7;
+	uint16_t : 1;
+	uint16_t NFCU3 : 1;
+	uint16_t addr : 7;
+};
+
+#define NOTCH_FILTER_4_ADDR 0x1e
+struct NotchFilter4 {
+	uint16_t NFCA1 : 7;
+	uint16_t : 1;
+	uint16_t NFCU4 : 1;
+	uint16_t addr : 7;
+};
+
+#define ALC_CONTROL_1_ADDR 0x20
+struct ALCControl1 {
+	uint16_t ALCMNGAIN : 3;
+	uint16_t ALCMXGAIN : 3;
+	uint16_t : 1;
+	uint16_t ALCEN : 2;
+	uint16_t addr : 7;
+};
+
+#define ALC_CONTROL_2_ADDR 0x21
+struct ALCControl2 {
+	uint16_t ALCSL : 4;
+	uint16_t ALCHT : 4;
+	uint16_t : 1;
+	uint16_t addr : 7;
+};
+
+#define ALC_CONTROL_3_ADDR 0x22
+struct ALCControl3 {
+	uint16_t ALCATK : 4;
+	uint16_t ALCDCY : 4;
+	uint16_t ALCM : 1;
+	uint16_t addr : 7;
+};
+
+#define NOISE_GATE_ADDR 0x23
+struct NoiseGate {
+	uint16_t ALCNTH : 3;
+	uint16_t ALCNEN : 1;
+	uint16_t : 5;
+	uint16_t addr : 7;
+};
+
+#define PLL_N_ADDR 0x24
+struct PLLN {
+	uint16_t PLLN : 4;
+	uint16_t PLLMCLK : 1;
+	uint16_t : 4;
+	uint16_t addr : 7;
+};
+
+#define PLL_K1_ADDR 0x25
+struct PLLK1 {
+	uint16_t PLLK : 6;
+	uint16_t : 9;
+	uint16_t addr : 7;
+};
+
+#define PLL_K2_ADDR 0x26
+struct PLLK2 {
+	uint16_t PLLK : 9;
+	uint16_t addr : 7;
+};
+
+#define PLL_K3_ADDR 0x27
+struct PLLK3 {
+	uint16_t PLLK : 9;
+	uint16_t addr : 7;
+};
