@@ -303,7 +303,7 @@ void game_input(unsigned dt_usec)
 
 		mario_p.friction = 0;
 
-		if (mario_p.vy >= 0) {
+		if (mario_p.vy >= 0 && tile_y >= 0) {
 			switch (map[tile_y][tile_x]) {
 			case GRASS:
 			case FLOOR_MID:
