@@ -1,5 +1,6 @@
 #include "sdk/image.h"
 #include "sdk/input.h"
+#include "sdk/util.h"
 #include <pico/stdlib.h>
 
 #include <stdbool.h>
@@ -7,6 +8,7 @@
 #include <assert.h>
 
 #include <sdk.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <tft.h>
 
@@ -95,8 +97,12 @@ static int movement_lr_das = 150000;
 static int movement_lr_arr = 33333;
 static int time_moved_lr = 0;
 
+static int level_speeds[7] = {1000000, 500000, 250000, 125000, 62500, 31250, 15625};
+static int max_level = 6; // always the number of levels - 1
+static int current_level = 0;
+static int lines_per_level = 12;
+static int lines_cleared = 0;
 static int gravity_speed = 1000000; // how much time passes before the active piece falls
-static int gravity_strength = 1;    // how many spaces does the active piece fall
 static int time_after_falling = 0;
 
 static int lock_time = 500000; // how much time you have on the ground before the piece locks
@@ -113,8 +119,8 @@ static int active_bag[7] = { 0, 1, 2, 3, 4, 5, 6 };
 static int future_bag[7] = { 0, 1, 2, 3, 4, 5, 6 };
 static int next_piece_in_bag = 6;
 
-static uint8_t piece_rotation[112] = { //todo: store in a more space efficient format
-	0b1100,			       // z
+static uint8_t piece_rotation[112] = {
+	0b1100,	// z
 	0b0110, 0b0000, 0b0000, 0b0010, 0b0110, 0b0100, 0b0000, 0b0000,
 	0b1100, 0b0110, 0b0000, 0b0100, 0b1100, 0b1000, 0b0000,
 
@@ -410,6 +416,11 @@ static void lock_active_piece()
 			}
 		}
 		if (row_to_remove >= 0) {
+			lines_cleared++;
+			if (lines_cleared % lines_per_level == 0) {
+				current_level = clampi(++current_level, 0, max_level);
+				gravity_speed = level_speeds[current_level];
+			}
 			for (int y = row_to_remove; y >= 1; y--) {
 				for (int x = 0; x <= BOARD_WIDTH - 1; x++) {
 					board[y * BOARD_WIDTH + x] =
@@ -503,9 +514,11 @@ void game_input(unsigned dt_usec)
 		time_after_falling += dt_usec;
 	}
 	if (time_after_falling > gravity_speed) {
-		move_active_piece(0, gravity_strength);
+		move_active_piece(0, 1);
 		time_after_falling = 0;
 	}
+
+	printf("%i\n", dt_usec);
 
 	if (sdk_inputs_delta.b > 0) {
 		if (active_piece_shape != 4) // isn't I piece
