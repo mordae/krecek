@@ -323,6 +323,49 @@ struct PLLK3 {
 	uint16_t addr : 7;
 };
 
+#define LSPKOUT_VOLUME_ADDR 0x36
+struct LSPKOutVolume {
+	uint16_t LSPKGAIN : 5;
+	uint16_t LSPKMUTE : 1;
+	uint16_t LSPKZC : 1;
+	uint16_t LSPKVU : 1;
+	uint16_t addr : 7;
+};
+
+#define RSPKOUT_VOLUME_ADDR 0x37
+struct RSPKOutVolume {
+	uint16_t RSPKGAIN : 5;
+	uint16_t RSPKMUTE : 1;
+	uint16_t RSPKZC : 1;
+	uint16_t RSPKVU : 1;
+	uint16_t addr : 7;
+};
+
+#define AUX2_MIXER_ADDR 0x38
+struct AUX2Mixer {
+	uint16_t LDACAUX2 : 1;
+	uint16_t LMIXAUX2 : 1;
+	uint16_t LADCAUX2 : 1;
+	uint16_t AUX1MIX2 : 1;
+	uint16_t : 2;
+	uint16_t AUXOUT2MT : 1;
+	uint16_t : 2;
+	uint16_t addr : 7;
+};
+
+#define AUX1_MIXER_ADDR 0x39
+struct AUX1Mixer {
+	uint16_t RDACAUX1 : 1;
+	uint16_t RMIXAUX1 : 1;
+	uint16_t RADCAUX1 : 1;
+	uint16_t LDACAUX1 : 1;
+	uint16_t LMIXAUX1 : 1;
+	uint16_t AUX1HALF : 1;
+	uint16_t AUXOUT1MT : 1;
+	uint16_t : 2;
+	uint16_t addr : 7;
+};
+
 #define POWER_MANAGEMENT_4_ADDR 0x3a
 struct PowerManagement4 {
 	uint16_t IBADJ : 2;
