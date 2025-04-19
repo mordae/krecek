@@ -168,7 +168,7 @@ static void __unused play_effect(int volume, int frequency, int length, effect_g
 		e->offset = 0;
 		e->volume = volume;
 		e->length = length;
-		e->period = frequency ? 48000 / frequency : 1;
+		e->period = frequency ? SDK_AUDIO_RATE / frequency : 1;
 		e->generator = gen;
 
 		break;
