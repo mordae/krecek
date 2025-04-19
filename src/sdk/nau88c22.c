@@ -77,7 +77,6 @@ int nau88c22_start(nau88c22_driver_t drv)
 	struct PowerManagement1 pm1 = {
 		.addr = POWER_MANAGEMENT_1_ADDR,
 		.DCBUFEN = 1,
-		.PLLEN = 0,
 		.ABIASEN = 1,
 		.IOBUFEN = 1,
 		.REFIMP = 1, // 80kΩ
@@ -104,46 +103,16 @@ int nau88c22_start(nau88c22_driver_t drv)
 	};
 	return_on_error(write_reg(drv, &pm3));
 
-	struct PLLK1 pllk1 = {
-		.addr = PLL_K1_ADDR,
-		.PLLK = 0,
-	};
-	return_on_error(write_reg(drv, &pllk1));
-
-	struct PLLK2 pllk2 = {
-		.addr = PLL_K2_ADDR,
-		.PLLK = 0,
-	};
-	return_on_error(write_reg(drv, &pllk2));
-
-	struct PLLK3 pllk3 = {
-		.addr = PLL_K3_ADDR,
-		.PLLK = 0,
-	};
-	return_on_error(write_reg(drv, &pllk3));
-
-	struct PLLN plln = {
-		.addr = PLL_N_ADDR,
-		.PLLN = 8,
-		.PLLMCLK = 1,
-	};
-	return_on_error(write_reg(drv, &plln));
-
-	sleep_ms(10);
-
-	pm1.PLLEN = 1;
-	return_on_error(write_reg(drv, &pm1));
-
 	struct AudioInterface aif = {
 		.addr = AUDIO_INTERFACE_ADDR,
-		.WLEN = 3,  // 32b
+		.WLEN = 0,  // 16b
 		.AIFMT = 2, // I²S
 	};
 	return_on_error(write_reg(drv, &aif));
 
 	struct ClockControl1 clock1 = {
 		.addr = CLOCK_CONTROL_1_ADDR,
-		.CLKM = 1,    // Use PLL for master clock
+		.CLKM = 0,    // Use SCLK as MCLK directly
 		.MCLKSEL = 0, // Divide by 1
 	};
 	return_on_error(write_reg(drv, &clock1));
@@ -157,7 +126,9 @@ int nau88c22_start(nau88c22_driver_t drv)
 
 	struct _192kHzSampling hss = {
 		.addr = _192KHZ_SAMPLING_ADDR,
-		.PLL49MOUT = 1, // Skip one more divider
+		.ADC_OSR32x = 1,
+		.DAC_OSR32x = 1,
+		.UNKNOWN = 1,
 	};
 	return_on_error(write_reg(drv, &hss));
 
