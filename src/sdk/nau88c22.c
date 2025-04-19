@@ -15,199 +15,196 @@
 		__res;                \
 	})
 
-static int write_regs(nau88c22_driver_t drv, uint8_t base, const void *buf, size_t len)
+static int read_reg(nau88c22_driver_t drv, uint8_t addr, void *buf)
 {
-	const uint8_t *bytes = buf;
-	size_t i = 0;
+	uint16_t packet;
 
-	for (i = 0; i < len; i++) {
-		uint8_t cmd[2] = { base + i, bytes[i] };
+	addr <<= 1;
 
-		if (2 != i2c_write_timeout_us(drv->i2c, drv->addr, cmd, 2, false, TIMEOUT))
-			goto fail;
-	}
+	if (1 != i2c_write_timeout_us(drv->i2c, drv->addr, &addr, 1, true, TIMEOUT))
+		goto fail;
+
+	if (2 != i2c_read_timeout_us(drv->i2c, drv->addr, (uint8_t *)&packet, 2, false, TIMEOUT))
+		goto fail;
+
+	packet = __builtin_bswap16(packet);
+	packet |= addr << 8;
+	*(uint16_t *)buf = packet;
 
 	return 0;
 
 fail:
-	printf(TAG "write register %hhx failed\n", base + i);
+	printf(TAG "read register 0x%hhx failed\n", addr >> 1);
 	return -1;
 }
 
-static int read_regs(nau88c22_driver_t drv, uint8_t base, void *buf, size_t len)
+static int write_reg(nau88c22_driver_t drv, const void *buf)
 {
-	uint8_t *bytes = buf;
-	size_t i = 0;
+	uint16_t packet = __builtin_bswap16(*(uint16_t *)buf);
 
-	for (i = 0; i < len; i++) {
-		uint8_t reg = base + i;
-
-		if (1 != i2c_write_timeout_us(drv->i2c, drv->addr, &reg, 1, true, TIMEOUT))
-			goto fail;
-
-		if (1 != i2c_read_timeout_us(drv->i2c, drv->addr, bytes + i, 1, false, TIMEOUT))
-			goto fail;
-	}
+	if (2 != i2c_write_timeout_us(drv->i2c, drv->addr, (uint8_t *)&packet, 2, false, TIMEOUT))
+		goto fail;
 
 	return 0;
 
 fail:
-	printf(TAG "read register %hhx failed\n", base + i);
+	printf(TAG "write register 0x%hhx failed\n", packet >> 9);
 	return -1;
 }
 
 int nau88c22_identify(nau88c22_driver_t drv)
 {
-#if 0
-	struct CHIP chip;
+	struct DeviceId deviceId;
+	struct DeviceRevision deviceRevision;
 
-	if (0 > read_regs(drv, CHIP_REG_BASE, &chip, sizeof chip))
-		return -1;
+	return_on_error(read_reg(drv, DEVICE_REVISION_ADDR, &deviceRevision));
+	return_on_error(read_reg(drv, DEVICE_ID_ADDR, &deviceId));
 
-	return (chip.CHIP_ID1 << 16) | (chip.CHIP_ID2 << 8) | chip.CHIP_VER;
-#endif
+	return (deviceId.ID << 16) | deviceRevision.REV;
 }
 
 int nau88c22_reset(nau88c22_driver_t drv)
 {
-#if 0
-	struct I2C iic = { .INI_REG = true };
-	return_on_error(write_regs(drv, I2C_REG_BASE, &iic, sizeof iic));
-
-	iic.INI_REG = false;
-	return_on_error(write_regs(drv, I2C_REG_BASE, &iic, sizeof iic));
-
-	return 0;
-#endif
+	struct Reset reset = {
+		.addr = RESET_ADDR,
+		.RESET = 0x1ff,
+	};
+	return write_reg(drv, &reset);
 }
 
 int nau88c22_start(nau88c22_driver_t drv)
 {
-#if 0
-	struct state state;
-	return_on_error(read_regs(drv, 0, &state, sizeof state));
+	struct PowerManagement1 pm1 = {
+		.addr = POWER_MANAGEMENT_1_ADDR,
+		.DCBUFEN = 1,
+		.PLLEN = 0,
+		.ABIASEN = 1,
+		.IOBUFEN = 1,
+		.REFIMP = 1, // 80kΩ
+	};
+	return_on_error(write_reg(drv, &pm1));
 
-	/* Resets */
-	state.reset.RST_DAC_DIG = false;
-	state.reset.RST_ADC_DIG = false;
-	state.reset.RST_MST = false;
-	state.reset.RST_CMG = false;
-	state.reset.RST_DIG = false;
-	state.reset.SEQ_DIS = false;
-	state.reset.MSC = false;
-	state.reset.CSM_ON = true;
+	struct PowerManagement2 pm2 = {
+		.addr = POWER_MANAGEMENT_2_ADDR,
+		.RHPEN = 1,
+		.LHPEN = 1,
+	};
+	return_on_error(write_reg(drv, &pm2));
 
-	/* Clocks */
-	state.clocks.ANACLKDAC_ON = true;
-	state.clocks.ANACLKADC_ON = true;
-	state.clocks.CLKDAC_ON = true;
-	state.clocks.CLKADC_ON = true;
-	state.clocks.BCLK_ON = true;
-	state.clocks.MCLK_ON = false;
-	state.clocks.MCLK_INV = false;
-	state.clocks.MCLK_SEL = MCLK_SEL_BCLK;
-	state.clocks.DIV_PRE = 0;  /* 1× BCLK */
-	state.clocks.MULT_PRE = 3; /* 8× BCLK = 8 × 1.536 = 12.288 MHz */
-	state.clocks.DIV_CLKDAC = 0;
-	state.clocks.DIV_CLKADC = 0;
-	state.clocks.ADC_FSMODE = ADC_FSMODE_SINGLE;
-	state.clocks.ADC_OSR = 32; /* 128× oversampling */
-	state.clocks.DAC_OSR = 32;
+	struct PowerManagement3 pm3 = {
+		.addr = POWER_MANAGEMENT_3_ADDR,
+		.AUXOUT1EN = 0,
+		.AUXOUT2EN = 0,
+		.LSPKEN = 1,
+		.RSPKEN = 1,
+		.RMIXEN = 1,
+		.LMIXEN = 1,
+		.RDACEN = 1,
+		.LDACEN = 1,
+	};
+	return_on_error(write_reg(drv, &pm3));
 
-	/* Serial Data Port */
-	state.sdp.SDP_IN_FMT = SDP_IN_FMT_I2S;
-	state.sdp.SDP_IN_WL = SDP_IN_WL_16_BIT;
-	state.sdp.SDP_IN_SEL = SDP_IN_SEL_LEFT;
-	state.sdp.SDP_IN_MUTE = true;
-	state.sdp.SDP_OUT_FMT = SDP_OUT_FMT_I2S;
-	state.sdp.SDP_OUT_WL = SDP_OUT_WL_16_BIT;
-	state.sdp.SDP_OUT_MUTE = false;
+	struct PLLK1 pllk1 = {
+		.addr = PLL_K1_ADDR,
+		.PLLK = 0,
+	};
+	return_on_error(write_reg(drv, &pllk1));
 
-	/* System */
-	state.system.PWRUP_A = 0;
-	state.system.PWRUP_B_HI = 0;
-	state.system.PWRUP_B_LO = 0;
-	state.system.PWRUP_C = 0;
-	state.system.VMIDSEL = 1;
-	state.system.PDN_VREF = false;
-	state.system.PDN_DACVREFGEN = false;
-	state.system.PDN_ADCVREFGEN = false;
-	state.system.PDN_ADCBIASGEN = false;
-	state.system.PDN_IBIASGEN = false;
-	state.system.PDN_ANA = false;
-	state.system.VROI = 0;
-	state.system.RST_MOD = false;
-	state.system.PDN_MOD = false;
-	state.system.PDN_PGA = false;
-	state.system.VX1SEL = 1;
-	state.system.VX2OFF = true;
-	state.system.IBIAS_SW = 0;
-	state.system.DAC_IBIAS_SW = true;
-	state.system.PDN_DAC = false;
-	state.system.ENREFR = true;
-	state.system.PGAGAIN = 0; /* Start at +0 dB */
-	state.system.LINSEL = LINSEL_MIC1PN;
-	state.system.ENMONOOUT = false;
-	state.system.ENREFR_MONO = true;
-	state.system.MONOOUT_MUTE = true;
-	state.system.LD2MONOOUT = false;
-	state.system.HPSW = false;
+	struct PLLK2 pllk2 = {
+		.addr = PLL_K2_ADDR,
+		.PLLK = 0,
+	};
+	return_on_error(write_reg(drv, &pllk2));
 
-	/* ADC */
-	state.adc.ADC_RAMPRATE = 2;
-	state.adc.ADC_SCALE = 4;
-	state.adc.ADC_RAMCLR = false;
-	state.adc.ADC_SYNC = 0;
-	state.adc.ADC_VOLUME = 191;
-	state.adc.ALC_WINSIZE = 15;
-	state.adc.ADC_AUTOMUTE_EN = false;
-	state.adc.ALC_EN = false;
-	state.adc.ALC_MINLEVEL = 0;
-	state.adc.ALC_MAXLEVEL = 15;
-	state.adc.ADC_AUTOMUTE_NG = 15;
-	state.adc.ADC_AUTOMUTE_WS = 15;
-	state.adc.ADC_HPFS1 = 1;
-	state.adc.ADC_AUTOMUTE_VOL = 0;
-	state.adc.ADC_HPFS2 = 1;
-	state.adc.ADC_HPF = ADC_HPF_DYNAMIC;
-	state.adc.ADC_EQBYPASS = true;
+	struct PLLK3 pllk3 = {
+		.addr = PLL_K3_ADDR,
+		.PLLK = 0,
+	};
+	return_on_error(write_reg(drv, &pllk3));
 
-	/* DAC */
-	state.dac.DAC_VOLUME = 0;
-	state.dac.DAC_DSMDITH_OFF = false;
-	state.dac.DAC_EQBYPASS = true;
-	state.dac.DAC_RAMPRATE = 2;
+	struct PLLN plln = {
+		.addr = PLL_N_ADDR,
+		.PLLN = 8,
+		.PLLMCLK = 1,
+	};
+	return_on_error(write_reg(drv, &plln));
 
-	/* GPIO */
-	state.gpio.GPIO_SEL = GPIO_SEL_0;
-	state.gpio.ADCDAT_SEL = ADCDAT_SEL_ADC_0;
-	state.gpio.ADC2DAC_SEL = false;
-	state.gpio.PULLUP_SE = 0;
+	sleep_ms(10);
 
-	return_on_error(write_regs(drv, 0, &state, sizeof state));
+	pm1.PLLEN = 1;
+	return_on_error(write_reg(drv, &pm1));
+
+	struct AudioInterface aif = {
+		.addr = AUDIO_INTERFACE_ADDR,
+		.WLEN = 3,  // 32b
+		.AIFMT = 2, // I²S
+	};
+	return_on_error(write_reg(drv, &aif));
+
+	struct ClockControl1 clock1 = {
+		.addr = CLOCK_CONTROL_1_ADDR,
+		.CLKM = 1,    // Use PLL for master clock
+		.MCLKSEL = 0, // Divide by 1
+	};
+	return_on_error(write_reg(drv, &clock1));
+
+	struct ClockControl2 clock2 = {
+		.addr = CLOCK_CONTROL_2_ADDR,
+		.SMPLR = 0,  // 48 kHz, maximum
+		.SCLKEN = 1, // Slow clock enable
+	};
+	return_on_error(write_reg(drv, &clock2));
+
+	struct _192kHzSampling hss = {
+		.addr = _192KHZ_SAMPLING_ADDR,
+		.PLL49MOUT = 1, // Skip one more divider
+	};
+	return_on_error(write_reg(drv, &hss));
+
+	struct LeftDACVolume ldacvol = {
+		.addr = LEFT_DAC_VOLUME_ADDR,
+		.LDACGAIN = 255,
+	};
+	return_on_error(write_reg(drv, &ldacvol));
+
+	struct RightDACVolume rdacvol = {
+		.addr = RIGHT_DAC_VOLUME_ADDR,
+		.RDACGAIN = 255,
+		.RDACVU = 1,
+	};
+	return_on_error(write_reg(drv, &rdacvol));
+
+	struct LeftMixer lmix = {
+		.addr = LEFT_MIXER_ADDR,
+		.LDACLMX = 1,
+	};
+	return_on_error(write_reg(drv, &lmix));
+
+	struct RightMixer rmix = {
+		.addr = RIGHT_MIXER_ADDR,
+		.RDACRMX = 1,
+	};
+	return_on_error(write_reg(drv, &rmix));
+
+	struct RightSpeakerSubmix rsubmix = {
+		.addr = RIGHT_SPEAKER_SUBMIX_ADDR,
+		.RSUBBYP = 1, // Invert signal to drive speaker as bridge
+	};
+	return_on_error(write_reg(drv, &rsubmix));
+
+	struct OutputControl outctrl = {
+		.addr = OUTPUT_CONTROL_ADDR,
+		.SPKBST = 1,
+		.TSEN = 1, // Thermal shutdown
+	};
+	return_on_error(write_reg(drv, &outctrl));
+
 	return 0;
-#endif
 }
 
-int nau88c22_set_output(nau88c22_driver_t drv, bool right, bool mute)
+int nau88c22_set_output_gain(nau88c22_driver_t drv, float gain)
 {
-#if 0
-	struct SDP sdp;
-	return_on_error(read_regs(drv, SDP_REG_BASE, &sdp, sizeof sdp));
-	sdp.SDP_IN_SEL = right ? SDP_IN_SEL_RIGHT : SDP_IN_SEL_LEFT;
-	sdp.SDP_IN_MUTE = mute;
-	return_on_error(write_regs(drv, SDP_REG_BASE, &sdp, sizeof sdp));
-	return 0;
-#endif
-}
-
-int nau88c22_set_output_gain(nau88c22_driver_t drv, uint8_t gain)
-{
-#if 0
-	struct DAC dac;
-	return_on_error(read_regs(drv, DAC_REG_BASE, &dac, sizeof dac));
-	dac.DAC_VOLUME = gain;
-	return_on_error(write_regs(drv, DAC_REG_BASE, &dac, sizeof dac));
-	return 0;
-#endif
+	(void)drv;
+	(void)gain;
+	return -1;
 }

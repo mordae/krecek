@@ -13,13 +13,13 @@
 #include <sdk.h>
 #include <sdk/remote.h>
 
-//#include "es8312.h"
+#include "nau88c22.h"
 #include "i2s.pio.h"
 
-/*static struct es8312_driver dsp = {*/
-/*	.i2c = DSP_I2C,*/
-/*	.addr = ES8312_ADDR,*/
-/*};*/
+static struct nau88c22_driver dsp = {
+	.i2c = DSP_I2C,
+	.addr = NAU88C22_ADDR,
+};
 
 static int sm_i2s = -1;
 static int dma_i2s_rx = -1;
@@ -148,11 +148,21 @@ void sdk_audio_init(void)
 	gpio_set_pulls(DSP_CDATA_PIN, true, false);
 	gpio_set_pulls(DSP_CCLK_PIN, true, false);
 
-	/*int id = es8312_identify(&dsp);*/
-	/**/
-	/*printf("sdk: DSP identified as ES%x r%x\n", id >> 8, id & 0xff);*/
-	/**/
-	/*es8312_reset(&dsp);*/
+	if (0 > nau88c22_reset(&dsp)) {
+		printf("sdk: failed to reset SDP\n");
+	} else {
+		printf("sdk: DSP reset\n");
+	}
+
+	int device_id = nau88c22_identify(&dsp);
+	int id = device_id >> 16;
+	int rev = device_id & 0xffff;
+
+	if (id == dsp.addr) {
+		printf("sdk: DSP identified as NAU88C22 rev. %x\n", rev);
+	} else {
+		printf("sdk: DSP identified as %x rev %x\n", id, rev);
+	}
 
 	sm_i2s = pio_claim_unused_sm(SDK_PIO, true);
 
@@ -200,9 +210,8 @@ void sdk_audio_init(void)
 
 	puts("sdk: configured i2s");
 
-	/*es8312_start(&dsp);*/
-	/*es8312_set_output(&dsp, false, false);*/
-	/*es8312_set_output_gain(&dsp, 0);*/
+	nau88c22_start(&dsp);
+	nau88c22_set_output_gain(&dsp, 0);
 
 	puts("sdk: configured audio DSP");
 }
@@ -225,17 +234,5 @@ void sdk_audio_report(void)
 
 void sdk_set_output_gain_db(float gain)
 {
-	(void)gain;
-	/*int gain_raw = 191 + gain * 2;*/
-	/**/
-	/*if (gain_raw < 0)*/
-	/*	gain_raw = 0;*/
-	/**/
-	/*if (gain_raw > 255)*/
-	/*	gain_raw = 255;*/
-	/**/
-	/*if (0 > es8312_set_output_gain(&dsp, gain_raw))*/
-	/*	puts("sdk: failed to set output gain");*/
-	/**/
-	/*set_amp_enabled(!!gain_raw);*/
+	nau88c22_set_output_gain(&dsp, gain);
 }

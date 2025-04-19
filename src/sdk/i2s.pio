@@ -33,10 +33,17 @@ bitloop1:             ;      ||
     nop               side 0b01
     jmp x-- bitloop1  side 0b11
 
+noploop1:
+    nop               side 0b11
+    nop               side 0b01
+
+    nop               side 0b01
+    jmp x-- noploop1  side 0b11
+
     out pins, 1       side 0b10
     in pins, 1        side 0b00
 
-    nop               side 0b00
+    set y, 15         side 0b00
     set x, 14         side 0b10
 
 bitloop0:
@@ -46,11 +53,18 @@ bitloop0:
     nop               side 0b00
     jmp x-- bitloop0  side 0b10
 
+noploop0:
+    nop               side 0b10
+    nop               side 0b00
+
+    nop               side 0b00
+    jmp x-- noploop0  side 0b10
+
     out pins, 1       side 0b11
     in pins, 1        side 0b01
 
 public entry_point:
-    nop               side 0b01
+    set y, 15         side 0b01
     set x, 14         side 0b11
 
 % c-sdk {
@@ -91,7 +105,7 @@ inline static int pio_i2s_init(struct pio_i2s_config *cfg) {
 	sm_config_set_sideset_pins(&sm_config, cfg->clock_pin_base);
 	sm_config_set_out_shift(&sm_config, false, true, 32);
 	sm_config_set_in_shift(&sm_config, false, true, 32);
-	sm_config_set_clkdiv(&sm_config, (float)CLK_SYS_HZ / (32 * 4 * cfg->sample_rate));
+	sm_config_set_clkdiv(&sm_config, (float)CLK_SYS_HZ / (64 * 4 * cfg->sample_rate));
 
 	pio_sm_init(cfg->pio, cfg->sm, origin + pio_i2s_offset_entry_point, &sm_config);
 
