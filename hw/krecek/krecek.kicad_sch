@@ -205,6 +205,16 @@
 	)
 	(wire
 		(pts
+			(xy 114.3 111.76) (xy 139.7 111.76)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "24d75e00-1ba7-4eb4-a630-838e87db1849")
+	)
+	(wire
+		(pts
 			(xy 114.3 137.16) (xy 139.7 137.16)
 		)
 		(stroke
@@ -255,7 +265,7 @@
 	)
 	(wire
 		(pts
-			(xy 114.3 104.14) (xy 139.7 104.14)
+			(xy 114.3 101.6) (xy 139.7 101.6)
 		)
 		(stroke
 			(width 0)
@@ -275,7 +285,7 @@
 	)
 	(wire
 		(pts
-			(xy 114.3 109.22) (xy 139.7 109.22)
+			(xy 114.3 106.68) (xy 139.7 106.68)
 		)
 		(stroke
 			(width 0)
@@ -345,7 +355,7 @@
 	)
 	(wire
 		(pts
-			(xy 114.3 96.52) (xy 139.7 96.52)
+			(xy 114.3 93.98) (xy 139.7 93.98)
 		)
 		(stroke
 			(width 0)
@@ -545,7 +555,7 @@
 	)
 	(wire
 		(pts
-			(xy 114.3 111.76) (xy 139.7 111.76)
+			(xy 114.3 109.22) (xy 139.7 109.22)
 		)
 		(stroke
 			(width 0)
@@ -585,7 +595,7 @@
 	)
 	(wire
 		(pts
-			(xy 114.3 101.6) (xy 139.7 101.6)
+			(xy 114.3 99.06) (xy 139.7 99.06)
 		)
 		(stroke
 			(width 0)
@@ -615,7 +625,7 @@
 	)
 	(wire
 		(pts
-			(xy 114.3 99.06) (xy 139.7 99.06)
+			(xy 114.3 96.52) (xy 139.7 96.52)
 		)
 		(stroke
 			(width 0)
@@ -655,7 +665,7 @@
 	)
 	(wire
 		(pts
-			(xy 114.3 106.68) (xy 139.7 106.68)
+			(xy 114.3 104.14) (xy 139.7 104.14)
 		)
 		(stroke
 			(width 0)
@@ -2090,7 +2100,7 @@
 			)
 		)
 		(pin "DSP_{CDATA}" bidirectional
-			(at 139.7 101.6 180)
+			(at 139.7 99.06 180)
 			(uuid "93d175ff-abc0-495a-a280-ab4297a7fd4e")
 			(effects
 				(font
@@ -2100,7 +2110,7 @@
 			)
 		)
 		(pin "DSP_{CCLK}" output
-			(at 139.7 99.06 180)
+			(at 139.7 96.52 180)
 			(uuid "482b2a19-7a8c-4e82-900e-cff016c925a3")
 			(effects
 				(font
@@ -2110,7 +2120,7 @@
 			)
 		)
 		(pin "DSP_{ASDOUT}" input
-			(at 139.7 104.14 180)
+			(at 139.7 101.6 180)
 			(uuid "1d218655-ad35-4c5c-8e6d-08d756288f8b")
 			(effects
 				(font
@@ -2120,7 +2130,7 @@
 			)
 		)
 		(pin "DSP_{ASDIN}" output
-			(at 139.7 106.68 180)
+			(at 139.7 104.14 180)
 			(uuid "200dd811-2092-4aa1-a275-47d9a509d793")
 			(effects
 				(font
@@ -2130,7 +2140,7 @@
 			)
 		)
 		(pin "DSP_{LRCK}" output
-			(at 139.7 109.22 180)
+			(at 139.7 106.68 180)
 			(uuid "a8366db3-6dc3-4c90-8cb5-782aa08a5202")
 			(effects
 				(font
@@ -2140,7 +2150,7 @@
 			)
 		)
 		(pin "DSP_{SCLK}" output
-			(at 139.7 111.76 180)
+			(at 139.7 109.22 180)
 			(uuid "e84f9a05-2c3e-49e5-998b-9d5ac6a0836f")
 			(effects
 				(font
@@ -2160,7 +2170,7 @@
 			)
 		)
 		(pin "HP_{SENSE}" input
-			(at 139.7 96.52 180)
+			(at 139.7 93.98 180)
 			(uuid "7d172b9b-24ea-4e83-8b59-ea183b2634dc")
 			(effects
 				(font
@@ -2177,6 +2187,16 @@
 					(size 1.27 1.27)
 				)
 				(justify right)
+			)
+		)
+		(pin "DSP_{MCLK}" output
+			(at 139.7 111.76 180)
+			(uuid "bbcd4eb5-851c-4a44-815a-b88bde1d7c41")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
 			)
 		)
 		(instances
@@ -2222,7 +2242,7 @@
 			)
 		)
 		(pin "CDATA" bidirectional
-			(at 114.3 101.6 0)
+			(at 114.3 99.06 0)
 			(uuid "2e4ce3a1-54df-497a-96e4-a76962689dbd")
 			(effects
 				(font
@@ -2232,7 +2252,7 @@
 			)
 		)
 		(pin "CCLK" input
-			(at 114.3 99.06 0)
+			(at 114.3 96.52 0)
 			(uuid "0cd8de0d-959c-427f-9ad4-c4f8d31e7f25")
 			(effects
 				(font
@@ -2242,7 +2262,7 @@
 			)
 		)
 		(pin "LRCK" input
-			(at 114.3 109.22 0)
+			(at 114.3 106.68 0)
 			(uuid "84beb26b-9edc-42b4-be17-8bc51dad5eec")
 			(effects
 				(font
@@ -2252,7 +2272,7 @@
 			)
 		)
 		(pin "ADC" output
-			(at 114.3 104.14 0)
+			(at 114.3 101.6 0)
 			(uuid "b4402685-b79c-427d-8889-0e5d7d40334c")
 			(effects
 				(font
@@ -2262,7 +2282,7 @@
 			)
 		)
 		(pin "DAC" input
-			(at 114.3 106.68 0)
+			(at 114.3 104.14 0)
 			(uuid "b59229ae-bbe5-4986-a642-b19e13af279f")
 			(effects
 				(font
@@ -2272,7 +2292,7 @@
 			)
 		)
 		(pin "SCLK" input
-			(at 114.3 111.76 0)
+			(at 114.3 109.22 0)
 			(uuid "4dcf7ca0-6821-4efe-8398-f7ea98d48071")
 			(effects
 				(font
@@ -2282,7 +2302,7 @@
 			)
 		)
 		(pin "HP_{SENSE}" output
-			(at 114.3 96.52 0)
+			(at 114.3 93.98 0)
 			(uuid "2396a116-8bd3-426c-be5c-7dbd319f1782")
 			(effects
 				(font
@@ -2294,6 +2314,16 @@
 		(pin "IR_{TX}" input
 			(at 114.3 114.3 0)
 			(uuid "b3542cca-c00e-4c15-9619-88b6c882c09d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(pin "MCLK" input
+			(at 114.3 111.76 0)
+			(uuid "ec52b03d-fb06-4ab2-9b37-7befa3527007")
 			(effects
 				(font
 					(size 1.27 1.27)
