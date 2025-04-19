@@ -260,5 +260,5 @@ uint32_t sdk_random()
 
 void sdk_turn_off(void)
 {
-	//
+	remote_gpio_set(SLAVE_OFF_PIN, 0);
 }

@@ -189,7 +189,7 @@ void sdk_input_task(void)
 					uint32_t select_held_for = time_us_32() - select_held_since;
 					if (select_held_for > 3000000) {
 						puts("sdk: SELECT held for 3s, turning off...");
-						remote_gpio_set(SLAVE_OFF_PIN, 0);
+						sdk_turn_off();
 						select_held_since = 0;
 					}
 				}
