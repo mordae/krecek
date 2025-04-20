@@ -37,8 +37,6 @@ void game_reset(void)
 
 void game_start(void)
 {
-	sdk_set_output_gain_db(6);
-
 	player.s.tile = 0;
 	player.s.x = TFT_WIDTH / 2.0f;
 	player.s.y = TFT_HEIGHT / 2.0f;

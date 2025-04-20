@@ -42,6 +42,9 @@ void sdk_input_task(void);
 void sdk_slave_park(void);
 void sdk_slave_init(void);
 
+/* From comms.c */
+void sdk_comms_init(void);
+
 static void sdk_stats_task(void);
 
 task_t task_avail[NUM_CORES][MAX_TASKS] = {
@@ -172,6 +175,9 @@ void __noreturn sdk_main(const struct sdk_config *conf)
 	sdk_audio_init();
 	puts("sdk: audio init done");
 
+	sdk_comms_init();
+	puts("sdk: comms init done");
+
 	game_start();
 
 	sdk_audio_start();
@@ -260,5 +266,5 @@ uint32_t sdk_random()
 
 void sdk_turn_off(void)
 {
-	//
+	remote_gpio_set(SLAVE_OFF_PIN, 0);
 }

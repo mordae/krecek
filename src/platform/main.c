@@ -64,7 +64,7 @@ struct menu {
 	int select;
 };
 static struct menu menu;
-static float volume = 0;
+static float volume = SDK_GAIN_STD;
 
 // --- Initialize the game ---
 void game_start(void)
@@ -124,7 +124,7 @@ void game_audio(int nsamples)
 		tone_pos = 0;
 		elapsed = 0;
 		for (int s = 0; s < nsamples; s++)
-			sdk_write_sample(0);
+			sdk_write_sample(0, 0);
 		return;
 	}
 	for (int s = 0; s < nsamples; s++) {
@@ -140,9 +140,10 @@ void game_audio(int nsamples)
 			int period = SDK_AUDIO_RATE / freq;
 			int half_period = 2 * elapsed / period;
 			int modulo = half_period & 1;
-			sdk_write_sample(4000 * (modulo ? 1 : -1));
+			int16_t sample = 4000 * (modulo ? 1 : -1);
+			sdk_write_sample(sample, sample);
 		} else {
-			sdk_write_sample(0);
+			sdk_write_sample(0, 0);
 		}
 		elapsed++;
 	}
@@ -252,14 +253,14 @@ void game_input(unsigned dt_usec)
 			return;
 		}
 		if (sdk_inputs_delta.vol_sw > 0) {
-			if (volume < SDK_GAIN_MIN) {
-				volume = 0;
+			if (volume <= SDK_GAIN_MIN) {
+				volume = SDK_GAIN_STD;
 			} else {
-				volume = SDK_GAIN_MIN - 1;
+				volume = SDK_GAIN_MIN;
 			}
 		}
 
-		volume = clamp(volume, SDK_GAIN_MIN - 1.0, 6);
+		volume = clamp(volume, SDK_GAIN_MIN, SDK_GAIN_MAX);
 
 		if (sdk_inputs.vol_up || sdk_inputs.vol_down || sdk_inputs.vol_sw) {
 			sdk_set_output_gain_db(volume);

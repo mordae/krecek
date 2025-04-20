@@ -117,8 +117,6 @@ static int16_t __unused noise(struct effect *eff)
 
 void game_start(void)
 {
-	sdk_set_output_gain_db(6);
-
 	pacman.speed = 32;
 	pacman.s = (sdk_sprite_t){
 		.ts = &ts_pacman_png,
@@ -153,7 +151,7 @@ void game_audio(int nsamples)
 				e->volume = 0;
 		}
 
-		sdk_write_sample(sample);
+		sdk_write_sample(sample, sample);
 	}
 }
 
@@ -168,7 +166,7 @@ static void __unused play_effect(int volume, int frequency, int length, effect_g
 		e->offset = 0;
 		e->volume = volume;
 		e->length = length;
-		e->period = frequency ? 48000 / frequency : 1;
+		e->period = frequency ? SDK_AUDIO_RATE / frequency : 1;
 		e->generator = gen;
 
 		break;

@@ -3439,10 +3439,6 @@
 		(uuid "a1175f94-9901-4345-9b63-af9592d5fcc1")
 	)
 	(no_connect
-		(at 101.6 109.22)
-		(uuid "af4a9a92-e5a6-4a59-a14d-62f4653745dc")
-	)
-	(no_connect
 		(at 177.8 109.22)
 		(uuid "b4759100-6f4d-4a74-b0f5-8a64a0705456")
 	)
@@ -5891,6 +5887,17 @@
 			(justify left bottom)
 		)
 		(uuid "f7dbfc49-8987-4052-98c5-e6a1ef55a618")
+	)
+	(hierarchical_label "DSP_{MCLK}"
+		(shape output)
+		(at 101.6 109.22 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "04c069e2-da14-4384-81da-9efffe1d9004")
 	)
 	(hierarchical_label "SD_{MISO}"
 		(shape input)

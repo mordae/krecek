@@ -5,6 +5,7 @@ add_library(
   input.c
   audio.c
   video.c
+  comms.c
   tft.c
   pico.c
   ${CMAKE_CURRENT_LIST_DIR}/../../src/vendor/pico-tft/font.c

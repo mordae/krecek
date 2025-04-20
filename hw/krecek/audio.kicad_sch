@@ -2522,12 +2522,6 @@
 		(uuid "0493a61c-cc43-41cc-a920-03d5b27653ad")
 	)
 	(junction
-		(at 66.04 157.48)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "33e17e04-6cdc-4075-aea4-a583ae168db8")
-	)
-	(junction
 		(at 50.8 152.4)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -2552,10 +2546,6 @@
 		(uuid "f181736b-7228-488c-a497-435368368fea")
 	)
 	(no_connect
-		(at 76.2 121.92)
-		(uuid "15dc5098-2eaa-4bdd-bd26-05013ae0c56d")
-	)
-	(no_connect
 		(at 76.2 137.16)
 		(uuid "2b405d62-0b87-4e07-a570-fea62dbbbdfc")
 	)
@@ -2568,7 +2558,7 @@
 		(uuid "b0fc9f1f-9bec-450d-975c-5d7f84c9b0b9")
 	)
 	(no_connect
-		(at 76.2 119.38)
+		(at 76.2 114.3)
 		(uuid "b880e818-8f88-4045-8cdd-9c89adbacc8a")
 	)
 	(no_connect
@@ -2795,16 +2785,6 @@
 	)
 	(wire
 		(pts
-			(xy 63.5 157.48) (xy 66.04 157.48)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "67fd1b62-d1cd-4504-9cc5-bf7e67ba3e00")
-	)
-	(wire
-		(pts
 			(xy 138.43 132.08) (xy 152.4 132.08)
 		)
 		(stroke
@@ -2835,23 +2815,13 @@
 	)
 	(wire
 		(pts
-			(xy 76.2 170.18) (xy 66.04 170.18)
+			(xy 76.2 170.18) (xy 63.5 170.18)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
 		(uuid "7d4c7446-d013-4035-ba24-98da8a0e83f3")
-	)
-	(wire
-		(pts
-			(xy 66.04 170.18) (xy 66.04 157.48)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "849ee2f7-8a33-4843-b62b-63ffc0caf64c")
 	)
 	(wire
 		(pts
@@ -2905,7 +2875,7 @@
 	)
 	(wire
 		(pts
-			(xy 66.04 157.48) (xy 76.2 157.48)
+			(xy 63.5 157.48) (xy 76.2 157.48)
 		)
 		(stroke
 			(width 0)
@@ -2965,7 +2935,7 @@
 	)
 	(wire
 		(pts
-			(xy 64.77 114.3) (xy 76.2 114.3)
+			(xy 64.77 119.38) (xy 76.2 119.38)
 		)
 		(stroke
 			(width 0)
@@ -3002,6 +2972,16 @@
 			(type default)
 		)
 		(uuid "d231c6f5-fef6-46a5-9a33-419327efbdcb")
+	)
+	(wire
+		(pts
+			(xy 72.39 121.92) (xy 76.2 121.92)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d42ac228-60fe-49e6-8404-f2e450ea138e")
 	)
 	(wire
 		(pts
@@ -3164,7 +3144,7 @@
 		(uuid "6fa9dc43-2f2c-4278-9fa5-6345b5bf49e3")
 	)
 	(label "IR"
-		(at 64.77 114.3 0)
+		(at 64.77 119.38 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3224,6 +3204,17 @@
 			(justify right)
 		)
 		(uuid "0a73b014-6de0-4ecb-a8e1-835fa39a91ea")
+	)
+	(hierarchical_label "MCLK"
+		(shape input)
+		(at 63.5 170.18 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "47ae8283-77c2-459f-87bb-e7253f6992f9")
 	)
 	(hierarchical_label "LRCK"
 		(shape input)
@@ -3602,7 +3593,6 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "2726e8e4-37b0-4bd1-ba07-4bd7421ae222")
 		(property "Reference" "#PWR065"
 			(at 165.1 78.74 0)
@@ -6193,6 +6183,73 @@
 		)
 	)
 	(symbol
+		(lib_id "power:GND")
+		(at 67.31 121.92 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "d60f4a9b-eb42-4207-a7a4-ae82997bd796")
+		(property "Reference" "#PWR0129"
+			(at 60.96 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 63.5 121.9199 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" ""
+			(at 67.31 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 67.31 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 67.31 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "1d8835d2-16a9-46ff-bec2-1244b53c6dde")
+		)
+		(instances
+			(project "krecek"
+				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
+					(reference "#PWR0129")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Device:C_Small")
 		(at 101.6 76.2 0)
 		(mirror y)
@@ -6471,6 +6528,83 @@
 			(project "krecek"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
 					(reference "U10")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C_Small")
+		(at 69.85 121.92 270)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "e937800d-ba58-4992-826e-745a68d20b0e")
+		(property "Reference" "C58"
+			(at 69.8436 115.57 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "1u"
+			(at 69.8436 118.11 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 69.85 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 69.85 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized capacitor, small symbol"
+			(at 69.85 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part" "C52923"
+			(at 69.85 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "aef695e6-4a24-411f-b57d-a2b903d80219")
+		)
+		(pin "2"
+			(uuid "8ab07afb-8861-4314-98aa-0ec7f081e4a0")
+		)
+		(instances
+			(project "krecek"
+				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
+					(reference "C58")
 					(unit 1)
 				)
 			)

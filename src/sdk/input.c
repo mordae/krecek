@@ -87,6 +87,7 @@ void sdk_input_task(void)
 	static int temp_hist[16], temp_idx = 0, temp_avg = 0;
 	static int cc1_hist[16], cc1_idx = 0, cc1_avg = 0;
 	static int cc2_hist[16], cc2_idx = 0, cc2_avg = 0;
+	static int hps_hist[16], hps_idx = 0, hps_avg = 0;
 
 	while (true) {
 		sdk_inputs.a = !remote_gpio_get(SLAVE_A_PIN);
@@ -144,6 +145,18 @@ void sdk_input_task(void)
 
 		sdk_inputs.cc_mv = MAX(cc1_mv, cc2_mv);
 
+		/* Read headphone sense. */
+		adc_select_input(HP_SENSE_PIN - 26);
+		int hps = adc_repeated_read(16);
+		hps_avg -= hps_hist[hps_idx];
+		hps_avg += hps;
+		hps_hist[hps_idx] = hps;
+		hps_idx = (hps_idx + 1) & 15;
+		float hps_mv = hps_avg * (3300.0f / (4095 * 256.0f));
+
+		sdk_inputs.hps_mv = hps_mv;
+		sdk_inputs.hps = hps_mv < 1900.0f;
+
 		/* Read current temperature. */
 		adc_select_input(4);
 		int temp = adc_repeated_read(16);
@@ -168,6 +181,8 @@ void sdk_input_task(void)
 		sdk_inputs_delta.vol_down = sdk_inputs.vol_down - prev_inputs.vol_down;
 		sdk_inputs_delta.vol_sw = sdk_inputs.vol_sw - prev_inputs.vol_sw;
 
+		sdk_inputs_delta.hps = sdk_inputs.hps - prev_inputs.hps;
+
 		sdk_inputs_delta.brack_l = sdk_inputs.brack_l - prev_inputs.brack_l;
 		sdk_inputs_delta.brack_r = sdk_inputs.brack_r - prev_inputs.brack_r;
 
@@ -180,6 +195,7 @@ void sdk_input_task(void)
 		prev_inputs = sdk_inputs;
 
 		sdk_inputs_delta.batt_mv = sdk_inputs.batt_mv - prev_inputs.batt_mv;
+		sdk_inputs_delta.hps_mv = sdk_inputs.hps_mv - prev_inputs.hps_mv;
 
 		if (sdk_inputs.cc_mv < 250.0f) {
 			if (sdk_config.off_on_select && sdk_inputs.select) {
@@ -189,7 +205,7 @@ void sdk_input_task(void)
 					uint32_t select_held_for = time_us_32() - select_held_since;
 					if (select_held_for > 3000000) {
 						puts("sdk: SELECT held for 3s, turning off...");
-						remote_gpio_set(SLAVE_OFF_PIN, 0);
+						sdk_turn_off();
 						select_held_since = 0;
 					}
 				}
@@ -226,6 +242,14 @@ void sdk_input_task(void)
 				printf("\x1b[1;31msdk: charging at 100mA\e[0m\n");
 				charging_mode = 0;
 			}
+		}
+
+		if (sdk_inputs_delta.hps > 0) {
+			// Enable headphones, disable speaker.
+			sdk_enable_headphones(true);
+		} else if (sdk_inputs_delta.hps < 0) {
+			// Disable headphones, enable speaker.
+			sdk_enable_headphones(false);
 		}
 
 		/* Let the game process inputs as soon as possible. */

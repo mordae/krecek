@@ -7,7 +7,8 @@ add_library(
   slave.c
   remote.c
   dap.c
-  es8312.c
+  nau88c22.c
+  comms.c
 )
 
 pico_generate_pio_header(krecek ${CMAKE_CURRENT_LIST_DIR}/i2s.pio)

@@ -9,6 +9,7 @@
 #include <sdk/sprite.h>
 #include <sdk/util.h>
 #include <sdk/video.h>
+#include <sdk/comms.h>
 
 #if !defined(__noreturn)
 #define __noreturn __attribute__((__noreturn__))

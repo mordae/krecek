@@ -63,22 +63,22 @@ void sdk_audio_flush()
 void sdk_audio_task(void)
 {
 	int writable = pa_stream_writable_size(pa->stream) / 2;
-
 	if (writable)
 		game_audio(writable);
 }
 
-bool sdk_write_sample(int16_t sample)
+void sdk_write_sample(int16_t left, int16_t right)
 {
+	int16_t sample = ((int32_t)left + (int32_t)right) >> 1;
+
 	int error = 0;
 
 	if (used == BUFFER_SIZE) {
 		// Buffer is full, check if we can flush it.
 		int writable = pa_stream_writable_size(pa->stream) / 2;
 
-		if (writable < used) {
-			return false; // Apply backpressure.
-		}
+		if (writable < used)
+			return; // No can do.
 
 		// Yes, we can flush it. Let's do so.
 		if (0 > pa_simple_write(pa, buffer, BUFFER_SIZE * 2, &error))
@@ -90,53 +90,20 @@ bool sdk_write_sample(int16_t sample)
 
 	// Add the sample.
 	buffer[used++] = sample;
-	return true;
 }
 
-bool sdk_read_sample(int16_t *sample)
+void sdk_read_sample(int16_t *left, int16_t *right)
 {
-	(void)sample;
-	return false;
-}
-
-int sdk_write_samples(const int16_t *buf, int len)
-{
-	int error = 0;
-
-	// Can we fit this inside our buffer?
-	if (used + len <= BUFFER_SIZE) {
-		used += len;
-		memcpy(buffer + used, buf, len * 2);
-		return len;
-	}
-
-	// Flush our buffer first.
-	sdk_audio_flush();
-
-	// Find out how much space is there for us.
-	int writable = pa_stream_writable_size(pa->stream) / 2;
-
-	// Do not write more than the available space.
-	if (len > writable)
-		len = writable;
-
-	if (!len)
-		return 0;
-
-	if (0 > pa_simple_write(pa, buf, len * 2, &error))
-		sdk_panic("pa_simple_write failed, error=%i", error);
-
-	return len;
-}
-
-int sdk_read_samples(int16_t *buf, int len)
-{
-	(void)buf;
-	(void)len;
-	return 0;
+	*left = 0;
+	*right = 0;
 }
 
 void sdk_set_output_gain_db(float gain)
 {
 	(void)gain;
+}
+
+void sdk_enable_headphones(bool en)
+{
+	(void)en;
 }
