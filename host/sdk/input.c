@@ -243,6 +243,9 @@ void sdk_input_commit(uint32_t dt)
 	sdk_inputs.cc_mv = 400.0f;
 	sdk_inputs.temp = 35.0f;
 
+	sdk_inputs.hps_mv = 2100.0f;
+	sdk_inputs.hps = 0;
+
 	/* Calculate input deltas */
 	sdk_inputs_delta.a = sdk_inputs.a - prev_inputs.a;
 	sdk_inputs_delta.b = sdk_inputs.b - prev_inputs.b;
@@ -256,6 +259,8 @@ void sdk_input_commit(uint32_t dt)
 	sdk_inputs_delta.vol_down = sdk_inputs.vol_down - prev_inputs.vol_down;
 	sdk_inputs_delta.vol_sw = sdk_inputs.vol_sw - prev_inputs.vol_sw;
 
+	sdk_inputs_delta.hps = sdk_inputs.hps - prev_inputs.hps;
+
 	sdk_inputs_delta.brack_l = sdk_inputs.brack_l - prev_inputs.brack_l;
 	sdk_inputs_delta.brack_r = sdk_inputs.brack_r - prev_inputs.brack_r;
 
@@ -267,6 +272,7 @@ void sdk_input_commit(uint32_t dt)
 
 	sdk_inputs_delta.cc_mv = sdk_inputs.cc_mv - prev_inputs.cc_mv;
 	sdk_inputs_delta.temp = sdk_inputs.temp - prev_inputs.temp;
+	sdk_inputs_delta.hps_mv = sdk_inputs.hps_mv - prev_inputs.hps_mv;
 
 	sdk_inputs.joy_x = 2047 * joy_right - 2047 * joy_left;
 	sdk_inputs.joy_y = 2047 * joy_down - 2047 * joy_up;

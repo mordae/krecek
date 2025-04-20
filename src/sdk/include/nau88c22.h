@@ -32,3 +32,9 @@ int nau88c22_start(nau88c22_driver_t drv);
  * - NAU88C22_MAX_GAIN =  +6 dB
  */
 int nau88c22_set_output_gain(nau88c22_driver_t drv, float gain);
+
+/* Enable output to headphones. */
+int nau88c22_enable_headphones(nau88c22_driver_t drv, bool en);
+
+/* Enable output to speaker. */
+int nau88c22_enable_speaker(nau88c22_driver_t drv, bool en);

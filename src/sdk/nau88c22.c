@@ -87,8 +87,8 @@ int nau88c22_start(nau88c22_driver_t drv)
 
 	struct PowerManagement2 pm2 = {
 		.addr = POWER_MANAGEMENT_2_ADDR,
-		.RHPEN = 1,
-		.LHPEN = 1,
+		.RHPEN = 0, // Start with just speaker
+		.LHPEN = 0, // Start with just speaker
 		.LADCEN = 1,
 		.RADCEN = 1,
 		.LBSTEN = 1,
@@ -296,4 +296,24 @@ int nau88c22_set_output_gain(nau88c22_driver_t drv, float gain)
 	(void)drv;
 	(void)gain;
 	return -1;
+}
+
+int nau88c22_enable_headphones(nau88c22_driver_t drv, bool en)
+{
+	struct PowerManagement2 pm2;
+	return_on_error(read_reg(drv, POWER_MANAGEMENT_2_ADDR, &pm2));
+	pm2.RHPEN = !!en;
+	pm2.LHPEN = !!en;
+	return_on_error(write_reg(drv, &pm2));
+	return 0;
+}
+
+int nau88c22_enable_speaker(nau88c22_driver_t drv, bool en)
+{
+	struct PowerManagement3 pm3;
+	return_on_error(read_reg(drv, POWER_MANAGEMENT_3_ADDR, &pm3));
+	pm3.LSPKEN = !!en;
+	pm3.RSPKEN = !!en;
+	return_on_error(write_reg(drv, &pm3));
+	return 0;
 }

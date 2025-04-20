@@ -238,3 +238,9 @@ void sdk_set_output_gain_db(float gain)
 {
 	nau88c22_set_output_gain(&dsp, gain);
 }
+
+void sdk_enable_headphones(bool en)
+{
+	nau88c22_enable_headphones(&dsp, en);
+	nau88c22_enable_speaker(&dsp, !en);
+}

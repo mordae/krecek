@@ -102,3 +102,8 @@ void sdk_set_output_gain_db(float gain)
 {
 	(void)gain;
 }
+
+void sdk_enable_headphones(bool en)
+{
+	(void)en;
+}
