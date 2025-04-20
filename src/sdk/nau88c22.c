@@ -76,6 +76,7 @@ int nau88c22_start(nau88c22_driver_t drv)
 {
 	struct PowerManagement1 pm1 = {
 		.addr = POWER_MANAGEMENT_1_ADDR,
+		.MICBIASEN = 1,
 		.DCBUFEN = 1,
 		.ABIASEN = 1,
 		.IOBUFEN = 1,
@@ -87,6 +88,12 @@ int nau88c22_start(nau88c22_driver_t drv)
 		.addr = POWER_MANAGEMENT_2_ADDR,
 		.RHPEN = 1,
 		.LHPEN = 1,
+		.LADCEN = 1,
+		.RADCEN = 1,
+		.LBSTEN = 1,
+		.RBSTEN = 1,
+		.LPGAEN = 0,
+		.RPGAEN = 0,
 	};
 	return_on_error(write_reg(drv, &pm2));
 
@@ -103,16 +110,41 @@ int nau88c22_start(nau88c22_driver_t drv)
 	};
 	return_on_error(write_reg(drv, &pm3));
 
+	struct PLLK1 pllk1 = {
+		.addr = PLL_K1_ADDR,
+		.PLLK = 0,
+	};
+	return_on_error(write_reg(drv, &pllk1));
+
+	struct PLLK2 pllk2 = {
+		.addr = PLL_K2_ADDR,
+		.PLLK = 0,
+	};
+	return_on_error(write_reg(drv, &pllk2));
+
+	struct PLLK3 pllk3 = {
+		.addr = PLL_K3_ADDR,
+		.PLLK = 0,
+	};
+	return_on_error(write_reg(drv, &pllk3));
+
+	struct PLLN plln = {
+		.addr = PLL_N_ADDR,
+		.PLLN = 8,
+		.PLLMCLK = 0, // Divide by 1
+	};
+	return_on_error(write_reg(drv, &plln));
+
 	struct AudioInterface aif = {
 		.addr = AUDIO_INTERFACE_ADDR,
-		.WLEN = 0,  // 16b
+		.WLEN = 3,  // 32b
 		.AIFMT = 2, // I²S
 	};
 	return_on_error(write_reg(drv, &aif));
 
 	struct ClockControl1 clock1 = {
 		.addr = CLOCK_CONTROL_1_ADDR,
-		.CLKM = 0,    // Use SCLK as MCLK directly
+		.CLKM = 1,    // Use PLL for MCLK
 		.MCLKSEL = 0, // Divide by 1
 	};
 	return_on_error(write_reg(drv, &clock1));
@@ -126,9 +158,8 @@ int nau88c22_start(nau88c22_driver_t drv)
 
 	struct _192kHzSampling hss = {
 		.addr = _192KHZ_SAMPLING_ADDR,
-		.ADC_OSR32x = 1,
-		.DAC_OSR32x = 1,
-		.UNKNOWN = 1,
+		.PLL49MOUT = 1,
+		.ADCB_OVER = 1,
 	};
 	return_on_error(write_reg(drv, &hss));
 
@@ -145,15 +176,31 @@ int nau88c22_start(nau88c22_driver_t drv)
 	};
 	return_on_error(write_reg(drv, &rdacvol));
 
+	struct LHPVolume lhpvol = {
+		.addr = LHP_VOLUME_ADDR,
+		.LHPVU = 0,
+		.LHPGAIN = 0b111001, // +0dB
+	};
+	return_on_error(write_reg(drv, &lhpvol));
+
+	struct RHPVolume rhpvol = {
+		.addr = RHP_VOLUME_ADDR,
+		.RHPVU = 1,
+		.RHPGAIN = 0b111001, // +0dB
+	};
+	return_on_error(write_reg(drv, &rhpvol));
+
 	struct LeftMixer lmix = {
 		.addr = LEFT_MIXER_ADDR,
-		.LDACLMX = 1,
+		.LDACLMX = 1, // Left DAC to LMAIN
+		.LBYPLMX = 0, // Left Analog to LMAIN
 	};
 	return_on_error(write_reg(drv, &lmix));
 
 	struct RightMixer rmix = {
 		.addr = RIGHT_MIXER_ADDR,
-		.RDACRMX = 1,
+		.RDACRMX = 1, // Right DAC to RMAIN
+		.RBYPRMX = 0, // Right Analog to RMAIN
 	};
 	return_on_error(write_reg(drv, &rmix));
 
@@ -163,12 +210,59 @@ int nau88c22_start(nau88c22_driver_t drv)
 	};
 	return_on_error(write_reg(drv, &rsubmix));
 
+	struct InputControl inctrl = {
+		.addr = INPUT_CONTROL_ADDR,
+		.MICBIASV = 1,	// ~2.2V
+		.LLINLPGA = 1,	// Left line into left amplifier (IR)
+		.RMICNRPGA = 0, // Right mic P/N into right amplifier (HP)
+		.RMICPRPGA = 0,
+	};
+	return_on_error(write_reg(drv, &inctrl));
+
+	struct LeftADCBoost ladcbst = {
+		.addr = LEFT_ADC_BOOST_ADDR,
+		.LAUXBSTGAIN = 0b101, // LAUX to LADC at +0 dB
+	};
+	return_on_error(write_reg(drv, &ladcbst));
+
+	struct RightADCBoost radcbst = {
+		.addr = RIGHT_ADC_BOOST_ADDR,
+		.RPGABSTGAIN = 0b101, // Right PGA to RADC at +0 dB
+	};
+	return_on_error(write_reg(drv, &radcbst));
+
 	struct OutputControl outctrl = {
 		.addr = OUTPUT_CONTROL_ADDR,
 		.SPKBST = 1,
+		.AUX1BST = 1,
+		.AUX2BST = 1,
 		.TSEN = 1, // Thermal shutdown
 	};
 	return_on_error(write_reg(drv, &outctrl));
+
+	struct DACControl dacctrl = {
+		.addr = DAC_CONTROL_ADDR,
+		.DACOS = 1,
+	};
+	return_on_error(write_reg(drv, &dacctrl));
+
+	struct ADCControl adcctrl = {
+		.addr = ADC_CONTROL_ADDR,
+		.ADCOS = 1,
+	};
+	return_on_error(write_reg(drv, &adcctrl));
+
+	struct MiscControls miscctrl = {
+		.addr = MISC_CONTROLS_ADDR,
+		.FSERRENA = 1,
+		.FSERRVAL = 0,
+		.PLLLOKBP = 0,
+		.DACOS256 = 0,
+	};
+	return_on_error(write_reg(drv, &miscctrl));
+
+	pm1.PLLEN = 1;
+	return_on_error(write_reg(drv, &pm1));
 
 	return 0;
 }

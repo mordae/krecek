@@ -13,7 +13,7 @@ void sdk_set_output_gain_db(float gain);
 
 /* Audio sample rate. */
 #if !defined(SDK_AUDIO_RATE)
-#define SDK_AUDIO_RATE 192000
+#define SDK_AUDIO_RATE 191894.53125f
 #endif
 
 /*

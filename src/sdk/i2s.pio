@@ -33,12 +33,12 @@ bitloop1:             ;      ||
     nop               side 0b01
     jmp x-- bitloop1  side 0b11
 
-//noploop1:
-//    set pins 0        side 0b11
-//    nop               side 0b01
-//
-//    nop               side 0b01
-//    jmp x-- noploop1  side 0b11
+noploop1:
+    set pins 0        side 0b11
+    nop               side 0b01
+
+    nop               side 0b01
+    jmp x-- noploop1  side 0b11
 
     out pins, 1       side 0b10
     in pins, 1        side 0b00
@@ -53,12 +53,12 @@ bitloop0:
     nop               side 0b00
     jmp x-- bitloop0  side 0b10
 
-//noploop0:
-//    set pins 0        side 0b10
-//    nop               side 0b00
-//
-//    nop               side 0b00
-//    jmp x-- noploop0  side 0b10
+noploop0:
+    set pins 0        side 0b10
+    nop               side 0b00
+
+    nop               side 0b00
+    jmp x-- noploop0  side 0b10
 
     out pins, 1       side 0b11
     in pins, 1        side 0b01
@@ -77,7 +77,7 @@ struct pio_i2s_config {
 	int in_pin;
 	int out_pin;
 	int clock_pin_base;
-	int sample_rate;
+	float sample_rate;
 };
 
 inline static int pio_i2s_init(struct pio_i2s_config *cfg) {
@@ -107,7 +107,16 @@ inline static int pio_i2s_init(struct pio_i2s_config *cfg) {
 	sm_config_set_sideset_pins(&sm_config, cfg->clock_pin_base);
 	sm_config_set_out_shift(&sm_config, false, true, 32);
 	sm_config_set_in_shift(&sm_config, false, true, 32);
-	sm_config_set_clkdiv(&sm_config, (float)CLK_SYS_HZ / (32 * 4 * cfg->sample_rate));
+
+  float freq = 64 * 4 * cfg->sample_rate;
+  float clkdiv = (float)CLK_SYS_HZ / freq;
+  int clkdiv_int = clkdiv;
+  int clkdiv_frac = 256 * (clkdiv - clkdiv_int);
+	sm_config_set_clkdiv_int_frac(&sm_config, clkdiv_int, clkdiv_frac);
+
+  printf("i2s: in=%i out=%i lrck=%i bclk=%i  freq=%.0f  clkdiv=%i+%i/256\n",
+         cfg->in_pin, cfg->out_pin, cfg->clock_pin_base, cfg->clock_pin_base + 1,
+         freq / 4, clkdiv_int, clkdiv_frac);
 
 	pio_sm_init(cfg->pio, cfg->sm, origin + pio_i2s_offset_entry_point, &sm_config);
 

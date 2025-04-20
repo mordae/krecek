@@ -638,9 +638,9 @@ struct _192kHzSampling {
 	uint16_t ADC_OSR32x : 1;
 	uint16_t DAC_OSR32x : 1;
 	uint16_t PLL49MOUT : 1;
-	uint16_t UNKNOWN : 1;
+	uint16_t : 2;
 	uint16_t ADCB_OVER : 1;
-	uint16_t : 4;
+	uint16_t : 3;
 	uint16_t addr : 7;
 };
 static_assert(2 == sizeof(struct _192kHzSampling));

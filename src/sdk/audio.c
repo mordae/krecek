@@ -181,7 +181,7 @@ void sdk_audio_init(void)
 	if (0 > offset)
 		sdk_panic("sdk: pio_i2s_init failed\n");
 
-	printf("sdk: pio_i2s offset=%i\n", offset);
+	printf("sdk: pio_i2s loaded at %i-%i\n", offset, offset + pio_i2s_program.length - 1);
 
 	pio_sm_set_enabled(SDK_PIO, sm_i2s, true);
 
