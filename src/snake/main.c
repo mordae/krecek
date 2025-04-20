@@ -54,7 +54,6 @@ void game_reset(void)
 
 void game_start(void)
 {
-	sdk_set_output_gain_db(6);
 }
 
 void game_audio(int __unused nsamples)

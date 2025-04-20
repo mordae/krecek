@@ -84,7 +84,6 @@ void game_input(unsigned __unused dt_usec)
 
 void game_start(void)
 {
-	/* sdk_set_output_gain_db(6); */
 }
 
 /*

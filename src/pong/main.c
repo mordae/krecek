@@ -99,7 +99,6 @@ static bool rects_overlap(int x0, int y0, int x1, int y1, int a0, int b0, int a1
 
 void game_start(void)
 {
-	sdk_set_output_gain_db(6);
 }
 
 static int audio_sum_left, audio_sum_right;

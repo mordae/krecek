@@ -81,8 +81,6 @@ void game_start(void)
 {
 	current_screen = GAME;
 
-	sdk_set_output_gain_db(0);
-
 	tones['c'] = 131;
 	tones['d'] = 147;
 	tones['e'] = 165;

@@ -117,8 +117,6 @@ static int16_t __unused noise(struct effect *eff)
 
 void game_start(void)
 {
-	sdk_set_output_gain_db(6);
-
 	pacman.speed = 32;
 	pacman.s = (sdk_sprite_t){
 		.ts = &ts_pacman_png,

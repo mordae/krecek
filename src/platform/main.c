@@ -61,7 +61,7 @@ struct menu {
 	int select;
 };
 static struct menu menu;
-static float volume = 0;
+static float volume = SDK_GAIN_STD;
 
 // --- Initialize the game ---
 void game_start(void)
@@ -241,14 +241,14 @@ void game_input(unsigned dt_usec)
 			return;
 		}
 		if (sdk_inputs_delta.vol_sw > 0) {
-			if (volume < SDK_GAIN_MIN) {
-				volume = 0;
+			if (volume <= SDK_GAIN_MIN) {
+				volume = SDK_GAIN_STD;
 			} else {
-				volume = SDK_GAIN_MIN - 1;
+				volume = SDK_GAIN_MIN;
 			}
 		}
 
-		volume = clamp(volume, SDK_GAIN_MIN - 1.0, 6);
+		volume = clamp(volume, SDK_GAIN_MIN, SDK_GAIN_MAX);
 
 		if (sdk_inputs.vol_up || sdk_inputs.vol_down || sdk_inputs.vol_sw) {
 			sdk_set_output_gain_db(volume);

@@ -130,8 +130,6 @@ static const char tune[] = " cegCEGB";
 
 void game_start(void)
 {
-	sdk_set_output_gain_db(6);
-
 	notes['c'] = 131;
 	notes['d'] = 147;
 	notes['e'] = 165;

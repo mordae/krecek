@@ -291,11 +291,27 @@ int nau88c22_start(nau88c22_driver_t drv)
 	return 0;
 }
 
+inline static int clampi(int x, int lo, int hi)
+{
+	return x < lo ? lo : (x > hi ? hi : x);
+}
+
 int nau88c22_set_output_gain(nau88c22_driver_t drv, float gain)
 {
-	(void)drv;
-	(void)gain;
-	return -1;
+	struct LeftDACVolume ldacvol = {
+		.addr = LEFT_DAC_VOLUME_ADDR,
+		.LDACGAIN = 255 + clampi(2 * gain, -255, 0),
+	};
+	return_on_error(write_reg(drv, &ldacvol));
+
+	struct RightDACVolume rdacvol = {
+		.addr = RIGHT_DAC_VOLUME_ADDR,
+		.RDACGAIN = 255 + clampi(2 * gain, -255, 0),
+		.RDACVU = 1,
+	};
+	return_on_error(write_reg(drv, &rdacvol));
+
+	return 0;
 }
 
 int nau88c22_enable_headphones(nau88c22_driver_t drv, bool en)

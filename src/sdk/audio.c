@@ -106,16 +106,8 @@ void sdk_read_sample(int16_t *left, int16_t *right)
 	*right = i2s_rx_buf[idx][1] - INT16_MAX;
 }
 
-static void set_amp_enabled(bool en)
-{
-	(void)en;
-	// TODO: Amplifier is now built into the DSP.
-}
-
 void sdk_audio_init(void)
 {
-	set_amp_enabled(false);
-
 	unsigned rate = i2c_init(DSP_I2C, 100000);
 
 	printf("sdk: i2c rate=%u\n", rate);

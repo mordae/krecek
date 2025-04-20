@@ -1,9 +1,9 @@
 #pragma once
 #include <pico/stdlib.h>
 
-#define SDK_GAIN_MIN -95.0f // Minimum audio gain
-#define SDK_GAIN_STD 0.0f   // Default audio gain
-#define SDK_GAIN_MAX 30.0f  // Maximum audio gain
+#define SDK_GAIN_MIN -127.5f // Minimum audio gain
+#define SDK_GAIN_STD 0.0f    // Default audio gain
+#define SDK_GAIN_MAX 0.0f    // Maximum audio gain
 
 /*
  * Set audio output gain (in decibels).

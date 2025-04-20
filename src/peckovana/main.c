@@ -157,7 +157,6 @@ static int16_t __unused noise(struct effect *eff)
 
 void game_start(void)
 {
-	sdk_set_output_gain_db(6);
 	//menu.game_mode = 3;
 }
 
