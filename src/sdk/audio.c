@@ -21,7 +21,8 @@ static struct nau88c22_driver dsp = {
 	.addr = NAU88C22_ADDR,
 };
 
-static int sm_i2s = -1;
+static int sm_i2s_rx = -1;
+static int sm_i2s_tx = -1;
 static int dma_i2s_rx = -1;
 static int dma_i2s_tx = -1;
 
@@ -34,13 +35,11 @@ static int min_samples = INT_MAX;
 static int max_samples = 0;
 static int all_samples = 0;
 
-#define I2S_BUF_BITS 11
-#define I2S_BUF_LEN (1 << (I2S_BUF_BITS - 1))
+#define I2S_BUF_BITS 12
+#define I2S_BUF_LEN (1 << (I2S_BUF_BITS - 2))
 
-static int16_t __scratch_x("i2s_rx_buf") i2s_rx_buf[I2S_BUF_LEN]
-	__attribute__((__aligned__(I2S_BUF_LEN * 2)));
-static int16_t __scratch_y("i2s_tx_buf") i2s_tx_buf[I2S_BUF_LEN]
-	__attribute__((__aligned__(I2S_BUF_LEN * 2)));
+static uint16_t i2s_rx_buf[I2S_BUF_LEN][2] __attribute__((__aligned__(I2S_BUF_LEN * 4)));
+static uint16_t i2s_tx_buf[I2S_BUF_LEN][2] __attribute__((__aligned__(I2S_BUF_LEN * 4)));
 
 void sdk_audio_task(void)
 {
@@ -71,7 +70,8 @@ void sdk_audio_task(void)
 			tx_offset = rx_offset;
 		}
 
-		game_audio(delta);
+		if (delta)
+			game_audio(delta);
 
 		rx_offset = xx_limit;
 		tx_offset = xx_limit;
@@ -92,40 +92,18 @@ void sdk_audio_task(void)
 	}
 }
 
-bool sdk_write_sample(int16_t sample)
+void sdk_write_sample(int16_t left, int16_t right)
 {
-	if (tx_offset >= xx_limit)
-		return false;
-
-	i2s_tx_buf[tx_offset++ & (I2S_BUF_LEN - 1)] = sample;
-	return true;
+	size_t idx = tx_offset++ % I2S_BUF_LEN;
+	i2s_tx_buf[idx][0] = left + INT16_MAX;
+	i2s_tx_buf[idx][1] = right + INT16_MAX;
 }
 
-bool sdk_read_sample(int16_t *sample)
+void sdk_read_sample(int16_t *left, int16_t *right)
 {
-	if (rx_offset >= xx_limit)
-		return false;
-
-	*sample = i2s_rx_buf[rx_offset++ & (I2S_BUF_LEN - 1)];
-	return true;
-}
-
-int sdk_write_samples(const int16_t *buf, int len)
-{
-	for (int i = 0; i < len; i++)
-		if (!sdk_write_sample(buf[i]))
-			return i;
-
-	return len;
-}
-
-int sdk_read_samples(int16_t *buf, int len)
-{
-	for (int i = 0; i < len; i++)
-		if (!sdk_read_sample(buf + i))
-			return i;
-
-	return len;
+	size_t idx = rx_offset++ % I2S_BUF_LEN;
+	*left = i2s_rx_buf[idx][0] - INT16_MAX;
+	*right = i2s_rx_buf[idx][1] - INT16_MAX;
 }
 
 static void set_amp_enabled(bool en)
@@ -164,48 +142,63 @@ void sdk_audio_init(void)
 		printf("sdk: DSP identified as %x rev %x\n", id, rev);
 	}
 
-	sm_i2s = pio_claim_unused_sm(SDK_PIO, true);
+	sm_i2s_rx = pio_claim_unused_sm(SDK_PIO, true);
+	sm_i2s_tx = pio_claim_unused_sm(SDK_PIO, true);
+
+	printf("sdk: pio_i2s_rx: claimed sm%i\n", sm_i2s_rx);
+	printf("sdk: pio_i2s_tx: claimed sm%i\n", sm_i2s_tx);
 
 	struct pio_i2s_config i2s_cfg = {
 		.origin = -1,
 		.pio = SDK_PIO,
-		.sm = sm_i2s,
+		.rx_sm = sm_i2s_rx,
+		.tx_sm = sm_i2s_tx,
 		.in_pin = DSP_DOUT_PIN,
 		.out_pin = DSP_DIN_PIN,
 		.clock_pin_base = DSP_LRCK_PIN,
 		.sample_rate = SDK_AUDIO_RATE,
 	};
 
-	int offset = pio_i2s_init(&i2s_cfg);
+	int rx_offset = pio_i2s_rx_init(&i2s_cfg);
 
-	if (0 > offset)
-		sdk_panic("sdk: pio_i2s_init failed\n");
+	if (0 > rx_offset)
+		sdk_panic("sdk: pio_i2s_rx_init failed\n");
 
-	printf("sdk: pio_i2s loaded at %i-%i\n", offset, offset + pio_i2s_program.length - 1);
+	printf("sdk: pio_i2s_rx loaded at %i-%i\n", rx_offset,
+	       rx_offset + pio_i2s_rx_program.length - 1);
 
-	pio_sm_set_enabled(SDK_PIO, sm_i2s, true);
+	int tx_offset = pio_i2s_tx_init(&i2s_cfg);
+
+	if (0 > tx_offset)
+		sdk_panic("sdk: pio_i2s_tx_init failed\n");
+
+	printf("sdk: pio_i2s_tx loaded at %i-%i\n", tx_offset,
+	       tx_offset + pio_i2s_tx_program.length - 1);
 
 	dma_i2s_rx = dma_claim_unused_channel(true);
 	dma_i2s_tx = dma_claim_unused_channel(true);
 
+	printf("sdk: pio_i2s_rx: claimed dma%i\n", dma_i2s_rx);
+	printf("sdk: pio_i2s_tx: claimed dma%i\n", dma_i2s_tx);
+
 	dma_channel_config dma_cfg;
 
 	dma_cfg = dma_channel_get_default_config(dma_i2s_rx);
-	channel_config_set_dreq(&dma_cfg, pio_get_dreq(SDK_PIO, sm_i2s, false));
+	channel_config_set_dreq(&dma_cfg, pio_get_dreq(SDK_PIO, sm_i2s_rx, false));
 	channel_config_set_read_increment(&dma_cfg, false);
 	channel_config_set_write_increment(&dma_cfg, true);
 	channel_config_set_ring(&dma_cfg, true, I2S_BUF_BITS);
-	channel_config_set_transfer_data_size(&dma_cfg, DMA_SIZE_16);
-	dma_channel_configure(dma_i2s_rx, &dma_cfg, i2s_rx_buf, &SDK_PIO->rxf[sm_i2s], UINT_MAX,
+	channel_config_set_transfer_data_size(&dma_cfg, DMA_SIZE_32);
+	dma_channel_configure(dma_i2s_rx, &dma_cfg, i2s_rx_buf, &SDK_PIO->rxf[sm_i2s_rx], UINT_MAX,
 			      false);
 
 	dma_cfg = dma_channel_get_default_config(dma_i2s_tx);
-	channel_config_set_dreq(&dma_cfg, pio_get_dreq(SDK_PIO, sm_i2s, true));
+	channel_config_set_dreq(&dma_cfg, pio_get_dreq(SDK_PIO, sm_i2s_tx, true));
 	channel_config_set_read_increment(&dma_cfg, true);
 	channel_config_set_write_increment(&dma_cfg, false);
 	channel_config_set_ring(&dma_cfg, false, I2S_BUF_BITS);
-	channel_config_set_transfer_data_size(&dma_cfg, DMA_SIZE_16);
-	dma_channel_configure(dma_i2s_tx, &dma_cfg, &SDK_PIO->txf[sm_i2s], i2s_tx_buf, UINT_MAX,
+	channel_config_set_transfer_data_size(&dma_cfg, DMA_SIZE_32);
+	dma_channel_configure(dma_i2s_tx, &dma_cfg, &SDK_PIO->txf[sm_i2s_tx], i2s_tx_buf, UINT_MAX,
 			      false);
 
 	puts("sdk: configured i2s");
@@ -219,12 +212,21 @@ void sdk_audio_init(void)
 void sdk_audio_start(void)
 {
 	dma_hw->multi_channel_trigger = (1u << dma_i2s_tx) | (1u << dma_i2s_rx);
+	pio_enable_sm_mask_in_sync(SDK_PIO, (1 << sm_i2s_rx) | (1 << sm_i2s_tx));
 }
 
 void sdk_audio_report(void)
 {
-	printf("sdk: audio samples: min=%i avg=%i max=%i / buf=%i\n", min_samples,
-	       all_samples / num_wakeups, max_samples, I2S_BUF_LEN);
+	static uint32_t last_wakeup = 0;
+
+	uint32_t now = time_us_32();
+	uint32_t diff = now - last_wakeup;
+	last_wakeup = now;
+
+	float rate = (float)all_samples / (1e-6f * diff);
+
+	printf("sdk: audio samples: min=%i avg=%i max=%i / buf=%i, rate=%.0f\n", min_samples,
+	       all_samples / num_wakeups, max_samples, I2S_BUF_LEN, rate);
 
 	num_wakeups = 0;
 	min_samples = INT_MAX;

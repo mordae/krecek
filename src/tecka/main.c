@@ -53,7 +53,7 @@ void game_audio(int nsamples)
 		int max = INT16_MAX / 6 * remaining / ehp_max;
 		int sample = rand() % (2 * max) - max;
 
-		sdk_write_sample(sample);
+		sdk_write_sample(sample, sample);
 	}
 }
 

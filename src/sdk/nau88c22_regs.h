@@ -614,6 +614,15 @@ struct DeviceId {
 };
 static_assert(2 == sizeof(struct DeviceId));
 
+#define _5V_BIASING_ADDR 0x45
+struct _5VBiasing {
+	uint16_t HVOP : 1;
+	uint16_t : 1;
+	uint16_t HVOPU : 1;
+	uint16_t : 6;
+	uint16_t addr : 7;
+};
+
 #define ALC_ENHANCEMENTS_1_ADDR 0x46
 struct ALCEnhancements1 {
 	uint16_t ALCGAINL : 6;

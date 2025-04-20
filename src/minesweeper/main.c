@@ -159,7 +159,7 @@ void game_audio(int nsamples)
 		ellapsed = 0;
 
 		for (int s = 0; s < nsamples; s++)
-			sdk_write_sample(0);
+			sdk_write_sample(0, 0);
 
 		return;
 	}
@@ -181,10 +181,10 @@ void game_audio(int nsamples)
 			int period = SDK_AUDIO_RATE / freq;
 			int half_period = 2 * ellapsed / period;
 			int modulo = half_period & 1;
-
-			sdk_write_sample(4000 * (modulo ? 1 : -1));
+			int16_t sample = 4000 * (modulo ? 1 : -1);
+			sdk_write_sample(sample, sample);
 		} else {
-			sdk_write_sample(0);
+			sdk_write_sample(0, 0);
 		}
 
 		ellapsed++;

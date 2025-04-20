@@ -78,6 +78,7 @@ int nau88c22_start(nau88c22_driver_t drv)
 		.addr = POWER_MANAGEMENT_1_ADDR,
 		.MICBIASEN = 1,
 		.DCBUFEN = 1,
+		.PLLEN = 0, // No PLL until we set things up.
 		.ABIASEN = 1,
 		.IOBUFEN = 1,
 		.REFIMP = 1, // 80kΩ
@@ -137,14 +138,23 @@ int nau88c22_start(nau88c22_driver_t drv)
 
 	struct AudioInterface aif = {
 		.addr = AUDIO_INTERFACE_ADDR,
-		.WLEN = 3,  // 32b
-		.AIFMT = 2, // I²S
+		.WLEN = 0,     // 16b
+		.AIFMT = 0b11, // PCM Data
+		.LRP = 1,      // PCM B
+		.DACPHS = 1,   // Invert Left/Right for DAC
+		.ADCPHS = 1,   // Invert Left/Right for ADC
 	};
 	return_on_error(write_reg(drv, &aif));
 
+	struct Companding comp = {
+		.addr = COMPANDING_ADDR,
+		.ADDAP = 0, // Digital ADC to DAC loopback
+	};
+	return_on_error(write_reg(drv, &comp));
+
 	struct ClockControl1 clock1 = {
 		.addr = CLOCK_CONTROL_1_ADDR,
-		.CLKM = 1,    // Use PLL for MCLK
+		.CLKM = 0,    // Use MCLK directly
 		.MCLKSEL = 0, // Divide by 1
 	};
 	return_on_error(write_reg(drv, &clock1));
@@ -158,20 +168,20 @@ int nau88c22_start(nau88c22_driver_t drv)
 
 	struct _192kHzSampling hss = {
 		.addr = _192KHZ_SAMPLING_ADDR,
-		.PLL49MOUT = 1,
-		.ADCB_OVER = 1,
+		.PLL49MOUT = 0,
+		.ADCB_OVER = 0,
 	};
 	return_on_error(write_reg(drv, &hss));
 
 	struct LeftDACVolume ldacvol = {
 		.addr = LEFT_DAC_VOLUME_ADDR,
-		.LDACGAIN = 255,
+		.LDACGAIN = 255 - 0, // -0 dB
 	};
 	return_on_error(write_reg(drv, &ldacvol));
 
 	struct RightDACVolume rdacvol = {
 		.addr = RIGHT_DAC_VOLUME_ADDR,
-		.RDACGAIN = 255,
+		.RDACGAIN = 255 - 0, // -0 dB
 		.RDACVU = 1,
 	};
 	return_on_error(write_reg(drv, &rdacvol));
@@ -179,16 +189,30 @@ int nau88c22_start(nau88c22_driver_t drv)
 	struct LHPVolume lhpvol = {
 		.addr = LHP_VOLUME_ADDR,
 		.LHPVU = 0,
-		.LHPGAIN = 0b111001, // +0dB
+		.LHPGAIN = 0b111111 - 36, // 6 - 36 dB
 	};
 	return_on_error(write_reg(drv, &lhpvol));
 
 	struct RHPVolume rhpvol = {
 		.addr = RHP_VOLUME_ADDR,
 		.RHPVU = 1,
-		.RHPGAIN = 0b111001, // +0dB
+		.RHPGAIN = 0b111111 - 36, // 6 - 36 dB
 	};
 	return_on_error(write_reg(drv, &rhpvol));
+
+	struct LSPKOutVolume lspkvol = {
+		.addr = LSPKOUT_VOLUME_ADDR,
+		.LSPKVU = 1,
+		.LSPKGAIN = 0b111111 - 6, // 6 - 6 dB
+	};
+	return_on_error(write_reg(drv, &lspkvol));
+
+	struct RSPKOutVolume rspkvol = {
+		.addr = RSPKOUT_VOLUME_ADDR,
+		.RSPKVU = 1,
+		.RSPKGAIN = 0b111111 - 6, // 6 - 6 dB
+	};
+	return_on_error(write_reg(drv, &rspkvol));
 
 	struct LeftMixer lmix = {
 		.addr = LEFT_MIXER_ADDR,
@@ -233,9 +257,9 @@ int nau88c22_start(nau88c22_driver_t drv)
 
 	struct OutputControl outctrl = {
 		.addr = OUTPUT_CONTROL_ADDR,
-		.SPKBST = 1,
 		.AUX1BST = 1,
 		.AUX2BST = 1,
+		.SPKBST = 1,
 		.TSEN = 1, // Thermal shutdown
 	};
 	return_on_error(write_reg(drv, &outctrl));
@@ -261,8 +285,8 @@ int nau88c22_start(nau88c22_driver_t drv)
 	};
 	return_on_error(write_reg(drv, &miscctrl));
 
-	pm1.PLLEN = 1;
-	return_on_error(write_reg(drv, &pm1));
+	// pm1.PLLEN = 1;
+	// return_on_error(write_reg(drv, &pm1));
 
 	return 0;
 }

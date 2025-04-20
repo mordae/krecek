@@ -1,78 +1,62 @@
-;
-; Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
-;
-; SPDX-License-Identifier: BSD-3-Clause
-;
+; PCM-B Audio
 
-; Transmit (and receive) stereo audio signal using the I2S protocol.
-;
-; Autopull must be enabled, with threshold set to 32.
-; Since I2S is MSB-first, shift direction should be to left.
-; Hence the format of the FIFO word is:
-;
-; | 31   :   16 | 15   :    0 |
-; | sample ws=0 | sample ws=1 |
-;
-; Data is transferred at 1 bit per 4 clocks. Use clock divider to adjust frequency.
-; Fractional divider will probably be needed to get correct bit clock period,
-; but for common syslck freqs this should still give a constant word select period.
-;
-; One input pin is used for the data input.
-; One output pin is used for the data output.
-; Two side-set pins are used. Bit 0 is word select, bit 1 is bit clock.
-
-.program pio_i2s
+.program pio_i2s_rx
 .side_set 2
+.wrap_target
 
                       ;      ,--- SCLK
                       ;      |,-- LRCK
-bitloop1:             ;      ||
-    out pins, 1       side 0b11
-    in pins, 1        side 0b01
-
+public entry_point:   ;      ||
     nop               side 0b01
-    jmp x-- bitloop1  side 0b11
+    set x, 31         side 0b11
 
-noploop1:
-    set pins 0        side 0b11
-    nop               side 0b01
-
-    nop               side 0b01
-    jmp x-- noploop1  side 0b11
-
-    out pins, 1       side 0b10
+bitloop:
+    // Get bit, clock down, de-assert new frame flag.
     in pins, 1        side 0b00
+    // Loop. Clock up to ask for next bit.
+    jmp x-- bitloop   side 0b10
 
-    set y, 15         side 0b00
-    set x, 14         side 0b10
+    // Keep clocking, prepare for 6 idle loops.
+    set x, 6          side 0b00
+    set y, 29         side 0b10
 
-bitloop0:
-    out pins, 1       side 0b10
-    in pins, 1        side 0b00
-
+idle:
     nop               side 0b00
-    jmp x-- bitloop0  side 0b10
+    jmp y-- idle      side 0b10
 
-noploop0:
-    set pins 0        side 0b10
-    nop               side 0b00
+    // We are now at tick 64.
+    // We need 256 total to feed MCLK.
+    // So we need further 6x32 idle ticks.
 
-    nop               side 0b00
-    jmp x-- noploop0  side 0b10
+    set y, 30         side 0b00
+    jmp x-- idle      side 0b10
+.wrap
 
-    out pins, 1       side 0b11
-    in pins, 1        side 0b01
-
-
+.program pio_i2s_tx
 public entry_point:
-    set y, 15         side 0b01
-    set x, 14         side 0b11
+    nop
+    set x, 31
+
+bitloop1:
+    out pins, 1
+    jmp x-- bitloop1
+
+    set x, 6
+    set y, 29
+
+idle1:
+    nop
+    jmp y-- idle1
+
+    set y, 30
+    jmp x-- idle1
+.wrap
 
 % c-sdk {
 
 struct pio_i2s_config {
 	PIO pio;
-	int sm;
+	int rx_sm, tx_sm;
 	int origin;
 	int in_pin;
 	int out_pin;
@@ -80,13 +64,13 @@ struct pio_i2s_config {
 	float sample_rate;
 };
 
-inline static int pio_i2s_init(struct pio_i2s_config *cfg) {
-	pio_sm_set_enabled(cfg->pio, cfg->sm, false);
-	pio_sm_restart(cfg->pio, cfg->sm);
-	pio_sm_clear_fifos(cfg->pio, cfg->sm);
+inline static int pio_i2s_rx_init(struct pio_i2s_config *cfg) {
+	pio_sm_set_enabled(cfg->pio, cfg->rx_sm, false);
+	pio_sm_restart(cfg->pio, cfg->rx_sm);
+	pio_sm_clear_fifos(cfg->pio, cfg->rx_sm);
 
 	int origin = cfg->origin;
-	static struct pio_program program = pio_i2s_program;
+	static struct pio_program program = pio_i2s_rx_program;
 	program.origin = origin;
 
 	if (!pio_can_add_program(cfg->pio, &program))
@@ -95,38 +79,73 @@ inline static int pio_i2s_init(struct pio_i2s_config *cfg) {
 	origin = pio_add_program(cfg->pio, &program);
 
 	pio_gpio_init(cfg->pio, cfg->in_pin);
-	pio_gpio_init(cfg->pio, cfg->out_pin);
 	pio_gpio_init(cfg->pio, cfg->clock_pin_base);
 	pio_gpio_init(cfg->pio, cfg->clock_pin_base + 1);
 
-	pio_sm_config sm_config = pio_i2s_program_get_default_config(origin);
+	pio_sm_config sm_config = pio_i2s_rx_program_get_default_config(origin);
 
 	sm_config_set_in_pins(&sm_config, cfg->in_pin);
-	sm_config_set_out_pins(&sm_config, cfg->out_pin, 1);
-	sm_config_set_set_pins(&sm_config, cfg->out_pin, 1);
 	sm_config_set_sideset_pins(&sm_config, cfg->clock_pin_base);
 	sm_config_set_out_shift(&sm_config, false, true, 32);
 	sm_config_set_in_shift(&sm_config, false, true, 32);
 
-  float freq = 64 * 4 * cfg->sample_rate;
+  float freq = 256 * 2 * cfg->sample_rate;
   float clkdiv = (float)CLK_SYS_HZ / freq;
   int clkdiv_int = clkdiv;
   int clkdiv_frac = 256 * (clkdiv - clkdiv_int);
 	sm_config_set_clkdiv_int_frac(&sm_config, clkdiv_int, clkdiv_frac);
 
-  printf("i2s: in=%i out=%i lrck=%i bclk=%i  freq=%.0f  clkdiv=%i+%i/256\n",
-         cfg->in_pin, cfg->out_pin, cfg->clock_pin_base, cfg->clock_pin_base + 1,
-         freq / 4, clkdiv_int, clkdiv_frac);
+  printf("i2s: out=%i in=%i bclk=%i lrck=%i clkdiv=%i+%i/256\n",
+         cfg->out_pin, cfg->in_pin, cfg->clock_pin_base + 1, cfg->clock_pin_base,
+         clkdiv_int, clkdiv_frac);
 
-	pio_sm_init(cfg->pio, cfg->sm, origin + pio_i2s_offset_entry_point, &sm_config);
+	pio_sm_init(cfg->pio, cfg->rx_sm, origin + pio_i2s_rx_offset_entry_point, &sm_config);
 
-	uint out_mask = (1u << cfg->out_pin) | (3u << cfg->clock_pin_base);
-	pio_sm_set_pindirs_with_mask(cfg->pio, cfg->sm, out_mask, out_mask);
+	uint out_mask = 3u << cfg->clock_pin_base;
+	pio_sm_set_pindirs_with_mask(cfg->pio, cfg->rx_sm, out_mask, out_mask);
 
 	uint in_mask = 1u << cfg->in_pin;
-	pio_sm_set_pindirs_with_mask(cfg->pio, cfg->sm, 0, in_mask);
+	pio_sm_set_pindirs_with_mask(cfg->pio, cfg->rx_sm, 0, in_mask);
 
-	pio_sm_set_pins(cfg->pio, cfg->sm, 0);
+	pio_sm_set_pins(cfg->pio, cfg->rx_sm, 0);
+
+	return origin;
+}
+
+inline static int pio_i2s_tx_init(struct pio_i2s_config *cfg) {
+	pio_sm_set_enabled(cfg->pio, cfg->tx_sm, false);
+	pio_sm_restart(cfg->pio, cfg->tx_sm);
+	pio_sm_clear_fifos(cfg->pio, cfg->tx_sm);
+
+	int origin = cfg->origin;
+	static struct pio_program program = pio_i2s_tx_program;
+	program.origin = origin;
+
+	if (!pio_can_add_program(cfg->pio, &program))
+		return -1;
+
+	origin = pio_add_program(cfg->pio, &program);
+
+	pio_gpio_init(cfg->pio, cfg->out_pin);
+
+	pio_sm_config sm_config = pio_i2s_tx_program_get_default_config(origin);
+
+	sm_config_set_out_pins(&sm_config, cfg->out_pin, 1);
+	sm_config_set_out_shift(&sm_config, false, true, 32);
+	sm_config_set_in_shift(&sm_config, false, true, 32);
+
+  float freq = 256 * 2 * cfg->sample_rate;
+  float clkdiv = (float)CLK_SYS_HZ / freq;
+  int clkdiv_int = clkdiv;
+  int clkdiv_frac = 256 * (clkdiv - clkdiv_int);
+	sm_config_set_clkdiv_int_frac(&sm_config, clkdiv_int, clkdiv_frac);
+
+	pio_sm_init(cfg->pio, cfg->tx_sm, origin + pio_i2s_tx_offset_entry_point, &sm_config);
+
+	uint out_mask = 1u << cfg->out_pin;
+	pio_sm_set_pindirs_with_mask(cfg->pio, cfg->tx_sm, out_mask, out_mask);
+
+	pio_sm_set_pins(cfg->pio, cfg->tx_sm, 0);
 
 	return origin;
 }

@@ -96,10 +96,16 @@ static bool rects_overlap(int x0, int y0, int x1, int y1, int a0, int b0, int a1
 
 	return true;
 }
+
 void game_start(void)
 {
 	sdk_set_output_gain_db(6);
 }
+
+static int audio_sum_left, audio_sum_right;
+static int audio_left[TFT_HEIGHT];
+static int audio_right[TFT_HEIGHT];
+static int audio_total;
 
 void game_audio(int nsamples)
 {
@@ -118,8 +124,16 @@ void game_audio(int nsamples)
 				e->volume = 0;
 		}
 
-		sdk_write_sample(sample);
+		sdk_write_sample(sample, sample);
+
+		int16_t left, right;
+		sdk_read_sample(&left, &right);
+
+		audio_sum_left += abs(left);
+		audio_sum_right += abs(right);
 	}
+
+	audio_total += nsamples;
 }
 
 static void __unused play_effect(int volume, int frequency, int length, effect_gen_fn gen)
@@ -255,6 +269,40 @@ void game_input(unsigned dt_usec)
 void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
+
+	if (!audio_total)
+		audio_total = 1;
+
+	int left = audio_sum_left / audio_total;
+	int right = audio_sum_right / audio_total;
+
+	audio_total = 0;
+	audio_sum_left = 0;
+	audio_sum_right = 0;
+
+	left = 4 * (32 - __builtin_clz(left));
+	right = 4 * (32 - __builtin_clz(right));
+
+	audio_left[TFT_HEIGHT - 1] = left;
+	audio_right[TFT_HEIGHT - 1] = right;
+
+	for (int y = 0; y < TFT_HEIGHT; y++) {
+		int ls = audio_left[y];
+		int rs = audio_right[y];
+
+		for (int x = 0; x < TFT_WIDTH / 2; x++) {
+			if (x <= ls)
+				tft_draw_pixel(x, y, rgb_to_rgb565(31, 31, 63));
+
+			if (x <= rs)
+				tft_draw_pixel(TFT_WIDTH - 1 - x, y, rgb_to_rgb565(31, 63, 31));
+		}
+
+		if (y) {
+			audio_left[y - 1] = audio_left[y];
+			audio_right[y - 1] = audio_right[y];
+		}
+	}
 
 	for (int i = 0; i < TFT_HEIGHT; i += 20) {
 		tft_draw_rect(TFT_WIDTH / 2, i + 5, TFT_WIDTH / 2, i + 10 + 5, ball.color);

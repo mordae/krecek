@@ -153,7 +153,7 @@ void game_audio(int nsamples)
 				e->volume = 0;
 		}
 
-		sdk_write_sample(sample);
+		sdk_write_sample(sample, sample);
 	}
 }
 
