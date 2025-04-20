@@ -2,9 +2,6 @@
 #include <sdk.h>
 #include <tft.h>
 #include <sdk.h>
-#include <math.h>
-//#include <stdlib.h>
-#include <stdio.h>
 
 #define TILE_SIZE 8
 #define MAP_ROWS 8
@@ -62,7 +59,7 @@ void game_audio(int nsamples)
 		tone_pos = 0;
 		elapsed = 0;
 		for (int s = 0; s < nsamples; s++)
-			sdk_write_sample(0);
+			sdk_write_sample(0, 0);
 		return;
 	}
 	for (int s = 0; s < nsamples; s++) {
@@ -78,9 +75,10 @@ void game_audio(int nsamples)
 			int period = SDK_AUDIO_RATE / freq;
 			int half_period = 2 * elapsed / period;
 			int modulo = half_period & 1;
-			sdk_write_sample(4000 * (modulo ? 1 : -1));
+			int sample = 4000 * (modulo ? 1 : -1);
+			sdk_write_sample(sample, sample);
 		} else {
-			sdk_write_sample(0);
+			sdk_write_sample(0, 0);
 		}
 		elapsed++;
 	}

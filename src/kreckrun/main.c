@@ -141,14 +141,6 @@ void game_paint(unsigned __unused dt_usec)
 		}
 	}
 
-	// line 1
-	for (int i; i = i; i++) {
-		if object
-			.l1p0 = 1;
-
-		//dojede na konec
-	}
-
 	char buf[16];
 	snprintf(buf, sizeof buf, "%6.1f", game.score);
 	tft_draw_string(0, 0, RED, buf);
