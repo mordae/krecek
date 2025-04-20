@@ -8,6 +8,7 @@ add_library(
   remote.c
   dap.c
   nau88c22.c
+  comms.c
 )
 
 pico_generate_pio_header(krecek ${CMAKE_CURRENT_LIST_DIR}/i2s.pio)
