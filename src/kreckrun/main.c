@@ -22,7 +22,6 @@ struct object {
 	int l2p0;
 	int l3p0;
 };
-static struct object object;
 
 struct k {
 	sdk_sprite_t s;
