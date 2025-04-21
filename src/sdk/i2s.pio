@@ -1,4 +1,4 @@
-; PCM-B Audio
+; PCM-A Audio
 
 .program pio_i2s_rx
 .side_set 2
@@ -10,15 +10,19 @@ public entry_point:   ;      ||
     nop               side 0b01
     set x, 31         side 0b11
 
+    // Clock down, de-assert new frame flag.
+    nop               side 0b00
+    // Clock up to ask for next bit.
+    nop               side 0b10
+
 bitloop:
-    // Get bit, clock down, de-assert new frame flag.
+    // Get the bits.
     in pins, 1        side 0b00
-    // Loop. Clock up to ask for next bit.
     jmp x-- bitloop   side 0b10
 
     // Keep clocking, prepare for 6 idle loops.
     set x, 6          side 0b00
-    set y, 29         side 0b10
+    set y, 27         side 0b10
 
 idle:
     nop               side 0b00
@@ -33,6 +37,7 @@ idle:
 .wrap
 
 .program pio_i2s_tx
+.wrap_target
 public entry_point:
     nop
     set x, 31
@@ -41,8 +46,11 @@ bitloop1:
     out pins, 1
     jmp x-- bitloop1
 
+    nop
+    nop
+
     set x, 6
-    set y, 29
+    set y, 27
 
 idle1:
     nop

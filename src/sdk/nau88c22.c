@@ -87,8 +87,8 @@ int nau88c22_start(nau88c22_driver_t drv)
 
 	struct PowerManagement2 pm2 = {
 		.addr = POWER_MANAGEMENT_2_ADDR,
-		.RHPEN = 0, // Start with just speaker
-		.LHPEN = 0, // Start with just speaker
+		.RHPEN = 0,
+		.LHPEN = 0,
 		.LADCEN = 1,
 		.RADCEN = 1,
 		.LBSTEN = 1,
@@ -140,7 +140,7 @@ int nau88c22_start(nau88c22_driver_t drv)
 		.addr = AUDIO_INTERFACE_ADDR,
 		.WLEN = 0,     // 16b
 		.AIFMT = 0b11, // PCM Data
-		.LRP = 1,      // PCM B
+		.LRP = 0,      // PCM A
 		.DACPHS = 1,   // Invert Left/Right for DAC
 		.ADCPHS = 1,   // Invert Left/Right for ADC
 	};
@@ -238,8 +238,8 @@ int nau88c22_start(nau88c22_driver_t drv)
 		.addr = INPUT_CONTROL_ADDR,
 		.MICBIASV = 1,	// ~2.2V
 		.LLINLPGA = 1,	// Left line into left amplifier (IR)
-		.RMICNRPGA = 0, // Right mic P/N into right amplifier (HP)
-		.RMICPRPGA = 0,
+		.RMICNRPGA = 1, // Right mic P/N into right amplifier (HP)
+		.RMICPRPGA = 1,
 	};
 	return_on_error(write_reg(drv, &inctrl));
 
@@ -273,6 +273,7 @@ int nau88c22_start(nau88c22_driver_t drv)
 	struct ADCControl adcctrl = {
 		.addr = ADC_CONTROL_ADDR,
 		.ADCOS = 1,
+		.HPFEN = 1, // Enable high-pass filter at ~4 Hz
 	};
 	return_on_error(write_reg(drv, &adcctrl));
 

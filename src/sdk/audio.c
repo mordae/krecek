@@ -38,8 +38,8 @@ static int all_samples = 0;
 #define I2S_BUF_BITS 12
 #define I2S_BUF_LEN (1 << (I2S_BUF_BITS - 2))
 
-static uint16_t i2s_rx_buf[I2S_BUF_LEN][2] __attribute__((__aligned__(I2S_BUF_LEN * 4)));
-static uint16_t i2s_tx_buf[I2S_BUF_LEN][2] __attribute__((__aligned__(I2S_BUF_LEN * 4)));
+static int16_t i2s_rx_buf[I2S_BUF_LEN][2] __attribute__((__aligned__(I2S_BUF_LEN * 4)));
+static int16_t i2s_tx_buf[I2S_BUF_LEN][2] __attribute__((__aligned__(I2S_BUF_LEN * 4)));
 
 void sdk_audio_task(void)
 {
@@ -95,15 +95,15 @@ void sdk_audio_task(void)
 void sdk_write_sample(int16_t left, int16_t right)
 {
 	size_t idx = tx_offset++ % I2S_BUF_LEN;
-	i2s_tx_buf[idx][0] = left + INT16_MAX;
-	i2s_tx_buf[idx][1] = right + INT16_MAX;
+	i2s_tx_buf[idx][0] = left;
+	i2s_tx_buf[idx][1] = right;
 }
 
 void sdk_read_sample(int16_t *left, int16_t *right)
 {
 	size_t idx = rx_offset++ % I2S_BUF_LEN;
-	*left = i2s_rx_buf[idx][0] - INT16_MAX;
-	*right = i2s_rx_buf[idx][1] - INT16_MAX;
+	*left = i2s_rx_buf[idx][0];
+	*right = i2s_rx_buf[idx][1];
 }
 
 void sdk_audio_init(void)
