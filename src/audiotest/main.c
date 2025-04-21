@@ -42,7 +42,7 @@ void game_audio(int nsamples)
 		static uint32_t phase_right;
 
 		uint32_t step_left = UINT32_MAX / (SDK_AUDIO_RATE / test_freq);
-		uint32_t step_right = UINT32_MAX / (SDK_AUDIO_RATE / test_freq);
+		uint32_t step_right = UINT32_MAX / (SDK_AUDIO_RATE / (test_freq * 1.25));
 
 		for (int i = 0; i < nsamples; i++) {
 			phase_left += step_left;

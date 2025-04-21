@@ -146,11 +146,34 @@ int nau88c22_start(nau88c22_driver_t drv)
 	};
 	return_on_error(write_reg(drv, &aif));
 
+#if 0
+	struct LeftTimeSlot ltslot = {
+		.addr = LEFT_TIME_SLOT_ADDR,
+		.LTSLOT = 1,
+	};
+	return_on_error(write_reg(drv, &ltslot));
+
+	struct RightTimeSlot rtslot = {
+		.addr = RIGHT_TIME_SLOT_ADDR,
+		.RTSLOT = 17,
+	};
+	return_on_error(write_reg(drv, &rtslot));
+
+	struct Misc misc = {
+		.addr = MISC_ADDR,
+		.PUDEN = 1,
+		.PCMTSEN = 1,
+		.LTSLOT = 0,
+		.RTSLOT = 0,
+	};
+	return_on_error(write_reg(drv, &misc));
+
 	struct Companding comp = {
 		.addr = COMPANDING_ADDR,
 		.ADDAP = 0, // Digital ADC to DAC loopback
 	};
 	return_on_error(write_reg(drv, &comp));
+#endif
 
 	struct ClockControl1 clock1 = {
 		.addr = CLOCK_CONTROL_1_ADDR,
