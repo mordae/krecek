@@ -287,6 +287,39 @@ int nau88c22_start(nau88c22_driver_t drv)
 	};
 	return_on_error(write_reg(drv, &miscctrl));
 
+#if 0
+	struct EQ1LowCutoff eq1 = {
+		.addr = EQ1_LOW_CUTOFF_ADDR,
+		.EQ1GC = 0b11000, // -12dB
+	};
+	return_on_error(write_reg(drv, &eq1));
+
+	struct EQ2Peak1 eq2 = {
+		.addr = EQ2_PEAK_1_ADDR,
+		.EQ2GC = 0b11000, // -12dB
+	};
+	return_on_error(write_reg(drv, &eq2));
+
+	struct EQ3Peak2 eq3 = {
+		.addr = EQ3_PEAK_2_ADDR,
+		.EQ3GC = 0b11000, // -12dB
+	};
+	return_on_error(write_reg(drv, &eq3));
+
+	struct EQ4Peak3 eq4 = {
+		.addr = EQ4_PEAK_3_ADDR,
+		.EQ4GC = 0b11000, // -12dB
+	};
+	return_on_error(write_reg(drv, &eq4));
+
+	struct EQ5HighCutoff eq5 = {
+		.addr = EQ5_HIGH_CUTOFF_ADDR,
+		.EQ5CF = 0b01,	  // 6.9 kHz
+		.EQ5GC = 0b11000, // -12dB
+	};
+	return_on_error(write_reg(drv, &eq5));
+#endif
+
 	// pm1.PLLEN = 1;
 	// return_on_error(write_reg(drv, &pm1));
 
