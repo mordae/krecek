@@ -264,6 +264,7 @@ int nau88c22_start(nau88c22_driver_t drv)
 	struct DACControl dacctrl = {
 		.addr = DAC_CONTROL_ADDR,
 		.DACOS = 1,
+		.AUTOMT = 1, // Automute after 1024 0 samples
 	};
 	return_on_error(write_reg(drv, &dacctrl));
 
