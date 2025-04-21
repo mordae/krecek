@@ -217,12 +217,11 @@ void game_input(unsigned dt_usec)
 
 		ball.x = PADDLE_WIDTH + 1;
 
-		play_effect(2000, 440, SDK_AUDIO_RATE / 20, square_wave);
+		play_effect(8000, 440, SDK_AUDIO_RATE / 20, square_wave);
 	} else if (ball.x < PADDLE_WIDTH - 1) {
 		// srazka s levou zdi
 		paddle2.score++;
-		//play_effect(1000, 0, SDK_AUDIO_RATE / 20, noise);
-		play_effect(2000, 110, SDK_AUDIO_RATE / 20, square_wave);
+		play_effect(8000, 0, SDK_AUDIO_RATE / 20, noise);
 		new_round();
 	}
 
@@ -244,12 +243,11 @@ void game_input(unsigned dt_usec)
 
 		ball.x = TFT_RIGHT - PADDLE_WIDTH - BALL_WIDTH - 1;
 
-		play_effect(2000, 440 + 2 * 440 / 8, SDK_AUDIO_RATE / 20, square_wave);
+		play_effect(8000, 440 + 2 * 440 / 8, SDK_AUDIO_RATE / 20, square_wave);
 	} else if (ball.x + BALL_WIDTH > TFT_RIGHT - PADDLE_WIDTH + 1) {
 		// srazka s pravou zdi
 		paddle1.score++;
-		//play_effect(1000, 0, SDK_AUDIO_RATE / 20, noise);
-		play_effect(2000, 110, SDK_AUDIO_RATE / 20, square_wave);
+		play_effect(8000, 0, SDK_AUDIO_RATE / 20, noise);
 		new_round();
 	}
 }
