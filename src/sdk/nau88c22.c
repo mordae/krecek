@@ -141,8 +141,8 @@ int nau88c22_start(nau88c22_driver_t drv)
 		.WLEN = 0,     // 16b
 		.AIFMT = 0b11, // PCM Data
 		.LRP = 0,      // PCM A
-		.DACPHS = 1,   // Invert Left/Right for DAC
-		.ADCPHS = 1,   // Invert Left/Right for ADC
+		.DACPHS = 0,   // Invert Left/Right for DAC
+		.ADCPHS = 0,   // Invert Left/Right for ADC
 	};
 	return_on_error(write_reg(drv, &aif));
 
@@ -203,14 +203,14 @@ int nau88c22_start(nau88c22_driver_t drv)
 	struct LSPKOutVolume lspkvol = {
 		.addr = LSPKOUT_VOLUME_ADDR,
 		.LSPKVU = 1,
-		.LSPKGAIN = 0b111111 - 6, // 6 - 6 dB
+		.LSPKGAIN = 0b111111 - 12, // 6 - 12 dB
 	};
 	return_on_error(write_reg(drv, &lspkvol));
 
 	struct RSPKOutVolume rspkvol = {
 		.addr = RSPKOUT_VOLUME_ADDR,
 		.RSPKVU = 1,
-		.RSPKGAIN = 0b111111 - 6, // 6 - 6 dB
+		.RSPKGAIN = 0b111111 - 12, // 6 - 12 dB
 	};
 	return_on_error(write_reg(drv, &rspkvol));
 
@@ -257,10 +257,12 @@ int nau88c22_start(nau88c22_driver_t drv)
 
 	struct OutputControl outctrl = {
 		.addr = OUTPUT_CONTROL_ADDR,
+		.TSEN = 1, // Thermal shutdown
 		.AUX1BST = 1,
 		.AUX2BST = 1,
 		.SPKBST = 1,
-		.TSEN = 1, // Thermal shutdown
+		.LDACRMX = 0,
+		.RDACLMX = 0,
 	};
 	return_on_error(write_reg(drv, &outctrl));
 
@@ -269,6 +271,13 @@ int nau88c22_start(nau88c22_driver_t drv)
 		.DACOS = 1,
 	};
 	return_on_error(write_reg(drv, &dacctrl));
+
+	struct DACDither dacdither = {
+		.addr = DAC_DITHER_ADDR,
+		.ANALOG = 4,
+		.MODULATOR = 18,
+	};
+	return_on_error(write_reg(drv, &dacdither));
 
 	struct ADCControl adcctrl = {
 		.addr = ADC_CONTROL_ADDR,
@@ -279,10 +288,7 @@ int nau88c22_start(nau88c22_driver_t drv)
 
 	struct MiscControls miscctrl = {
 		.addr = MISC_CONTROLS_ADDR,
-		.FSERRENA = 1,
-		.FSERRVAL = 0,
-		.PLLLOKBP = 0,
-		.DACOS256 = 0,
+		.DACOSR256 = 1,
 	};
 	return_on_error(write_reg(drv, &miscctrl));
 

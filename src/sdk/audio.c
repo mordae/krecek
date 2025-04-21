@@ -95,15 +95,15 @@ void sdk_audio_task(void)
 void sdk_write_sample(int16_t left, int16_t right)
 {
 	size_t idx = tx_offset++ % I2S_BUF_LEN;
-	i2s_tx_buf[idx][0] = left;
-	i2s_tx_buf[idx][1] = right;
+	i2s_tx_buf[idx][1] = left;
+	i2s_tx_buf[idx][0] = right;
 }
 
 void sdk_read_sample(int16_t *left, int16_t *right)
 {
 	size_t idx = rx_offset++ % I2S_BUF_LEN;
-	*left = i2s_rx_buf[idx][0];
-	*right = i2s_rx_buf[idx][1];
+	*left = i2s_rx_buf[idx][1];
+	*right = i2s_rx_buf[idx][0];
 }
 
 void sdk_audio_init(void)

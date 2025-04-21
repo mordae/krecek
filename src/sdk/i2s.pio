@@ -7,13 +7,11 @@
                       ;      ,--- SCLK
                       ;      |,-- LRCK
 public entry_point:   ;      ||
-    nop               side 0b01
+    irq clear 7       side 0b01
     set x, 31         side 0b11
 
-    // Clock down, de-assert new frame flag.
-    nop               side 0b00
-    // Clock up to ask for next bit.
-    nop               side 0b10
+    nop               side 0b01
+    nop               side 0b11
 
 bitloop:
     // Get the bits.
@@ -28,8 +26,8 @@ idle:
     nop               side 0b00
     jmp y-- idle      side 0b10
 
-    // We are now at tick 64.
-    // We need 256 total to feed MCLK.
+    // We are now at tick 63.
+    // We need 255 total to feed MCLK.
     // So we need further 6x32 idle ticks.
 
     set y, 30         side 0b00
@@ -37,27 +35,18 @@ idle:
 .wrap
 
 .program pio_i2s_tx
-.wrap_target
 public entry_point:
     nop
     set x, 31
+
+.wrap_target
 
 bitloop1:
     out pins, 1
     jmp x-- bitloop1
 
-    nop
-    nop
-
-    set x, 6
-    set y, 27
-
-idle1:
-    nop
-    jmp y-- idle1
-
-    set y, 30
-    jmp x-- idle1
+    set x, 31
+    irq wait 7
 .wrap
 
 % c-sdk {

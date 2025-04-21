@@ -614,6 +614,13 @@ struct DeviceId {
 };
 static_assert(2 == sizeof(struct DeviceId));
 
+#define DAC_DITHER_ADDR 0x41
+struct DACDither {
+	uint16_t ANALOG : 4;
+	uint16_t MODULATOR : 5;
+	uint16_t addr : 7;
+};
+
 #define _5V_BIASING_ADDR 0x45
 struct _5VBiasing {
 	uint16_t HVOP : 1;
@@ -656,9 +663,10 @@ static_assert(2 == sizeof(struct _192kHzSampling));
 
 #define MISC_CONTROLS_ADDR 0x49
 struct MiscControls {
-	uint16_t DACOS256 : 1;
+	uint16_t DACOSR256 : 1;
 	uint16_t PLLLOKBP : 1;
-	uint16_t : 2;
+	uint16_t DACINMUTE : 1;
+	uint16_t NOTCHDLY : 1;
 	uint16_t FSERRENA : 1;
 	uint16_t FSERFLSH : 1;
 	uint16_t FSERRVAL : 2;
