@@ -3,8 +3,6 @@
 #include <hardware/i2c.h>
 
 #define NAU88C22_ADDR 0x1a
-#define NAU88C22_MIN_GAIN -57.0f
-#define NAU88C22_MAX_GAIN 6.0f
 
 struct nau88c22_driver {
 	/* Configured I2C peripheral to use: */
@@ -25,12 +23,7 @@ int nau88c22_reset(nau88c22_driver_t drv);
 /* Start the device. */
 int nau88c22_start(nau88c22_driver_t drv);
 
-/*
- * Control output gain.
- *
- * - NAU88C22_MIN_GAIN = -57 dB
- * - NAU88C22_MAX_GAIN =  +6 dB
- */
+/* Control output gain. */
 int nau88c22_set_output_gain(nau88c22_driver_t drv, float gain);
 
 /* Enable output to headphones. */

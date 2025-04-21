@@ -36,17 +36,17 @@ idle:
 
 .program pio_i2s_tx
 public entry_point:
-    nop
-    set x, 31
+    nop               // 0
+    set x, 31         // 1
 
 .wrap_target
 
 bitloop1:
-    out pins, 1
-    jmp x-- bitloop1
+    out pins, 1       // 0
+    jmp x-- bitloop1  // 1
 
     set x, 31
-    irq wait 7
+    irq wait 7        // 1
 .wrap
 
 % c-sdk {

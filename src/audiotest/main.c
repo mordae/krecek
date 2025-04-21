@@ -3,7 +3,6 @@
 
 #include <sdk.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <tft.h>
 
 typedef enum {

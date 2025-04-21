@@ -146,35 +146,6 @@ int nau88c22_start(nau88c22_driver_t drv)
 	};
 	return_on_error(write_reg(drv, &aif));
 
-#if 0
-	struct LeftTimeSlot ltslot = {
-		.addr = LEFT_TIME_SLOT_ADDR,
-		.LTSLOT = 1,
-	};
-	return_on_error(write_reg(drv, &ltslot));
-
-	struct RightTimeSlot rtslot = {
-		.addr = RIGHT_TIME_SLOT_ADDR,
-		.RTSLOT = 17,
-	};
-	return_on_error(write_reg(drv, &rtslot));
-
-	struct Misc misc = {
-		.addr = MISC_ADDR,
-		.PUDEN = 1,
-		.PCMTSEN = 1,
-		.LTSLOT = 0,
-		.RTSLOT = 0,
-	};
-	return_on_error(write_reg(drv, &misc));
-
-	struct Companding comp = {
-		.addr = COMPANDING_ADDR,
-		.ADDAP = 0, // Digital ADC to DAC loopback
-	};
-	return_on_error(write_reg(drv, &comp));
-#endif
-
 	struct ClockControl1 clock1 = {
 		.addr = CLOCK_CONTROL_1_ADDR,
 		.CLKM = 0,    // Use MCLK directly
@@ -198,42 +169,43 @@ int nau88c22_start(nau88c22_driver_t drv)
 
 	struct LeftDACVolume ldacvol = {
 		.addr = LEFT_DAC_VOLUME_ADDR,
-		.LDACGAIN = 255 - 0, // -0 dB
+		.LDACVU = 1,
+		.LDACGAIN = 255 - (2 * 6), // -6 dB
 	};
 	return_on_error(write_reg(drv, &ldacvol));
 
 	struct RightDACVolume rdacvol = {
 		.addr = RIGHT_DAC_VOLUME_ADDR,
-		.RDACGAIN = 255 - 0, // -0 dB
 		.RDACVU = 1,
+		.RDACGAIN = 255 - (2 * 6), // -6 dB
 	};
 	return_on_error(write_reg(drv, &rdacvol));
 
 	struct LHPVolume lhpvol = {
 		.addr = LHP_VOLUME_ADDR,
-		.LHPVU = 0,
-		.LHPGAIN = 0b111111 - 36, // 6 - 36 dB
+		.LHPVU = 1,
+		.LHPGAIN = 63 - 36, // 6 - 36 dB
 	};
 	return_on_error(write_reg(drv, &lhpvol));
 
 	struct RHPVolume rhpvol = {
 		.addr = RHP_VOLUME_ADDR,
 		.RHPVU = 1,
-		.RHPGAIN = 0b111111 - 36, // 6 - 36 dB
+		.RHPGAIN = 63 - 36, // 6 - 36 dB
 	};
 	return_on_error(write_reg(drv, &rhpvol));
 
 	struct LSPKOutVolume lspkvol = {
 		.addr = LSPKOUT_VOLUME_ADDR,
 		.LSPKVU = 1,
-		.LSPKGAIN = 0b111111 - 12, // 6 - 12 dB
+		.LSPKGAIN = 63 - 14, // 6 - 14 dB
 	};
 	return_on_error(write_reg(drv, &lspkvol));
 
 	struct RSPKOutVolume rspkvol = {
 		.addr = RSPKOUT_VOLUME_ADDR,
 		.RSPKVU = 1,
-		.RSPKGAIN = 0b111111 - 12, // 6 - 12 dB
+		.RSPKGAIN = 63 - 14, // 6 - 14 dB
 	};
 	return_on_error(write_reg(drv, &rspkvol));
 
@@ -328,15 +300,18 @@ inline static int clampi(int x, int lo, int hi)
 
 int nau88c22_set_output_gain(nau88c22_driver_t drv, float gain)
 {
+	int dacgain = 255 + clampi(2 * (gain - 6.0f), -255, 0);
+
 	struct LeftDACVolume ldacvol = {
 		.addr = LEFT_DAC_VOLUME_ADDR,
-		.LDACGAIN = 255 + clampi(2 * gain, -255, 0),
+		.LDACVU = 1,
+		.LDACGAIN = dacgain,
 	};
 	return_on_error(write_reg(drv, &ldacvol));
 
 	struct RightDACVolume rdacvol = {
 		.addr = RIGHT_DAC_VOLUME_ADDR,
-		.RDACGAIN = 255 + clampi(2 * gain, -255, 0),
+		.RDACGAIN = dacgain,
 		.RDACVU = 1,
 	};
 	return_on_error(write_reg(drv, &rdacvol));
@@ -356,10 +331,20 @@ int nau88c22_enable_headphones(nau88c22_driver_t drv, bool en)
 
 int nau88c22_enable_speaker(nau88c22_driver_t drv, bool en)
 {
+	// When speaker is active, combine both channels to obtain mono mix.
+	// This affects both speaker and headphones, but we can't really do
+	// anything about that and likely it's one or the other, not both.
+	struct OutputControl outctrl;
+	return_on_error(read_reg(drv, OUTPUT_CONTROL_ADDR, &outctrl));
+	outctrl.LDACRMX = !!en;
+	outctrl.RDACLMX = !!en;
+	return_on_error(write_reg(drv, &outctrl));
+
 	struct PowerManagement3 pm3;
 	return_on_error(read_reg(drv, POWER_MANAGEMENT_3_ADDR, &pm3));
 	pm3.LSPKEN = !!en;
 	pm3.RSPKEN = !!en;
 	return_on_error(write_reg(drv, &pm3));
+
 	return 0;
 }
