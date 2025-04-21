@@ -25,3 +25,8 @@ inline static double __unused clampq(double x, double lo, double hi)
 }
 
 uint32_t sdk_random();
+
+inline static int lerp(int x, int y, int a, int b)
+{
+	return x + (y - x) * a / b;
+}

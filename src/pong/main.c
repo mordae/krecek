@@ -38,33 +38,59 @@ struct ball {
 static struct paddle paddle1, paddle2;
 static struct ball ball;
 
-struct effect;
+sdk_sequencer_t sequencer;
 
-typedef int16_t (*effect_gen_fn)(struct effect *eff);
-
-struct effect {
-	int offset;
-	int length;
-	int volume;
-	int period;
-	effect_gen_fn generator;
+sdk_track_square_t track_left_paddle = {
+	.track = {
+		.fn = sdk_play_square,
+		.base = 16000,
+		.peak = 20000,
+		.attack = 0.05 * SDK_AUDIO_RATE,
+		.decay = 0.05 * SDK_AUDIO_RATE,
+		.sustain = 0.10 * SDK_AUDIO_RATE,
+		.release = 0.10 * SDK_AUDIO_RATE,
+		.pan = -20000,
+	},
+	.frequency = 440,
 };
 
-#define MAX_EFFECTS 8
-struct effect effects[MAX_EFFECTS];
+sdk_track_square_t track_right_paddle = {
+	.track = {
+		.fn = sdk_play_square,
+		.base = 16000,
+		.peak = 20000,
+		.attack = 0.05 * SDK_AUDIO_RATE,
+		.decay = 0.05 * SDK_AUDIO_RATE,
+		.sustain = 0.10 * SDK_AUDIO_RATE,
+		.release = 0.10 * SDK_AUDIO_RATE,
+		.pan = 20000,
+	},
+	.frequency = 440 + (440 * 2 / 8),
+};
 
-static int16_t __unused square_wave(struct effect *eff)
-{
-	if ((eff->offset % eff->period) < (eff->period / 2))
-		return eff->volume;
-	else
-		return -eff->volume;
-}
+sdk_track_noise_t track_left_miss = {
+	.track = {
+		.fn = sdk_play_noise,
+		.base = 8000,
+		.peak = 16000,
+		.attack = 0.05 * SDK_AUDIO_RATE,
+		.decay = 0.10 * SDK_AUDIO_RATE,
+		.release = 0.10 * SDK_AUDIO_RATE,
+		.pan = -20000,
+	},
+};
 
-static int16_t __unused noise(struct effect *eff)
-{
-	return rand() % (2 * eff->volume) - eff->volume;
-}
+sdk_track_noise_t track_right_miss = {
+	.track = {
+		.fn = sdk_play_noise,
+		.base = 8000,
+		.peak = 16000,
+		.attack = 0.05 * SDK_AUDIO_RATE,
+		.decay = 0.10 * SDK_AUDIO_RATE,
+		.release = 0.10 * SDK_AUDIO_RATE,
+		.pan = 20000,
+	},
+};
 
 static bool rects_overlap(int x0, int y0, int x1, int y1, int a0, int b0, int a1, int b1)
 {
@@ -104,39 +130,9 @@ void game_start(void)
 void game_audio(int nsamples)
 {
 	for (int s = 0; s < nsamples; s++) {
-		int sample = 0;
-
-		for (int i = 0; i < MAX_EFFECTS; i++) {
-			struct effect *e = effects + i;
-
-			if (!e->volume)
-				continue;
-
-			sample += e->generator(e);
-
-			if (e->offset++ >= e->length)
-				e->volume = 0;
-		}
-
-		sdk_write_sample(sample, sample);
-	}
-}
-
-static void __unused play_effect(int volume, int frequency, int length, effect_gen_fn gen)
-{
-	for (int i = 0; i < MAX_EFFECTS; i++) {
-		struct effect *e = effects + i;
-
-		if (e->volume)
-			continue;
-
-		e->offset = 0;
-		e->volume = volume;
-		e->length = length;
-		e->period = frequency ? SDK_AUDIO_RATE / frequency : 1;
-		e->generator = gen;
-
-		break;
+		int16_t left, right;
+		sdk_sequencer_sample(&sequencer, &left, &right);
+		sdk_write_sample(left, right);
 	}
 }
 
@@ -217,11 +213,11 @@ void game_input(unsigned dt_usec)
 
 		ball.x = PADDLE_WIDTH + 1;
 
-		play_effect(16000, 440, SDK_AUDIO_RATE / 20, square_wave);
+		sdk_add_track(&sequencer, &track_left_paddle.track);
 	} else if (ball.x < PADDLE_WIDTH - 1) {
 		// srazka s levou zdi
 		paddle2.score++;
-		play_effect(16000, 0, SDK_AUDIO_RATE / 20, noise);
+		sdk_add_track(&sequencer, &track_left_miss.track);
 		new_round();
 	}
 
@@ -243,11 +239,11 @@ void game_input(unsigned dt_usec)
 
 		ball.x = TFT_RIGHT - PADDLE_WIDTH - BALL_WIDTH - 1;
 
-		play_effect(16000, 440 + 2 * 440 / 8, SDK_AUDIO_RATE / 20, square_wave);
+		sdk_add_track(&sequencer, &track_right_paddle.track);
 	} else if (ball.x + BALL_WIDTH > TFT_RIGHT - PADDLE_WIDTH + 1) {
 		// srazka s pravou zdi
 		paddle1.score++;
-		play_effect(16000, 0, SDK_AUDIO_RATE / 20, noise);
+		sdk_add_track(&sequencer, &track_right_miss.track);
 		new_round();
 	}
 }
