@@ -1555,7 +1555,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "LCSC:PJ-313B6-B"
+		(symbol "LCSC:PJ-320D"
 			(pin_names
 				(hide yes)
 			)
@@ -1570,7 +1570,7 @@
 					)
 				)
 			)
-			(property "Value" "PJ-313B6-B"
+			(property "Value" "PJ-320D"
 				(at 0 -10.16 0)
 				(effects
 					(font
@@ -1578,7 +1578,7 @@
 					)
 				)
 			)
-			(property "Footprint" "LCSC:AUDIO-TH_PJ-313B6-B"
+			(property "Footprint" "LCSC:AUDIO-SMD_PJ-320D"
 				(at 0 -12.7 0)
 				(effects
 					(font
@@ -1587,7 +1587,7 @@
 					(hide yes)
 				)
 			)
-			(property "Datasheet" "https://lcsc.com/product-detail/Audio-Video-Connectors_XKB-Connectivity-PJ-313B6-B_C500087.html"
+			(property "Datasheet" "https://lcsc.com/product-detail/Audio-Video-Connectors_SHOU-HAN-PJ-320D_C431535.html"
 				(at 0 -15.24 0)
 				(effects
 					(font
@@ -1605,7 +1605,7 @@
 					(hide yes)
 				)
 			)
-			(property "LCSC Part" "C500087"
+			(property "LCSC Part" "C431535"
 				(at 0 -17.78 0)
 				(effects
 					(font
@@ -1614,10 +1614,21 @@
 					(hide yes)
 				)
 			)
-			(symbol "PJ-313B6-B_0_1"
+			(symbol "PJ-320D_0_1"
+				(rectangle
+					(start -10.92 0)
+					(end -9.4 -4.57)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
 				(polyline
 					(pts
-						(xy 0 2.54) (xy -10.41 2.54) (xy -10.41 -2.79) (xy -11.18 -1.27)
+						(xy 0 2.54) (xy -10.16 2.54) (xy -10.16 0)
 					)
 					(stroke
 						(width 0)
@@ -1629,7 +1640,7 @@
 				)
 				(polyline
 					(pts
-						(xy 0 0) (xy -6.1 0) (xy -6.86 -0.76) (xy -7.62 0)
+						(xy 0 -2.54) (xy -4.57 -2.54) (xy -5.08 -1.52) (xy -5.59 -2.54)
 					)
 					(stroke
 						(width 0)
@@ -1641,7 +1652,7 @@
 				)
 				(polyline
 					(pts
-						(xy 0 -2.54) (xy -4.06 -2.54) (xy -4.83 -1.78) (xy -5.59 -2.54)
+						(xy 0 -5.08) (xy -5.84 -5.08) (xy -6.35 -4.06) (xy -6.86 -5.08)
 					)
 					(stroke
 						(width 0)
@@ -1653,7 +1664,7 @@
 				)
 				(polyline
 					(pts
-						(xy 0 -5.08) (xy -7.62 -5.08) (xy -8.89 -3.81) (xy -10.16 -5.08)
+						(xy 1.02 0) (xy -3.3 0) (xy -3.81 -1.02) (xy -4.32 0)
 					)
 					(stroke
 						(width 0)
@@ -1664,18 +1675,18 @@
 					)
 				)
 			)
-			(symbol "PJ-313B6-B_1_1"
+			(symbol "PJ-320D_1_1"
 				(pin passive line
-					(at 2.54 2.54 180)
-					(length 2.54)
-					(name "~"
+					(at 5.08 2.54 180)
+					(length 5.08)
+					(name "1"
 						(effects
 							(font
 								(size 1.27 1.27)
 							)
 						)
 					)
-					(number "T"
+					(number "1"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1684,34 +1695,16 @@
 					)
 				)
 				(pin passive line
-					(at 2.54 0 180)
-					(length 2.54)
-					(name "~"
+					(at 5.08 0 180)
+					(length 5.08)
+					(name "4"
 						(effects
 							(font
 								(size 1.27 1.27)
 							)
 						)
 					)
-					(number "R2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 2.54 -2.54 180)
-					(length 2.54)
-					(name "~"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "S"
+					(number "4"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1720,16 +1713,34 @@
 					)
 				)
 				(pin passive line
-					(at 2.54 -5.08 180)
-					(length 2.54)
-					(name "~"
+					(at 5.08 -2.54 180)
+					(length 5.08)
+					(name "3"
 						(effects
 							(font
 								(size 1.27 1.27)
 							)
 						)
 					)
-					(number "R1"
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 -5.08 180)
+					(length 5.08)
+					(name "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -2765,7 +2776,7 @@
 	)
 	(wire
 		(pts
-			(xy 177.8 40.64) (xy 190.5 40.64)
+			(xy 177.8 43.18) (xy 190.5 43.18)
 		)
 		(stroke
 			(width 0)
@@ -2835,7 +2846,7 @@
 	)
 	(wire
 		(pts
-			(xy 177.8 33.02) (xy 190.5 33.02)
+			(xy 177.8 35.56) (xy 190.5 35.56)
 		)
 		(stroke
 			(width 0)
@@ -2995,7 +3006,7 @@
 	)
 	(wire
 		(pts
-			(xy 177.8 35.56) (xy 190.5 35.56)
+			(xy 177.8 40.64) (xy 190.5 40.64)
 		)
 		(stroke
 			(width 0)
@@ -3134,7 +3145,7 @@
 		(uuid "6929f265-5096-4215-a2be-59c443b79bbc")
 	)
 	(label "HP_{LEFT}"
-		(at 177.8 33.02 0)
+		(at 177.8 35.56 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3154,7 +3165,7 @@
 		(uuid "b45314b8-3c4c-4446-a1de-4bbdb86de4df")
 	)
 	(label "HP_{RIGHT}"
-		(at 177.8 40.64 0)
+		(at 177.8 43.18 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3645,6 +3656,92 @@
 			(project "krecek"
 				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
 					(reference "#PWR065")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "LCSC:PJ-320D")
+		(at 195.58 38.1 0)
+		(mirror y)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "2870ad21-3870-4b2c-932f-c83e2bffd4b7")
+		(property "Reference" "CN1"
+			(at 208.28 38.0999 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "PJ-320D"
+			(at 208.28 40.6399 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "LCSC:AUDIO-SMD_PJ-320D"
+			(at 195.58 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://lcsc.com/product-detail/Audio-Video-Connectors_SHOU-HAN-PJ-320D_C431535.html"
+			(at 195.58 53.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 195.58 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "LCSC Part" "C431535"
+			(at 195.58 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "3"
+			(uuid "fd941f9c-0fa9-480c-af04-3b196237c5d6")
+		)
+		(pin "4"
+			(uuid "050b6ec1-4ea5-482d-be65-d2188d291339")
+		)
+		(pin "2"
+			(uuid "b9fee36a-15d2-47aa-bbe7-29186e40d4e8")
+		)
+		(pin "1"
+			(uuid "eeaa1af4-ddc0-4896-8aae-49f032c8f773")
+		)
+		(instances
+			(project ""
+				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
+					(reference "CN1")
 					(unit 1)
 				)
 			)
@@ -4855,92 +4952,6 @@
 		)
 	)
 	(symbol
-		(lib_id "LCSC:PJ-313B6-B")
-		(at 193.04 35.56 0)
-		(mirror y)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "8045e8dd-7ad6-4368-b57f-3f415762cfb7")
-		(property "Reference" "CN1"
-			(at 205.74 35.56 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "PJ-313B6-B"
-			(at 205.74 38.1 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "LCSC:AUDIO-TH_PJ-313B6-B"
-			(at 193.04 48.26 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "https://lcsc.com/product-detail/Audio-Video-Connectors_XKB-Connectivity-PJ-313B6-B_C500087.html"
-			(at 193.04 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 193.04 35.56 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "LCSC Part" "C500087"
-			(at 193.04 53.34 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "R1"
-			(uuid "a577126b-4341-4eae-8d7f-91415b1bdaac")
-		)
-		(pin "R2"
-			(uuid "00c48218-b4f4-4e03-96f0-ac89c1ff5177")
-		)
-		(pin "S"
-			(uuid "d0d0fc80-cfbc-4fad-9119-35d5eee2fa15")
-		)
-		(pin "T"
-			(uuid "a4b12e7a-2b23-413d-a0c4-3934fe41afa9")
-		)
-		(instances
-			(project "krecek"
-				(path "/8888f37b-ecc2-47df-8824-4b4e1e726451/a7733ec7-68c7-444f-aac5-8a965be5cbce"
-					(reference "CN1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:R_Small")
 		(at 254 69.85 0)
 		(mirror y)
@@ -5760,7 +5771,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 177.8 35.56 270)
+		(at 177.8 40.64 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5769,7 +5780,7 @@
 		(fields_autoplaced yes)
 		(uuid "bf9b72ba-4755-4571-a772-a08a32d52e60")
 		(property "Reference" "#PWR061"
-			(at 171.45 35.56 0)
+			(at 171.45 40.64 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5778,7 +5789,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 173.99 35.56 90)
+			(at 173.99 40.64 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5787,7 +5798,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 177.8 35.56 0)
+			(at 177.8 40.64 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5796,7 +5807,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 177.8 35.56 0)
+			(at 177.8 40.64 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5805,7 +5816,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 177.8 35.56 0)
+			(at 177.8 40.64 0)
 			(effects
 				(font
 					(size 1.27 1.27)
