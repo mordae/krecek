@@ -43,7 +43,7 @@ sdk_player_t player;
 sdk_track_square_t track_left_paddle = {
 	.track = {
 		.fn = sdk_play_square,
-		.base = 16000,
+		.base = 12000,
 		.peak = 20000,
 		.attack = 0.05 * SDK_AUDIO_RATE,
 		.decay = 0.05 * SDK_AUDIO_RATE,
@@ -57,7 +57,7 @@ sdk_track_square_t track_left_paddle = {
 sdk_track_square_t track_right_paddle = {
 	.track = {
 		.fn = sdk_play_square,
-		.base = 16000,
+		.base = 12000,
 		.peak = 20000,
 		.attack = 0.05 * SDK_AUDIO_RATE,
 		.decay = 0.05 * SDK_AUDIO_RATE,
