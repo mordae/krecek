@@ -123,8 +123,10 @@ void game_input(unsigned dt_usec)
 	int pos_x = player.s.x / TILE_SIZE;
 	int pos_y = player.s.y / TILE_SIZE;
 
-	if (map[pos_y][pos_x].effect == TILE_EFFECT_TELEPORT) {
-		switch (map[pos_y][pos_x].parameter) {
+	Tile tile = map[pos_y][pos_x];
+
+	if (tile.effect == TILE_EFFECT_TELEPORT) {
+		switch (tile.map) {
 		case 0:
 			map = (void *)maps_map1;
 			break;
@@ -133,6 +135,9 @@ void game_input(unsigned dt_usec)
 			map = (void *)maps_map2;
 			break;
 		}
+
+		player.s.x = (TILE_SIZE * tile.px) + 3.5f;
+		player.s.y = (TILE_SIZE * tile.py) + 3.5f;
 	}
 }
 

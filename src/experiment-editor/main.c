@@ -12,7 +12,7 @@
 
 #define GRAY rgb_to_rgb565(127, 127, 127)
 
-#define NUM_MAPS 2
+#define NUM_TPS 2
 
 extern uint32_t maps_map1[MAP_ROWS][MAP_COLS];
 extern uint32_t maps_map2[MAP_ROWS][MAP_COLS];
@@ -26,6 +26,9 @@ static int sel_y = 0;
 
 static float cur_x = 0;
 static float cur_y = 0;
+
+static int moving_x = -1;
+static int moving_y = -1;
 
 void game_start(void)
 {
@@ -69,6 +72,21 @@ void game_input(unsigned dt_usec)
 		map[sel_y][sel_x].u32 = 0;
 	}
 
+	if (sdk_inputs_delta.x > 0) {
+		if (moving_x < 0 && map[sel_y][sel_x].effect == TILE_EFFECT_TELEPORT) {
+			moving_x = sel_x;
+			moving_y = sel_y;
+		} else {
+			moving_x = -1;
+			moving_y = -1;
+		}
+	}
+
+	if (moving_x >= 0) {
+		map[moving_y][moving_x].px = sel_x;
+		map[moving_y][moving_x].py = sel_y;
+	}
+
 	if (sdk_inputs_delta.aux[1] > 0) {
 		map[sel_y][sel_x].collides_left = !map[sel_y][sel_x].collides_left;
 	}
@@ -91,7 +109,7 @@ void game_input(unsigned dt_usec)
 
 	if (sdk_inputs_delta.aux[6] > 0) {
 		if (map[sel_y][sel_x].effect == TILE_EFFECT_TELEPORT) {
-			map[sel_y][sel_x].parameter = (map[sel_y][sel_x].parameter + 1) % NUM_MAPS;
+			map[sel_y][sel_x].map = (map[sel_y][sel_x].map + 1) % NUM_TPS;
 		}
 	}
 
@@ -167,14 +185,15 @@ void game_paint(unsigned dt_usec)
 
 	tft_draw_rect(sel_x * TILE_SIZE + TILE_SIZE / 2.0 - 1,
 		      sel_y * TILE_SIZE + TILE_SIZE / 2.0 - 1, sel_x * TILE_SIZE + TILE_SIZE / 2.0,
-		      sel_y * TILE_SIZE + TILE_SIZE / 2.0, rgb_to_rgb565(255, 63, 63));
+		      sel_y * TILE_SIZE + TILE_SIZE / 2.0,
+		      moving_x < 0 ? rgb_to_rgb565(255, 63, 63) : rgb_to_rgb565(63, 63, 255));
 
 	char text[32] = "";
 
 	if (tile.effect == TILE_EFFECT_TELEPORT) {
-		snprintf(text, sizeof text, "%i ->%i", tile.tile_id, tile.parameter);
+		snprintf(text, sizeof text, "%i ->%i", tile.tile_id, tile.map);
 	} else if (tile.effect == TILE_EFFECT_DAMAGE) {
-		snprintf(text, sizeof text, "%i !%i", tile.tile_id, tile.parameter);
+		snprintf(text, sizeof text, "%i !%i", tile.tile_id, tile.damage);
 	} else {
 		snprintf(text, sizeof text, "%i", tile.tile_id);
 	}

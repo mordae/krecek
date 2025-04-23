@@ -19,13 +19,32 @@ typedef union Tile {
 		uint32_t tile_id : 8;
 
 		uint32_t : 8;
-		uint32_t parameter : 8;
+		uint32_t : 8;
 
 		uint32_t effect : 4;
 		uint32_t collides_right : 1;
 		uint32_t collides_up : 1;
 		uint32_t collides_down : 1;
 		uint32_t collides_left : 1;
+	};
+
+	struct {
+		uint32_t : 8;
+
+		uint32_t map : 7;
+		uint32_t px : 5;
+		uint32_t py : 4;
+
+		uint32_t : 8;
+	};
+
+	struct {
+		uint32_t : 8;
+
+		uint32_t : 8;
+		uint32_t damage : 8;
+
+		uint32_t : 8;
 	};
 } __attribute__((__packed__)) Tile;
 
