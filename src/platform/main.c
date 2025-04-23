@@ -40,6 +40,7 @@ extern TileType maps_map3[MAP_ROWS][MAP_COLS];
 extern TileType maps_map4[MAP_ROWS][MAP_COLS];
 extern TileType maps_map1c[MAP_ROWS][MAP_COLS];
 extern TileType maps_mapwin[MAP_ROWS][MAP_COLS];
+extern TileType maps_map2c[MAP_ROWS][MAP_COLS];
 
 TileType (*map)[MAP_COLS] = maps_map1;
 
@@ -209,9 +210,10 @@ void game_input(unsigned dt_usec)
 	}
 	if (mario_p.mode == 1 || mario_p.mode == 2) {
 		if (!mario_p.alive) {
-			if (sdk_inputs.start)
+			if (sdk_inputs.start) {
 				game_reset();
-			return;
+				return;
+			}
 		}
 		if (mario_p.won) {
 			if (sdk_inputs.start) {
@@ -233,8 +235,12 @@ void game_input(unsigned dt_usec)
 					mario_p.px = 1;
 					mario_p.py = 7;
 				} else if (map == maps_map1c) {
+					map = maps_map2c;
+					mario_p.px = 1;
+					mario_p.py = 7;
+				} else if (map == maps_map2c) {
 					map = maps_mapwin;
-					mario_p.px = 3.5;
+					mario_p.px = 1;
 					mario_p.py = 7;
 				}
 			}
