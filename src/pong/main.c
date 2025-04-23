@@ -38,7 +38,7 @@ struct ball {
 static struct paddle paddle1, paddle2;
 static struct ball ball;
 
-sdk_sequencer_t sequencer;
+sdk_player_t player;
 
 sdk_track_square_t track_left_paddle = {
 	.track = {
@@ -131,7 +131,7 @@ void game_audio(int nsamples)
 {
 	for (int s = 0; s < nsamples; s++) {
 		int16_t left, right;
-		sdk_sequencer_sample(&sequencer, &left, &right);
+		sdk_player_sample(&player, &left, &right);
 		sdk_write_sample(left, right);
 	}
 }
@@ -213,11 +213,11 @@ void game_input(unsigned dt_usec)
 
 		ball.x = PADDLE_WIDTH + 1;
 
-		sdk_add_track(&sequencer, &track_left_paddle.track);
+		sdk_add_track(&player, &track_left_paddle.track);
 	} else if (ball.x < PADDLE_WIDTH - 1) {
 		// srazka s levou zdi
 		paddle2.score++;
-		sdk_add_track(&sequencer, &track_left_miss.track);
+		sdk_add_track(&player, &track_left_miss.track);
 		new_round();
 	}
 
@@ -239,11 +239,11 @@ void game_input(unsigned dt_usec)
 
 		ball.x = TFT_RIGHT - PADDLE_WIDTH - BALL_WIDTH - 1;
 
-		sdk_add_track(&sequencer, &track_right_paddle.track);
+		sdk_add_track(&player, &track_right_paddle.track);
 	} else if (ball.x + BALL_WIDTH > TFT_RIGHT - PADDLE_WIDTH + 1) {
 		// srazka s pravou zdi
 		paddle1.score++;
-		sdk_add_track(&sequencer, &track_right_miss.track);
+		sdk_add_track(&player, &track_right_miss.track);
 		new_round();
 	}
 }

@@ -46,11 +46,11 @@ typedef struct sdk_track {
 	/* Current playback position. */
 	uint position;
 
-	/* Next track in the sequencer. */
+	/* Next track in the player. */
 	struct sdk_track *next;
 
 	/* Sequencer this track is currently playing on. */
-	struct sdk_sequencer *seq;
+	struct sdk_player *player;
 } sdk_track_t;
 
 /* Play sine wave. */
@@ -78,30 +78,30 @@ typedef struct sdk_track_noise {
 	sdk_track_t track; /* Base track. */
 } sdk_track_noise_t;
 
-/* Simple audio sequencer. */
-typedef struct sdk_sequencer {
+/* Simple audio player. */
+typedef struct sdk_player {
 	sdk_track_t *tracks;
-} sdk_sequencer_t;
+} sdk_player_t;
 
 /*
- * Add track to the sequencer.
+ * Add track to the player.
  *
  * It is not possible to add a track that is already playing.
  */
-inline static void sdk_add_track(sdk_sequencer_t *seq, sdk_track_t *track)
+inline static void sdk_add_track(sdk_player_t *player, sdk_track_t *track)
 {
-	if (track->seq)
+	if (track->player)
 		return;
 
-	track->seq = seq;
-	track->next = seq->tracks;
-	seq->tracks = track;
+	track->player = player;
+	track->next = player->tracks;
+	player->tracks = track;
 }
 
 /*
- * Obtain next sequencer sample.
+ * Obtain next player sample.
  *
  * Once a track finishes playing, it is automatically removed from
- * the sequencer and its position is reset to 0.
+ * the player and its position is reset to 0.
  */
-void sdk_sequencer_sample(sdk_sequencer_t *seq, int16_t *left, int16_t *right);
+void sdk_player_sample(sdk_player_t *player, int16_t *left, int16_t *right);

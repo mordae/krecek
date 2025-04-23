@@ -239,7 +239,7 @@ void sdk_enable_headphones(bool en)
 	nau88c22_enable_speaker(&dsp, !en);
 }
 
-void sdk_sequencer_sample(sdk_sequencer_t *seq, int16_t *left, int16_t *right)
+void sdk_player_sample(sdk_player_t *player, int16_t *left, int16_t *right)
 {
 	// Tracks we want to keep.
 	sdk_track_t *next_tracks = NULL;
@@ -248,7 +248,7 @@ void sdk_sequencer_sample(sdk_sequencer_t *seq, int16_t *left, int16_t *right)
 	int accright = 0;
 
 	// Go over all tracks and make them output samples.
-	for (sdk_track_t *track = seq->tracks; track; track = track->next) {
+	for (sdk_track_t *track = player->tracks; track; track = track->next) {
 		int16_t amplitude;
 
 		uint offset = track->position;
@@ -286,7 +286,7 @@ void sdk_sequencer_sample(sdk_sequencer_t *seq, int16_t *left, int16_t *right)
 		// Track is done.
 		track->position = 0;
 		track->next = NULL;
-		track->seq = NULL;
+		track->player = NULL;
 		continue;
 
 pan:
@@ -302,7 +302,7 @@ pan:
 		accright += lerp(0, sample, pan, 1 << 16);
 	}
 
-	seq->tracks = next_tracks;
+	player->tracks = next_tracks;
 
 	*left = clamp(accleft, INT16_MIN, INT16_MAX);
 	*right = clamp(accright, INT16_MIN, INT16_MAX);
