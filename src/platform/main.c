@@ -245,7 +245,6 @@ void game_input(unsigned dt_usec)
 				}
 			}
 		}
-
 		if (sdk_inputs.vol_up) {
 			volume += 12.0 * dt;
 		}
