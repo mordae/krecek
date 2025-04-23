@@ -2,10 +2,28 @@
 #include <math.h>
 #include <sdk/audio.h>
 
+#if defined(KRECEK)
+#include <pico/mutex.h>
+auto_init_mutex(shared_player_mutex);
+#endif
+
 void sdk_player_sample(sdk_player_t *player, int16_t *left, int16_t *right)
 {
-	// Tracks we want to keep.
-	sdk_track_t *next_tracks = NULL;
+	// Tracks we want to keep. Initialize with new newly added tracks.
+	sdk_track_t *next_tracks;
+
+	if (player->new_tracks) {
+#if defined(KRECEK)
+		mutex_enter_blocking(&shared_player_mutex);
+#endif
+		next_tracks = player->new_tracks;
+		player->new_tracks = NULL;
+#if defined(KRECEK)
+		mutex_exit(&shared_player_mutex);
+#endif
+	} else {
+		next_tracks = NULL;
+	}
 
 	int accleft = 0;
 	int accright = 0;
@@ -99,4 +117,24 @@ int16_t sdk_play_noise(void *_self, int16_t amplitude)
 {
 	(void)_self;
 	return (((int)rand() >> 16) * amplitude) >> 16;
+}
+
+void sdk_add_track(sdk_player_t *player, sdk_track_t *track)
+{
+	if (track->player) {
+		track->position = 0;
+		return;
+	}
+
+#if defined(KRECEK)
+	mutex_enter_blocking(&shared_player_mutex);
+#endif
+
+	track->player = player;
+	track->next = player->new_tracks;
+	player->new_tracks = track;
+
+#if defined(KRECEK)
+	mutex_exit(&shared_player_mutex);
+#endif
 }

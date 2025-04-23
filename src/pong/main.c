@@ -65,7 +65,7 @@ sdk_track_square_t track_right_paddle = {
 		.release = 0.10 * SDK_AUDIO_RATE,
 		.pan = 20000,
 	},
-	.frequency = 440 + (440 * 2 / 8),
+	.frequency = 440 * 1.25,
 };
 
 sdk_track_noise_t track_left_miss = {

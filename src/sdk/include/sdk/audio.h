@@ -81,22 +81,16 @@ typedef struct sdk_track_noise {
 /* Simple audio player. */
 typedef struct sdk_player {
 	sdk_track_t *tracks;
+	sdk_track_t *new_tracks;
 } sdk_player_t;
 
 /*
  * Add track to the player.
  *
- * It is not possible to add a track that is already playing.
+ * If the track is on a different player, this does nothing.
+ * If the track is on this player already, it gets reset to start.
  */
-inline static void sdk_add_track(sdk_player_t *player, sdk_track_t *track)
-{
-	if (track->player)
-		return;
-
-	track->player = player;
-	track->next = player->tracks;
-	player->tracks = track;
-}
+void sdk_add_track(sdk_player_t *player, sdk_track_t *track);
 
 /*
  * Obtain next player sample.
