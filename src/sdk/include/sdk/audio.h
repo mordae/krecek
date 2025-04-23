@@ -38,13 +38,13 @@ typedef struct sdk_track {
 	int16_t pan;
 
 	/* Durations of individual parts. */
-	uint attack, decay, sustain, release;
+	uint32_t attack, decay, sustain, release;
 
 	/* Base and peak volume. */
 	int16_t base, peak;
 
 	/* Current playback position. */
-	uint position;
+	uint32_t position;
 
 	/* Next track in the player. */
 	struct sdk_track *next;

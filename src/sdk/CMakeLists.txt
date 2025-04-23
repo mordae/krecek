@@ -2,6 +2,7 @@ add_library(
   krecek
   main.c
   audio.c
+  player.c
   video.c
   input.c
   slave.c

@@ -8,6 +8,7 @@ add_library(
   comms.c
   tft.c
   pico.c
+  ../../src/sdk/player.c
   ${CMAKE_CURRENT_LIST_DIR}/../../src/vendor/pico-tft/font.c
 )
 
