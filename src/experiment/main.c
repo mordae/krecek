@@ -43,11 +43,6 @@ void game_start(void)
 	player.speed = 50.0f;
 }
 
-void game_audio(int nsamples)
-{
-	(void)nsamples;
-}
-
 void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;

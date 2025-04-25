@@ -19,6 +19,7 @@
 #define WHITE rgb_to_rgb565(255, 255, 255)
 
 static float volume = 0;
+
 void game_start(void)
 {
 	sdk_set_output_gain_db(volume);
@@ -27,61 +28,6 @@ void game_start(void)
 void game_reset(void)
 {
 	game_start();
-}
-
-static uint16_t tones[256];
-static const char tune[] = "";
-static bool play_music = true;
-
-void tone_init(void)
-{
-	tones['c'] = 131;
-	tones['d'] = 147;
-	tones['e'] = 165;
-	tones['f'] = 175;
-	tones['g'] = 196;
-	tones['a'] = 220;
-	tones['h'] = 247;
-	tones['C'] = 261;
-	tones['D'] = 293;
-	tones['E'] = 329;
-	tones['F'] = 349;
-	tones['G'] = 392;
-	tones['A'] = 440;
-	tones['H'] = 494;
-}
-
-void game_audio(int nsamples)
-{
-	static int elapsed = 0;
-	static int tone_pos = 0;
-	if (!play_music) {
-		tone_pos = 0;
-		elapsed = 0;
-		for (int s = 0; s < nsamples; s++)
-			sdk_write_sample(0, 0);
-		return;
-	}
-	for (int s = 0; s < nsamples; s++) {
-		if (elapsed > SDK_AUDIO_RATE / 4) {
-			tone_pos++;
-			elapsed = 0;
-		}
-		if (!tune[tone_pos]) {
-			tone_pos = 0;
-		}
-		int freq = tones[(unsigned)tune[tone_pos]];
-		if (freq) {
-			int period = SDK_AUDIO_RATE / freq;
-			int half_period = 2 * elapsed / period;
-			int modulo = half_period & 1;
-			int sample = 4000 * (modulo ? 1 : -1);
-			sdk_write_sample(sample, sample);
-		} else {
-			sdk_write_sample(0, 0);
-		}
-		elapsed++;
-	}
 }
 
 void game_input(unsigned dt_usec)
@@ -142,6 +88,5 @@ int main()
 		.off_on_select = false,
 		.fps_color = GRAY,
 	};
-	tone_init();
 	sdk_main(&config);
 }

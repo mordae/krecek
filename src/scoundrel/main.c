@@ -18,18 +18,19 @@
 #define DIAMONDS 2
 #define CLUBS 3
 
-static int deck[52]; // -1 means card was dealt
-static int deck_position = 0; // -1 means card was played
-static int removed_cards[8] = {9, 10, 11, 12, 35, 36, 37, 38}; // cards taken out of the deck
-static int room_cards[4] = {-1, -1, -1, -1};
+static int deck[52];						 // -1 means card was dealt
+static int deck_position = 0;					 // -1 means card was played
+static int removed_cards[8] = { 9, 10, 11, 12, 35, 36, 37, 38 }; // cards taken out of the deck
+static int room_cards[4] = { -1, -1, -1, -1 };
 static int cursor_position = 0;
 static int weapon;
-static int last_weapon_use; // last card defeated with weapon. -1 means that the weapon wasn't used yet
+static int
+	last_weapon_use; // last card defeated with weapon. -1 means that the weapon wasn't used yet
 static int player_health;
 static bool using_weapon = false;
 
-
-void init_deck() {
+void init_deck()
+{
 	for (int c = 0; c < 52; c++) {
 		deck[c] = c;
 	}
@@ -44,7 +45,8 @@ void init_deck() {
 	}
 }
 
-void new_room() {
+void new_room()
+{
 	for (int i = 0; i < 4; i++) {
 		while (deck[deck_position] < 0 || deck[deck_position] >= 52) {
 			deck_position++;
@@ -63,16 +65,14 @@ void new_room() {
 }
 
 // 0 = hearts | 1 = spades | 2 = diamonds | 3 = clubs | 4 = jokers
-int get_card_suit(int c) {
+int get_card_suit(int c)
+{
 	return c / 13;
 }
 
-int get_card_value(int c) {
-	return c % 13 + 2;
-}
-
-void game_audio(int __unused nsamples)
+int get_card_value(int c)
 {
+	return c % 13 + 2;
 }
 
 void game_reset(void)
@@ -123,7 +123,8 @@ void game_input(unsigned __unused dt_usec)
 			last_weapon_use = -1;
 			room_cards[cursor_position] = -1;
 		} else { // spades or clubs
-			if (using_weapon && (get_card_value(last_weapon_use) >= card_value || last_weapon_use == -1)) {
+			if (using_weapon && (get_card_value(last_weapon_use) >= card_value ||
+					     last_weapon_use == -1)) {
 				player_health -= MAX(card_value - get_card_value(weapon), 0);
 				last_weapon_use = room_cards[cursor_position];
 				room_cards[cursor_position] = -1;

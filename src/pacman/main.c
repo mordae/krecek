@@ -1,6 +1,5 @@
 #include <pico/stdlib.h>
 
-#include <stdlib.h>
 #include <math.h>
 
 #include <sdk.h>
@@ -87,34 +86,6 @@ static struct pacman pacman;
 
 static struct ghost_blue ghost_blue;
 
-struct effect;
-
-typedef int16_t (*effect_gen_fn)(struct effect *eff);
-
-struct effect {
-	int offset;
-	int length;
-	int volume;
-	int period;
-	effect_gen_fn generator;
-};
-
-#define MAX_EFFECTS 8
-struct effect effects[MAX_EFFECTS];
-
-static int16_t __unused square_wave(struct effect *eff)
-{
-	if ((eff->offset % eff->period) < (eff->period / 2))
-		return eff->volume;
-	else
-		return -eff->volume;
-}
-
-static int16_t __unused noise(struct effect *eff)
-{
-	return rand() % (2 * eff->volume) - eff->volume;
-}
-
 void game_start(void)
 {
 	pacman.speed = 32;
@@ -132,45 +103,6 @@ void game_start(void)
 		.oy = 3.5,
 		.tile = 0,
 	};
-}
-
-void game_audio(int nsamples)
-{
-	for (int s = 0; s < nsamples; s++) {
-		int sample = 0;
-
-		for (int i = 0; i < MAX_EFFECTS; i++) {
-			struct effect *e = effects + i;
-
-			if (!e->volume)
-				continue;
-
-			sample += e->generator(e);
-
-			if (e->offset++ >= e->length)
-				e->volume = 0;
-		}
-
-		sdk_write_sample(sample, sample);
-	}
-}
-
-static void __unused play_effect(int volume, int frequency, int length, effect_gen_fn gen)
-{
-	for (int i = 0; i < MAX_EFFECTS; i++) {
-		struct effect *e = effects + i;
-
-		if (e->volume)
-			continue;
-
-		e->offset = 0;
-		e->volume = volume;
-		e->length = length;
-		e->period = frequency ? SDK_AUDIO_RATE / frequency : 1;
-		e->generator = gen;
-
-		break;
-	}
 }
 
 static void new_round(void)
@@ -356,9 +288,11 @@ void game_input(unsigned dt_usec)
 			map[y][x] = 0;
 
 			if (eaten == 1) {
+				sdk_melody_play("e");
 				pacman.score += 10;
 			} else if (eaten == 2) {
 				pacman.score += 0;
+				sdk_melody_play("g-");
 			} else if (eaten == 3) {
 				pacman.score += 50;
 			} else if (eaten > 3) {

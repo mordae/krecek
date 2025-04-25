@@ -125,70 +125,6 @@ void game_reset(void)
 	}
 }
 
-static uint16_t notes[256];
-static const char tune[] = " cegCEGB";
-
-void game_start(void)
-{
-	notes['c'] = 131;
-	notes['d'] = 147;
-	notes['e'] = 165;
-	notes['f'] = 175;
-	notes['g'] = 196;
-	notes['a'] = 220;
-	notes['b'] = 247;
-
-	notes['C'] = 261;
-	notes['D'] = 293;
-	notes['E'] = 329;
-	notes['F'] = 349;
-	notes['G'] = 392;
-	notes['A'] = 440;
-	notes['B'] = 494;
-}
-
-void game_audio(int nsamples)
-{
-	static int ellapsed = 0;
-	static int tone_pos = 0;
-
-	if (!victorious) {
-		tone_pos = 0;
-		ellapsed = 0;
-
-		for (int s = 0; s < nsamples; s++)
-			sdk_write_sample(0, 0);
-
-		return;
-	}
-
-	for (int s = 0; s < nsamples; s++) {
-		if (ellapsed > SDK_AUDIO_RATE / 6) {
-			tone_pos++;
-			ellapsed = 0;
-		}
-
-		if (!tune[tone_pos]) {
-			game_reset();
-			return;
-		}
-
-		int freq = notes[(unsigned)tune[tone_pos]];
-
-		if (freq) {
-			int period = SDK_AUDIO_RATE / freq;
-			int half_period = 2 * ellapsed / period;
-			int modulo = half_period & 1;
-			int16_t sample = 4000 * (modulo ? 1 : -1);
-			sdk_write_sample(sample, sample);
-		} else {
-			sdk_write_sample(0, 0);
-		}
-
-		ellapsed++;
-	}
-}
-
 void game_input(unsigned dt_usec)
 {
 	if (sdk_inputs.joy_x > 1024 || sdk_inputs.joy_x < -1024) {
@@ -303,7 +239,7 @@ void game_paint(unsigned __unused dt_usec)
 	draw_cursor();
 
 	if (cleared_cells >= SPACE_COUNT_HOR * SPACE_COUNT_VER)
-		victorious = true;
+		sdk_melody_play("/i:square _cegCEGB");
 }
 
 int main()

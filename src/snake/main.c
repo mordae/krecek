@@ -56,10 +56,6 @@ void game_start(void)
 {
 }
 
-void game_audio(int __unused nsamples)
-{
-}
-
 void game_input(unsigned dt_usec)
 {
 	if (sdk_inputs_delta.b > 0) {

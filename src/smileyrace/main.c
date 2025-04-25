@@ -155,10 +155,6 @@ void game_start(void)
 {
 }
 
-void game_audio(int __unused nsamples)
-{
-}
-
 void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;

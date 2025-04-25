@@ -126,77 +126,9 @@ static struct menu menu;
 // Ambiance
 static int day = -1;
 
-//Audio
-struct effect;
-
-typedef int16_t (*effect_gen_fn)(struct effect *eff);
-
-struct effect {
-	int offset;
-	int length;
-	int volume;
-	int period;
-	effect_gen_fn generator;
-};
-
-#define MAX_EFFECTS 8
-struct effect effects[MAX_EFFECTS];
-
-static int16_t __unused square_wave(struct effect *eff)
-{
-	if ((eff->offset % eff->period) < (eff->period / 2))
-		return eff->volume;
-	else
-		return -eff->volume;
-}
-
-static int16_t __unused noise(struct effect *eff)
-{
-	return rand() % (2 * eff->volume) - eff->volume;
-}
-
 void game_start(void)
 {
 	//menu.game_mode = 3;
-}
-
-void game_audio(int nsamples)
-{
-	for (int s = 0; s < nsamples; s++) {
-		int sample = 0;
-
-		for (int i = 0; i < MAX_EFFECTS; i++) {
-			struct effect *e = effects + i;
-
-			if (!e->volume)
-				continue;
-
-			sample += e->generator(e);
-
-			if (e->offset++ >= e->length)
-				e->volume = 0;
-		}
-
-		sdk_write_sample(sample, sample);
-	}
-}
-
-static void __unused play_effect(int volume, int frequency, int length, effect_gen_fn gen)
-{
-	for (int i = 0; i < MAX_EFFECTS; i++) {
-		struct effect *e = effects + i;
-
-		if (e->volume)
-			continue;
-
-		e->offset = 0;
-		e->volume = volume;
-		e->length = length;
-		e->period = frequency ? SDK_AUDIO_RATE / frequency : 1;
-		e->generator = gen;
-
-		break;
-	}
 }
 
 void game_reset(void)
@@ -304,7 +236,7 @@ void game_input(unsigned __unused dt_usec)
 			p1.bullets[i].s.x = 24;
 			p1.bullets[i].s.y = p1.y + 16;
 			p1.bullets[i].dx = BULLET_SPEED;
-			play_effect(INT16_MAX / 5, 440, 6000, square_wave);
+			sdk_melody_play("/i:square /pll a");
 			break;
 		}
 	}
@@ -318,7 +250,7 @@ void game_input(unsigned __unused dt_usec)
 			p2.bullets[i].s.x = TFT_RIGHT - 24;
 			p2.bullets[i].s.y = p2.y + 16;
 			p2.bullets[i].dx = -BULLET_SPEED;
-			play_effect(INT16_MAX / 5, 440, 6000, square_wave);
+			sdk_melody_play("/i:square /prr a");
 			break;
 		}
 	}
@@ -336,7 +268,7 @@ void game_input(unsigned __unused dt_usec)
 			p1.bullets[i].x = 24;
 			p1.bullets[i].y = p1.y + 16;
 			p1.bullets[i].dx = BULLET_SPEED;
-			play_effect(INT16_MAX / 5, 440, 6000, square_wave);
+			sdk_melody_play("/i:square a");
 			break;
 		}
 	}
@@ -350,7 +282,7 @@ void game_input(unsigned __unused dt_usec)
 			p2.bullets[i].x = TFT_RIGHT - 24;
 			p2.bullets[i].y = p2.y + 16;
 			p2.bullets[i].dx = -BULLET_SPEED;
-			play_effect(INT16_MAX / 5, 440, 6000, square_wave);
+			sdk_melody_play("/i:square a");
 			break;
 		}
 	}
@@ -400,7 +332,7 @@ void game_paint(unsigned dt_usec)
 			if (p1.bullets[i].s.y >= wall_top && p1.bullets[i].s.y <= wall_bottom &&
 			    p1.bullets[i].s.x >= wall_left && p1.bullets[i].s.x <= wall_right) {
 				p1.bullets[i].spawned = false;
-				play_effect(INT16_MAX / 5, 0, 6000, noise);
+				sdk_melody_play("/i:noise c");
 			}
 		}
 
@@ -408,7 +340,7 @@ void game_paint(unsigned dt_usec)
 			if (p2.bullets[i].s.y >= wall_top && p2.bullets[i].s.y <= wall_bottom &&
 			    p2.bullets[i].s.x >= wall_left && p2.bullets[i].s.x <= wall_right) {
 				p2.bullets[i].spawned = false;
-				play_effect(INT16_MAX / 5, 0, 6000, noise);
+				sdk_melody_play("/i:noise c");
 			}
 		}
 	}
@@ -458,7 +390,7 @@ void game_paint(unsigned dt_usec)
 				power_up.spawn_time = POWER_UP_RESPAWN_TIME;
 				power_up.s.y = POWER_UP_MIN + (POWER_UP_MAX - POWER_UP_MIN) *
 								      (rand() / (float)RAND_MAX);
-				play_effect(INT16_MAX / 5, 880, 6000, square_wave);
+				sdk_melody_play("/i:square A");
 				break;
 			}
 
@@ -470,7 +402,7 @@ void game_paint(unsigned dt_usec)
 				power_up.spawn_time = POWER_UP_RESPAWN_TIME;
 				power_up.s.y = POWER_UP_MIN + (POWER_UP_MAX - POWER_UP_MIN) *
 								      (rand() / (float)RAND_MAX);
-				play_effect(INT16_MAX / 5, 880, 6000, square_wave);
+				sdk_melody_play("/i:square A");
 				break;
 			}
 		}
@@ -495,7 +427,7 @@ void game_paint(unsigned dt_usec)
 				second_bullet.s.y = SECOND_BULLET_MIN +
 						    (SECOND_BULLET_MAX - SECOND_BULLET_MIN) *
 							    (rand() / (float)RAND_MAX);
-				play_effect(INT16_MAX / 5, 880, 6000, square_wave);
+				sdk_melody_play("/i:square A");
 			}
 
 			if (p2.bullets[i].spawned &&
@@ -508,7 +440,7 @@ void game_paint(unsigned dt_usec)
 				second_bullet.s.y = SECOND_BULLET_MIN +
 						    (SECOND_BULLET_MAX - SECOND_BULLET_MIN) *
 							    (rand() / (float)RAND_MAX);
-				play_effect(INT16_MAX / 5, 880, 6000, square_wave);
+				sdk_melody_play("/i:square A");
 			}
 		}
 	}
@@ -561,7 +493,7 @@ void game_paint(unsigned dt_usec)
 			p1.bullets[i].spawned = false;
 			p2.hp -= 1;
 
-			play_effect(INT16_MAX / 5, 220, 12000, square_wave);
+			sdk_melody_play("/i:square /prr (mf) < a");
 
 			if (p2.hp <= 0) {
 				p2.ddt = HAMSTER_DEATH_DELTA_TIME;
@@ -573,7 +505,7 @@ void game_paint(unsigned dt_usec)
 			p2.bullets[i].spawned = false;
 			p1.hp -= 1;
 
-			play_effect(INT16_MAX / 5, 220, 12000, square_wave);
+			sdk_melody_play("/i:square /pll (mf) < a");
 
 			if (p1.hp <= 0) {
 				p1.ddt = HAMSTER_DEATH_DELTA_TIME;
@@ -705,7 +637,7 @@ void game_paint(unsigned dt_usec)
 			if (sdk_sprites_collide(&p1.bullets[i].s, &p2.bullets[j].s)) {
 				p1.bullets[i].spawned = false;
 				p2.bullets[j].spawned = false;
-				play_effect(INT16_MAX / 5, 0, 6000, noise);
+				sdk_melody_play("/i:noise c");
 			}
 		}
 	}
