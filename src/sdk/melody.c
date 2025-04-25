@@ -2,7 +2,6 @@
 #include <sdk/audio.h>
 #include <sdk/melody-lexer.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #if !defined(SDK_MAX_MELODIES)
@@ -13,9 +12,13 @@ typedef int16_t (*synth_fn)(uint32_t position, uint32_t step);
 
 static int16_t synth_sine(uint32_t position, uint32_t step);
 static int16_t synth_square(uint32_t position, uint32_t step);
+static int16_t synth_phi(uint32_t position, uint32_t step);
 static int16_t synth_noise(uint32_t position, uint32_t step);
+static int16_t synth_prnl(uint32_t position, uint32_t step);
 
-static synth_fn instruments[] = { synth_sine, synth_square, synth_noise };
+static synth_fn instruments[] = {
+	synth_sine, synth_square, synth_noise, synth_phi, synth_prnl,
+};
 
 #define BASE_VOLUME 3
 #define NUM_VOLUMES 8
@@ -137,11 +140,11 @@ static void advance(sdk_melody_t *melody)
 			return;
 
 		case SDK_MELODY_TOKEN_NOTE:
-			uint32_t len = melody->duration * token.length;
-			melody->note.attack = len >> 3;	 /* 1/8 */
-			melody->note.decay = len >> 3;	 /* 1/8 */
-			melody->note.sustain = len >> 1; /* 4/8 */
-			melody->note.release = len >> 2; /* 2/8 */
+			int jiffy = melody->duration >> 3;
+			melody->note.attack = jiffy;
+			melody->note.decay = jiffy;
+			melody->note.sustain = melody->duration * token.length - 4 * jiffy;
+			melody->note.release = 2 * jiffy;
 			melody->note.position = 0;
 			melody->note.step = tones[token.note] >> melody->octave;
 			melody->rest = 0;
@@ -232,11 +235,38 @@ static int16_t synth_square(uint32_t position, uint32_t step)
 	return (int)(position * step) >= 0 ? INT16_MAX : -INT16_MAX;
 }
 
+inline static int16_t pseudorandom_noise(uint32_t position)
+{
+	// Multiply position with 1/pi, because why not.
+	uint32_t value = 0x517cc1b7u * position;
+
+	// Stir the bits around like xorshift32 does.
+	value ^= value << 13;
+	value ^= value >> 17;
+	value ^= value << 5;
+
+	// Make top bits more uniformly random via 1/phi.
+	value *= 0x9e3779b9u;
+
+	// Return those noisy bits.
+	return value >> 16;
+}
+
+static int16_t synth_prnl(uint32_t position, uint32_t step)
+{
+	int period = UINT32_MAX / step;
+	return pseudorandom_noise(position % period);
+}
+
 static int16_t synth_noise(uint32_t position, uint32_t step)
 {
-	(void)position;
 	(void)step;
-	return (int)rand() >> 16;
+	return pseudorandom_noise(position);
+}
+
+static int16_t synth_phi(uint32_t position, uint32_t step)
+{
+	return (0x9e3779b9u * (position * step)) >> 16;
 }
 
 void sdk_melody_sample(int16_t *left, int16_t *right)

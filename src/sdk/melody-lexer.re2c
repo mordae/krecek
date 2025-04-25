@@ -290,6 +290,18 @@ sdk_melody_token_t sdk_melody_lex(const char **input_ptr)
             goto done;
         }
 
+        "/i:phi" {
+            token.type = SDK_MELODY_TOKEN_INSTRUMENT;
+            token.instrument = SDK_MELODY_INSTRUMENT_PHI;
+            goto done;
+        }
+
+        "/i:prnl" {
+            token.type = SDK_MELODY_TOKEN_INSTRUMENT;
+            token.instrument = SDK_MELODY_INSTRUMENT_PRNL;
+            goto done;
+        }
+
         "/bpm:" [0-9]{1,4} {
             token.type = SDK_MELODY_TOKEN_BPM;
             token.bpm = atoi(*input_ptr + 5);

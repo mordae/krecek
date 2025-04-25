@@ -17,9 +17,11 @@ typedef enum {
 } sdk_melody_token_type_t;
 
 typedef enum {
-	SDK_MELODY_INSTRUMENT_SINE = 0,
-	SDK_MELODY_INSTRUMENT_SQUARE,
-	SDK_MELODY_INSTRUMENT_NOISE,
+	SDK_MELODY_INSTRUMENT_SINE = 0, // Sine wave
+	SDK_MELODY_INSTRUMENT_SQUARE,	// Square wave
+	SDK_MELODY_INSTRUMENT_NOISE,	// White noise
+	SDK_MELODY_INSTRUMENT_PHI,	// Phi-derived patterns
+	SDK_MELODY_INSTRUMENT_PRNL,	// Pseudorandom noise loop
 } sdk_melody_instrument_t;
 
 // Tagged union for token data
