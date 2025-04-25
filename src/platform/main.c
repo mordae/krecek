@@ -67,15 +67,25 @@ static struct menu menu;
 static float volume = SDK_GAIN_STD;
 
 // --- Audio: Updated tune ---
-static const char music[] = "/i:square /bpm:60 "
-			    "{ "
-			    "ACGgbGA _ ACEGgFD _ ACGgbEC _ FGAGFED _ "
-			    "CEGAEC  _ GBgfeD  _ ACGEFGA _ DEFGEDC _ "
-			    "ACGgbGA _ ACEGgFD _ ACGgbEC _ FGAGFED _ "
-			    "EGCEGA  _ DFABAG  _ CEGBAF  _ DFACBG  _ "
-			    "GABCDEF _ EGABCDE _ BAGFEDC _ ACEGFED _ "
-			    "CEGAGEC _ GBgfeD  _ ACGEFGA _ DEFGEDC _ "
-			    "}";
+static const char music1[] = "/i:square /bpm:60 "
+			     "{ "
+			     "ACGgbGA _ ACEGgFD _ ACGgbEC _ FGAGFED _ "
+			     "CEGAEC  _ GBgfeD  _ ACGEFGA _ DEFGEDC _ "
+			     "ACGgbGA _ ACEGgFD _ ACGgbEC _ FGAGFED _ "
+			     "EGCEGA  _ DFABAG  _ CEGBAF  _ DFACBG  _ "
+			     "GABCDEF _ EGABCDE _ BAGFEDC _ ACEGFED _ "
+			     "CEGAGEC _ GBgfeD  _ ACGEFGA _ DEFGEDC _ "
+			     "}";
+
+static const char music2[] = "/i:noise /bpm:60 "
+			     "{ "
+			     "cc_c_cc _ cc_c_cc _ cc_c_cc _ cc_c_cc _ "
+			     "cc_c_c  _ cc_c__  _ cc_c_cc _ cc_c_cc _ "
+			     "cc_c_cc _ cc_c_cc _ cc_c_cc _ cc_c_cc _ "
+			     "cc_c_c  _ cc_c__  _ cc_c_c  _ cc_c_c  _ "
+			     "cc_c_cc _ cc_c_cc _ cc_c_cc _ cc_c_cc _ "
+			     "cc_c_cc _ cc_c_c  _ cc_c_cc _ cc_c_cc _ "
+			     "}";
 
 // --- Initialize the game ---
 void game_start(void)
@@ -92,7 +102,8 @@ void game_start(void)
 	mario_p.s.tile = 0;
 
 	sdk_set_output_gain_db(volume);
-	sdk_melody_play(music);
+	sdk_melody_play(music1);
+	sdk_melody_play(music2);
 }
 
 void game_reset(void)
