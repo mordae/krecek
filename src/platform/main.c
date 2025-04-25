@@ -10,7 +10,6 @@
 
 #include <petr.png.h>
 #include <platforms.png.h>
-#include <spawners.png.h>
 #include <menu.png.h>
 #include <levels.png.h>
 // Physics constants

@@ -10,7 +10,6 @@
 #define MAP_COLS 48
 
 #include <platforms.png.h>
-#include <spawners.png.h>
 
 #define GRAY rgb_to_rgb565(127, 127, 127)
 
