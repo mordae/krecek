@@ -28,5 +28,5 @@ uint32_t sdk_random();
 
 inline static int lerp(int x, int y, int a, int b)
 {
-	return x + (y - x) * a / b;
+	return x + ((y - x) * a) / b;
 }

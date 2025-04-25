@@ -26,76 +26,93 @@ void sdk_write_sample(int16_t left, int16_t right);
 /* Input a stereo audio sample. */
 void sdk_read_sample(int16_t *left, int16_t *right);
 
-/* Function implementing an instrument. */
-typedef int16_t (*sdk_instrument_fn)(void *self, int16_t amplitude);
-
-/* Simple audio track. */
-typedef struct sdk_track {
-	/* Function to call to obtain new sample. */
-	sdk_instrument_fn fn;
-
-	/* Linear panning. Negative to the left, positive to the right. */
-	int16_t pan;
-
-	/* Durations of individual parts. */
-	uint32_t attack, decay, sustain, release;
-
-	/* Base and peak volume. */
-	int16_t base, peak;
-
-	/* Current playback position. */
-	uint32_t position;
-
-	/* Next track in the player. */
-	struct sdk_track *next;
-
-	/* Sequencer this track is currently playing on. */
-	struct sdk_player *player;
-} sdk_track_t;
-
-/* Play sine wave. */
-int16_t sdk_play_sine(void *self, int16_t amplitude);
-
-typedef struct sdk_track_sine {
-	sdk_track_t track; /* Base track. */
-	int frequency;	   /* Sine wave frequency. */
-	uint32_t phase;	   /* Current phase offset. */
-} sdk_track_sine_t;
-
-/* Play square wave. */
-int16_t sdk_play_square(void *self, int16_t amplitude);
-
-typedef struct sdk_track_square {
-	sdk_track_t track; /* Base track. */
-	int frequency;	   /* Square wave frequency. */
-	uint32_t phase;	   /* Current phase offset. */
-} sdk_track_square_t;
-
-/* Play white noise. */
-int16_t sdk_play_noise(void *self, int16_t amplitude);
-
-typedef struct sdk_track_noise {
-	sdk_track_t track; /* Base track. */
-} sdk_track_noise_t;
-
-/* Simple audio player. */
-typedef struct sdk_player {
-	sdk_track_t *tracks;
-	sdk_track_t *new_tracks;
-} sdk_player_t;
+/*
+ * Sample melody player.
+ *
+ * This gets done automatically inside game_audio() unless you override it.
+ * If you do, you need to call it yourself as needed.
+ */
+void sdk_melody_sample(int16_t *left, int16_t *right);
 
 /*
- * Add track to the player.
+ * Start playing given melody.
  *
- * If the track is on a different player, this does nothing.
- * If the track is on this player already, it gets reset to start.
+ * Melody string has following syntax:
+ *
+ * <instrument> <tempo> [bar-1] [misc-1] [bar-2] ... [misc-m] [bar-n]
+ *
+ * Where instrument is one of "sine", "square" or "noise".
+ * Tempo is a number of beats per minute (BPM). Use 120 if unsure.
+ *
+ * Bars are little bit more involved. Base duration of a note is fourth.
+ * You can use spaces freely to group notes for readability. Underscores
+ * are rests and dashes make the notes last longer. For example:
+ *
+ * cece g-gg cece d-dd cege dde_ cege ddc-
+ *
+ * Lower case 'a' is A4 or 440 Hz. Upper case 'a' is A5 or 880 Hz.
+ * In order to change the scales, you must use misc symbol '<' or '>'.
+ *
+ * '<' moves following notes an octave lower, so 'a' would be 220 Hz.
+ * Using '<<' places 'a' at 110 Hz and 'A' at 220 Hz.
+ *
+ * '>' moves following notes an octave higher. So '>>' places 'a' at
+ * whopping 1760 Hz and 'A' at 3520 Hz.
+ *
+ * Everything is C-major, so 'c' is C4 by default, at ~261.63 Hz,
+ * sharps are available and parsed properly. So the whole range is:
+ *
+ * c c# d d# e f f# g g# a a# b C C# D D# E F F# G G# A A# B
+ *
+ * Sharps need to be close to the note, so if you want a long one,
+ * use "g#-f#- g#---".
+ *
+ * Another pair of special symbols are '[' and ']'. These increase and
+ * decrease volume by 1/5 respectively. Base melody amplitude starts at
+ * roughly 1/2 of the maximum, so "[[ a--- ]]" gives us roughly 48% of
+ * maximum and "[[[[ a--- ]]]]" 69% of maximum.
+ *
+ * There are also '(' and ')', which act identically, except in reverse.
+ * The '(' lowers the volume and ')' increases it. Those are mainly for
+ * those of us who dislike unbalanced parenthesis.
+ *
+ * And finally, there is looping. Using '{' and '}' marks part of the
+ * melody that is played in an infinite loop. This looping can be stopped
+ * with functions below and in most cases the melody will then proceed to
+ * play out to the natural conclusion after the closing '}'.
+ *
+ * Returns `false` when there is no space for another melody.
  */
-void sdk_add_track(sdk_player_t *player, sdk_track_t *track);
+bool sdk_melody_play(const char *melody);
 
 /*
- * Obtain next player sample.
+ * Check if given melody is currently playing.
  *
- * Once a track finishes playing, it is automatically removed from
- * the player and its position is reset to 0.
+ * This compares the melodies by pointer address, not by the contents,
+ * so you need to use the very same object. Ideally keep the medies in
+ * static variables and use those.
  */
-void sdk_player_sample(sdk_player_t *player, int16_t *left, int16_t *right);
+bool sdk_melody_is_playing(const char *melody);
+
+#define SDK_ALL_MELODIES (const char *)0
+#define SDK_ONLY_LOOPING (const char *)1
+#define SDK_EXCEPT_LOOPING (const char *)2
+
+/*
+ * Stop playing given melody, fading it out.
+ *
+ * There are special constants you can use here instead of a specific
+ * melody. SDK_ALL_MELODIES will stop all melodies. SDK_ONLY_LOOPING will
+ * stop and fade out only those that are loopable, SDK_EXCEPT_LOOPING will
+ * stop and fade those that are not loopable, leaving loops alone.
+ */
+void sdk_melody_stop_playing(const char *melody);
+
+/*
+ * Disable looping for given melody, having it end naturally.
+ *
+ * If NULL, SDK_ALL_MELODIES or SDK_ONLY_LOOPING is given instead of a
+ * specific melody, all currently playing (looping) melodies are affected.
+ * Passing SDK_EXCEPT_LOOPING accomplishes nothing.
+ */
+void sdk_melody_stop_looping(const char *melody);

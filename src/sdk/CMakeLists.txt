@@ -2,7 +2,8 @@ add_library(
   krecek
   main.c
   audio.c
-  player.c
+  melody.c
+  melody-lexer.c
   video.c
   input.c
   slave.c

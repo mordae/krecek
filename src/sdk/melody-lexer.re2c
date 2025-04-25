@@ -1,0 +1,351 @@
+#include <ctype.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <sdk/melody-lexer.h>
+
+/*!re2c
+    re2c:define:YYCTYPE = "char";
+    re2c:yyfill:enable = 0;
+*/
+
+sdk_melody_token_t sdk_melody_lex(const char **input_ptr)
+{
+	sdk_melody_token_t token;
+	const char *YYCURSOR = *input_ptr;
+	const char *YYMARKER;
+
+	// Initialize token
+	token.type = SDK_MELODY_TOKEN_ERROR;
+
+	// Skip leading whitespace
+	while (isspace(*YYCURSOR))
+		YYCURSOR++;
+
+	// Update input pointer to skip whitespace
+	*input_ptr = YYCURSOR;
+
+	/*!re2c
+        [\x00] {
+            token.type = SDK_MELODY_TOKEN_END;
+            goto done;
+        }
+
+        "c" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 0;
+            token.length = YYCURSOR - *input_ptr - 1 + 1;
+            goto done;
+        }
+
+        "c#" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 1;
+            token.length = YYCURSOR - *input_ptr - 2 + 1;
+            goto done;
+        }
+
+        "C" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 12;
+            token.length = YYCURSOR - *input_ptr - 1 + 1;
+            goto done;
+        }
+
+        "C#" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 13;
+            token.length = YYCURSOR - *input_ptr - 2 + 1;
+            goto done;
+        }
+
+        "d" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 2;
+            token.length = YYCURSOR - *input_ptr - 1 + 1;
+            goto done;
+        }
+
+        "d#" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 3;
+            token.length = YYCURSOR - *input_ptr - 2 + 1;
+            goto done;
+        }
+
+        "D" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 14;
+            token.length = YYCURSOR - *input_ptr - 1 + 1;
+            goto done;
+        }
+
+        "D#" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 15;
+            token.length = YYCURSOR - *input_ptr - 2 + 1;
+            goto done;
+        }
+
+        "e" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 4;
+            token.length = YYCURSOR - *input_ptr - 1 + 1;
+            goto done;
+        }
+
+        "E" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 16;
+            token.length = YYCURSOR - *input_ptr - 1 + 1;
+            goto done;
+        }
+
+        "f" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 5;
+            token.length = YYCURSOR - *input_ptr - 1 + 1;
+            goto done;
+        }
+
+        "f#" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 6;
+            token.length = YYCURSOR - *input_ptr - 2 + 1;
+            goto done;
+        }
+
+        "F" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 17;
+            token.length = YYCURSOR - *input_ptr - 1 + 1;
+            goto done;
+        }
+
+        "F#" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 18;
+            token.length = YYCURSOR - *input_ptr - 2 + 1;
+            goto done;
+        }
+
+        "g" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 7;
+            token.length = YYCURSOR - *input_ptr - 1 + 1;
+            goto done;
+        }
+
+        "g#" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 8;
+            token.length = YYCURSOR - *input_ptr - 2 + 1;
+            goto done;
+        }
+
+        "G" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 19;
+            token.length = YYCURSOR - *input_ptr - 1 + 1;
+            goto done;
+        }
+
+        "G#" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 20;
+            token.length = YYCURSOR - *input_ptr - 2 + 1;
+            goto done;
+        }
+
+        "a" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 9;
+            token.length = YYCURSOR - *input_ptr - 1 + 1;
+            goto done;
+        }
+
+        "a#" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 10;
+            token.length = YYCURSOR - *input_ptr - 2 + 1;
+            goto done;
+        }
+
+        "A" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 21;
+            token.length = YYCURSOR - *input_ptr - 1 + 1;
+            goto done;
+        }
+
+        "A#" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 22;
+            token.length = YYCURSOR - *input_ptr - 2 + 1;
+            goto done;
+        }
+
+        "b" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 11;
+            token.length = YYCURSOR - *input_ptr - 1 + 1;
+            goto done;
+        }
+
+        "B" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_NOTE;
+            token.note = 23;
+            token.length = YYCURSOR - *input_ptr - 1 + 1;
+            goto done;
+        }
+
+        "_" "-"{0,7} {
+            token.type = SDK_MELODY_TOKEN_REST;
+            token.length = YYCURSOR - *input_ptr;
+            goto done;
+        }
+
+        ">" {
+            token.type = SDK_MELODY_TOKEN_OCTAVE_UP;
+            goto done;
+        }
+
+        "<" {
+            token.type = SDK_MELODY_TOKEN_OCTAVE_DOWN;
+            goto done;
+        }
+
+        "{" {
+            token.type = SDK_MELODY_TOKEN_LOOP_START;
+            goto done;
+        }
+
+        "}" {
+            token.type = SDK_MELODY_TOKEN_LOOP_END;
+            goto done;
+        }
+
+        "(ppp)" {
+            token.type = SDK_MELODY_TOKEN_DYNAMIC;
+            token.dynamic = 0;
+            goto done;
+        }
+
+        "(pp)" {
+            token.type = SDK_MELODY_TOKEN_DYNAMIC;
+            token.dynamic = 1;
+            goto done;
+        }
+
+        "(p)" {
+            token.type = SDK_MELODY_TOKEN_DYNAMIC;
+            token.dynamic = 2;
+            goto done;
+        }
+
+        "(mp)" {
+            token.type = SDK_MELODY_TOKEN_DYNAMIC;
+            token.dynamic = 3;
+            goto done;
+        }
+
+        "(mf)" {
+            token.type = SDK_MELODY_TOKEN_DYNAMIC;
+            token.dynamic = 4;
+            goto done;
+        }
+
+        "(f)" {
+            token.type = SDK_MELODY_TOKEN_DYNAMIC;
+            token.dynamic = 5;
+            goto done;
+        }
+
+        "(ff)" {
+            token.type = SDK_MELODY_TOKEN_DYNAMIC;
+            token.dynamic = 6;
+            goto done;
+        }
+
+        "(fff)" {
+            token.type = SDK_MELODY_TOKEN_DYNAMIC;
+            token.dynamic = 7;
+            goto done;
+        }
+
+        "/i:sine" {
+            token.type = SDK_MELODY_TOKEN_INSTRUMENT;
+            token.instrument = SDK_MELODY_INSTRUMENT_SINE;
+            goto done;
+        }
+
+        "/i:square" {
+            token.type = SDK_MELODY_TOKEN_INSTRUMENT;
+            token.instrument = SDK_MELODY_INSTRUMENT_SQUARE;
+            goto done;
+        }
+
+        "/i:noise" {
+            token.type = SDK_MELODY_TOKEN_INSTRUMENT;
+            token.instrument = SDK_MELODY_INSTRUMENT_NOISE;
+            goto done;
+        }
+
+        "/bpm:" [0-9]{1,4} {
+            token.type = SDK_MELODY_TOKEN_BPM;
+            token.bpm = atoi(*input_ptr + 5);
+            goto done;
+        }
+
+        "/plll" {
+            token.type = SDK_MELODY_TOKEN_PANNING;
+            token.panning = 0;
+            goto done;
+        }
+
+        "/pll" {
+            token.type = SDK_MELODY_TOKEN_PANNING;
+            token.panning = 1;
+            goto done;
+        }
+
+        "/pl" {
+            token.type = SDK_MELODY_TOKEN_PANNING;
+            token.panning = 2;
+            goto done;
+        }
+
+        "/pc" {
+            token.type = SDK_MELODY_TOKEN_PANNING;
+            token.panning = 3;
+            goto done;
+        }
+
+        "/pr" {
+            token.type = SDK_MELODY_TOKEN_PANNING;
+            token.panning = 4;
+            goto done;
+        }
+
+        "/prr" {
+            token.type = SDK_MELODY_TOKEN_PANNING;
+            token.panning = 5;
+            goto done;
+        }
+
+        "/prrr" {
+            token.type = SDK_MELODY_TOKEN_PANNING;
+            token.panning = 6;
+            goto done;
+        }
+
+        * {
+            token.type = SDK_MELODY_TOKEN_ERROR;
+            goto done;
+        }
+    */
+
+done:
+	// Update the input pointer to the new position
+	*input_ptr = YYCURSOR;
+	return token;
+}

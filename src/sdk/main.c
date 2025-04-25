@@ -248,7 +248,11 @@ __weak void game_reset(void)
 
 __weak void game_audio(int nsamples)
 {
-	(void)nsamples;
+	for (int i = 0; i < nsamples; i++) {
+		int16_t left, right;
+		sdk_melody_sample(&left, &right);
+		sdk_write_sample(left, right);
+	}
 }
 
 __weak void game_input(unsigned __unused dt)

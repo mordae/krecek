@@ -6,7 +6,7 @@
 static pa_simple *pa;
 
 #define BUFFER_SIZE 1024
-static int16_t buffer[BUFFER_SIZE];
+static int16_t buffer[BUFFER_SIZE][2];
 static int used = 0;
 
 /*
@@ -26,7 +26,7 @@ void sdk_audio_init(void)
 {
 	pa_sample_spec ss = {
 		.format = PA_SAMPLE_S16NE,
-		.channels = 1,
+		.channels = 2,
 		.rate = SDK_AUDIO_RATE,
 	};
 
@@ -48,13 +48,13 @@ void sdk_audio_flush()
 		return;
 
 	// How much can we write?
-	int writable = pa_stream_writable_size(pa->stream) / 2;
+	int writable = pa_stream_writable_size(pa->stream) / 4;
 
 	if (writable < used)
 		return; // No can do.
 
 	// We can flush it now, good.
-	if (0 > pa_simple_write(pa, buffer, used * 2, &error))
+	if (0 > pa_simple_write(pa, buffer, used * 4, &error))
 		sdk_panic("pa_simple_write failed, error=%i", error);
 
 	used = 0;
@@ -62,26 +62,24 @@ void sdk_audio_flush()
 
 void sdk_audio_task(void)
 {
-	int writable = pa_stream_writable_size(pa->stream) / 2;
+	int writable = pa_stream_writable_size(pa->stream) / 4;
 	if (writable)
 		game_audio(writable);
 }
 
 void sdk_write_sample(int16_t left, int16_t right)
 {
-	int16_t sample = ((int32_t)left + (int32_t)right) >> 1;
-
 	int error = 0;
 
 	if (used == BUFFER_SIZE) {
 		// Buffer is full, check if we can flush it.
-		int writable = pa_stream_writable_size(pa->stream) / 2;
+		int writable = pa_stream_writable_size(pa->stream) / 4;
 
 		if (writable < used)
 			return; // No can do.
 
 		// Yes, we can flush it. Let's do so.
-		if (0 > pa_simple_write(pa, buffer, BUFFER_SIZE * 2, &error))
+		if (0 > pa_simple_write(pa, buffer, BUFFER_SIZE * 4, &error))
 			sdk_panic("pa_simple_write failed, error=%i", error);
 
 		// We now have a nice, empty buffer.
@@ -89,7 +87,9 @@ void sdk_write_sample(int16_t left, int16_t right)
 	}
 
 	// Add the sample.
-	buffer[used++] = sample;
+	buffer[used][0] = left;
+	buffer[used][1] = right;
+	used++;
 }
 
 void sdk_read_sample(int16_t *left, int16_t *right)

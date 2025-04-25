@@ -38,59 +38,11 @@ struct ball {
 static struct paddle paddle1, paddle2;
 static struct ball ball;
 
-sdk_player_t player;
+const char *left_paddle_melody = "/i:square /bpm:100 /pll (f) C-";
+const char *right_paddle_melody = "/i:square /bpm:100 /prr (f) E-";
 
-sdk_track_square_t track_left_paddle = {
-	.track = {
-		.fn = sdk_play_square,
-		.base = 12000,
-		.peak = 20000,
-		.attack = 0.05 * SDK_AUDIO_RATE,
-		.decay = 0.05 * SDK_AUDIO_RATE,
-		.sustain = 0.10 * SDK_AUDIO_RATE,
-		.release = 0.10 * SDK_AUDIO_RATE,
-		.pan = -20000,
-	},
-	.frequency = 440,
-};
-
-sdk_track_square_t track_right_paddle = {
-	.track = {
-		.fn = sdk_play_square,
-		.base = 12000,
-		.peak = 20000,
-		.attack = 0.05 * SDK_AUDIO_RATE,
-		.decay = 0.05 * SDK_AUDIO_RATE,
-		.sustain = 0.10 * SDK_AUDIO_RATE,
-		.release = 0.10 * SDK_AUDIO_RATE,
-		.pan = 20000,
-	},
-	.frequency = 440 * 1.25,
-};
-
-sdk_track_noise_t track_left_miss = {
-	.track = {
-		.fn = sdk_play_noise,
-		.base = 8000,
-		.peak = 16000,
-		.attack = 0.05 * SDK_AUDIO_RATE,
-		.decay = 0.10 * SDK_AUDIO_RATE,
-		.release = 0.10 * SDK_AUDIO_RATE,
-		.pan = -20000,
-	},
-};
-
-sdk_track_noise_t track_right_miss = {
-	.track = {
-		.fn = sdk_play_noise,
-		.base = 8000,
-		.peak = 16000,
-		.attack = 0.05 * SDK_AUDIO_RATE,
-		.decay = 0.10 * SDK_AUDIO_RATE,
-		.release = 0.10 * SDK_AUDIO_RATE,
-		.pan = 20000,
-	},
-};
+const char *left_miss_melody = "/i:noise /bpm:100 /pll (mf) c-";
+const char *right_miss_melody = "/i:noise /bpm:100 /prr (mf) e-";
 
 static bool rects_overlap(int x0, int y0, int x1, int y1, int a0, int b0, int a1, int b1)
 {
@@ -125,15 +77,6 @@ static bool rects_overlap(int x0, int y0, int x1, int y1, int a0, int b0, int a1
 
 void game_start(void)
 {
-}
-
-void game_audio(int nsamples)
-{
-	for (int s = 0; s < nsamples; s++) {
-		int16_t left, right;
-		sdk_player_sample(&player, &left, &right);
-		sdk_write_sample(left, right);
-	}
 }
 
 static void new_round(void)
@@ -213,11 +156,11 @@ void game_input(unsigned dt_usec)
 
 		ball.x = PADDLE_WIDTH + 1;
 
-		sdk_add_track(&player, &track_left_paddle.track);
+		sdk_melody_play(left_paddle_melody);
 	} else if (ball.x < PADDLE_WIDTH - 1) {
 		// srazka s levou zdi
 		paddle2.score++;
-		sdk_add_track(&player, &track_left_miss.track);
+		sdk_melody_play(left_miss_melody);
 		new_round();
 	}
 
@@ -239,11 +182,11 @@ void game_input(unsigned dt_usec)
 
 		ball.x = TFT_RIGHT - PADDLE_WIDTH - BALL_WIDTH - 1;
 
-		sdk_add_track(&player, &track_right_paddle.track);
+		sdk_melody_play(right_paddle_melody);
 	} else if (ball.x + BALL_WIDTH > TFT_RIGHT - PADDLE_WIDTH + 1) {
 		// srazka s pravou zdi
 		paddle1.score++;
-		sdk_add_track(&player, &track_right_miss.track);
+		sdk_melody_play(right_miss_melody);
 		new_round();
 	}
 }
