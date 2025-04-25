@@ -195,12 +195,8 @@ bool sdk_melody_is_playing(const char *melody)
 static void stop_playing(sdk_melody_t *melody)
 {
 	melody->repeat = NULL;
-
-	while (*melody->cursor)
-		melody->cursor++;
-
-	unsigned end = melody->note.attack + melody->note.decay + melody->note.sustain;
-	melody->note.position = end;
+	melody->melody = "";
+	melody->cursor = "";
 }
 
 void sdk_melody_stop_playing(const char *melody)
