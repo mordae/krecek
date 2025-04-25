@@ -22,7 +22,6 @@ enum screen {
 
 static enum screen current_screen = GAME;
 static uint32_t start_time;
-static bool play_music = true;
 
 struct worm {
 	float x, y;
@@ -73,29 +72,14 @@ static struct worm worms_init[NUM_WORMS] = {
 
 };
 
-static uint16_t tones[256];
-static const char tune[] =
-	" ggahC g C g C g CChag D g D g D ggahC g C g C g CCDEF C F C F C FFEDC g C g C g CChag D g D g D";
+static const char music[] = "/i:square /bpm:60 { "
+			    "ggab C_g_ C_g_ C_g_ CCba g_D_ g_D_ g_D_ ggab C_g_ C_g_ C_g_ "
+			    "CCDE F_C_ F_C_ F_C_ FFED C_g_ C_g_ C_g_ CCba g_D_ g_D_ g_D_ "
+			    "}";
 
 void game_start(void)
 {
 	current_screen = GAME;
-
-	tones['c'] = 131;
-	tones['d'] = 147;
-	tones['e'] = 165;
-	tones['f'] = 175;
-	tones['g'] = 196;
-	tones['a'] = 220;
-	tones['h'] = 247;
-
-	tones['C'] = 261;
-	tones['D'] = 293;
-	tones['E'] = 329;
-	tones['F'] = 349;
-	tones['G'] = 392;
-	tones['A'] = 440; // <--
-	tones['H'] = 494;
 }
 
 void game_reset(void)
@@ -110,48 +94,7 @@ void game_reset(void)
 	}
 
 	memcpy(worms, worms_init, sizeof worms);
-	play_music = true;
-}
-
-void game_audio(int nsamples)
-{
-	static int ellapsed = 0;
-	static int tone_pos = 0;
-
-	if (!play_music) {
-		tone_pos = 0;
-		ellapsed = 0;
-
-		for (int s = 0; s < nsamples; s++)
-			sdk_write_sample(0, 0);
-
-		return;
-	}
-
-	for (int s = 0; s < nsamples; s++) {
-		if (ellapsed > SDK_AUDIO_RATE / 4) {
-			tone_pos++;
-			ellapsed = 0;
-		}
-
-		if (!tune[tone_pos]) {
-			tone_pos = 0;
-		}
-
-		int freq = tones[(unsigned)tune[tone_pos]];
-
-		if (freq) {
-			int period = SDK_AUDIO_RATE / freq;
-			int half_period = 2 * ellapsed / period;
-			int modulo = half_period & 1;
-			int16_t sample = 4000 * (modulo ? 1 : -1);
-			sdk_write_sample(sample, sample);
-		} else {
-			sdk_write_sample(0, 0);
-		}
-
-		ellapsed++;
-	}
+	sdk_melody_play(music);
 }
 
 float angle_diff(float a, float b)
@@ -295,7 +238,7 @@ static int pick_next_loser(uint32_t tod_better_than)
 
 static void paint_score()
 {
-	play_music = false;
+	sdk_melody_stop_playing(music);
 
 	if (sdk_inputs.start) {
 		game_reset();
