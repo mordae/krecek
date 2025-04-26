@@ -23,6 +23,7 @@ typedef enum {
 	SDK_MELODY_INSTRUMENT_PHI,	// Phi-derived patterns
 	SDK_MELODY_INSTRUMENT_PRNL,	// Pseudorandom noise loop
 	SDK_MELODY_INSTRUMENT_FLUTE,	// Flute-like sound
+	SDK_MELODY_INSTRUMENT_STRING,	// String-line sound
 } sdk_melody_instrument_t;
 
 // Tagged union for token data

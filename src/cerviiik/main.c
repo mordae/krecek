@@ -72,11 +72,11 @@ static struct worm worms_init[NUM_WORMS] = {
 
 };
 
-static const char music1[] = "/i:square /bpm:60 { "
+static const char music1[] = "/i:flute > /bpm:60 { "
 			     "ggab C_g_ C_g_ C_g_ ____ ____ ____ ____ ggab C_g_ C_g_ C_g_ "
 			     "CCDE F_C_ F_C_ F_C_ FFED C_g_ C_g_ C_g_ CCba g_D_ g_D_ g_D_ "
 			     "}";
-static const char music2[] = "/i:prnl /bpm:60 { "
+static const char music2[] = "/i:string /bpm:60 { "
 			     "____ ____ ____ ____ CCba g_D_ g_D_ g_D_ ____ ____ ____ ____ "
 			     "CCDE F_C_ F_C_ F_C_ FFED C_g_ C_g_ C_g_ CCba g_D_ g_D_ g_D_ "
 			     "}";
