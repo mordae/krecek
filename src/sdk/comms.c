@@ -34,8 +34,8 @@ static int64_t send_ir_bit(__unused alarm_id_t alarm, __unused void *arg)
 	bits_left--;
 
 	if (bit) {
-		pwm_set_wrap(slice, CLK_SYS_HZ / 20000);
-		pwm_set_chan_level(slice, chan, CLK_SYS_HZ / 20000 / 10);
+		pwm_set_wrap(slice, CLK_SYS_HZ / 14000);
+		pwm_set_chan_level(slice, chan, CLK_SYS_HZ / 14000 / 10);
 	} else {
 		pwm_set_wrap(slice, CLK_SYS_HZ / 10000);
 		pwm_set_chan_level(slice, chan, CLK_SYS_HZ / 10000 / 10);

@@ -9,6 +9,7 @@
 typedef enum {
 	MODE_INPUT = 0,
 	MODE_OUTPUT,
+	MODE_IR,
 	NUM_MODES,
 } Mode;
 
@@ -30,6 +31,7 @@ static Scale scale = SCALE_LINEAR;
 
 static int16_t audio_left[TFT_WIDTH];
 static int16_t audio_right[TFT_WIDTH];
+static int16_t audio_demod[TFT_WIDTH];
 static int audio_idx;
 static float test_freq = 1000;
 
@@ -41,9 +43,8 @@ void game_audio(int nsamples)
 			audio_idx = (audio_idx + 1) % TFT_WIDTH;
 		}
 
-		for (int i = 0; i < nsamples; i++) {
+		for (int i = 0; i < nsamples; i++)
 			sdk_write_sample(0, 0);
-		}
 	} else if (MODE_OUTPUT == mode) {
 		static uint32_t phase_left;
 		static uint32_t phase_right;
@@ -74,6 +75,41 @@ void game_audio(int nsamples)
 
 			sdk_write_sample(left, right);
 		}
+	} else if (MODE_IR == mode) {
+		static int seq = 0;
+		static int I, Q;
+		static int prev_phase;
+
+		for (int i = 0; i < nsamples; i++) {
+			int16_t left, right;
+			sdk_read_sample(&left, &right);
+
+			if (0 == seq) {
+				I = left;
+				seq++;
+			} else if (1 == seq) {
+				Q = left;
+				seq++;
+			} else if (2 == seq) {
+				I -= left;
+				seq++;
+			} else if (3 == seq) {
+				Q -= left;
+				seq = 0;
+
+				int phase = atan2f(Q, I) * (INT16_MAX / M_PI);
+
+				audio_left[audio_idx] = Q;
+				audio_right[audio_idx] = I;
+				audio_demod[audio_idx] = phase - prev_phase;
+
+				audio_idx = (audio_idx + 1) % TFT_WIDTH;
+				prev_phase = phase;
+			}
+		}
+
+		for (int i = 0; i < nsamples; i++)
+			sdk_write_sample(0, 0);
 	}
 }
 
@@ -81,25 +117,32 @@ void game_input(unsigned dt_usec)
 {
 	(void)dt_usec;
 
-	if (sdk_inputs_delta.start > 0)
+	if (sdk_inputs_delta.select > 0)
 		mode = (mode + 1) % NUM_MODES;
 
-	if (sdk_inputs_delta.select > 0)
-		wave = (wave + 1) % NUM_WAVES;
+	if (MODE_INPUT == mode) {
+		// Nothing yet.
+	} else if (MODE_OUTPUT == mode) {
+		if (sdk_inputs_delta.start > 0)
+			wave = (wave + 1) % NUM_WAVES;
+
+		if (sdk_inputs.y)
+			test_freq = MIN(test_freq * 1.01f, 20000);
+
+		if (sdk_inputs.a)
+			test_freq = MAX(test_freq * 0.99f, 100);
+	} else if (MODE_IR == mode) {
+		if (sdk_inputs_delta.start > 0)
+			sdk_send_ir(0xcafecafe);
+	}
 
 	if (sdk_inputs_delta.b > 0)
 		scale = (scale + 1) % NUM_SCALES;
-
-	if (sdk_inputs.y)
-		test_freq = MIN(test_freq * 1.01f, 20000);
-
-	if (sdk_inputs.a)
-		test_freq = MAX(test_freq * 0.99f, 100);
 }
 
 int sign(int x)
 {
-	return x > 0 ? 1 : -1;
+	return x >= 0 ? 1 : -1;
 }
 
 void game_paint(unsigned dt_usec)
@@ -112,6 +155,7 @@ void game_paint(unsigned dt_usec)
 						     rgb_to_rgb565(255, 63, 63);
 	uint16_t right_color = (MODE_INPUT == mode) ? rgb_to_rgb565(127, 127, 255) :
 						      rgb_to_rgb565(63, 255, 63);
+	uint16_t demod_color = rgb_to_rgb565(127, 127, 255);
 
 	char buf[32];
 
@@ -124,24 +168,37 @@ void game_paint(unsigned dt_usec)
 				      buf);
 	}
 
+	int left_baseline = TFT_HEIGHT / 4;
+	int right_baseline = TFT_HEIGHT * 3 / 4;
+	int demod_baseline = right_baseline;
+
+	if (MODE_IR == mode)
+		right_baseline = left_baseline;
+
 	for (int x = 0; x < TFT_WIDTH; x++) {
-		tft_draw_pixel(x, TFT_HEIGHT / 4, rgb_to_rgb565(63, 63, 63));
-		tft_draw_pixel(x, TFT_HEIGHT * 3 / 4, rgb_to_rgb565(63, 63, 63));
+		tft_draw_pixel(x, left_baseline, rgb_to_rgb565(63, 63, 63));
+		tft_draw_pixel(x, right_baseline, rgb_to_rgb565(63, 63, 63));
+		tft_draw_pixel(x, demod_baseline, rgb_to_rgb565(63, 63, 63));
 
 		int i = (audio_idx + TFT_WIDTH + x) % TFT_WIDTH;
 
-		int left = 0, right = 0;
+		int left = 0, right = 0, demod = 0;
 
 		if (SCALE_LINEAR == scale) {
 			left = audio_left[i] / 1093;
 			right = audio_right[i] / 1093;
+			demod = audio_demod[i] / 1093;
 		} else if (SCALE_LOG == scale) {
 			left = sign(audio_left[i]) * 2 * log2f(abs(audio_left[i]));
 			right = sign(audio_right[i]) * 2 * log2f(abs(audio_right[i]));
+			demod = sign(audio_demod[i]) * 2 * log2f(abs(audio_demod[i]));
 		}
 
-		tft_draw_pixel(x, TFT_HEIGHT / 4 + left, left_color);
-		tft_draw_pixel(x, TFT_HEIGHT * 3 / 4 + right, right_color);
+		tft_draw_pixel(x, left_baseline + left, left_color);
+		tft_draw_pixel(x, right_baseline + right, right_color);
+
+		if (MODE_IR == mode)
+			tft_draw_pixel(x, demod_baseline + demod, demod_color);
 	}
 }
 
