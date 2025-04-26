@@ -203,8 +203,8 @@ void sdk_melody_stop_playing(const char *melody)
 {
 	for (int i = 0; i < SDK_MAX_MELODIES; i++) {
 		if (melodies[i].melody == melody || melody == SDK_ALL_MELODIES ||
-		    (melody == SDK_ONLY_LOOPING && melodies[i].repeat) ||
-		    (melody == SDK_EXCEPT_LOOPING && !melodies[i].repeat)) {
+		    (melody == SDK_ALL_LOOPING && melodies[i].repeat) ||
+		    (melody == SDK_ALL_NOT_LOOPING && !melodies[i].repeat)) {
 			stop_playing(&melodies[i]);
 		}
 	}
@@ -214,8 +214,8 @@ void sdk_melody_stop_looping(const char *melody)
 {
 	for (int i = 0; i < SDK_MAX_MELODIES; i++) {
 		if (melodies[i].melody == melody || melody == SDK_ALL_MELODIES ||
-		    (melody == SDK_ONLY_LOOPING && melodies[i].repeat) ||
-		    (melody == SDK_EXCEPT_LOOPING && !melodies[i].repeat)) {
+		    (melody == SDK_ALL_LOOPING && melodies[i].repeat) ||
+		    (melody == SDK_ALL_NOT_LOOPING && !melodies[i].repeat)) {
 			melodies[i].repeat = NULL;
 		}
 	}

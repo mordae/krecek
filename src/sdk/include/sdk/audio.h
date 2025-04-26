@@ -95,15 +95,15 @@ bool sdk_melody_play(const char *melody);
 bool sdk_melody_is_playing(const char *melody);
 
 #define SDK_ALL_MELODIES (const char *)0
-#define SDK_ONLY_LOOPING (const char *)1
-#define SDK_EXCEPT_LOOPING (const char *)2
+#define SDK_ALL_LOOPING (const char *)1
+#define SDK_ALL_NOT_LOOPING (const char *)2
 
 /*
  * Stop playing given melody, fading it out.
  *
  * There are special constants you can use here instead of a specific
- * melody. SDK_ALL_MELODIES will stop all melodies. SDK_ONLY_LOOPING will
- * stop and fade out only those that are loopable, SDK_EXCEPT_LOOPING will
+ * melody. SDK_ALL_MELODIES will stop all melodies. SDK_ALL_LOOPING will
+ * stop and fade out only those that are loopable, SDK_ALL_NOT_LOOPING will
  * stop and fade those that are not loopable, leaving loops alone.
  */
 void sdk_melody_stop_playing(const char *melody);
@@ -111,8 +111,8 @@ void sdk_melody_stop_playing(const char *melody);
 /*
  * Disable looping for given melody, having it end naturally.
  *
- * If NULL, SDK_ALL_MELODIES or SDK_ONLY_LOOPING is given instead of a
+ * If NULL, SDK_ALL_MELODIES or SDK_ALL_LOOPING is given instead of a
  * specific melody, all currently playing (looping) melodies are affected.
- * Passing SDK_EXCEPT_LOOPING accomplishes nothing.
+ * Passing SDK_ALL_NOT_LOOPING accomplishes nothing.
  */
 void sdk_melody_stop_looping(const char *melody);
