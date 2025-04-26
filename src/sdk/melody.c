@@ -4,6 +4,13 @@
 #include <stdio.h>
 #include <string.h>
 
+#if defined(KRECEK)
+#include <pico/mutex.h>
+auto_init_mutex(melodies_mutex);
+#else
+static int melodies_mutex = 0;
+#endif
+
 #if !defined(SDK_MAX_MELODIES)
 #define SDK_MAX_MELODIES 16
 #endif
@@ -79,6 +86,30 @@ typedef struct sdk_melody {
 
 static sdk_melody_t melodies[SDK_MAX_MELODIES];
 
+static void lock_melodies(void)
+{
+#if defined(KRECEK)
+	mutex_enter_blocking(&melodies_mutex);
+#else
+	melodies_mutex++;
+
+	if (melodies_mutex >= 2)
+		printf("melodies_mutex = %i\n", melodies_mutex);
+#endif
+}
+
+static void unlock_melodies(void)
+{
+#if defined(KRECEK)
+	mutex_exit(&melodies_mutex);
+#else
+	melodies_mutex--;
+
+	if (melodies_mutex < 0)
+		printf("melodies_mutex = %i\n", melodies_mutex);
+#endif
+}
+
 static void advance(sdk_melody_t *melody)
 {
 	bool empty_loop = false;
@@ -88,11 +119,16 @@ static void advance(sdk_melody_t *melody)
 
 		switch (token.type) {
 		case SDK_MELODY_TOKEN_ERROR:
+			printf("melody: invalid token: %s", melody->cursor);
+			lock_melodies();
 			memset(melody, 0, sizeof(*melody));
+			unlock_melodies();
 			return;
 
 		case SDK_MELODY_TOKEN_END:
+			lock_melodies();
 			memset(melody, 0, sizeof(*melody));
+			unlock_melodies();
 			return;
 
 		case SDK_MELODY_TOKEN_BPM:
@@ -126,7 +162,9 @@ static void advance(sdk_melody_t *melody)
 			if (melody->repeat) {
 				if (empty_loop) {
 					printf("melody: empty loop: %s", melody->repeat);
+					lock_melodies();
 					memset(melody, 0, sizeof(*melody));
+					unlock_melodies();
 					return;
 				}
 
@@ -155,7 +193,6 @@ static void advance(sdk_melody_t *melody)
 
 static void setup(sdk_melody_t *melody, const char *str)
 {
-	melody->melody = str;
 	melody->cursor = str;
 	melody->repeat = strchr(str, '{');
 	melody->octave = BASE_OCTAVE;
@@ -164,31 +201,48 @@ static void setup(sdk_melody_t *melody, const char *str)
 	melody->synth = synth_sine;
 	melody->panning = 3;
 
-	if (melody->repeat)
-		melody->repeat++;
-
-	advance(melody);
+	// This has to come last since that's what the sampler checks.
+	// Once we turn it non-null, it will try to advance it.
+	melody->melody = str;
 }
 
 bool sdk_melody_play(const char *melody)
 {
+	lock_melodies();
+
+	int free_spot = -1;
+
 	for (int i = 0; i < SDK_MAX_MELODIES; i++) {
-		if (!melodies[i].melody) {
-			setup(&melodies[i], melody);
-			return true;
+		if (melody == melodies[i].melody) {
+			unlock_melodies();
+			return false;
+		} else if (!melodies[i].melody) {
+			free_spot = i;
 		}
 	}
 
-	return false;
+	if (free_spot < 0) {
+		unlock_melodies();
+		return false;
+	}
+
+	setup(&melodies[free_spot], melody);
+	unlock_melodies();
+	return true;
 }
 
 bool sdk_melody_is_playing(const char *melody)
 {
+	lock_melodies();
+
 	for (int i = 0; i < SDK_MAX_MELODIES; i++) {
-		if (melody == melodies[i].melody)
+		if (melody == melodies[i].melody) {
+			unlock_melodies();
 			return true;
+		}
 	}
 
+	unlock_melodies();
 	return false;
 }
 
@@ -201,24 +255,38 @@ static void stop_playing(sdk_melody_t *melody)
 
 void sdk_melody_stop_playing(const char *melody)
 {
+	lock_melodies();
+
 	for (int i = 0; i < SDK_MAX_MELODIES; i++) {
+		if (!melodies[i].melody)
+			continue;
+
 		if (melodies[i].melody == melody || melody == SDK_ALL_MELODIES ||
 		    (melody == SDK_ALL_LOOPING && melodies[i].repeat) ||
 		    (melody == SDK_ALL_NOT_LOOPING && !melodies[i].repeat)) {
 			stop_playing(&melodies[i]);
 		}
 	}
+
+	unlock_melodies();
 }
 
 void sdk_melody_stop_looping(const char *melody)
 {
+	lock_melodies();
+
 	for (int i = 0; i < SDK_MAX_MELODIES; i++) {
+		if (!melodies[i].melody)
+			continue;
+
 		if (melodies[i].melody == melody || melody == SDK_ALL_MELODIES ||
 		    (melody == SDK_ALL_LOOPING && melodies[i].repeat) ||
 		    (melody == SDK_ALL_NOT_LOOPING && !melodies[i].repeat)) {
 			melodies[i].repeat = NULL;
 		}
 	}
+
+	unlock_melodies();
 }
 
 static int16_t synth_sine(uint32_t position, uint32_t step)
