@@ -85,6 +85,8 @@ static const char music3[] = "/i:sine << /bpm:60 { "
 			     "CCDE F_C_ F_C_ F_C_ FFED C_g_ C_g_ C_g_ CCba g_D_ g_D_ g_D_ "
 			     "}";
 
+static sdk_melody_t *melody1, *melody2, *melody3;
+
 void game_start(void)
 {
 	current_screen = GAME;
@@ -102,9 +104,9 @@ void game_reset(void)
 	}
 
 	memcpy(worms, worms_init, sizeof worms);
-	sdk_melody_play(music1);
-	sdk_melody_play(music2);
-	sdk_melody_play(music3);
+	melody1 = sdk_melody_play_get(music1);
+	melody2 = sdk_melody_play_get(music2);
+	melody3 = sdk_melody_play_get(music3);
 }
 
 float angle_diff(float a, float b)
@@ -248,7 +250,12 @@ static int pick_next_loser(uint32_t tod_better_than)
 
 static void paint_score()
 {
-	sdk_melody_stop_playing(SDK_ALL_MELODIES);
+	if (melody1) {
+		sdk_melody_stop_and_release(melody1);
+		sdk_melody_stop_and_release(melody2);
+		sdk_melody_stop_and_release(melody3);
+		melody1 = melody2 = melody3 = NULL;
+	}
 
 	if (sdk_inputs.start) {
 		game_reset();

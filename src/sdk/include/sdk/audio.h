@@ -26,6 +26,10 @@ void sdk_write_sample(int16_t left, int16_t right);
 /* Input a stereo audio sample. */
 void sdk_read_sample(int16_t *left, int16_t *right);
 
+/* Opaque handle for playing melodies. */
+struct sdk_melody;
+typedef struct sdk_melody sdk_melody_t;
+
 /*
  * Sample melody player.
  *
@@ -37,82 +41,70 @@ void sdk_melody_sample(int16_t *left, int16_t *right);
 /*
  * Start playing given melody.
  *
- * Melody string has following syntax:
- *
- * <instrument> <tempo> [bar-1] [misc-1] [bar-2] ... [misc-m] [bar-n]
- *
- * Where instrument is one of "sine", "square" or "noise".
- * Tempo is a number of beats per minute (BPM). Use 120 if unsure.
- *
- * Bars are little bit more involved. Base duration of a note is fourth.
- * You can use spaces freely to group notes for readability. Underscores
- * are rests and dashes make the notes last longer. For example:
- *
- * cece g-gg cece d-dd cege dde_ cege ddc-
- *
- * Lower case 'a' is A4 or 440 Hz. Upper case 'a' is A5 or 880 Hz.
- * In order to change the scales, you must use misc symbol '<' or '>'.
- *
- * '<' moves following notes an octave lower, so 'a' would be 220 Hz.
- * Using '<<' places 'a' at 110 Hz and 'A' at 220 Hz.
- *
- * '>' moves following notes an octave higher. So '>>' places 'a' at
- * whopping 1760 Hz and 'A' at 3520 Hz.
- *
- * Everything is C-major, so 'c' is C4 by default, at ~261.63 Hz,
- * sharps are available and parsed properly. So the whole range is:
+ * Melody is composed from 1/4 notes that can be extended up to 8/4.
+ * Whole range is two octaves and sharps are supported as well.
  *
  * c c# d d# e f f# g g# a a# b C C# D D# E F F# G G# A A# B
  *
- * Sharps need to be close to the note, so if you want a long one,
- * use "g#-f#- g#---".
+ * To extend note duration, use '-'. To insert rest, use '_'.
+ * For example:
  *
- * Another pair of special symbols are '[' and ']'. These increase and
- * decrease volume by 1/5 respectively. Base melody amplitude starts at
- * roughly 1/2 of the maximum, so "[[ a--- ]]" gives us roughly 48% of
- * maximum and "[[[[ a--- ]]]]" 69% of maximum.
+ * cece g-gg cece d-dd cege dde_ cege ddc-
  *
- * There are also '(' and ')', which act identically, except in reverse.
- * The '(' lowers the volume and ')' increases it. Those are mainly for
- * those of us who dislike unbalanced parenthesis.
+ * Default instrument is sine wave, playing at 120 BPM.
+ * These can be modified at any point. Like this:
  *
- * And finally, there is looping. Using '{' and '}' marks part of the
- * melody that is played in an infinite loop. This looping can be stopped
- * with functions below and in most cases the melody will then proceed to
- * play out to the natural conclusion after the closing '}'.
+ * /i:square cece /bpm:60 /i:sine g /bpm:120 gg /i:square d-dd
  *
- * Returns `false` when there is no space for another melody.
+ * Lowercase 'a' is A4 or 440 Hz. Uppercase 'A' is A5 or 880 Hz.
+ * You can use symbols '<' and '>' to shift scale down (or up) one octave.
+ *
+ * Volume can be adjusted by using dynamic marks that go like (from the
+ * quietest to the loudest):
+ *
+ * (ppp) c (pp) c (p) c (mp) c (mf) c (f) c (ff) c (fff) c
+ *
+ * Default is (mp).
+ *
+ * Marks '{' and '}' establish an infinitely looping segment. Anything in
+ * between will be repeated forever.
+ *
+ * Function returns `NULL` when there is no space for another melody.
+ *
+ * You have to call `sdk_melody_release()` once you are done with the melody.
+ * It will keep playing until it finishes or, in case it loops, will play
+ * forever. If you wish to stop the melody prematurely or just disable the
+ * looping and let it finish naturally, use proper combination of the
+ * procedures listed below.
+ */
+sdk_melody_t *sdk_melody_play_get(const char *melody);
+
+/*
+ * Shortcut to call sdk_melody_release(sdk_melody_play_get()).
+ * Returns `true` if a slot was found and `false` if not.
  */
 bool sdk_melody_play(const char *melody);
 
 /*
- * Check if given melody is currently playing.
- *
- * This compares the melodies by pointer address, not by the contents,
- * so you need to use the very same object. Ideally keep the medies in
- * static variables and use those.
+ * Check if given melody is still playing.
  */
-bool sdk_melody_is_playing(const char *melody);
-
-#define SDK_ALL_MELODIES (const char *)0
-#define SDK_ALL_LOOPING (const char *)1
-#define SDK_ALL_NOT_LOOPING (const char *)2
+bool sdk_melody_is_playing(sdk_melody_t *melody);
 
 /*
- * Stop playing given melody, fading it out.
- *
- * There are special constants you can use here instead of a specific
- * melody. SDK_ALL_MELODIES will stop all melodies. SDK_ALL_LOOPING will
- * stop and fade out only those that are loopable, SDK_ALL_NOT_LOOPING will
- * stop and fade those that are not loopable, leaving loops alone.
+ * Stop playing given melody after current note or rest ends,
+ * releasing the handle so that the slot can be reused.
  */
-void sdk_melody_stop_playing(const char *melody);
+void sdk_melody_stop_and_release(sdk_melody_t *melody);
 
 /*
  * Disable looping for given melody, having it end naturally.
- *
- * If NULL, SDK_ALL_MELODIES or SDK_ALL_LOOPING is given instead of a
- * specific melody, all currently playing (looping) melodies are affected.
- * Passing SDK_ALL_NOT_LOOPING accomplishes nothing.
+ * You still need to call sdk_melody_release() at some point.
  */
-void sdk_melody_stop_looping(const char *melody);
+void sdk_melody_stop_looping(sdk_melody_t *melody);
+
+/*
+ * Release the melody so that the slot can be reused.
+ * Melody will continue playing until it ends.
+ * If it loops, it will keep playing indefinitely.
+ */
+void sdk_melody_release(sdk_melody_t *melody);

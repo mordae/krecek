@@ -6,13 +6,11 @@
 
 #if defined(KRECEK)
 #include <pico/mutex.h>
-auto_init_mutex(melodies_mutex);
+auto_init_mutex(freelist_mutex);
+auto_init_mutex(pending_mutex);
 #else
-static int melodies_mutex = 0;
-#endif
-
-#if !defined(SDK_MAX_MELODIES)
-#define SDK_MAX_MELODIES 16
+static int freelist_mutex = 0;
+static int pending_mutex = 0;
 #endif
 
 typedef int16_t (*synth_fn)(uint32_t position, uint32_t step);
@@ -64,7 +62,9 @@ static const uint32_t tones[NUM_TONES] = {
 	493.8833 * 64 * HZ, // B5
 };
 
-typedef struct sdk_melody {
+struct sdk_melody {
+	struct sdk_melody *next; /* Next melody in either active or free list. */
+
 	const char *melody; /* Whole melody string. */
 	const char *cursor; /* Cursor into the melody to play next. */
 	const char *repeat; /* Cursor to return to on '}'. */
@@ -75,6 +75,8 @@ typedef struct sdk_melody {
 	uint8_t volume;	   /* Current volume table index. */
 	uint8_t panning;   /* Panning from 0 (L) through 3 (C) to 6 (R). */
 
+	bool released; /* Has been released and can be recycled. */
+
 	synth_fn synth;
 
 	struct {
@@ -82,31 +84,77 @@ typedef struct sdk_melody {
 		uint32_t position;
 		uint32_t step;
 	} note;
-} sdk_melody_t;
+};
 
-static sdk_melody_t melodies[SDK_MAX_MELODIES];
+#define MAX_MELODIES 16
+static sdk_melody_t melodies[MAX_MELODIES] = {
+	{ .next = &melodies[1] },  { .next = &melodies[2] },
+	{ .next = &melodies[3] },  { .next = &melodies[4] },
+	{ .next = &melodies[5] },  { .next = &melodies[6] },
+	{ .next = &melodies[7] },  { .next = &melodies[8] },
+	{ .next = &melodies[9] },  { .next = &melodies[10] },
+	{ .next = &melodies[11] }, { .next = &melodies[12] },
+	{ .next = &melodies[13] }, { .next = &melodies[14] },
+	{ .next = &melodies[15] }, {},
+};
 
-static void lock_melodies(void)
+static sdk_melody_t *playing = NULL;
+static sdk_melody_t *freelist = &melodies[0];
+static sdk_melody_t *pending = NULL;
+
+static const sdk_melody_t template = {
+	.octave = BASE_OCTAVE,
+	.volume = BASE_VOLUME,
+	.duration = SDK_AUDIO_RATE * 15 / 120,
+	.synth = synth_sine,
+	.panning = 3,
+};
+
+static void lock_freelist(void)
 {
 #if defined(KRECEK)
-	mutex_enter_blocking(&melodies_mutex);
+	mutex_enter_blocking(&freelist_mutex);
 #else
-	melodies_mutex++;
+	freelist_mutex++;
 
-	if (melodies_mutex >= 2)
-		printf("melodies_mutex = %i\n", melodies_mutex);
+	if (freelist_mutex >= 2)
+		printf("freelist_mutex = %i\n", freelist_mutex);
 #endif
 }
 
-static void unlock_melodies(void)
+static void unlock_freelist(void)
 {
 #if defined(KRECEK)
-	mutex_exit(&melodies_mutex);
+	mutex_exit(&freelist_mutex);
 #else
-	melodies_mutex--;
+	freelist_mutex--;
 
-	if (melodies_mutex < 0)
-		printf("melodies_mutex = %i\n", melodies_mutex);
+	if (freelist_mutex < 0)
+		printf("freelist_mutex = %i\n", freelist_mutex);
+#endif
+}
+
+static void lock_pending(void)
+{
+#if defined(KRECEK)
+	mutex_enter_blocking(&pending_mutex);
+#else
+	pending_mutex++;
+
+	if (pending_mutex >= 2)
+		printf("pending_mutex = %i\n", pending_mutex);
+#endif
+}
+
+static void unlock_pending(void)
+{
+#if defined(KRECEK)
+	mutex_exit(&pending_mutex);
+#else
+	pending_mutex--;
+
+	if (pending_mutex < 0)
+		printf("pending_mutex = %i\n", pending_mutex);
 #endif
 }
 
@@ -120,15 +168,11 @@ static void advance(sdk_melody_t *melody)
 		switch (token.type) {
 		case SDK_MELODY_TOKEN_ERROR:
 			printf("melody: invalid token: %s", melody->cursor);
-			lock_melodies();
-			memset(melody, 0, sizeof(*melody));
-			unlock_melodies();
+			melody->melody = NULL;
 			return;
 
 		case SDK_MELODY_TOKEN_END:
-			lock_melodies();
-			memset(melody, 0, sizeof(*melody));
-			unlock_melodies();
+			melody->melody = NULL;
 			return;
 
 		case SDK_MELODY_TOKEN_BPM:
@@ -162,9 +206,7 @@ static void advance(sdk_melody_t *melody)
 			if (melody->repeat) {
 				if (empty_loop) {
 					printf("melody: empty loop: %s", melody->repeat);
-					lock_melodies();
-					memset(melody, 0, sizeof(*melody));
-					unlock_melodies();
+					melody->melody = NULL;
 					return;
 				}
 
@@ -191,102 +233,83 @@ static void advance(sdk_melody_t *melody)
 	}
 }
 
-static void setup(sdk_melody_t *melody, const char *str)
+static void recycle(sdk_melody_t *slot)
 {
-	melody->cursor = str;
-	melody->repeat = strchr(str, '{');
-	melody->octave = BASE_OCTAVE;
-	melody->volume = BASE_VOLUME;
-	melody->duration = SDK_AUDIO_RATE * 15 / 120;
-	melody->synth = synth_sine;
-	melody->panning = 3;
+	lock_freelist();
+	slot->next = freelist;
+	freelist = slot;
+	unlock_freelist();
+}
 
-	// This has to come last since that's what the sampler checks.
-	// Once we turn it non-null, it will try to advance it.
-	melody->melody = str;
+sdk_melody_t *sdk_melody_play_get(const char *melody)
+{
+	if (!freelist) {
+		printf("melody: no free slots\n");
+		return NULL;
+	}
+
+	lock_freelist();
+	sdk_melody_t *slot = freelist;
+	freelist = freelist->next;
+	unlock_freelist();
+
+	*slot = template;
+	slot->melody = melody;
+	slot->cursor = melody;
+	slot->repeat = strchr(melody, '{');
+
+	lock_pending();
+	slot->next = pending;
+	pending = slot;
+	unlock_pending();
+
+	return slot;
 }
 
 bool sdk_melody_play(const char *melody)
 {
-	lock_melodies();
+	sdk_melody_t *slot = sdk_melody_play_get(melody);
 
-	int free_spot = -1;
-
-	for (int i = 0; i < SDK_MAX_MELODIES; i++) {
-		if (melody == melodies[i].melody) {
-			unlock_melodies();
-			return false;
-		} else if (!melodies[i].melody) {
-			free_spot = i;
-		}
-	}
-
-	if (free_spot < 0) {
-		unlock_melodies();
+	if (!slot)
 		return false;
-	}
 
-	setup(&melodies[free_spot], melody);
-	unlock_melodies();
+	sdk_melody_release(slot);
 	return true;
 }
 
-bool sdk_melody_is_playing(const char *melody)
+bool sdk_melody_is_playing(sdk_melody_t *melody)
 {
-	lock_melodies();
+	if (!melody)
+		return false;
 
-	for (int i = 0; i < SDK_MAX_MELODIES; i++) {
-		if (melody == melodies[i].melody) {
-			unlock_melodies();
-			return true;
-		}
-	}
-
-	unlock_melodies();
-	return false;
+	return !!melody->melody;
 }
 
-static void stop_playing(sdk_melody_t *melody)
+void sdk_melody_stop_and_release(sdk_melody_t *melody)
 {
+	if (!melody)
+		return;
+
 	melody->repeat = NULL;
 	melody->melody = "";
 	melody->cursor = "";
+	melody->released = true;
 }
 
-void sdk_melody_stop_playing(const char *melody)
+void sdk_melody_stop_looping(sdk_melody_t *melody)
 {
-	lock_melodies();
+	if (!melody)
+		return;
 
-	for (int i = 0; i < SDK_MAX_MELODIES; i++) {
-		if (!melodies[i].melody)
-			continue;
-
-		if (melodies[i].melody == melody || melody == SDK_ALL_MELODIES ||
-		    (melody == SDK_ALL_LOOPING && melodies[i].repeat) ||
-		    (melody == SDK_ALL_NOT_LOOPING && !melodies[i].repeat)) {
-			stop_playing(&melodies[i]);
-		}
-	}
-
-	unlock_melodies();
+	melody->repeat = NULL;
 }
 
-void sdk_melody_stop_looping(const char *melody)
+void sdk_melody_release(sdk_melody_t *melody)
 {
-	lock_melodies();
+	if (!melody)
+		return;
 
-	for (int i = 0; i < SDK_MAX_MELODIES; i++) {
-		if (!melodies[i].melody)
-			continue;
-
-		if (melodies[i].melody == melody || melody == SDK_ALL_MELODIES ||
-		    (melody == SDK_ALL_LOOPING && melodies[i].repeat) ||
-		    (melody == SDK_ALL_NOT_LOOPING && !melodies[i].repeat)) {
-			melodies[i].repeat = NULL;
-		}
-	}
-
-	unlock_melodies();
+	melody->released = true;
 }
 
 static int16_t synth_sine(uint32_t position, uint32_t step)
@@ -338,68 +361,98 @@ void sdk_melody_sample(int16_t *left, int16_t *right)
 	int accleft = 0;
 	int accright = 0;
 
-	for (int i = 0; i < SDK_MAX_MELODIES; i++) {
-		sdk_melody_t *melody = &melodies[i];
+	if (pending) {
+		lock_pending();
 
-		if (!melody->melody)
-			continue;
+		while (pending) {
+			sdk_melody_t *next = pending->next;
+			pending->next = playing;
+			playing = pending;
+			pending = next;
+		}
 
-		if (melody->rest > 0) {
-			melody->rest--;
+		unlock_pending();
+	}
 
-			if (!melody->rest)
-				advance(melody);
+	sdk_melody_t **ptr = &playing;
+
+	for (sdk_melody_t *iter = playing; iter; iter = iter->next) {
+next:
+		if (!iter->melody) {
+			if (!iter->released)
+				continue;
+
+			sdk_melody_t *slot = iter;
+			iter = iter->next;
+			*ptr = iter;
+
+			recycle(slot);
+
+			if (iter) {
+				goto next;
+			} else {
+				break;
+			}
+		}
+
+		ptr = &iter->next;
+
+		if (iter->rest > 0) {
+			iter->rest--;
+
+			if (!iter->rest)
+				advance(iter);
 
 			continue;
 		}
 
 		int16_t amplitude;
 
-		uint32_t offset = melody->note.position;
-		uint32_t milestone = melody->note.attack;
+		uint32_t offset = iter->note.position;
+		uint32_t milestone = iter->note.attack;
 
-		int peak = volumes[melody->volume];
+		int peak = volumes[iter->volume];
 		int base = (3 * peak) >> 2;
 
-		if (melody->note.position < milestone) {
-			amplitude = lerp(0, peak, offset, melody->note.attack);
+		if (iter->note.position < milestone) {
+			amplitude = lerp(0, peak, offset, iter->note.attack);
 			goto sample;
 		}
 
-		offset -= melody->note.attack;
-		milestone += melody->note.decay;
+		offset -= iter->note.attack;
+		milestone += iter->note.decay;
 
-		if (melody->note.position < milestone) {
-			amplitude = lerp(peak, base, offset, melody->note.decay);
+		if (iter->note.position < milestone) {
+			amplitude = lerp(peak, base, offset, iter->note.decay);
 			goto sample;
 		}
 
-		offset -= melody->note.decay;
-		milestone += melody->note.sustain;
+		offset -= iter->note.decay;
+		milestone += iter->note.sustain;
 
-		if (melody->note.position < milestone) {
+		if (iter->note.position < milestone) {
 			amplitude = base;
 			goto sample;
 		}
 
-		offset -= melody->note.sustain;
-		milestone += melody->note.release;
+		offset -= iter->note.sustain;
+		milestone += iter->note.release;
 
-		if (melody->note.position < milestone) {
-			amplitude = lerp(base, 0, offset, melody->note.release);
+		if (iter->note.position < milestone) {
+			amplitude = lerp(base, 0, offset, iter->note.release);
 			goto sample;
 		}
 
 		// Note is finished playing.
-		advance(melody);
+		advance(iter);
 		continue;
 
 sample:
-		int sample = melody->synth(melody->note.position++, melody->note.step);
+		int sample = iter->synth(iter->note.position++, iter->note.step);
 		sample = (sample * amplitude) >> 16;
 
-		accleft += lerp(sample, 0, melody->panning, 6);
-		accright += lerp(0, sample, melody->panning, 6);
+		accleft += lerp(sample, 0, iter->panning, 6);
+		accright += lerp(0, sample, iter->panning, 6);
 	}
 
 	*left = clamp(accleft, INT16_MIN, INT16_MAX);
