@@ -1,7 +1,7 @@
-#include <math.h>
 #include <sdk/audio.h>
 #include <sdk/melody-lexer.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #if defined(KRECEK)
@@ -13,16 +13,17 @@ static int freelist_mutex = 0;
 static int pending_mutex = 0;
 #endif
 
-typedef int16_t (*synth_fn)(uint32_t position, uint32_t step);
+typedef int (*synth_fn)(uint32_t position, uint32_t step);
 
-static int16_t synth_sine(uint32_t position, uint32_t step);
-static int16_t synth_square(uint32_t position, uint32_t step);
-static int16_t synth_phi(uint32_t position, uint32_t step);
-static int16_t synth_noise(uint32_t position, uint32_t step);
-static int16_t synth_prnl(uint32_t position, uint32_t step);
+static int synth_sine(uint32_t position, uint32_t step);
+static int synth_square(uint32_t position, uint32_t step);
+static int synth_phi(uint32_t position, uint32_t step);
+static int synth_noise(uint32_t position, uint32_t step);
+static int synth_prnl(uint32_t position, uint32_t step);
+static int synth_flute(uint32_t position, uint32_t step);
 
 static synth_fn instruments[] = {
-	synth_sine, synth_square, synth_noise, synth_phi, synth_prnl,
+	synth_sine, synth_square, synth_noise, synth_phi, synth_prnl, synth_flute,
 };
 
 #define BASE_VOLUME 3
@@ -312,12 +313,25 @@ void sdk_melody_release(sdk_melody_t *melody)
 	melody->released = true;
 }
 
-static int16_t synth_sine(uint32_t position, uint32_t step)
+inline static int fakesin(uint32_t phase)
 {
-	return INT16_MAX * sinf((int)(position * step) * (float)M_PI / (1 << 31));
+	int x = (int)phase >> 16;
+	return x - ((x * abs(x)) >> 15);
 }
 
-static int16_t synth_square(uint32_t position, uint32_t step)
+static int synth_sine(uint32_t position, uint32_t step)
+{
+	return fakesin(position * step) << 2;
+}
+
+static int synth_flute(uint32_t position, uint32_t step)
+{
+	float y0 = fakesin(position * step) << 1;
+	float y1 = fakesin(position * step * 2 - (1 << 31)) << 1;
+	return y0 + y1;
+}
+
+static int synth_square(uint32_t position, uint32_t step)
 {
 	return (int)(position * step) >= 0 ? INT16_MAX : -INT16_MAX;
 }
@@ -339,19 +353,19 @@ inline static int16_t pseudorandom_noise(uint32_t position)
 	return value >> 16;
 }
 
-static int16_t synth_prnl(uint32_t position, uint32_t step)
+static int synth_prnl(uint32_t position, uint32_t step)
 {
 	int period = UINT32_MAX / step;
 	return pseudorandom_noise(position % period);
 }
 
-static int16_t synth_noise(uint32_t position, uint32_t step)
+static int synth_noise(uint32_t position, uint32_t step)
 {
 	(void)step;
 	return pseudorandom_noise(position);
 }
 
-static int16_t synth_phi(uint32_t position, uint32_t step)
+static int synth_phi(uint32_t position, uint32_t step)
 {
 	return (0x9e3779b9u * (position * step)) >> 16;
 }
