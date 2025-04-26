@@ -1,0 +1,7 @@
+#!/bin/bash -ex
+
+perf script -F ip --no-header >hotspots.txt
+objdump --disassemble --source "${1}" >disassembly.txt
+addr2line -e "${1}" -af @hotspots.txt >lines.txt
+
+# EOF
