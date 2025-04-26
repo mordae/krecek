@@ -2,16 +2,16 @@
 
 .program pio_i2s_rx
 .side_set 2
-.wrap_target
 
                       ;      ,--- SCLK
                       ;      |,-- LRCK
 public entry_point:   ;      ||
+.wrap_target          ;      ||
     irq clear 7       side 0b01
     set x, 31         side 0b11
 
-    nop               side 0b01
-    nop               side 0b11
+    nop               side 0b00
+    nop               side 0b10
 
 bitloop:
     // Get the bits.

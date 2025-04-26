@@ -146,6 +146,27 @@ int nau88c22_start(nau88c22_driver_t drv)
 	};
 	return_on_error(write_reg(drv, &aif));
 
+	struct LeftTimeSlot lts = {
+		.addr = LEFT_TIME_SLOT_ADDR,
+		.LTSLOT = 1,
+	};
+	return_on_error(write_reg(drv, &lts));
+
+	struct RightTimeSlot rts = {
+		.addr = RIGHT_TIME_SLOT_ADDR,
+		.RTSLOT = 17,
+	};
+	return_on_error(write_reg(drv, &rts));
+
+	struct Misc misc = {
+		.addr = MISC_ADDR,
+		.PUDEN = 1,
+		.PCMTSEN = 1,
+		.LTSLOT = 0,
+		.RTSLOT = 0,
+	};
+	return_on_error(write_reg(drv, &misc));
+
 	struct ClockControl1 clock1 = {
 		.addr = CLOCK_CONTROL_1_ADDR,
 		.CLKM = 0,    // Use MCLK directly
@@ -281,12 +302,6 @@ int nau88c22_start(nau88c22_driver_t drv)
 		.HPFEN = 1, // Enable high-pass filter at ~4 Hz
 	};
 	return_on_error(write_reg(drv, &adcctrl));
-
-	struct MiscControls miscctrl = {
-		.addr = MISC_CONTROLS_ADDR,
-		.DACOSR256 = 1,
-	};
-	return_on_error(write_reg(drv, &miscctrl));
 
 #if 0
 	struct EQ1LowCutoff eq1 = {
