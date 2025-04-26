@@ -268,6 +268,7 @@ int nau88c22_start(nau88c22_driver_t drv)
 	struct RightADCBoost radcbst = {
 		.addr = RIGHT_ADC_BOOST_ADDR,
 		.RPGABSTGAIN = 0b101, // Right PGA to RADC at +0 dB
+		.RPGABST = 0,	      // Right PGA +20 dB boost
 	};
 	return_on_error(write_reg(drv, &radcbst));
 

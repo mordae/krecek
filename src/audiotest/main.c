@@ -3,6 +3,7 @@
 
 #include <sdk.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <tft.h>
 
 typedef enum {
@@ -17,8 +18,15 @@ typedef enum {
 	NUM_WAVES,
 } Wave;
 
+typedef enum {
+	SCALE_LINEAR = 0,
+	SCALE_LOG,
+	NUM_SCALES,
+} Scale;
+
 static Mode mode = MODE_INPUT;
 static Wave wave = WAVE_SINE;
+static Scale scale = SCALE_LINEAR;
 
 static int16_t audio_left[TFT_WIDTH];
 static int16_t audio_right[TFT_WIDTH];
@@ -79,6 +87,9 @@ void game_input(unsigned dt_usec)
 	if (sdk_inputs_delta.select > 0)
 		wave = (wave + 1) % NUM_WAVES;
 
+	if (sdk_inputs_delta.b > 0)
+		scale = (scale + 1) % NUM_SCALES;
+
 	if (sdk_inputs.y)
 		test_freq = MIN(test_freq * 1.01f, 20000);
 
@@ -102,10 +113,15 @@ void game_paint(unsigned dt_usec)
 	uint16_t right_color = (MODE_INPUT == mode) ? rgb_to_rgb565(127, 127, 255) :
 						      rgb_to_rgb565(63, 255, 63);
 
+	char buf[32];
+
 	if (MODE_OUTPUT == mode) {
-		char buf[32];
 		sprintf(buf, "%s %.0f Hz", wave == WAVE_SINE ? "sine" : "square", test_freq);
 		tft_draw_string_right(TFT_WIDTH - 1, 0, rgb_to_rgb565(127, 127, 127), buf);
+	} else if (MODE_INPUT == mode) {
+		sprintf(buf, "%.2f mV", sdk_inputs.hps_mv);
+		tft_draw_string_right(TFT_WIDTH - 1, TFT_HEIGHT - 13, rgb_to_rgb565(127, 127, 255),
+				      buf);
 	}
 
 	for (int x = 0; x < TFT_WIDTH; x++) {
@@ -114,11 +130,15 @@ void game_paint(unsigned dt_usec)
 
 		int i = (audio_idx + TFT_WIDTH + x) % TFT_WIDTH;
 
-		int left = audio_left[i] / 1093;
-		int right = audio_right[i] / 1093;
+		int left = 0, right = 0;
 
-		// int left = sign(audio_left[i]) * 2 * log2f(abs(audio_left[i]));
-		// int right = sign(audio_right[i]) * 2 * log2f(abs(audio_right[i]));
+		if (SCALE_LINEAR == scale) {
+			left = audio_left[i] / 1093;
+			right = audio_right[i] / 1093;
+		} else if (SCALE_LOG == scale) {
+			left = sign(audio_left[i]) * 2 * log2f(abs(audio_left[i]));
+			right = sign(audio_right[i]) * 2 * log2f(abs(audio_right[i]));
+		}
 
 		tft_draw_pixel(x, TFT_HEIGHT / 4 + left, left_color);
 		tft_draw_pixel(x, TFT_HEIGHT * 3 / 4 + right, right_color);
