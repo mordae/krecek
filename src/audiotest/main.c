@@ -88,8 +88,12 @@ void game_audio(int nsamples)
 	} else if (MODE_IR == mode) {
 		static int seq = 0;
 		static int I, Q;
-		static int demod_state, prev_demod;
+		static int prev_demod;
 		static int32_t prev_phase;
+
+		static uint32_t bits_wip;
+		static uint32_t bits_len;
+		static uint32_t window;
 
 		for (int i = 0; i < nsamples; i++) {
 			int16_t left, right;
@@ -111,7 +115,7 @@ void game_audio(int nsamples)
 				int32_t phase = atan2f(Q, I) * 683565275.576f;
 				int32_t demod;
 
-				if (abs(I) + abs(Q) > 32) {
+				if (abs(I) + abs(Q) > 64) {
 					demod = phase - prev_phase;
 				} else {
 					demod = 0;
@@ -124,26 +128,33 @@ void game_audio(int nsamples)
 				audio_demod[audio_idx] = demod >> 16;
 				audio_idx = (audio_idx + 1) % TFT_WIDTH;
 
-				if (demod > 0) {
-					demod_state++;
-				} else if (demod < 0) {
-					demod_state--;
-				} else if (demod_state > 0 && !prev_demod) {
-					demod_state--;
-				} else if (demod_state < 0 && !prev_demod) {
-					demod_state++;
+				static uint32_t decim_ctr;
+
+				if (demod) {
+					window <<= 1;
+					window |= (demod > 0);
+
+					decim_ctr++;
+
+					if (12 == decim_ctr) {
+						decim_ctr = 0;
+						bits_wip <<= 1;
+						const uint32_t mask = (1 << 13) - 1;
+						int pop = __builtin_popcount(window & mask);
+						bits_wip |= (pop >= 7);
+						bits_len++;
+
+						if (32 == bits_len) {
+							bits = bits_wip;
+							bits_len = 0;
+						}
+					}
+				} else if (!prev_demod) {
+					bits_len = 0;
+					decim_ctr = 0;
 				}
 
 				prev_demod = demod;
-
-				if (demod_state >= 8) {
-					demod_state -= 12;
-					bits <<= 1;
-					bits |= 1;
-				} else if (demod_state <= -8) {
-					demod_state += 12;
-					bits <<= 1;
-				}
 			}
 		}
 

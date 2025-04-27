@@ -12,29 +12,39 @@ static unsigned chan;
 static uint32_t buffer = 0;
 static int bits_left = 0;
 
+#define MAX_DEPTH 8
+static uint32_t stack[MAX_DEPTH];
+static int stack_depth;
+
 bool sdk_send_ir(uint32_t word)
 {
-	if (bits_left)
+	if (stack_depth >= MAX_DEPTH)
 		return false;
 
-	buffer = word;
-	bits_left = 32;
+	stack[stack_depth++] = word;
 	return true;
 }
 
 static int64_t send_ir_bit(__unused alarm_id_t alarm, __unused void *arg)
 {
 	if (bits_left <= 0) {
+		if (stack_depth) {
+			buffer = stack[--stack_depth];
+			bits_left = 32;
+			goto begin;
+		}
+
 		pwm_set_chan_level(slice, chan, 0);
 		return -1000;
 	}
 
+begin:
 	int bit = buffer >> 31;
 	buffer <<= 1;
 	bits_left--;
 
 #define CARRIER 12000
-#define DEVIATION 2000
+#define DEVIATION 1000
 
 	if (bit) {
 		pwm_set_wrap(slice, CLK_SYS_HZ / (CARRIER + DEVIATION));
