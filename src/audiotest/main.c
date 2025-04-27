@@ -140,8 +140,11 @@ void game_audio(int nsamples)
 			}
 		}
 
-		for (int i = 0; i < nsamples; i++)
-			sdk_write_sample(0, 0);
+		for (int i = 0; i < nsamples; i++) {
+			int16_t left, right;
+			sdk_melody_sample(&left, &right);
+			sdk_write_sample(left, right);
+		}
 	}
 }
 
@@ -238,6 +241,14 @@ void game_paint(unsigned dt_usec)
 		if (MODE_IR == mode)
 			tft_draw_pixel(x, demod_baseline + demod, demod_color);
 	}
+
+	static uint32_t prev_bits;
+
+	if (0xdefea7ed == bits && bits != prev_bits) {
+		sdk_melody_play("/i:prnl /bpm:160 (fff) e_ e_ e_");
+	}
+
+	prev_bits = bits;
 }
 
 int main()
