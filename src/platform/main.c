@@ -269,7 +269,7 @@ void game_input(unsigned dt_usec)
 			mario_p.vx = mario_p.vx * 0.98;
 		}
 		if (sdk_inputs.a) {
-			mario_p.won = 1;
+			mario_p.won = 0;
 		}
 
 		// Apply gravity
