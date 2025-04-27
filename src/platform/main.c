@@ -42,6 +42,7 @@ extern TileType maps_map1c[MAP_ROWS][MAP_COLS];
 extern TileType maps_mapwin[MAP_ROWS][MAP_COLS];
 extern TileType maps_map2c[MAP_ROWS][MAP_COLS];
 extern TileType maps_map3c[MAP_ROWS][MAP_COLS];
+extern TileType maps_map4c[MAP_ROWS][MAP_COLS];
 TileType (*map)[MAP_COLS] = maps_map1;
 
 // --- Mario's state in the tile map game ---
@@ -207,6 +208,12 @@ void game_input(unsigned dt_usec)
 					mario_p.vx = 0;
 					mario_p.vy = 0;
 				} else if (map == maps_map3c) {
+					map = maps_map4c;
+					mario_p.px = 0 * TILE_SIZE;
+					mario_p.py = 12 * TILE_SIZE;
+					mario_p.vx = 0;
+					mario_p.vy = 0;
+				} else if (map == maps_map4c) {
 					map = maps_mapwin;
 					mario_p.px = 1;
 					mario_p.py = 7;
@@ -404,9 +411,9 @@ void game_input(unsigned dt_usec)
 				map = maps_map2c;
 			} else if (menu.levels == 6) {
 				map = maps_map3c;
-			} //else if (menu.levels == 7) {
-			//	map = maps_map4c;
-			//}
+			} else if (menu.levels == 7) {
+				map = maps_map4c;
+			}
 		}
 	}
 }
