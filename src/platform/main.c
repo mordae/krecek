@@ -472,7 +472,7 @@ static void enemy_jockey(float dt)
 	}
 
 	TileType next_tile = map[next_tile_y][next_tile_x];
-	bool can_move;
+	bool can_move = false;
 
 	switch (next_tile) {
 	case GRASS:
