@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <math.h>
 #include <pico/stdlib.h>
 
@@ -45,6 +46,16 @@ void game_start(void)
 	my_code = rand();
 }
 
+void game_inbox(const sdk_message_t *msg)
+{
+	if (SDK_MSG_IR == msg->type) {
+		bits = msg->ir.data;
+
+		if (bits != my_code)
+			sdk_melody_play("/i:prnl /bpm:160 (fff) e_ e_ e_");
+	}
+}
+
 void game_audio(int nsamples)
 {
 	if (MODE_INPUT == mode) {
@@ -86,80 +97,22 @@ void game_audio(int nsamples)
 			sdk_write_sample(left, right);
 		}
 	} else if (MODE_IR == mode) {
-		static int seq = 0;
-		static int I, Q;
-		static int prev_demod;
-		static int32_t prev_phase;
-
-		static uint32_t bits_wip;
-		static uint32_t bits_len;
-		static uint32_t window;
-
 		for (int i = 0; i < nsamples; i++) {
 			int16_t left, right;
+			sdk_melody_sample(&left, &right);
+			sdk_write_sample(left, right);
+
 			sdk_read_sample(&left, &right);
 
-			if (0 == seq) {
-				Q = left;
-				seq++;
-			} else if (1 == seq) {
-				I = left;
-				seq++;
-			} else if (2 == seq) {
-				Q -= left;
-				seq++;
-			} else if (3 == seq) {
-				I -= left;
-				seq = 0;
+			int I, Q, dm = INT_MIN;
+			sdk_decode_ir_raw(left, &I, &Q, &dm);
 
-				int32_t phase = atan2f(Q, I) * 683565275.576f;
-				int32_t demod;
-
-				if (abs(I) + abs(Q) > 64) {
-					demod = phase - prev_phase;
-				} else {
-					demod = 0;
-				}
-
-				prev_phase = phase;
-
-				audio_left[audio_idx] = Q;
-				audio_right[audio_idx] = I;
-				audio_demod[audio_idx] = demod >> 16;
+			if (dm != INT_MIN) {
+				audio_left[audio_idx] = I;
+				audio_right[audio_idx] = Q;
+				audio_demod[audio_idx] = dm;
 				audio_idx = (audio_idx + 1) % TFT_WIDTH;
-
-				static uint32_t decim_ctr;
-
-				if (demod) {
-					window <<= 1;
-					window |= (demod > 0);
-
-					decim_ctr++;
-
-					if (12 == decim_ctr) {
-						decim_ctr = 0;
-						bits_wip <<= 1;
-						const uint32_t mask = (1 << 13) - 1;
-						int pop = __builtin_popcount(window & mask);
-						bits_wip |= (pop >= 7);
-						bits_len++;
-
-						if (32 == bits_len) {
-							bits = bits_wip;
-							bits_len = 0;
-						}
-					}
-				} else if (!prev_demod) {
-					bits_len = 0;
-					decim_ctr = 0;
-				}
-
-				prev_demod = demod;
 			}
-		}
-
-		for (int i = 0; i < nsamples; i++) {
-			sdk_write_sample(0, 0);
 		}
 	}
 }
@@ -261,14 +214,6 @@ void game_paint(unsigned dt_usec)
 		if (MODE_IR == mode)
 			tft_draw_pixel(x, demod_baseline + demod, demod_color);
 	}
-
-	static uint32_t prev_bits;
-
-	if (bits != prev_bits && bits != my_code) {
-		sdk_melody_play("/i:prnl /bpm:160 (fff) e_ e_ e_");
-	}
-
-	prev_bits = bits;
 }
 
 int main()

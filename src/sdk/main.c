@@ -252,6 +252,9 @@ __weak void game_audio(int nsamples)
 		int16_t left, right;
 		sdk_melody_sample(&left, &right);
 		sdk_write_sample(left, right);
+
+		sdk_read_sample(&left, &right);
+		sdk_decode_ir(left);
 	}
 }
 
@@ -261,6 +264,13 @@ __weak void game_input(unsigned __unused dt)
 
 __weak void game_paint(unsigned __unused dt)
 {
+}
+
+__weak void game_inbox(const sdk_message_t *msg)
+{
+	if (SDK_MSG_IR == msg->type) {
+		printf("sdk: ir=%08x\n", (unsigned)msg->ir.data);
+	}
 }
 
 uint32_t sdk_random()

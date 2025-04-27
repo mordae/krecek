@@ -197,6 +197,9 @@ __weak void game_audio(int nsamples)
 		int16_t left, right;
 		sdk_melody_sample(&left, &right);
 		sdk_write_sample(left, right);
+
+		sdk_read_sample(&left, &right);
+		sdk_decode_ir(left);
 	}
 }
 
@@ -206,6 +209,11 @@ __weak void game_input(unsigned __unused dt)
 
 __weak void game_paint(unsigned __unused dt)
 {
+}
+
+__weak void game_inbox(const sdk_message_t *msg)
+{
+	(void)msg;
 }
 
 uint32_t sdk_random()

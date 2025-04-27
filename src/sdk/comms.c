@@ -1,9 +1,10 @@
+#include <math.h>
 #include <pico/stdlib.h>
 
 #include <hardware/pwm.h>
 
 #include <sdk.h>
-#include <stdio.h>
+#include <stdlib.h>
 #include <task.h>
 
 static unsigned slice;
@@ -35,7 +36,7 @@ static int64_t send_ir_bit(__unused alarm_id_t alarm, __unused void *arg)
 		}
 
 		pwm_set_chan_level(slice, chan, 0);
-		return -1000;
+		return -500;
 	}
 
 begin:
@@ -44,7 +45,7 @@ begin:
 	bits_left--;
 
 #define CARRIER 12000
-#define DEVIATION 1000
+#define DEVIATION 2000
 
 	if (bit) {
 		pwm_set_wrap(slice, CLK_SYS_HZ / (CARRIER + DEVIATION));
@@ -54,7 +55,106 @@ begin:
 		pwm_set_chan_level(slice, chan, CLK_SYS_HZ / (CARRIER - DEVIATION) / 32);
 	}
 
-	return -1000;
+	return -500;
+}
+
+void sdk_decode_ir_raw(int16_t sample, int *oI, int *oQ, int *dm)
+{
+	static int seq = 0;
+	static int I, Q;
+	static int active = 0;
+
+	if (0 == seq) {
+		Q = sample;
+		seq++;
+	} else if (1 == seq) {
+		I = sample;
+		seq++;
+	} else if (2 == seq) {
+		Q -= sample;
+		seq++;
+	} else if (3 == seq) {
+		I -= sample;
+		seq = 0;
+
+		if (abs(I) + abs(Q) >= 64) {
+			active = 32;
+		} else if (active > 0) {
+			active--;
+		} else {
+			return;
+		}
+
+		goto demodulate;
+	}
+
+	return;
+
+demodulate:
+	static int prev_demod;
+	static int32_t prev_phase;
+
+	static uint32_t bits_wip;
+	static uint32_t bits_len;
+	static uint32_t window;
+	static uint32_t decim_ctr;
+
+	int32_t demod;
+
+	if (abs(I) + abs(Q) < 64) {
+		demod = 0;
+
+		if (!prev_demod) {
+			bits_len = 0;
+			decim_ctr = 0;
+			prev_phase = 0;
+		}
+	} else {
+		int32_t phase = atan2f(Q, I) * 683565275.576f;
+		demod = phase - prev_phase;
+		prev_phase = phase;
+	}
+
+	if (oI)
+		*oI = I;
+
+	if (oQ)
+		*oQ = Q;
+
+	if (dm)
+		*dm = demod >> 16;
+
+	prev_demod = demod;
+
+	if (!demod)
+		return;
+
+	window <<= 1;
+	window |= (demod > 0);
+
+	decim_ctr++;
+
+	if (6 == decim_ctr) {
+		decim_ctr = 0;
+		bits_wip <<= 1;
+		const uint32_t mask = (1 << 5) - 1;
+		int pop = __builtin_popcount(window & mask);
+		bits_wip |= (pop >= 3);
+		bits_len++;
+
+		if (32 == bits_len) {
+			game_inbox(&(sdk_message_t){
+				.type = SDK_MSG_IR,
+				.ir = { .data = bits_wip },
+			});
+			bits_len = 0;
+		}
+	}
+}
+
+void sdk_decode_ir(int16_t sample)
+{
+	return sdk_decode_ir_raw(sample, NULL, NULL, NULL);
 }
 
 void sdk_comms_init(void)
