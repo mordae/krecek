@@ -9,6 +9,7 @@
 #include "common.h"
 
 #include <petr.png.h>
+#include <kurecidzokej.png.h>
 #include <platforms.png.h>
 #include <menu.png.h>
 #include <levels.png.h>
@@ -17,8 +18,9 @@
 #define GRAVITY 90	  // Gravity for falling
 #define JUMP_STRENGTH -80 // Jump strength
 #define MAX_SPEED 100	  // Max speed for movement
-#define ACCELERATION 80	  // Acceleration for movement
-#define FRICTION 8	  // Friction to stop sliding quickly
+#define MAX_JOCKEY_SPEED 40
+#define ACCELERATION 80 // Acceleration for movement
+#define FRICTION 8	// Friction to stop sliding quickly
 
 #define multiply332 \
 	(x, f) rgb_to_rgb332(rgb332_red((x)) * f, rgb332_green((x)) * f, rgb332_blue((x)) * f)
@@ -66,7 +68,17 @@ struct menu {
 	int select;
 };
 static struct menu menu;
+typedef struct {
+	float x, y;
+	float vx, vy;
+	int alive;
+	int right;
+	sdk_sprite_t s;
+} Jockey;
+static Jockey jockey;
 static float volume = SDK_GAIN_STD;
+
+static void enemy_jockey(float dt);
 
 // --- Audio: Updated tune ---
 static const char music1[] = "/i:square /bpm:60 "
@@ -109,6 +121,15 @@ void game_reset(void)
 	mario_p.s.ox = 3.5;
 	mario_p.s.oy = 7;
 	mario_p.s.tile = 0;
+
+	jockey.s.ts = &ts_kurecidzokej_png;
+	jockey.s.ox = 3.5;
+	jockey.s.oy = 7;
+	jockey.s.tile = 0;
+
+	jockey.y = 13 * TILE_SIZE;
+	jockey.x = 3 * TILE_SIZE;
+	jockey.right = 1;
 }
 
 // --- Game Input ---
@@ -220,6 +241,12 @@ void game_input(unsigned dt_usec)
 				}
 			}
 		}
+		if (map == maps_map1c) {
+			enemy_jockey(dt);
+		}
+		if (map == maps_map1) {
+			enemy_jockey(dt);
+		}
 		if (sdk_inputs.vol_up) {
 			volume += 12.0 * dt;
 		}
@@ -267,9 +294,6 @@ void game_input(unsigned dt_usec)
 
 		if (mario_p.vy != 0) {
 			mario_p.vx = mario_p.vx * 0.98;
-		}
-		if (sdk_inputs.a) {
-			mario_p.won = 0;
 		}
 
 		// Apply gravity
@@ -418,6 +442,85 @@ void game_input(unsigned dt_usec)
 	}
 }
 
+static void enemy_jockey(float dt)
+{
+	(void)dt;
+
+	if (sdk_inputs_delta.a > 0) {
+		jockey.vx = 0;
+		if (jockey.right) {
+			jockey.right = 0;
+		} else {
+			jockey.right = 1;
+		}
+	}
+
+	if (jockey.right) {
+		jockey.vx += 1;
+	} else {
+		jockey.vx -= 1;
+	}
+
+	if (jockey.vx > MAX_JOCKEY_SPEED) {
+		jockey.vx = MAX_JOCKEY_SPEED;
+	}
+	if (jockey.vx < -1 * MAX_JOCKEY_SPEED) {
+		jockey.vx = -1 * MAX_JOCKEY_SPEED;
+	}
+
+	jockey.vy += GRAVITY * dt;
+
+	jockey.x += jockey.vx * dt;
+	jockey.y += jockey.vy * dt;
+
+	int jockey_tile_x = jockey.x / TILE_SIZE;
+	int jockey_tile_y = jockey.y / TILE_SIZE + 1.0f / TILE_SIZE;
+
+	if (jockey.vy >= 0 && jockey_tile_y >= 0) {
+		switch (map[jockey_tile_y][jockey_tile_x]) {
+		case GRASS:
+		case FLOOR_MID:
+		case FLOOR_R:
+		case FLOOR_L:
+		case FLOOR_JUMP_MID:
+		case FLOOR_JUMP_L:
+		case FLOOR_JUMP_R:
+		case FLOOR_WIN_MID:
+		case FLOOR_WIN_L:
+		case FLOOR_WIN_R:
+		case FLOOR_MID_COLD:
+		case FLOOR_R_COLD:
+		case FLOOR_CUBE_COLD:
+		case FLOOR_L_COLD:
+		case FLOOR_JUMP_MID_COLD:
+		case FLOOR_JUMP_L_COLD:
+		case FLOOR_JUMP_CUBE_COLD:
+		case FLOOR_JUMP_R_COLD:
+		case FLOOR_WIN_MID_COLD:
+		case FLOOR_WIN_L_COLD:
+		case FLOOR_WIN_CUBE_COLD:
+		case FLOOR_WIN_R_COLD:
+			jockey.y = jockey_tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+			jockey.vy = 0;
+			break;
+
+		case EMPTY:
+		case SPAWNER_MARIO:
+		case SPAWNER_SONIC:
+		case CHEST:
+			break;
+		}
+	}
+	if (jockey.x < 0) {
+		jockey.x = 0;
+		jockey.vx = 0;
+	}
+	if (jockey.x >= MAP_COLS * TILE_SIZE - TILE_SIZE) {
+		jockey.x = MAP_COLS * TILE_SIZE - TILE_SIZE;
+		jockey.vx = 0;
+	}
+}
+
 // --- Game Paint ---
 void game_paint(unsigned dt_usec)
 {
@@ -448,6 +551,8 @@ void game_paint(unsigned dt_usec)
 	mario_p.s.x = mario_p.px;
 	mario_p.s.y = mario_p.py;
 
+	jockey.s.x = jockey.x;
+	jockey.s.y = jockey.y;
 	if (mario_p.vx > 0)
 		mario_p.s.tile = 0;
 	else if (mario_p.vx < 0)
@@ -456,8 +561,10 @@ void game_paint(unsigned dt_usec)
 		mario_p.s.tile = 4;
 
 	sdk_draw_sprite(&mario_p.s);
+	if (map == maps_map1 || map == maps_map1c) {
+		sdk_draw_sprite(&jockey.s);
+	}
 	tft_set_origin(0, 0);
-
 	char buf[16];
 	snprintf(buf, sizeof buf, "%-.2f", mario_p.time);
 	if (mario_p.fast) {
