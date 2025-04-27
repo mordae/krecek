@@ -90,6 +90,13 @@ static const char music2[] = "/i:noise /bpm:60 "
 // --- Initialize the game ---
 void game_start(void)
 {
+	sdk_set_output_gain_db(volume);
+	sdk_melody_play(music1);
+	sdk_melody_play(music2);
+}
+
+void game_reset(void)
+{
 	map = maps_map0;
 	mario_p.mode = 0;
 	menu.select = 0;
@@ -100,15 +107,6 @@ void game_start(void)
 	mario_p.s.ox = 3.5;
 	mario_p.s.oy = 7;
 	mario_p.s.tile = 0;
-
-	sdk_set_output_gain_db(volume);
-	sdk_melody_play(music1);
-	sdk_melody_play(music2);
-}
-
-void game_reset(void)
-{
-	game_start();
 }
 
 // --- Game Input ---

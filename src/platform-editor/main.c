@@ -28,7 +28,6 @@ void game_start(void)
 
 void game_reset(void)
 {
-	game_start();
 }
 
 void game_input(unsigned dt_usec)
