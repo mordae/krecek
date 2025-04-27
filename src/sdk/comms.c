@@ -33,12 +33,15 @@ static int64_t send_ir_bit(__unused alarm_id_t alarm, __unused void *arg)
 	buffer <<= 1;
 	bits_left--;
 
+#define CARRIER 12000
+#define DEVIATION 2000
+
 	if (bit) {
-		pwm_set_wrap(slice, CLK_SYS_HZ / 14000);
-		pwm_set_chan_level(slice, chan, CLK_SYS_HZ / 14000 / 10);
+		pwm_set_wrap(slice, CLK_SYS_HZ / (CARRIER + DEVIATION));
+		pwm_set_chan_level(slice, chan, CLK_SYS_HZ / (CARRIER + DEVIATION) / 32);
 	} else {
-		pwm_set_wrap(slice, CLK_SYS_HZ / 10000);
-		pwm_set_chan_level(slice, chan, CLK_SYS_HZ / 10000 / 10);
+		pwm_set_wrap(slice, CLK_SYS_HZ / (CARRIER - DEVIATION));
+		pwm_set_chan_level(slice, chan, CLK_SYS_HZ / (CARRIER - DEVIATION) / 32);
 	}
 
 	return -1000;

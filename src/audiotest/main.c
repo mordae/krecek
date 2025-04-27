@@ -35,6 +35,9 @@ static int16_t audio_demod[TFT_WIDTH];
 static int audio_idx;
 static float test_freq = 1000;
 
+// Demodulated bits.
+static uint32_t bits;
+
 void game_audio(int nsamples)
 {
 	if (MODE_INPUT == mode) {
@@ -78,38 +81,62 @@ void game_audio(int nsamples)
 	} else if (MODE_IR == mode) {
 		static int seq = 0;
 		static int I, Q;
-		static int prev_phase;
+		static int demod_state, prev_demod;
+		static int32_t prev_phase;
 
 		for (int i = 0; i < nsamples; i++) {
 			int16_t left, right;
 			sdk_read_sample(&left, &right);
 
 			if (0 == seq) {
-				I = left;
-				seq++;
-			} else if (1 == seq) {
 				Q = left;
 				seq++;
+			} else if (1 == seq) {
+				I = left;
+				seq++;
 			} else if (2 == seq) {
-				I -= left;
+				Q -= left;
 				seq++;
 			} else if (3 == seq) {
-				Q -= left;
+				I -= left;
 				seq = 0;
 
-				int phase = atan2f(Q, I) * (INT16_MAX / M_PI);
+				int32_t phase = atan2f(Q, I) * 683565275.576f;
+				int32_t demod;
+
+				if (abs(I) + abs(Q) > 32) {
+					demod = phase - prev_phase;
+				} else {
+					demod = 0;
+				}
+
+				prev_phase = phase;
 
 				audio_left[audio_idx] = Q;
 				audio_right[audio_idx] = I;
+				audio_demod[audio_idx] = demod >> 16;
+				audio_idx = (audio_idx + 1) % TFT_WIDTH;
 
-				if (abs(I) + abs(Q) > 32) {
-					audio_demod[audio_idx] = phase - prev_phase;
-				} else {
-					audio_demod[audio_idx] = 0;
+				if (demod > 0) {
+					demod_state++;
+				} else if (demod < 0) {
+					demod_state--;
+				} else if (demod_state > 0 && !prev_demod) {
+					demod_state--;
+				} else if (demod_state < 0 && !prev_demod) {
+					demod_state++;
 				}
 
-				audio_idx = (audio_idx + 1) % TFT_WIDTH;
-				prev_phase = phase;
+				prev_demod = demod;
+
+				if (demod_state >= 8) {
+					demod_state -= 12;
+					bits <<= 1;
+					bits |= 1;
+				} else if (demod_state <= -8) {
+					demod_state += 12;
+					bits <<= 1;
+				}
 			}
 		}
 
@@ -139,6 +166,8 @@ void game_input(unsigned dt_usec)
 	} else if (MODE_IR == mode) {
 		if (sdk_inputs_delta.start > 0)
 			sdk_send_ir(0xcafecafe);
+		if (sdk_inputs_delta.a > 0)
+			sdk_send_ir(0xdefea7ed);
 	}
 
 	if (sdk_inputs_delta.b > 0)
@@ -171,6 +200,10 @@ void game_paint(unsigned dt_usec)
 		sprintf(buf, "%.2f mV", sdk_inputs.hps_mv);
 		tft_draw_string_right(TFT_WIDTH - 1, TFT_HEIGHT - 13, rgb_to_rgb565(127, 127, 255),
 				      buf);
+	} else if (MODE_IR == mode) {
+		sprintf(buf, "%08x", (unsigned)bits);
+		tft_draw_string_right(TFT_WIDTH - 1, TFT_HEIGHT - 13, rgb_to_rgb565(127, 127, 255),
+				      buf);
 	}
 
 	int left_baseline = TFT_HEIGHT / 4;
@@ -181,9 +214,9 @@ void game_paint(unsigned dt_usec)
 		right_baseline = left_baseline;
 
 	for (int x = 0; x < TFT_WIDTH; x++) {
-		tft_draw_pixel(x, left_baseline, rgb_to_rgb565(63, 63, 63));
-		tft_draw_pixel(x, right_baseline, rgb_to_rgb565(63, 63, 63));
-		tft_draw_pixel(x, demod_baseline, rgb_to_rgb565(63, 63, 63));
+		tft_draw_pixel(x, left_baseline, rgb_to_rgb565(31, 31, 31));
+		tft_draw_pixel(x, right_baseline, rgb_to_rgb565(31, 31, 31));
+		tft_draw_pixel(x, demod_baseline, rgb_to_rgb565(31, 31, 31));
 
 		int i = (audio_idx + TFT_WIDTH + x) % TFT_WIDTH;
 
