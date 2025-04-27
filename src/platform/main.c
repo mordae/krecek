@@ -172,6 +172,7 @@ void game_input(unsigned dt_usec)
 			if (sdk_inputs.start) {
 				game_reset();
 				return;
+			} else {
 			}
 		}
 		if (mario_p.won) {
@@ -199,8 +200,10 @@ void game_input(unsigned dt_usec)
 					mario_p.py = 7;
 				} else if (map == maps_map2c) {
 					map = maps_map3c;
-					mario_p.px = 1;
-					mario_p.py = 7;
+					mario_p.px = 0 * TILE_SIZE;
+					mario_p.py = 12 * TILE_SIZE;
+					mario_p.vx = 0;
+					mario_p.vy = 0;
 				} else if (map == maps_map3c) {
 					map = maps_mapwin;
 					mario_p.px = 1;
@@ -358,7 +361,7 @@ void game_input(unsigned dt_usec)
 		if (mario_p.px >= MAP_COLS * TILE_SIZE - TILE_SIZE)
 			mario_p.px = MAP_COLS * TILE_SIZE - TILE_SIZE;
 
-		if (mario_p.py >= MAP_ROWS * TILE_SIZE - TILE_SIZE + TILE_SIZE + TILE_SIZE) {
+		if (mario_p.py >= MAP_ROWS * TILE_SIZE - TILE_SIZE - TILE_SIZE + TILE_SIZE) {
 			mario_p.alive = false;
 		}
 	}
@@ -432,6 +435,8 @@ void game_paint(unsigned dt_usec)
 		mario_p.s.tile = 0;
 	else if (mario_p.vx < 0)
 		mario_p.s.tile = 1;
+	if (!mario_p.alive)
+		mario_p.s.tile = 4;
 
 	sdk_draw_sprite(&mario_p.s);
 	tft_set_origin(0, 0);
