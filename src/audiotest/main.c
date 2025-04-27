@@ -101,7 +101,12 @@ void game_audio(int nsamples)
 
 				audio_left[audio_idx] = Q;
 				audio_right[audio_idx] = I;
-				audio_demod[audio_idx] = phase - prev_phase;
+
+				if (abs(I) + abs(Q) > 32) {
+					audio_demod[audio_idx] = phase - prev_phase;
+				} else {
+					audio_demod[audio_idx] = 0;
+				}
 
 				audio_idx = (audio_idx + 1) % TFT_WIDTH;
 				prev_phase = phase;
@@ -189,9 +194,9 @@ void game_paint(unsigned dt_usec)
 			right = audio_right[i] / 1093;
 			demod = audio_demod[i] / 1093;
 		} else if (SCALE_LOG == scale) {
-			left = sign(audio_left[i]) * 2 * log2f(abs(audio_left[i]));
-			right = sign(audio_right[i]) * 2 * log2f(abs(audio_right[i]));
-			demod = sign(audio_demod[i]) * 2 * log2f(abs(audio_demod[i]));
+			left = sign(audio_left[i]) * 2 * log2f(abs(audio_left[i] | 1));
+			right = sign(audio_right[i]) * 2 * log2f(abs(audio_right[i] | 1));
+			demod = sign(audio_demod[i]) * 2 * log2f(abs(audio_demod[i] | 1));
 		}
 
 		tft_draw_pixel(x, left_baseline + left, left_color);
