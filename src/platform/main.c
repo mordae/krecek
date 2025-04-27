@@ -19,6 +19,7 @@
 #define JUMP_STRENGTH -80 // Jump strength
 #define MAX_SPEED 100	  // Max speed for movement
 #define MAX_JOCKEY_SPEED 40
+#define MIN_JOCKEY_SPEED 5
 #define ACCELERATION 80 // Acceleration for movement
 #define FRICTION 8	// Friction to stop sliding quickly
 
@@ -69,10 +70,9 @@ struct menu {
 };
 static struct menu menu;
 typedef struct {
-	float x, y;
 	float vx, vy;
 	int alive;
-	int right;
+	bool right;
 	sdk_sprite_t s;
 } Jockey;
 static Jockey jockey;
@@ -126,10 +126,6 @@ void game_reset(void)
 	jockey.s.ox = 3.5;
 	jockey.s.oy = 7;
 	jockey.s.tile = 0;
-
-	jockey.y = 13 * TILE_SIZE;
-	jockey.x = 3 * TILE_SIZE;
-	jockey.right = 1;
 }
 
 // --- Game Input ---
@@ -173,6 +169,9 @@ void game_input(unsigned dt_usec)
 				mario_p.mode = 1;
 				mario_p.fast = 0;
 				map = maps_map1;
+				jockey.s.y = 14 * TILE_SIZE - 0.1;
+				jockey.s.x = 3 * TILE_SIZE;
+				jockey.right = 1;
 				return;
 			} else if (menu.select == 1) {
 				mario_p.time = 0;
@@ -186,6 +185,9 @@ void game_input(unsigned dt_usec)
 				mario_p.mode = 1;
 				mario_p.fast = 1;
 				map = maps_map1;
+				jockey.s.y = 14 * TILE_SIZE - 0.1;
+				jockey.s.x = 3 * TILE_SIZE;
+				jockey.right = 1;
 				return;
 			}
 			if (menu.select == 2) {
@@ -218,6 +220,9 @@ void game_input(unsigned dt_usec)
 					map = maps_map1c;
 					mario_p.px = 1;
 					mario_p.py = 7;
+					jockey.s.y = 14 * TILE_SIZE - 0.1;
+					jockey.s.x = 3 * TILE_SIZE;
+					jockey.right = 1;
 				} else if (map == maps_map1c) {
 					map = maps_map2c;
 					mario_p.px = 1;
@@ -423,6 +428,9 @@ void game_input(unsigned dt_usec)
 			mario_p.mode = 1;
 			if (menu.levels == 0) {
 				map = maps_map1;
+				jockey.s.y = 14 * TILE_SIZE - 1;
+				jockey.s.x = 3 * TILE_SIZE;
+				jockey.right = 1;
 			} else if (menu.levels == 1) {
 				map = maps_map2;
 			} else if (menu.levels == 2) {
@@ -431,6 +439,9 @@ void game_input(unsigned dt_usec)
 				map = maps_map4;
 			} else if (menu.levels == 4) {
 				map = maps_map1c;
+				jockey.s.y = 14 * TILE_SIZE - 1;
+				jockey.s.x = 3 * TILE_SIZE;
+				jockey.right = 1;
 			} else if (menu.levels == 5) {
 				map = maps_map2c;
 			} else if (menu.levels == 6) {
@@ -444,81 +455,68 @@ void game_input(unsigned dt_usec)
 
 static void enemy_jockey(float dt)
 {
-	(void)dt;
-
 	if (sdk_inputs_delta.a > 0) {
 		jockey.vx = 0;
-		if (jockey.right) {
-			jockey.right = 0;
-		} else {
-			jockey.right = 1;
-		}
+		jockey.right = !jockey.right;
 	}
 
-	if (jockey.right) {
-		jockey.vx += 1;
+	jockey.vx += jockey.right ? dt * 50 : dt * -50;
+	jockey.vx = clamp(jockey.vx, -MAX_JOCKEY_SPEED, MAX_JOCKEY_SPEED);
+
+	float next_x = jockey.s.x + jockey.vx * dt;
+	int next_tile_x = next_x / TILE_SIZE;
+	int next_tile_y = jockey.s.y / TILE_SIZE + 1;
+
+	if (next_x < 0.0f || next_x >= MAP_COLS * TILE_SIZE) {
+		goto turn;
+	}
+
+	TileType next_tile = map[next_tile_y][next_tile_x];
+	bool can_move;
+
+	switch (next_tile) {
+	case GRASS:
+	case FLOOR_MID:
+	case FLOOR_R:
+	case FLOOR_L:
+	case FLOOR_JUMP_MID:
+	case FLOOR_JUMP_L:
+	case FLOOR_JUMP_R:
+	case FLOOR_WIN_MID:
+	case FLOOR_WIN_L:
+	case FLOOR_WIN_R:
+	case FLOOR_MID_COLD:
+	case FLOOR_R_COLD:
+	case FLOOR_CUBE_COLD:
+	case FLOOR_L_COLD:
+	case FLOOR_JUMP_MID_COLD:
+	case FLOOR_JUMP_L_COLD:
+	case FLOOR_JUMP_CUBE_COLD:
+	case FLOOR_JUMP_R_COLD:
+	case FLOOR_WIN_MID_COLD:
+	case FLOOR_WIN_L_COLD:
+	case FLOOR_WIN_CUBE_COLD:
+	case FLOOR_WIN_R_COLD:
+		can_move = true;
+		break;
+
+	case EMPTY:
+	case SPAWNER_MARIO:
+	case SPAWNER_SONIC:
+	case CHEST:
+		can_move = false;
+		break;
+	}
+
+	if (can_move) {
+		jockey.s.x = next_x;
 	} else {
-		jockey.vx -= 1;
+turn:
+		jockey.right = !jockey.right;
+		jockey.vx = jockey.right ? MIN_JOCKEY_SPEED : -MIN_JOCKEY_SPEED;
 	}
 
-	if (jockey.vx > MAX_JOCKEY_SPEED) {
-		jockey.vx = MAX_JOCKEY_SPEED;
-	}
-	if (jockey.vx < -1 * MAX_JOCKEY_SPEED) {
-		jockey.vx = -1 * MAX_JOCKEY_SPEED;
-	}
-
-	jockey.vy += GRAVITY * dt;
-
-	jockey.x += jockey.vx * dt;
-	jockey.y += jockey.vy * dt;
-
-	int jockey_tile_x = jockey.x / TILE_SIZE;
-	int jockey_tile_y = jockey.y / TILE_SIZE + 1.0f / TILE_SIZE;
-
-	if (jockey.vy >= 0 && jockey_tile_y >= 0) {
-		switch (map[jockey_tile_y][jockey_tile_x]) {
-		case GRASS:
-		case FLOOR_MID:
-		case FLOOR_R:
-		case FLOOR_L:
-		case FLOOR_JUMP_MID:
-		case FLOOR_JUMP_L:
-		case FLOOR_JUMP_R:
-		case FLOOR_WIN_MID:
-		case FLOOR_WIN_L:
-		case FLOOR_WIN_R:
-		case FLOOR_MID_COLD:
-		case FLOOR_R_COLD:
-		case FLOOR_CUBE_COLD:
-		case FLOOR_L_COLD:
-		case FLOOR_JUMP_MID_COLD:
-		case FLOOR_JUMP_L_COLD:
-		case FLOOR_JUMP_CUBE_COLD:
-		case FLOOR_JUMP_R_COLD:
-		case FLOOR_WIN_MID_COLD:
-		case FLOOR_WIN_L_COLD:
-		case FLOOR_WIN_CUBE_COLD:
-		case FLOOR_WIN_R_COLD:
-			jockey.y = jockey_tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
-			jockey.vy = 0;
-			break;
-
-		case EMPTY:
-		case SPAWNER_MARIO:
-		case SPAWNER_SONIC:
-		case CHEST:
-			break;
-		}
-	}
-	if (jockey.x < 0) {
-		jockey.x = 0;
-		jockey.vx = 0;
-	}
-	if (jockey.x >= MAP_COLS * TILE_SIZE - TILE_SIZE) {
-		jockey.x = MAP_COLS * TILE_SIZE - TILE_SIZE;
-		jockey.vx = 0;
-	}
+	jockey.s.tile = jockey.right;
 }
 
 // --- Game Paint ---
@@ -547,12 +545,9 @@ void game_paint(unsigned dt_usec)
 		}
 	}
 	//tft_draw_rect(mario_p.px, mario_p.py, mario_p.px + TILE_SIZE, mario_p.py - TILE_SIZE, RED);
-
 	mario_p.s.x = mario_p.px;
 	mario_p.s.y = mario_p.py;
 
-	jockey.s.x = jockey.x;
-	jockey.s.y = jockey.y;
 	if (mario_p.vx > 0)
 		mario_p.s.tile = 0;
 	else if (mario_p.vx < 0)
