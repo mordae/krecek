@@ -12,6 +12,7 @@
 #include <platforms.png.h>
 #include <menu.png.h>
 #include <levels.png.h>
+#include <death.png.h>
 // Physics constants
 #define GRAVITY 90	  // Gravity for falling
 #define JUMP_STRENGTH -80 // Jump strength
@@ -116,7 +117,12 @@ void game_input(unsigned dt_usec)
 	if (map != maps_mapwin) {
 		mario_p.time += dt;
 	}
-	if (mario_p.mode == 0) {
+	if (mario_p.mode == 4) {
+		if (sdk_inputs_delta.start > 0) {
+			game_reset();
+			return;
+		}
+	} else if (mario_p.mode == 0) {
 		mario_p.fast = 0;
 		map = maps_map0;
 		if (sdk_inputs_delta.y > 0 || sdk_inputs.joy_y < -500) {
@@ -169,11 +175,7 @@ void game_input(unsigned dt_usec)
 	}
 	if (mario_p.mode == 1 || mario_p.mode == 2) {
 		if (!mario_p.alive) {
-			if (sdk_inputs.start) {
-				game_reset();
-				return;
-			} else {
-			}
+			mario_p.mode = 4;
 		}
 		if (mario_p.won) {
 			if (sdk_inputs.start) {
@@ -361,7 +363,7 @@ void game_input(unsigned dt_usec)
 		if (mario_p.px >= MAP_COLS * TILE_SIZE - TILE_SIZE)
 			mario_p.px = MAP_COLS * TILE_SIZE - TILE_SIZE;
 
-		if (mario_p.py >= MAP_ROWS * TILE_SIZE - TILE_SIZE - TILE_SIZE + TILE_SIZE) {
+		if (mario_p.py >= MAP_ROWS * TILE_SIZE - TILE_SIZE + TILE_SIZE - 1) {
 			mario_p.alive = false;
 		}
 	}
@@ -372,11 +374,11 @@ void game_input(unsigned dt_usec)
 		if (sdk_inputs_delta.a > 0 || sdk_inputs.joy_y > 500) {
 			menu.levels += 1;
 		}
-		if (menu.levels >= 4) {
+		if (menu.levels >= 8) {
 			menu.levels = 0;
 		}
 		if (menu.levels == -1) {
-			menu.levels = 3;
+			menu.levels = 7;
 		}
 
 		if (sdk_inputs_delta.start > 0) {
@@ -396,7 +398,15 @@ void game_input(unsigned dt_usec)
 				map = maps_map3;
 			} else if (menu.levels == 3) {
 				map = maps_map4;
-			}
+			} else if (menu.levels == 4) {
+				map = maps_map1c;
+			} else if (menu.levels == 5) {
+				map = maps_map2c;
+			} else if (menu.levels == 6) {
+				map = maps_map3c;
+			} //else if (menu.levels == 7) {
+			//	map = maps_map4c;
+			//}
 		}
 	}
 }
@@ -451,6 +461,9 @@ void game_paint(unsigned dt_usec)
 	}
 	if (mario_p.mode == 3) {
 		sdk_draw_tile(0, 0, &ts_levels_png, menu.levels);
+	}
+	if (mario_p.mode == 4) {
+		sdk_draw_tile(0, 0, &ts_death_png, 1);
 	}
 	//tft_draw_pixel(mario_p.px + 0.5, mario_p.py - 0.5, WHITE);
 }
