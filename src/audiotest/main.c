@@ -148,9 +148,7 @@ void game_audio(int nsamples)
 		}
 
 		for (int i = 0; i < nsamples; i++) {
-			int16_t left, right;
-			sdk_melody_sample(&left, &right);
-			sdk_write_sample(left, right);
+			sdk_write_sample(0, 0);
 		}
 	}
 }
