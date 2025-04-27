@@ -38,6 +38,13 @@ static float test_freq = 1000;
 // Demodulated bits.
 static uint32_t bits;
 
+static uint32_t my_code;
+
+void game_start(void)
+{
+	my_code = rand();
+}
+
 void game_audio(int nsamples)
 {
 	if (MODE_INPUT == mode) {
@@ -169,8 +176,12 @@ void game_input(unsigned dt_usec)
 	} else if (MODE_IR == mode) {
 		if (sdk_inputs_delta.start > 0)
 			sdk_send_ir(0xcafecafe);
+
 		if (sdk_inputs_delta.a > 0)
 			sdk_send_ir(0xdefea7ed);
+
+		if (sdk_inputs_delta.y > 0)
+			sdk_send_ir(my_code);
 	}
 
 	if (sdk_inputs_delta.b > 0)
@@ -244,7 +255,7 @@ void game_paint(unsigned dt_usec)
 
 	static uint32_t prev_bits;
 
-	if (0xdefea7ed == bits && bits != prev_bits) {
+	if (bits != prev_bits && bits != my_code) {
 		sdk_melody_play("/i:prnl /bpm:160 (fff) e_ e_ e_");
 	}
 
