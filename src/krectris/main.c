@@ -1,3 +1,4 @@
+#include "sdk/audio.h"
 #include "sdk/image.h"
 #include "sdk/input.h"
 #include "sdk/util.h"
@@ -411,8 +412,20 @@ static void lock_active_piece()
 	}
 }
 
+static const char testmusic[] = "/i:sine /bpm:100 <"
+				"acdd# def#a"
+				"{"
+				"gbDb DF#A>D F#D<A>D <AF#Db"
+				"gbDb DF#A>D F#D<A>D <AF#Db"
+				"cege gbDG   BGAG    Dbge"
+				"cege gbDG   BGAG    Dbge"
+				"}";
+
+static sdk_melody_t *testmelody;
+			
 void game_reset(void)
 {
+	testmelody = sdk_melody_play_get(testmusic);
 	generate_future_bag();
 	for (int i = 0; i <= 6; i++) {
 		active_bag[i] = future_bag[i];
@@ -490,8 +503,6 @@ void game_input(unsigned dt_usec)
 			time_after_falling -= gravity_speed;
 		}
 	}
-
-	printf("%i\n", dt_usec);
 
 	if (sdk_inputs_delta.b > 0) {
 		if (active_piece_shape != 4) // isn't I piece
