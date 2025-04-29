@@ -155,10 +155,14 @@ void __noreturn sdk_main(const struct sdk_config *conf)
 
 	printf("sdk: Hello, welcome to Krecek!\n");
 
-	/* Seed random number generator from ADC. */
-	for (int i = 0; i < 16; i++) {
+	/*
+	 * Seed random number generator from ADC inputs, including
+	 * temperature sensor. This should be somewhat sufficient as
+	 * those inputs are pretty noisy in the LSBs.
+	 */
+	for (int i = 0; i < 32; i++) {
 		adc_select_input(i % 5);
-		srand(adc_read() + random());
+		srand(adc_read() + rand());
 	}
 
 	task_init();

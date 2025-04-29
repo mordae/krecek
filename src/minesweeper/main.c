@@ -104,8 +104,6 @@ static bool victorious = false;
 
 void game_reset(void)
 {
-	srand(sdk_random());
-
 	victorious = false;
 	initial_state = true;
 
