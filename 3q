@@ -1,0 +1,79 @@
+#include <pico/stdlib.h>
+
+#include <sdk.h>
+#include <tft.h>
+
+#include <numer.png.h>
+#include <buttons.png.h>
+
+#define GRAY rgb_to_rgb565(63, 63, 63)
+
+// button
+struct kal {
+	int pos;
+};
+static struct kal kal;
+
+// gotta add tileset for tilemap
+
+typedef enum {
+	FLOOR = 0,
+	WALL = 1,
+} TileType;
+
+TileType map[15][20] = {
+	{ 0, 0, 0, 0, 0 },
+	{ 1, 1, 1, 1, 1 },
+};
+
+void game_reset(void)
+{
+}
+
+void game_input(unsigned dt_usec)
+{
+	(void)dt_usec;
+
+	kal.pos = 5;
+
+	if (sdk_inputs.joy_x > 300) {
+		kal.pos = 6;
+	} else if (sdk_inputs.joy_x < -300) {
+		kal.pos = 4;
+	} else if (sdk_inputs.joy_y > 300) {
+		kal.pos = 8;
+	} else if (sdk_inputs.joy_y < -300) {
+		kal.pos = 2;
+	}
+	if (sdk_inputs.joy_x < -300 && sdk_inputs.joy_y < -300) {
+		kal.pos = 1;
+	} else if (sdk_inputs.joy_x > 300 && sdk_inputs.joy_y < -300) {
+		kal.pos = 3;
+	} else if (sdk_inputs.joy_x < -300 && sdk_inputs.joy_y > 300) {
+		kal.pos = 7;
+	} else if (sdk_inputs.joy_y > 300 && sdk_inputs.joy_x > 300) {
+		kal.pos = 9;
+	}
+}
+
+void game_paint(unsigned __unused dt_usec)
+{
+	tft_fill(1);
+
+	sdk_draw_tile(5, TFT_BOTTOM - 26, &ts_numer_png, kal.pos - 1);
+	for (int x = 0; x > 10; x += 2) {
+		sdk_draw_tile(31, TFT_BOTTOM - 26, &ts_numer_png, x);
+	};
+}
+
+int main()
+{
+	struct sdk_config config = {
+		.wait_for_usb = true,
+		.show_fps = true,
+		.off_on_select = true,
+		.fps_color = GRAY,
+	};
+
+	sdk_main(&config);
+}
