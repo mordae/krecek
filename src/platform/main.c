@@ -77,11 +77,13 @@ typedef struct {
 } Jockey;
 static Jockey jockey;
 static float volume = SDK_GAIN_STD;
-
 static void enemy_jockey(float dt);
-
+static void game_menu(float dt);
+static void world_start();
+static void mario_movement(float dt);
+static void mario_win();
 // --- Audio: Updated tune ---
-static const char music1[] = "/i:square /bpm:60 "
+static const char music1[] = "/i:square /bpm:60 /pl "
 			     "{ "
 			     "ACGgbGA _ ACEGgFD _ ACGgbEC _ FGAGFED _ "
 			     "CEGAEC  _ GBgfeD  _ ACGEFGA _ DEFGEDC _ "
@@ -91,7 +93,7 @@ static const char music1[] = "/i:square /bpm:60 "
 			     "CEGAGEC _ GBgfeD  _ ACGEFGA _ DEFGEDC _ "
 			     "}";
 
-static const char music2[] = "/i:noise /bpm:60 "
+static const char music2[] = "/i:noise /bpm:60 /pr "
 			     "{ "
 			     "cc_c_cc _ cc_c_cc _ cc_c_cc _ cc_c_cc _ "
 			     "cc_c_c  _ cc_c__  _ cc_c_cc _ cc_c_cc _ "
@@ -128,10 +130,30 @@ void game_reset(void)
 	jockey.s.tile = 0;
 }
 
-// --- Game Input ---
 void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
+	if (sdk_inputs.vol_up) {
+		volume += 12.0 * dt;
+	}
+
+	if (sdk_inputs.vol_down) {
+		volume -= 12.0 * dt;
+	}
+
+	if (sdk_inputs_delta.vol_sw > 0) {
+		if (volume <= SDK_GAIN_MIN) {
+			volume = SDK_GAIN_STD;
+		} else {
+			volume = SDK_GAIN_MIN;
+		}
+	}
+	volume = clamp(volume, SDK_GAIN_MIN, SDK_GAIN_MAX);
+
+	if (sdk_inputs.vol_up || sdk_inputs.vol_down || sdk_inputs.vol_sw) {
+		sdk_set_output_gain_db(volume);
+	}
+
 	if (map != maps_mapwin) {
 		mario_p.time += dt;
 	}
@@ -141,318 +163,199 @@ void game_input(unsigned dt_usec)
 			return;
 		}
 	} else if (mario_p.mode == 0) {
-		mario_p.fast = 0;
-		map = maps_map0;
-		if (sdk_inputs_delta.y > 0 || sdk_inputs.joy_y < -500) {
-			menu.select -= 1;
-		}
-		if (sdk_inputs_delta.a > 0 || sdk_inputs.joy_y > 500) {
-			menu.select += 1;
-		}
-
-		if (menu.select >= 4) {
-			menu.select = 0;
-		}
-		if (menu.select == -1) {
-			menu.select = 3;
-		}
-
-		if (sdk_inputs_delta.start > 0) {
-			if (menu.select == 0) {
-				mario_p.px = 1 * TILE_SIZE;
-				mario_p.py = 12 * TILE_SIZE;
-				mario_p.vx = 0;
-				mario_p.vy = 0;
-				mario_p.score = 0;
-				mario_p.alive = 1;
-				mario_p.won = 0;
-				mario_p.mode = 1;
-				mario_p.fast = 0;
-				map = maps_map1;
-				jockey.s.y = 14 * TILE_SIZE - 0.1;
-				jockey.s.x = 3 * TILE_SIZE;
-				jockey.right = 1;
-				return;
-			} else if (menu.select == 1) {
-				mario_p.time = 0;
-				mario_p.px = 1 * TILE_SIZE;
-				mario_p.py = 12 * TILE_SIZE;
-				mario_p.vx = 0;
-				mario_p.vy = 0;
-				mario_p.score = 0;
-				mario_p.alive = 1;
-				mario_p.won = 0;
-				mario_p.mode = 1;
-				mario_p.fast = 1;
-				map = maps_map1;
-				jockey.s.y = 14 * TILE_SIZE - 0.1;
-				jockey.s.x = 3 * TILE_SIZE;
-				jockey.right = 1;
-				return;
-			}
-			if (menu.select == 2) {
-				mario_p.mode = 3;
-				menu.levels = 0;
-				return;
-			}
-		}
+		game_menu(dt);
+		return;
 	}
 	if (mario_p.mode == 1 || mario_p.mode == 2) {
-		if (!mario_p.alive) {
-			mario_p.mode = 4;
-		}
-		if (mario_p.won) {
-			if (sdk_inputs.start) {
-				mario_p.won = 0;
-				if (map == maps_map1) {
-					map = maps_map2;
-					mario_p.px = 3.5;
-					mario_p.py = 7;
-				} else if (map == maps_map2) {
-					map = maps_map3;
-					mario_p.px = 3.5;
-					mario_p.py = 7;
-				} else if (map == maps_map3) {
-					map = maps_map4;
-					mario_p.px = 3.5;
-					mario_p.py = 7;
-				} else if (map == maps_map4) {
-					map = maps_map1c;
-					mario_p.px = 1;
-					mario_p.py = 7;
-					jockey.s.y = 14 * TILE_SIZE - 0.1;
-					jockey.s.x = 3 * TILE_SIZE;
-					jockey.right = 1;
-				} else if (map == maps_map1c) {
-					map = maps_map2c;
-					mario_p.px = 1;
-					mario_p.py = 7;
-				} else if (map == maps_map2c) {
-					map = maps_map3c;
-					mario_p.px = 0 * TILE_SIZE;
-					mario_p.py = 12 * TILE_SIZE;
-					mario_p.vx = 0;
-					mario_p.vy = 0;
-				} else if (map == maps_map3c) {
-					map = maps_map4c;
-					mario_p.px = 0 * TILE_SIZE;
-					mario_p.py = 12 * TILE_SIZE;
-					mario_p.vx = 0;
-					mario_p.vy = 0;
-				} else if (map == maps_map4c) {
-					map = maps_mapwin;
-					mario_p.px = 1;
-					mario_p.py = 7;
-				}
-			}
-		}
-		if (map == maps_map1c) {
-			enemy_jockey(dt);
-		}
-		if (map == maps_map1) {
-			enemy_jockey(dt);
-		}
-		if (sdk_inputs.vol_up) {
-			volume += 12.0 * dt;
-		}
-
-		if (sdk_inputs.vol_down) {
-			volume -= 12.0 * dt;
-		}
-
-		if (sdk_inputs_delta.select > 0) {
-			game_reset();
-			return;
-		}
-		if (sdk_inputs_delta.vol_sw > 0) {
-			if (volume <= SDK_GAIN_MIN) {
-				volume = SDK_GAIN_STD;
-			} else {
-				volume = SDK_GAIN_MIN;
-			}
-		}
-
-		volume = clamp(volume, SDK_GAIN_MIN, SDK_GAIN_MAX);
-
-		if (sdk_inputs.vol_up || sdk_inputs.vol_down || sdk_inputs.vol_sw) {
-			sdk_set_output_gain_db(volume);
-		}
-
-		// Horizontal movement
-		if (sdk_inputs.x > 0 || sdk_inputs.joy_x < -500) { // Left
-			mario_p.vx -= ACCELERATION * dt;
-			if (mario_p.vx < -MAX_SPEED)
-				mario_p.vx = -MAX_SPEED;
-		} else if (sdk_inputs.b > 0 || sdk_inputs.joy_x > 500) { // Right
-			mario_p.vx += ACCELERATION * dt;
-			if (mario_p.vx > MAX_SPEED)
-				mario_p.vx = MAX_SPEED;
-
-		} else {
-			if (mario_p.friction == 0) {
-				mario_p.vx -= mario_p.vx * FRICTION * dt;
-				if (fabs(mario_p.vx) < 0.1) {
-					mario_p.vx = 0;
-				}
-			}
-		}
-
-		if (mario_p.vy != 0) {
-			mario_p.vx = mario_p.vx * 0.98;
-		}
-
-		// Apply gravity
-		mario_p.vy += GRAVITY * dt;
-
-		mario_p.px += mario_p.vx * dt;
-		mario_p.py += mario_p.vy * dt;
-
-		// Collision detection with floor tiles
-		int tile_x = mario_p.px / TILE_SIZE;
-		int tile_y = mario_p.py / TILE_SIZE + 1.0f / TILE_SIZE;
-
-		mario_p.friction = 0;
-
-		if (mario_p.vy >= 0 && tile_y >= 0) {
-			switch (map[tile_y][tile_x]) {
-			case GRASS:
-			case FLOOR_MID:
-			case FLOOR_R:
-			case FLOOR_L:
-				mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
-				mario_p.vy = 0;
-
-				if (sdk_inputs.y) {
-					mario_p.vy = JUMP_STRENGTH;
-				}
-
-				break;
-
-			case FLOOR_JUMP_MID:
-			case FLOOR_JUMP_L:
-			case FLOOR_JUMP_R:
-				mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
-				mario_p.vy = 0;
-
-				if (sdk_inputs.y) {
-					mario_p.vy = 1.2 * JUMP_STRENGTH;
-				}
-
-				break;
-
-			case FLOOR_WIN_MID:
-			case FLOOR_WIN_L:
-			case FLOOR_WIN_R:
-				mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
-				mario_p.vy = 0;
-				mario_p.won = 1;
-				break;
-
-			case FLOOR_MID_COLD:
-			case FLOOR_R_COLD:
-			case FLOOR_CUBE_COLD:
-			case FLOOR_L_COLD:
-				mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
-				mario_p.vy = 0;
-				mario_p.friction = 1;
-				if (sdk_inputs.y) {
-					mario_p.vy = JUMP_STRENGTH;
-				}
-
-				break;
-
-			case FLOOR_JUMP_MID_COLD:
-			case FLOOR_JUMP_L_COLD:
-			case FLOOR_JUMP_CUBE_COLD:
-			case FLOOR_JUMP_R_COLD:
-				mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
-				mario_p.vy = 0;
-				mario_p.friction = 1;
-				if (sdk_inputs.y) {
-					mario_p.vy = 1.2 * JUMP_STRENGTH;
-				}
-
-				break;
-
-			case FLOOR_WIN_MID_COLD:
-			case FLOOR_WIN_L_COLD:
-			case FLOOR_WIN_CUBE_COLD:
-			case FLOOR_WIN_R_COLD:
-				mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
-				mario_p.vy = 0;
-				mario_p.friction = 1;
-				mario_p.won = 1;
-				break;
-
-			case EMPTY:
-			case SPAWNER_MARIO:
-			case SPAWNER_SONIC:
-			case CHEST:
-				break;
-			}
-		}
-
-		// Boundaries
-		if (mario_p.px < 0)
-			mario_p.px = 0;
-
-		if (mario_p.px >= MAP_COLS * TILE_SIZE - TILE_SIZE)
-			mario_p.px = MAP_COLS * TILE_SIZE - TILE_SIZE;
-
-		if (mario_p.py >= MAP_ROWS * TILE_SIZE - TILE_SIZE + TILE_SIZE - 1) {
-			mario_p.alive = false;
-		}
+		mario_movement(dt);
 	}
 	if (mario_p.mode == 3) {
-		if (sdk_inputs_delta.y > 0 || sdk_inputs.joy_y < -500) {
-			menu.levels -= 1;
-		}
-		if (sdk_inputs_delta.a > 0 || sdk_inputs.joy_y > 500) {
-			menu.levels += 1;
-		}
-		if (menu.levels >= 8) {
-			menu.levels = 0;
-		}
-		if (menu.levels == -1) {
-			menu.levels = 7;
-		}
-
-		if (sdk_inputs_delta.start > 0) {
-			mario_p.px = 1 * TILE_SIZE;
-			mario_p.py = 12 * TILE_SIZE;
-			mario_p.vx = 0;
-			mario_p.vy = 0;
-			mario_p.score = 0;
-			mario_p.alive = 1;
-			mario_p.won = 0;
-			mario_p.mode = 1;
-			if (menu.levels == 0) {
-				map = maps_map1;
-				jockey.s.y = 14 * TILE_SIZE - 1;
-				jockey.s.x = 3 * TILE_SIZE;
-				jockey.right = 1;
-			} else if (menu.levels == 1) {
-				map = maps_map2;
-			} else if (menu.levels == 2) {
-				map = maps_map3;
-			} else if (menu.levels == 3) {
-				map = maps_map4;
-			} else if (menu.levels == 4) {
-				map = maps_map1c;
-				jockey.s.y = 14 * TILE_SIZE - 1;
-				jockey.s.x = 3 * TILE_SIZE;
-				jockey.right = 1;
-			} else if (menu.levels == 5) {
-				map = maps_map2c;
-			} else if (menu.levels == 6) {
-				map = maps_map3c;
-			} else if (menu.levels == 7) {
-				map = maps_map4c;
-			}
-		}
+		game_menu(dt);
+		return;
+	}
+}
+static void mario_win()
+{
+	mario_p.won = 0;
+	if (map == maps_map1) {
+		map = maps_map2;
+		world_start();
+	} else if (map == maps_map2) {
+		map = maps_map3;
+		world_start();
+	} else if (map == maps_map3) {
+		world_start();
+		map = maps_map4;
+	} else if (map == maps_map4) {
+		world_start();
+		map = maps_map1c;
+	} else if (map == maps_map1c) {
+		world_start();
+		map = maps_map2c;
+	} else if (map == maps_map2c) {
+		map = maps_map3c;
+		mario_p.py = 12 * TILE_SIZE;
+		world_start();
+	} else if (map == maps_map3c) {
+		map = maps_map4c;
+		mario_p.py = 12 * TILE_SIZE;
+		world_start();
+	} else if (map == maps_map4c) {
+		map = maps_mapwin;
+		mario_p.px = 1;
+		mario_p.py = 7;
 	}
 }
 
+static void mario_movement(float dt)
+{
+	if (!mario_p.alive) {
+		mario_p.mode = 4;
+		return;
+	}
+	if (mario_p.won) {
+		if (sdk_inputs.start) {
+			mario_win();
+		}
+	}
+
+	if (map == maps_map1c) {
+		enemy_jockey(dt);
+	}
+	if (map == maps_map1) {
+		enemy_jockey(dt);
+	}
+
+	if (sdk_inputs_delta.select > 0) {
+		game_reset();
+		return;
+	}
+
+	// Horizontal movement
+	if (sdk_inputs.x > 0 || sdk_inputs.joy_x < -500) { // Left
+		mario_p.vx -= ACCELERATION * dt;
+		if (mario_p.vx < -MAX_SPEED)
+			mario_p.vx = -MAX_SPEED;
+	} else if (sdk_inputs.b > 0 || sdk_inputs.joy_x > 500) { // Right
+		mario_p.vx += ACCELERATION * dt;
+		if (mario_p.vx > MAX_SPEED)
+			mario_p.vx = MAX_SPEED;
+
+	} else {
+		if (mario_p.friction == 0) {
+			mario_p.vx -= mario_p.vx * FRICTION * dt;
+			if (fabs(mario_p.vx) < 0.1) {
+				mario_p.vx = 0;
+			}
+		}
+	}
+
+	if (mario_p.vy != 0) {
+		mario_p.vx = mario_p.vx * 0.98;
+	}
+
+	// Apply gravity
+	mario_p.vy += GRAVITY * dt;
+
+	mario_p.px += mario_p.vx * dt;
+	mario_p.py += mario_p.vy * dt;
+
+	// Collision detection with floor tiles
+	int tile_x = mario_p.px / TILE_SIZE;
+	int tile_y = mario_p.py / TILE_SIZE + 1.0f / TILE_SIZE;
+
+	mario_p.friction = 0;
+
+	if (mario_p.vy >= 0 && tile_y >= 0) {
+		switch (map[tile_y][tile_x]) {
+		case GRASS:
+		case FLOOR_MID:
+		case FLOOR_R:
+		case FLOOR_L:
+			mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+			mario_p.vy = 0;
+
+			if (sdk_inputs.y) {
+				mario_p.vy = JUMP_STRENGTH;
+			}
+
+			break;
+
+		case FLOOR_JUMP_MID:
+		case FLOOR_JUMP_L:
+		case FLOOR_JUMP_R:
+			mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+			mario_p.vy = 0;
+
+			if (sdk_inputs.y) {
+				mario_p.vy = 1.2 * JUMP_STRENGTH;
+			}
+
+			break;
+
+		case FLOOR_WIN_MID:
+		case FLOOR_WIN_L:
+		case FLOOR_WIN_R:
+			mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+			mario_p.vy = 0;
+			mario_p.won = 1;
+			break;
+
+		case FLOOR_MID_COLD:
+		case FLOOR_R_COLD:
+		case FLOOR_CUBE_COLD:
+		case FLOOR_L_COLD:
+			mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+			mario_p.vy = 0;
+			mario_p.friction = 1;
+			if (sdk_inputs.y) {
+				mario_p.vy = JUMP_STRENGTH;
+			}
+
+			break;
+
+		case FLOOR_JUMP_MID_COLD:
+		case FLOOR_JUMP_L_COLD:
+		case FLOOR_JUMP_CUBE_COLD:
+		case FLOOR_JUMP_R_COLD:
+			mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+			mario_p.vy = 0;
+			mario_p.friction = 1;
+			if (sdk_inputs.y) {
+				mario_p.vy = 1.2 * JUMP_STRENGTH;
+			}
+
+			break;
+
+		case FLOOR_WIN_MID_COLD:
+		case FLOOR_WIN_L_COLD:
+		case FLOOR_WIN_CUBE_COLD:
+		case FLOOR_WIN_R_COLD:
+			mario_p.py = tile_y * TILE_SIZE - 1.0f / TILE_SIZE;
+			mario_p.vy = 0;
+			mario_p.friction = 1;
+			mario_p.won = 1;
+			break;
+
+		case EMPTY:
+		case SPAWNER_MARIO:
+		case SPAWNER_SONIC:
+		case CHEST:
+			break;
+		}
+	}
+
+	// Boundaries
+	if (mario_p.px < 0)
+		mario_p.px = 0;
+
+	if (mario_p.px >= MAP_COLS * TILE_SIZE - TILE_SIZE)
+		mario_p.px = MAP_COLS * TILE_SIZE - TILE_SIZE;
+
+	if (mario_p.py >= MAP_ROWS * TILE_SIZE - TILE_SIZE + TILE_SIZE - 1) {
+		mario_p.alive = false;
+	}
+}
 static void enemy_jockey(float dt)
 {
 	if (sdk_inputs_delta.a > 0) {
@@ -517,6 +420,95 @@ turn:
 	}
 
 	jockey.s.tile = jockey.right;
+}
+static void world_start()
+{
+	mario_p.px = 0 * TILE_SIZE;
+	mario_p.py = 12 * TILE_SIZE;
+	mario_p.score = 0;
+	mario_p.alive = 1;
+	mario_p.won = 0;
+	mario_p.mode = 1;
+	jockey.s.y = 14 * TILE_SIZE - 1;
+	jockey.s.x = 3 * TILE_SIZE;
+	jockey.right = 1;
+}
+
+static void game_menu(float dt)
+{
+	if (mario_p.mode == 0) {
+		mario_p.fast = 0;
+		map = maps_map0;
+		if (sdk_inputs_delta.y > 0 || sdk_inputs.joy_y < -500) {
+			menu.select -= 1;
+		}
+		if (sdk_inputs_delta.a > 0 || sdk_inputs.joy_y > 500) {
+			menu.select += 1;
+		}
+
+		if (menu.select >= 4) {
+			menu.select = 0;
+		}
+		if (menu.select == -1) {
+			menu.select = 3;
+		}
+
+		if (sdk_inputs_delta.start > 0) {
+			if (menu.select == 0) {
+				mario_p.px = 1 * TILE_SIZE;
+				mario_p.py = 12 * TILE_SIZE;
+				map = maps_map1;
+				world_start();
+				return;
+			} else if (menu.select == 1) {
+				mario_p.time = 0;
+				world_start();
+				mario_p.fast = 1;
+				map = maps_map1;
+				return;
+			}
+			if (menu.select == 2) {
+				mario_p.mode = 3;
+				menu.levels = 0;
+				return;
+			}
+		}
+	}
+	if (mario_p.mode == 3) {
+		if (sdk_inputs_delta.y > 0 || sdk_inputs.joy_y < -500) {
+			menu.levels -= 1;
+		}
+		if (sdk_inputs_delta.a > 0 || sdk_inputs.joy_y > 500) {
+			menu.levels += 1;
+		}
+		if (menu.levels >= 8) {
+			menu.levels = 0;
+		}
+		if (menu.levels == -1) {
+			menu.levels = 7;
+		}
+
+		if (sdk_inputs_delta.start > 0) {
+			world_start();
+			if (menu.levels == 0) {
+				map = maps_map1;
+			} else if (menu.levels == 1) {
+				map = maps_map2;
+			} else if (menu.levels == 2) {
+				map = maps_map3;
+			} else if (menu.levels == 3) {
+				map = maps_map4;
+			} else if (menu.levels == 4) {
+				map = maps_map1c;
+			} else if (menu.levels == 5) {
+				map = maps_map2c;
+			} else if (menu.levels == 6) {
+				map = maps_map3c;
+			} else if (menu.levels == 7) {
+				map = maps_map4c;
+			}
+		}
+	}
 }
 
 // --- Game Paint ---
