@@ -1,5 +1,6 @@
 #include <pico/stdlib.h>
 #include <sdk.h>
+#include <stdlib.h>
 #include <tft.h>
 #include <sdk.h>
 #include <math.h>
@@ -66,22 +67,28 @@ static Mario mario_p;
 
 struct menu {
 	int levels;
+	int accum;
 	int select;
 };
+
 static struct menu menu;
+
 typedef struct {
 	float vx, vy;
 	int alive;
 	bool right;
 	sdk_sprite_t s;
 } Jockey;
+
 static Jockey jockey;
+
 static float volume = SDK_GAIN_STD;
 static void enemy_jockey(float dt);
 static void game_menu(float dt);
 static void world_start();
 static void mario_movement(float dt);
 static void mario_win();
+
 // --- Audio: Updated tune ---
 static const char music1[] = "/i:square /bpm:60 /pl "
 			     "{ "
@@ -439,18 +446,30 @@ static void game_menu(float dt)
 	if (mario_p.mode == 0) {
 		mario_p.fast = 0;
 		map = maps_map0;
-		if (sdk_inputs_delta.y > 0 || sdk_inputs.joy_y < -500) {
-			menu.select -= 1;
-		}
-		if (sdk_inputs_delta.a > 0 || sdk_inputs.joy_y > 500) {
-			menu.select += 1;
+
+		if (abs(sdk_inputs.joy_y) > 500) {
+			if (!menu.accum)
+				menu.select += (sdk_inputs.joy_y > 0) ? 1 : -1;
+			menu.accum += sdk_inputs.joy_y * dt;
+		} else {
+			menu.accum = 0;
 		}
 
-		if (menu.select >= 4) {
-			menu.select = 0;
+		menu.select -= (sdk_inputs_delta.y > 0);
+		menu.select += (sdk_inputs_delta.a > 0);
+
+		if (menu.accum > 500) {
+			menu.accum -= 500;
+			menu.select += 1;
+		} else if (menu.accum < -500) {
+			menu.accum += 500;
+			menu.select -= 1;
 		}
-		if (menu.select == -1) {
-			menu.select = 3;
+
+		if (menu.select > 2) {
+			menu.select = 0;
+		} else if (menu.select < 0) {
+			menu.select = 2;
 		}
 
 		if (sdk_inputs_delta.start > 0) {
@@ -466,25 +485,35 @@ static void game_menu(float dt)
 				mario_p.fast = 1;
 				map = maps_map1;
 				return;
-			}
-			if (menu.select == 2) {
+			} else if (menu.select == 2) {
 				mario_p.mode = 3;
 				menu.levels = 0;
 				return;
 			}
 		}
-	}
-	if (mario_p.mode == 3) {
-		if (sdk_inputs_delta.y > 0 || sdk_inputs.joy_y < -500) {
+	} else if (mario_p.mode == 3) {
+		if (abs(sdk_inputs.joy_y) > 500) {
+			if (!menu.accum)
+				menu.levels += (sdk_inputs.joy_y > 0) ? 1 : -1;
+			menu.accum += sdk_inputs.joy_y * dt;
+		} else {
+			menu.accum = 0;
+		}
+
+		menu.levels -= (sdk_inputs_delta.y > 0);
+		menu.levels += (sdk_inputs_delta.a > 0);
+
+		if (menu.accum > 500) {
+			menu.accum -= 500;
+			menu.levels += 1;
+		} else if (menu.accum < -500) {
+			menu.accum += 500;
 			menu.levels -= 1;
 		}
-		if (sdk_inputs_delta.a > 0 || sdk_inputs.joy_y > 500) {
-			menu.levels += 1;
-		}
-		if (menu.levels >= 8) {
+
+		if (menu.levels > 7) {
 			menu.levels = 0;
-		}
-		if (menu.levels == -1) {
+		} else if (menu.levels < 0) {
 			menu.levels = 7;
 		}
 
