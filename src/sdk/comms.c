@@ -29,17 +29,17 @@ bool sdk_send_ir(uint32_t word)
 static int64_t send_ir_bit(__unused alarm_id_t alarm, __unused void *arg)
 {
 	if (bits_left <= 0) {
+		pwm_set_chan_level(slice, chan, 0);
+
 		if (stack_depth) {
 			buffer = stack[--stack_depth];
 			bits_left = 32;
-			goto begin;
+			return -2000;
 		}
 
-		pwm_set_chan_level(slice, chan, 0);
 		return -500;
 	}
 
-begin:
 	int bit = buffer >> 31;
 	buffer <<= 1;
 	bits_left--;
