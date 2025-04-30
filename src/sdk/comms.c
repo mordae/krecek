@@ -143,7 +143,7 @@ demodulate:
 		bits_len++;
 
 		if (32 == bits_len) {
-			game_inbox(&(sdk_message_t){
+			game_inbox((sdk_message_t){
 				.type = SDK_MSG_IR,
 				.ir = { .data = bits_wip },
 			});

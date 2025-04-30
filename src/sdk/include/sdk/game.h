@@ -25,4 +25,4 @@ typedef struct sdk_message {
 	};
 } sdk_message_t;
 
-void game_inbox(const sdk_message_t *msg);
+void game_inbox(sdk_message_t msg);

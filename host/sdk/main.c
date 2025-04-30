@@ -211,7 +211,7 @@ __weak void game_paint(unsigned __unused dt)
 {
 }
 
-__weak void game_inbox(const sdk_message_t *msg)
+__weak void game_inbox(sdk_message_t msg)
 {
 	(void)msg;
 }

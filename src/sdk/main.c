@@ -270,10 +270,10 @@ __weak void game_paint(unsigned __unused dt)
 {
 }
 
-__weak void game_inbox(const sdk_message_t *msg)
+__weak void game_inbox(sdk_message_t msg)
 {
-	if (SDK_MSG_IR == msg->type) {
-		printf("sdk: ir=%08x\n", (unsigned)msg->ir.data);
+	if (SDK_MSG_IR == msg.type) {
+		printf("sdk: ir=%08x\n", (unsigned)msg.ir.data);
 	}
 }
 

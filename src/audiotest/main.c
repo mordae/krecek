@@ -46,10 +46,10 @@ void game_start(void)
 	my_code = rand();
 }
 
-void game_inbox(const sdk_message_t *msg)
+void game_inbox(sdk_message_t msg)
 {
-	if (SDK_MSG_IR == msg->type) {
-		bits = msg->ir.data;
+	if (SDK_MSG_IR == msg.type) {
+		bits = msg.ir.data;
 
 		if (bits != my_code)
 			sdk_melody_play("/i:prnl /bpm:160 (fff) e_ e_ e_");
