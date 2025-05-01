@@ -2,6 +2,12 @@
 #include <stdint.h>
 
 enum {
+	FLAG_BURST = 0x40,
+	FLAG_READ = 0x80,
+};
+
+enum {
+	// Regular, read/write configuration registers
 	REG_IOCFG2 = 0x00,
 	REG_IOCFG1 = 0x01,
 	REG_IOCFG0 = 0x02,
@@ -27,6 +33,96 @@ enum {
 	REG_MCSM2 = 0x16,
 	REG_MCSM1 = 0x17,
 	REG_MCSM0 = 0x18,
+	REG_FOCCFG = 0x19,
+	REG_BSCFG = 0x1a,
+	REG_AGCCTRL2 = 0x1b,
+	REG_AGCCTRL1 = 0x1c,
+	REG_AGCCTRL0 = 0x1d,
+	REG_WOREVT1 = 0x1e,
+	REG_WOREVT0 = 0x1f,
+	REG_WORCTRL = 0x20,
+	REG_FREND1 = 0x21,
+	REG_FREND0 = 0x22,
+	REG_FSCAL3 = 0x23,
+	REG_FSCAL2 = 0x24,
+	REG_FSCAL1 = 0x25,
+	REG_FSCAL0 = 0x26,
+	REG_RCCTRL1 = 0x27,
+	REG_RCCTRL0 = 0x28,
+	REG_FSTEST = 0x29,
+	REG_PTEST = 0x2a,
+	REG_AGCTEST = 0x2b,
+	REG_TEST2 = 0x2c,
+	REG_TEST1 = 0x2d,
+	REG_TEST0 = 0x2e,
+	REG_UNUSED_2F = 0x2f,
+
+	// Read-only registers.
+	REG_PARTNUM = 0xf0,
+	REG_VERSION = 0xf1,
+	REG_FREQEST = 0xf2,
+	REG_LQI = 0xf3,
+	REG_RSSI = 0xf4,
+	REG_MARCSTATE = 0xf5,
+	REG_WORTIME1 = 0xf6,
+	REG_WORTIME0 = 0xf7,
+	REG_PKTSTATUS = 0xf8,
+	REG_VCO_VC_DAC = 0xf9,
+	REG_TXBYTES = 0xfa,
+	REG_RXBYTES = 0xfb,
+	REG_RCCTRL1_STATUS = 0xfc,
+	REG_RCCTRL0_STATUS = 0xfd,
+
+	// Special register with power amplifier ramp values.
+	// Actually 8 data bytes, best use burst mode.
+	// Pointer resets to data0 upon CS going high.
+	REG_PATABLE = 0x3e,
+
+	// RX and TX FIFO access.
+	// They are split, you cannot read TX nor write RX.
+	REG_FIFO = 0x3f,
+};
+
+enum {
+	SRES = 0x30,
+	SFSTXON = 0x31,
+	SXOFF = 0x32,
+	SCAL = 0x33,
+	SRX = 0x34,
+	STX = 0x35,
+	SIDLE = 0x36,
+	SWOR = 0x38,
+	SPWD = 0x39,
+	SFRX = 0x3a,
+	SFTX = 0x3b,
+	SWORRST = 0x3c,
+	SNOP = 0x3d,
+};
+
+enum {
+	STATE_SLEEP = 0x00,
+	STATE_IDLE = 0x01,
+	STATE_XOFF = 0x02,
+	STATE_VCCON_MC = 0x03,
+	STATE_REGON_MC = 0x04,
+	STATE_MANCAL = 0x05,
+	STATE_VCOON = 0x06,
+	STATE_REGON = 0x07,
+	STATE_STARTCAL = 0x08,
+	STATE_BWBOOST = 0x09,
+	STATE_FS_LOCK = 0x0a,
+	STATE_IFADCON = 0x0b,
+	STATE_ENDCAL = 0x0c,
+	STATE_RX = 0x0d,
+	STATE_RX_END = 0x0e,
+	STATE_RX_RST = 0x0f,
+	STATE_TXRX_SWITCH = 0x10,
+	STATE_RXFIFO_OVERFLOW = 0x11,
+	STATE_FSTXON = 0x12,
+	STATE_TX = 0x13,
+	STATE_TX_END = 0x14,
+	STATE_RXTX_SWITCH = 0x15,
+	STATE_TXFIFO_UNDERFLOW = 0x16,
 };
 
 // GDO2 Output Pin Configuration
@@ -70,19 +166,19 @@ struct FIFOTHR {
 
 // Sync Word, High Byte
 struct SYNC1 {
-	uint8_t SYNC : 8; // Sync Word MSB, 0xd3 default
+	uint8_t SYNC; // Sync Word MSB, 0xd3 default
 };
 
 // Sync Word, Low Byte
 struct SYNC2 {
-	uint8_t SYNC2 : 8; // Sync Word LSB, 0x91 default
+	uint8_t SYNC2; // Sync Word LSB, 0x91 default
 };
 
 // Packet Length
 struct PKTLEN {
 	// Packet length in fixed-length mode or maximum length in
 	// variable-length packet mode. Defaults to 0xff.
-	uint8_t PACKET_LENGTH : 8;
+	uint8_t PACKET_LENGTH;
 };
 
 // Packet Automation Control
@@ -130,14 +226,14 @@ struct PKTCTRL0 {
 // Device Address
 struct ADDR {
 	// Address used for packet filtration
-	uint8_t DEVICE_ADDR : 8;
+	uint8_t DEVICE_ADDR;
 };
 
 // Channel Number
 struct CHANNR {
 	// Channel number which is multiplied by the channel
 	// spacing setting and added to the base frequency.
-	uint8_t CHAN : 8;
+	uint8_t CHAN;
 };
 
 // Frequency Synthesizer Control
@@ -154,24 +250,24 @@ struct FSCTRL0 {
 	// Frequency offset added to the base frequency before
 	// being used by the frequency synthesizer.
 	// offset = (f_XOSC * FREQOFF) >> 14
-	int8_t FREQOFF : 8;
+	int8_t FREQOFF;
 };
 
 // Frequency Control Word, High Byte
 struct FREQ2 {
 	// f_CARRIER = (f_XOSC * FREQ) >> 16
 	// Default FREQ = 0x1ec4ec (2016492), 800+ MHz
-	uint8_t FREQ : 8;
+	uint8_t FREQ;
 };
 
 // Frequency Control Word, Middle Byte
 struct FREQ1 {
-	uint8_t FREQ : 8;
+	uint8_t FREQ;
 };
 
 // Frequency Control Word, Low Byte
 struct FREQ0 {
-	uint8_t FREQ : 8;
+	uint8_t FREQ;
 };
 
 // Modem Configuration
@@ -191,7 +287,7 @@ struct MDMCFG4 {
 struct MDMCFG3 {
 	// The mantissa of the user specified symbol rate.
 	// R_data = (f_XOSC * (256 + DRATE_M)) >> (28 - DRATE_E)
-	uint8_t DRATE_M : 8;
+	uint8_t DRATE_M;
 };
 
 // Modem Configuration
@@ -246,7 +342,7 @@ struct MDMCFG1 {
 struct MDMCFG0 {
 	// 8-bit mantissa of channel spacing.
 	// f_CHANNEL = (f_XOSC * (256 + CHANSPC_M)) >> (18 - CHANSPC_E)
-	uint8_t CHANSPC_M : 8;
+	uint8_t CHANSPC_M;
 };
 
 // Modem Deviation Setting
@@ -325,4 +421,347 @@ struct MCSC0 {
 	uint8_t FS_AUTOCAL : 2;
 
 	uint8_t : 2;
+};
+
+// Frequency Offset Compensation Configuration
+struct FOCCFG {
+	// The saturation point for the frequency offset compensation algorithm.
+	// Do not enable for ASK/OOK.
+	//
+	// 00 = no compensation
+	// 01 = +/- BW_channel / 8
+	// 10 = +/- BW_channel / 4 (default)
+	// 11 = +/- BW_channel / 2
+	uint8_t FOC_LIMIT : 2;
+
+	// Loop gain after sync word is detected.
+	// 0 = FOC_PRE_K
+	// 1 = K/2 (default)
+	uint8_t FOC_POST_K : 1;
+
+	// Loop gain before sync word is detected.
+	// 00 = 1 * K
+	// 01 = 2 * K
+	// 10 = 3 * K (default)
+	// 11 = 4 * K
+	uint8_t FOC_PRE_K : 2;
+
+	// Freeze FOC while CS is low.
+	// Default enabled.
+	uint8_t FOC_BS_CS_GATE : 1;
+
+	uint8_t : 2;
+};
+
+// Bit Synchronization Configuration
+struct BSCFG {
+	// The saturation point for the data rate offset compensation algorithm:
+	// 00 = no compensation
+	// 01 = R / 32
+	// 10 = R / 16
+	// 11 = R / 8
+	uint8_t BS_LIMIT : 2;
+
+	// Clock recovery feedback loop gain to be used after sync word.
+	// 0 = BS_PRE_KP
+	// 1 = K_P (default)
+	uint8_t BS_POST_KP : 1;
+
+	// Clock recovery feedback loop integral gain after sync word.
+	// 0 = BS_PRE_KI
+	// 1 = K_I / 2 (default)
+	uint8_t BS_POST_KI : 1;
+
+	// Clock recovery feedback loop integral gain before sync word.
+	// 00 = 1 * K_P
+	// 01 = 2 * K_P
+	// 10 = 3 * K_P (default)
+	// 11 = 4 * K_P
+	uint8_t BS_PRE_KP : 2;
+
+	// Clock recovery feedback loop integral gain before sync word,
+	// used to correct offsets in data rate.
+	// 00 = 1 * K_I
+	// 01 = 2 * K_I (default)
+	// 10 = 3 * K_I
+	// 11 = 4 * K_I
+	uint8_t BS_PRE_KI : 2;
+};
+
+// AGC Control
+struct AGCCTRL2 {
+	// Target average amplitude on the digital channel.
+	// 000 = 24 dB
+	// 001 = 27 dB
+	// 010 = 30 dB
+	// 011 = 33 dB (default)
+	// 100 = 36 dB
+	// 101 = 38 dB
+	// 110 = 40 dB
+	// 111 = 42 dB
+	uint8_t MAGN_TARGET : 3;
+
+	// Maximum LNA + LNA2 gain relative to maximum possible gain.
+	// 000 =  -0.0 dB
+	// 001 =  -2.6 dB
+	// 010 =  -6.1 dB
+	// 011 =  -7.4 dB
+	// 100 =  -9.2 dB
+	// 101 = -11.5 dB
+	// 110 = -14.6 dB
+	// 111 = -17.1 dB
+	uint8_t MAX_LNA_GAIN : 3;
+
+	// Reduces the maximum allowable DVGA gain.
+	// 00 = no maximum
+	// 01 = 1 highest disabled
+	// 10 = 2 highest disabled
+	// 11 = 3 highest disabled
+	uint8_t MAX_DVGA_GAIN : 2;
+};
+
+// AGC Control
+struct AGCCTRL1 {
+	// Absolute RSSI threshold for asserting carrier sense.
+	// In 1 dB steps, relative to MAGN_TARGET.
+	int8_t CARRIER_SENSE_ABS_THR : 4;
+
+	// Relative threshold for asserting carrier sense.
+	// 00 = disabled
+	// 01 =  +6 dB
+	// 10 = +10 dB
+	// 11 = +14 dB
+	uint8_t CARRIER_SENSE_REL_THR : 2;
+
+	// 0 = First attenuate LNA, then LNA2
+	// 1 = First attenuate LNA2, then LNA (default)
+	uint8_t AGC_LNA_PRIORITY : 1;
+
+	uint8_t : 1;
+};
+
+// AGC Control
+struct AGCCTRL0 {
+	// In FSK mode: averaging length for the amplitude from the channel filter.
+	// 00 = 8 samples
+	// 01 = 16 samples (default)
+	// 10 = 32 samples
+	// 11 = 64 samples
+	//
+	// In ASK/OOK mode: decision boundary for reception.
+	// 00 =  4 dB
+	// 01 =  8 dB (default)
+	// 10 = 12 dB
+	// 11 = 16 dB
+	uint8_t FILTER_LENGTH : 2;
+
+	// 00 = normal operation
+	// 01 = freeze gain after sync word
+	// 10 = manual analog freeze, use digital gain
+	// 11 = manual freeze of both gains
+	uint8_t AGC_FREEZE : 2;
+
+	// How many samples to wait after gain adjustment before starting
+	// to accumulate new samples and potentially changing gain again.
+	// 00 =  8 samples
+	// 01 = 16 samples (default)
+	// 10 = 24 samples
+	// 11 = 32 samples
+	uint8_t WAIT_TIME : 2;
+
+	// Hysteresis on magnitude deviation.
+	// 00 = No hysteresis, small symmetric dead zone, high gain
+	// 01 = Low hysteresis, small asymmetric dead zone, medium gain
+	// 10 = Medium hysteresis, medium asymmetric dead zone, medium gain (default)
+	// 11 = Large hysteresis, large asymmetric dead zone, low gain
+	uint8_t HYST_LEVEL : 2;
+};
+
+// High Byte Event0 Timeout
+struct WOREVT1 {
+	// t_Event0 = (750 / f_XOSC * EVENT0) << (5 * WOR_RES)
+	uint8_t EVENT0;
+};
+
+// Low Byte Event0 Timeout
+struct WOREVT0 {
+	uint8_t EVENT0;
+};
+
+// Wake On Radio Control
+struct WORCTRL {
+	// WOR Resolution. See WOREVT1.EVENT0.
+	uint8_t WOR_RES : 2;
+
+	uint8_t : 1;
+
+	// Calibrate RC oscillator.
+	uint8_t RC_CAL : 1;
+
+	// RC clock periods after Event0 for Event1 to time out.
+	uint8_t WOR_EVENT1 : 3;
+
+	// Power down RC oscillator.
+	uint8_t RC_PD : 1;
+};
+
+// Front End RX Configuration
+struct FREND1 {
+	uint8_t MIX_CURRENT : 2;
+	uint8_t LODIV_BUF_CURRENT_RX : 2;
+	uint8_t LNA2MIX_CURRENT : 2;
+	uint8_t LNA_CURRENT : 2;
+};
+
+// Front End RX Configuration
+struct FREND0 {
+	// Index to the PATABLE.
+	//
+	// In OOK/ASK mode, strength to use when transmitting '1'.
+	// When transmitting '0', index 0 is always used.
+	//
+	// The indexes between 0 and this index are used to shape
+	// the PA ramp in both FSK and ASK/OOK modes.
+	uint8_t PA_POWER : 3;
+
+	uint8_t : 1;
+
+	// Adjust current to TX LO buffer (input to PA).
+	// Default is 1.
+	uint8_t LODIV_BUF_CURRENT_TX : 2;
+
+	uint8_t : 2;
+};
+
+// Frequency Synthesizer Calibration
+struct FSCAL3 {
+	uint8_t FSCAL3 : 4;
+	uint8_t CHIP_CURR_CAL_EN : 2;
+	uint8_t FSCAL3_CFG : 2;
+};
+
+// Frequency Synthesizer Calibration
+struct FSCAL2 {
+	uint8_t FSCAL2 : 5;
+	uint8_t VCO_CORE_H_EN : 1;
+	uint8_t : 2;
+};
+
+// Frequency Synthesizer Calibration
+struct FSCAL1 {
+	uint8_t FSCAL1 : 5;
+	uint8_t : 3;
+};
+
+// Frequency Synthesizer Calibration
+struct FSCAL0 {
+	uint8_t FSCAL0 : 7;
+	uint8_t : 1;
+};
+
+// RC Oscillator Configuration
+struct RCCTRL1 {
+	uint8_t RCCTRL : 7;
+	uint8_t : 1;
+};
+
+// RC Oscillator Configuration
+struct RCCTRL0 {
+	uint8_t RCCTRL : 7;
+	uint8_t : 1;
+};
+
+struct FSTEST {
+	uint8_t FSTEST;
+};
+
+struct PTEST {
+	uint8_t PTEST;
+};
+
+struct AGCTEST {
+	uint8_t AGCTEST;
+};
+
+struct TEST2 {
+	uint8_t TEST2;
+};
+
+struct TEST1 {
+	uint8_t TEST1;
+};
+
+struct TEST0 {
+	uint8_t TEST0;
+};
+
+struct PARTNUM {
+	uint8_t PARTNUM;
+};
+
+struct VERSION {
+	uint8_t VERSION;
+};
+
+struct FREQEST {
+	uint8_t FREQOFF_EST;
+};
+
+struct LQI {
+	uint8_t LQI_EST : 7;
+	uint8_t CRC_OK : 1;
+};
+
+struct RSSI {
+	int8_t RSSI;
+};
+
+// Main Radio Control State Machine State
+struct MARCSTATE {
+	uint8_t MARC_STATE : 5;
+	uint8_t : 3;
+};
+
+struct WORTIME1 {
+	uint8_t TIME;
+};
+
+struct WORTIME0 {
+	uint8_t TIME;
+};
+
+// Current GDOx Status and Packet Status
+struct PKTSTATUS {
+	uint8_t GDO0 : 1;
+	uint8_t : 1;
+	uint8_t GDO2 : 1;
+	uint8_t SFD : 1;
+	uint8_t CCA : 1;
+	uint8_t PQT_REACHED : 1;
+	uint8_t CS : 1;
+	uint8_t CRC_OK : 1;
+};
+
+struct VCO_VC_DAC {
+	uint8_t VCO_VC_DAC;
+};
+
+struct TXBYTES {
+	uint8_t NUM_TXBYTES : 7;
+	uint8_t TXFIFO_UNDERFLOW : 1;
+};
+
+struct RXBYTES {
+	uint8_t NUM_RXBYTES : 7;
+	uint8_t RXFIFO_OVERFLOW : 1;
+};
+
+struct RCCTRL1_STATUS {
+	uint8_t RCCTRL1_STATUS : 7;
+	uint8_t : 1;
+};
+
+struct RCCTRL0_STATUS {
+	uint8_t RCCTRL0_STATUS : 7;
+	uint8_t : 1;
 };
