@@ -61,6 +61,7 @@ void game_audio(int nsamples)
 	if (MODE_INPUT == mode) {
 		for (int i = 0; i < nsamples; i++) {
 			sdk_read_sample(&audio_left[audio_idx], &audio_right[audio_idx]);
+			sdk_write_sample(audio_left[audio_idx], audio_right[audio_idx]);
 			audio_idx = (audio_idx + 1) % TFT_WIDTH;
 		}
 

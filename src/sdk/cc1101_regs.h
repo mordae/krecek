@@ -13,7 +13,7 @@ enum {
 	REG_IOCFG0 = 0x02,
 	REG_FIFOTHR = 0x03,
 	REG_SYNC1 = 0x04,
-	REG_SYNC2 = 0x05,
+	REG_SYNC0 = 0x05,
 	REG_PKTLEN = 0x06,
 	REG_PKTCTRL1 = 0x07,
 	REG_PKTCTRL0 = 0x08,
@@ -170,8 +170,8 @@ struct SYNC1 {
 };
 
 // Sync Word, Low Byte
-struct SYNC2 {
-	uint8_t SYNC2; // Sync Word LSB, 0x91 default
+struct SYNC0 {
+	uint8_t SYNC; // Sync Word LSB, 0x91 default
 };
 
 // Packet Length

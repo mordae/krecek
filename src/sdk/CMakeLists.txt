@@ -11,6 +11,7 @@ add_library(
   dap.c
   nau88c22.c
   comms.c
+  cc1101.c
 )
 
 pico_generate_pio_header(krecek ${CMAKE_CURRENT_LIST_DIR}/i2s.pio)
