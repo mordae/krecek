@@ -51,7 +51,12 @@ void sdk_card_task(void)
 			mounted = true;
 		}
 
-		task_sleep_ms(250);
+		if (SDCARD_IDLE == sdk_sdcard_status) {
+			task_sleep_ms(50);
+		} else {
+			task_sleep_ms(250);
+		}
+
 		mutex_enter_blocking(&sdk_sdcard_mutex);
 	}
 }
