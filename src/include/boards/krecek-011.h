@@ -44,10 +44,14 @@
 #define DAP_CORE1 0x11002927u
 #define DAP_RESCUE 0xf1002927u
 
+/* Card options. */
+#define SD_SPI_DEV spi0
+#define SD_BAUDRATE 26500000
+
 /* Master pinout */
 #define SD_MISO_PIN 0
 #define IR_TX_PIN 1
-#define SD_SCLK_PIN 2
+#define SD_SCK_PIN 2
 #define SD_MOSI_PIN 3
 #define CHG_ISET2_PIN 4
 #define SD_CS_PIN 5

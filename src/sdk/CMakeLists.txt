@@ -12,6 +12,14 @@ add_library(
   nau88c22.c
   comms.c
   cc1101.c
+  sdcard_task.c
+
+  # card & filesystem
+  sdcard.c
+  fatfs/diskio.c
+  fatfs/ff.c
+  fatfs/ffsystem.c
+  fatfs/ffunicode.c
 )
 
 pico_generate_pio_header(krecek ${CMAKE_CURRENT_LIST_DIR}/i2s.pio)

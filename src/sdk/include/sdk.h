@@ -10,6 +10,8 @@
 #include <sdk/util.h>
 #include <sdk/video.h>
 #include <sdk/comms.h>
+#include <sdk/sdcard.h>
+#include <sdk/fatfs.h>
 
 #if !defined(__noreturn)
 #define __noreturn __attribute__((__noreturn__))

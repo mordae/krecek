@@ -45,6 +45,9 @@ void sdk_slave_init(void);
 /* From comms.c */
 void sdk_comms_init(void);
 
+/* From sdcard.c */
+void sdk_card_task(void);
+
 static void sdk_stats_task(void);
 
 task_t task_avail[NUM_CORES][MAX_TASKS] = {
@@ -55,7 +58,8 @@ task_t task_avail[NUM_CORES][MAX_TASKS] = {
 	},
 	{
 		MAKE_TASK(4, "tft", sdk_tft_task),
-		MAKE_TASK(1, "audio", sdk_audio_task),
+		MAKE_TASK(2, "audio", sdk_audio_task),
+		MAKE_TASK(2, "card", sdk_card_task),
 	},
 };
 
