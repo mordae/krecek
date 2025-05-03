@@ -7,6 +7,8 @@
 #include <sdk/sdcard.h>
 #include <sdk/fatfs.h>
 
+#include <hardware/spi.h>
+
 #include <pico/stdlib.h>
 #include <stdio.h>
 #include <task.h>

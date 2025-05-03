@@ -1,3 +1,5 @@
+#include <stdarg.h>
+#include <stdio.h>
 #include <tft.h>
 
 #include <stdint.h>
@@ -140,30 +142,54 @@ void tft_draw_glyph(int x, int y, color_t color, char c)
 	}
 }
 
-void tft_draw_string(int x, int y, color_t color, const char *str)
+void tft_draw_string(int x, int y, color_t color, const char *fmt, ...)
 {
-	int len = strlen(str);
+	char buf[64];
+
+	va_list ap;
+	va_start(ap, fmt);
+	int len = vsnprintf(buf, sizeof buf, fmt, ap);
+	va_end(ap);
+
+	if (len < 0)
+		return;
 
 	for (int i = 0; i < len; i++)
-		tft_draw_glyph(x + i * 8, y, color, str[i]);
+		tft_draw_glyph(x + i * 8, y, color, buf[i]);
 }
 
-void tft_draw_string_right(int x, int y, color_t color, const char *str)
+void tft_draw_string_right(int x, int y, color_t color, const char *fmt, ...)
 {
-	int len = strlen(str);
+	char buf[64];
+
+	va_list ap;
+	va_start(ap, fmt);
+	int len = vsnprintf(buf, sizeof buf, fmt, ap);
+	va_end(ap);
+
+	if (len < 0)
+		return;
 
 	x -= len * 8;
 
 	for (int i = 0; i < len; i++)
-		tft_draw_glyph(x + i * 8, y, color, str[i]);
+		tft_draw_glyph(x + i * 8, y, color, buf[i]);
 }
 
-void tft_draw_string_center(int x, int y, color_t color, const char *str)
+void tft_draw_string_center(int x, int y, color_t color, const char *fmt, ...)
 {
-	int len = strlen(str);
+	char buf[64];
+
+	va_list ap;
+	va_start(ap, fmt);
+	int len = vsnprintf(buf, sizeof buf, fmt, ap);
+	va_end(ap);
+
+	if (len < 0)
+		return;
 
 	x -= len * 4;
 
 	for (int i = 0; i < len; i++)
-		tft_draw_glyph(x + i * 8, y, color, str[i]);
+		tft_draw_glyph(x + i * 8, y, color, buf[i]);
 }
