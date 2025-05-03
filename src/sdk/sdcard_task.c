@@ -2,6 +2,10 @@
 #include <stdio.h>
 #include <task.h>
 
+#include <pico/mutex.h>
+
+mutex_t sdk_sdcard_mutex;
+
 enum sdcard_status sdk_sdcard_status = SDCARD_MISSING;
 struct sdcard_csd sdk_sdcard_csd;
 
@@ -10,6 +14,7 @@ void sdk_card_task(void)
 	static FATFS sdfs;
 	bool mounted = false;
 
+	mutex_enter_blocking(&sdk_sdcard_mutex);
 	sdcard_init();
 
 	while (true) {
@@ -20,11 +25,17 @@ void sdk_card_task(void)
 			sdk_sdcard_status = sdcard_check();
 		}
 
+		mutex_exit(&sdk_sdcard_mutex);
+
 		if (mounted && SDCARD_READY != sdk_sdcard_status) {
 			f_mount(NULL, "", 1);
 			puts("sdcard: un-mounted");
 			mounted = false;
 		} else if (!mounted && SDCARD_READY == sdk_sdcard_status) {
+			mutex_enter_blocking(&sdk_sdcard_mutex);
+			sdcard_read_csd(&sdk_sdcard_csd);
+			mutex_exit(&sdk_sdcard_mutex);
+
 			f_mount(&sdfs, "", 1);
 
 			char label[32];
@@ -38,10 +49,14 @@ void sdk_card_task(void)
 			}
 
 			mounted = true;
-
-			sdcard_read_csd(&sdk_sdcard_csd);
 		}
 
-		task_sleep_ms(100);
+		task_sleep_ms(250);
+		mutex_enter_blocking(&sdk_sdcard_mutex);
 	}
+}
+
+void sdk_card_init(void)
+{
+	mutex_init(&sdk_sdcard_mutex);
 }

@@ -45,7 +45,8 @@ void sdk_slave_init(void);
 /* From comms.c */
 void sdk_comms_init(void);
 
-/* From sdcard.c */
+/* From sdcard_task.c */
+void sdk_card_init(void);
 void sdk_card_task(void);
 
 static void sdk_stats_task(void);
@@ -185,6 +186,9 @@ void __noreturn sdk_main(const struct sdk_config *conf)
 
 	sdk_comms_init();
 	puts("sdk: comms init done");
+
+	sdk_card_init();
+	puts("sdk: card init done");
 
 	game_start();
 

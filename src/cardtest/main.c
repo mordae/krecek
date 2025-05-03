@@ -11,6 +11,27 @@ void game_start(void)
 void game_input(unsigned dt_usec)
 {
 	(void)dt_usec;
+
+	if (sdk_inputs_delta.a > 0) {
+		f_mkdir("/testdir");
+	}
+
+	if (sdk_inputs_delta.b > 0) {
+		f_unlink("/testdir");
+	}
+
+	if (sdk_inputs_delta.x > 0) {
+		FIL file;
+		UINT bw;
+		if (FR_OK == f_open(&file, "/hello.txt", FA_WRITE | FA_CREATE_ALWAYS)) {
+			f_write(&file, "Hello!", 6, &bw);
+			f_close(&file);
+		}
+	}
+
+	if (sdk_inputs_delta.y > 0) {
+		f_unlink("/hello.txt");
+	}
 }
 
 void game_paint(unsigned dt_usec)
@@ -40,7 +61,8 @@ void game_paint(unsigned dt_usec)
 				break;
 
 			char buf[32];
-			sprintf(buf, "%12s %u", file.fname, (unsigned)file.fsize);
+			sprintf(buf, "%12s%s %u", file.fname, (file.fattrib & AM_DIR) ? "/" : " ",
+				(unsigned)file.fsize);
 			tft_draw_string(0, y, rgb_to_rgb565(255, 255, 255), buf);
 			y += 16;
 		}

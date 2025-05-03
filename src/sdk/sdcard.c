@@ -17,6 +17,8 @@
 #define SD_TRACE 0
 #endif
 
+#define TIMEOUT 256
+
 static void finish(void)
 {
 	uint8_t dummy;
@@ -59,7 +61,7 @@ static void wait_while_busy(int timeout)
 
 static int receive_data(uint8_t *buf, size_t n)
 {
-	int res = receive_response(256);
+	int res = receive_response(TIMEOUT);
 
 	if (res < 0) {
 		printf("sdcard: Timed out waiting for data.\n");
@@ -86,7 +88,7 @@ static int send_data(uint8_t tok, const uint8_t *buf, size_t n)
 	spi_write_blocking(SD_SPI_DEV, buf, n);
 	spi_write_blocking(SD_SPI_DEV, crc, 2);
 
-	int res = receive_response(256);
+	int res = receive_response(TIMEOUT);
 
 	if (res < 0) {
 		printf("sdcard: Timed out waiting for confirmation.\n");
@@ -98,7 +100,7 @@ static int send_data(uint8_t tok, const uint8_t *buf, size_t n)
 		return res;
 	}
 
-	wait_while_busy(256);
+	wait_while_busy(TIMEOUT);
 	return 0x00;
 }
 
@@ -164,6 +166,10 @@ void sdcard_init(void)
 
 bool sdcard_open(void)
 {
+#if SD_TRACE
+	puts("-- sdcard_open()");
+#endif
+
 	uint8_t dummy;
 	int res = 0;
 
@@ -378,7 +384,7 @@ void sdcard_end_read(void)
 	/* Keep reading until the termination is confirmed. */
 	uint8_t resp = 0x00;
 
-	for (int i = 0; i < 256; i++) {
+	for (int i = 0; i < TIMEOUT; i++) {
 		spi_read_blocking(SD_SPI_DEV, 0xff, &resp, 1);
 
 		if (0xff == resp)
@@ -398,7 +404,7 @@ void sdcard_end_write(void)
 	uint8_t stop[2] = { 0xfd, 0xff };
 	spi_write_blocking(SD_SPI_DEV, stop, 2);
 
-	wait_while_busy(256);
+	wait_while_busy(TIMEOUT);
 	finish();
 }
 

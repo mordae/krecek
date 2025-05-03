@@ -17,7 +17,7 @@ void ff_memfree(void *mblock)
 }
 #endif
 
-auto_init_recursive_mutex(fatfs_mutex);
+extern mutex_t sdk_sdcard_mutex;
 
 int ff_mutex_create(int vol)
 {
@@ -33,11 +33,12 @@ void ff_mutex_delete(int vol)
 int ff_mutex_take(int vol)
 {
 	(void)vol;
-	return recursive_mutex_enter_timeout_ms(&fatfs_mutex, FF_FS_TIMEOUT);
+	mutex_enter_blocking(&sdk_sdcard_mutex);
+	return true;
 }
 
 void ff_mutex_give(int vol)
 {
 	(void)vol;
-	recursive_mutex_exit(&fatfs_mutex);
+	mutex_exit(&sdk_sdcard_mutex);
 }

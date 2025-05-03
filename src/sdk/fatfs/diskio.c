@@ -9,9 +9,7 @@ DSTATUS disk_status(BYTE pdrv)
 	if (0 != pdrv)
 		panic("diskio: attempted to use drive %hhu", pdrv);
 
-	enum sdcard_status status = sdcard_check();
-
-	if (SDCARD_READY == status)
+	if (SDCARD_READY == sdk_sdcard_status)
 		return 0;
 
 	return STA_NOINIT;
@@ -19,11 +17,6 @@ DSTATUS disk_status(BYTE pdrv)
 
 DSTATUS disk_initialize(BYTE pdrv)
 {
-	if (0 == disk_status(pdrv))
-		return 0;
-
-	sdcard_open();
-
 	return disk_status(pdrv);
 }
 
