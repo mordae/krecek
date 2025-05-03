@@ -39,6 +39,8 @@ void game_paint(unsigned dt_usec)
 
 	tft_fill(0);
 
+	tft_draw_rect(0, 0, TFT_WIDTH - 1, 18, rgb_to_rgb565(63, 63, 63));
+
 	static const char *status_name[] = { "ready", "idle", "missing" };
 
 	static uint16_t status_color[] = {
@@ -47,18 +49,18 @@ void game_paint(unsigned dt_usec)
 		rgb_to_rgb565(255, 127, 127),
 	};
 
-	tft_draw_string_right(TFT_WIDTH - 1, 0, status_color[sdk_sdcard_status], "%s",
-			      status_name[sdk_sdcard_status]);
-
 	if (SDCARD_READY == sdk_sdcard_status) {
-		tft_draw_string(0, 0, rgb_to_rgb565(127, 255, 127), "%.3f GiB",
+		tft_draw_string(2, 2, rgb_to_rgb565(127, 255, 127), "%.3f GiB",
 				(double)sdk_sdcard_csd.size / (1024 * 1024 * 1024));
 	}
+
+	tft_draw_string_right(TFT_WIDTH - 1, 2, status_color[sdk_sdcard_status], "%s",
+			      status_name[sdk_sdcard_status]);
 
 	DIR dir;
 	if (FR_OK == f_opendir(&dir, "/")) {
 		FILINFO file;
-		int y = 16;
+		int y = 24;
 
 		while (FR_OK == f_readdir(&dir, &file)) {
 			if (!file.fname[0])
