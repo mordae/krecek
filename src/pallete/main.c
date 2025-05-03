@@ -3,7 +3,6 @@
 #include <pico/stdlib.h>
 
 #include <stdbool.h>
-#include <stdio.h>
 
 #include <sdk.h>
 #include <tft.h>
@@ -53,9 +52,7 @@ void game_paint(unsigned __unused dt_usec)
 		      SPACE_SIZE * cursor_x + SPACE_SIZE - 3,
 		      SPACE_SIZE * cursor_y + SPACE_SIZE - 3, (cursor_y * 16 + cursor_x) ^ 0xff);
 
-	char buf[64];
-	snprintf(buf, sizeof buf, "%i", (cursor_y * 16 + cursor_x));
-	tft_draw_string_center(132, 0, GRAY, buf);
+	tft_draw_string_center(132, 0, GRAY, "%i", (cursor_y * 16 + cursor_x));
 
 	tft_draw_rect(115, 50, 145, 80, (cursor_y * 16 + cursor_x));
 }

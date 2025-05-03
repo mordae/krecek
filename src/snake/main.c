@@ -1,7 +1,6 @@
 #include <pico/stdlib.h>
 
 #include <stdbool.h>
-#include <stdio.h>
 
 #include <sdk.h>
 #include <stdlib.h>
@@ -141,10 +140,7 @@ void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
 
-	char buf[64];
-
-	snprintf(buf, sizeof buf, "%i", score);
-	tft_draw_string(0, 0, RED, buf);
+	tft_draw_string(0, 0, RED, "%i", score);
 
 	// draw all snake parts
 	for (int snake_cell = 0; snake_cell <= score; snake_cell++) {

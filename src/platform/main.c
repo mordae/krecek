@@ -4,9 +4,6 @@
 #include <tft.h>
 #include <sdk.h>
 #include <math.h>
-//#include <stdlib.h>
-#include <stdio.h>
-
 #include "common.h"
 
 #include <petr.png.h>
@@ -581,10 +578,8 @@ void game_paint(unsigned dt_usec)
 		sdk_draw_sprite(&jockey.s);
 	}
 	tft_set_origin(0, 0);
-	char buf[16];
-	snprintf(buf, sizeof buf, "%-.2f", mario_p.time);
 	if (mario_p.fast) {
-		tft_draw_string(0, 0, rgb_to_rgb565(255, 255, 0), buf);
+		tft_draw_string(0, 0, rgb_to_rgb565(255, 255, 0), "%-.2f", mario_p.time);
 	}
 	if (mario_p.mode == 0) {
 		sdk_draw_tile(0, 0, &ts_menu_png, menu.select);

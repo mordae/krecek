@@ -1,6 +1,5 @@
 #include <pico/stdlib.h>
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
@@ -210,12 +209,8 @@ void game_paint(unsigned __unused dt_usec)
 	/* draw ball */
 	tft_draw_rect(ball.x, ball.y, ball.x + BALL_WIDTH, ball.y + BALL_HEIGHT, ball.color);
 
-	char buf[16];
-	snprintf(buf, sizeof buf, "%i", paddle1.score);
-	tft_draw_string(0 + 10, 0, BLUE, buf);
-
-	snprintf(buf, sizeof buf, "%i", paddle2.score);
-	tft_draw_string_right(TFT_RIGHT - 10, 0, GREEN, buf);
+	tft_draw_string(0 + 10, 0, BLUE, "%i", paddle1.score);
+	tft_draw_string_right(TFT_RIGHT - 10, 0, GREEN, "%i", paddle2.score);
 }
 
 int main()

@@ -201,19 +201,19 @@ void game_paint(unsigned dt_usec)
 		if (sel_y >= MAP_ROWS / 2) {
 			tft_draw_string_right(sel_x * TILE_SIZE + TILE_SIZE,
 					      sel_y * TILE_SIZE - 2 * TILE_SIZE,
-					      rgb_to_rgb565(255, 63, 63), text);
+					      rgb_to_rgb565(255, 63, 63), "%s", text);
 		} else {
 			tft_draw_string_right(sel_x * TILE_SIZE + TILE_SIZE,
 					      sel_y * TILE_SIZE + TILE_SIZE,
-					      rgb_to_rgb565(255, 63, 63), text);
+					      rgb_to_rgb565(255, 63, 63), "%s", text);
 		}
 	} else {
 		if (sel_y >= MAP_ROWS / 2) {
 			tft_draw_string(sel_x * TILE_SIZE, sel_y * TILE_SIZE - 2 * TILE_SIZE,
-					rgb_to_rgb565(255, 63, 63), text);
+					rgb_to_rgb565(255, 63, 63), "%s", text);
 		} else {
 			tft_draw_string(sel_x * TILE_SIZE, sel_y * TILE_SIZE + TILE_SIZE,
-					rgb_to_rgb565(255, 63, 63), text);
+					rgb_to_rgb565(255, 63, 63), "%s", text);
 		}
 	}
 }

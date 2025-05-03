@@ -2,7 +2,6 @@
 #include <pico/stdlib.h>
 
 #include <stdint.h>
-#include <stdio.h>
 #include <tft.h>
 #include <sdk.h>
 #include <sdk/remote.h>
@@ -38,22 +37,20 @@ void game_input(unsigned __unused dt_usec)
 	uint8_t control_byte_y = 0b10011011;
 	uint8_t null = 0;
 
-	exchange_bits(&control_byte_x, &null); 
+	exchange_bits(&control_byte_x, &null);
 	// we may posibly need to wait here
-	exchange_bits(&null, &position_x); 
+	exchange_bits(&null, &position_x);
 
-	exchange_bits(&control_byte_y, &null); 
+	exchange_bits(&control_byte_y, &null);
 	// we may posibly need to wait here
-	exchange_bits(&null, &position_y); 
+	exchange_bits(&null, &position_y);
 }
 
 void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
 
-	char buf[64];
-	sprintf(buf, "x%i y%i\n", position_x, position_y); 
-	tft_draw_string(0, 0, rgb565(255, 255, 255) , buf); 
+	tft_draw_string(0, 0, rgb565(255, 255, 255), "x%i y%i\n", position_x, position_y);
 }
 
 int main()

@@ -3,7 +3,6 @@
 #include <pico/stdlib.h>
 
 #include <sdk.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <tft.h>
 
@@ -168,19 +167,15 @@ void game_paint(unsigned dt_usec)
 						      rgb_to_rgb565(63, 255, 63);
 	uint16_t demod_color = rgb_to_rgb565(127, 127, 255);
 
-	char buf[32];
-
 	if (MODE_OUTPUT == mode) {
-		sprintf(buf, "%s %.0f Hz", wave == WAVE_SINE ? "sine" : "square", test_freq);
-		tft_draw_string_right(TFT_WIDTH - 1, 0, rgb_to_rgb565(127, 127, 127), buf);
+		tft_draw_string_right(TFT_WIDTH - 1, 0, rgb_to_rgb565(127, 127, 127), "%s %.0f Hz",
+				      wave == WAVE_SINE ? "sine" : "square", test_freq);
 	} else if (MODE_INPUT == mode) {
-		sprintf(buf, "%.2f mV", sdk_inputs.hps_mv);
 		tft_draw_string_right(TFT_WIDTH - 1, TFT_HEIGHT - 13, rgb_to_rgb565(127, 127, 255),
-				      buf);
+				      "%.2f mV", sdk_inputs.hps_mv);
 	} else if (MODE_IR == mode) {
-		sprintf(buf, "%08x", (unsigned)bits);
 		tft_draw_string_right(TFT_WIDTH - 1, TFT_HEIGHT - 13, rgb_to_rgb565(127, 127, 255),
-				      buf);
+				      "%08x", (unsigned)bits);
 	}
 
 	int left_baseline = TFT_HEIGHT / 4;

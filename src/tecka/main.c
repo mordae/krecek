@@ -1,6 +1,5 @@
 #include <pico/stdlib.h>
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
@@ -59,10 +58,8 @@ void game_audio(int nsamples)
 void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
-	char buf[64];
 
-	snprintf(buf, sizeof buf, "%i", score);
-	tft_draw_string(0, 0, RED, buf);
+	tft_draw_string(0, 0, RED, "%i", score);
 
 	/* Calculate crosshair position */
 	int tx = TFT_WIDTH / 2 * sdk_inputs.joy_x / 1400;

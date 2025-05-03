@@ -397,9 +397,7 @@ void game_paint(unsigned __unused dt_usec)
 	}
 
 	sdk_draw_sprite(&pacman.s);
-	char buf[16];
-	snprintf(buf, sizeof buf, "%i", pacman.score);
-	tft_draw_string(0 + 10, TFT_BOTTOM - 16, BLUE, buf);
+	tft_draw_string(0 + 10, TFT_BOTTOM - 16, BLUE, "%i", pacman.score);
 
 	sdk_draw_sprite(&ghost_blue.s);
 }

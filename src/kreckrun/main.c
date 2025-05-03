@@ -3,7 +3,6 @@
 #include <sdk.h>
 #include <tft.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 #include <krecek.png.h>
 #include <back.png.h>
@@ -122,9 +121,7 @@ void game_paint(unsigned __unused dt_usec)
 		}
 	}
 
-	char buf[16];
-	snprintf(buf, sizeof buf, "%6.1f", game.score);
-	tft_draw_string(0, 0, RED, buf);
+	tft_draw_string(0, 0, RED, "%6.1f", game.score);
 }
 
 int main()

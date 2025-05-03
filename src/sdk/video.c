@@ -9,7 +9,6 @@
 #include <tft.h>
 #include <task.h>
 
-#include <stdio.h>
 #include <math.h>
 
 static semaphore_t paint_sema;
@@ -52,9 +51,8 @@ void sdk_paint_task(void)
 		game_paint(delta ? delta : 1);
 
 		if (sdk_config.show_fps) {
-			char buf[16];
-			snprintf(buf, sizeof buf, "%.0f", floorf(active_fps));
-			tft_draw_string_right(TFT_WIDTH - 1, 0, sdk_config.fps_color, buf);
+			tft_draw_string_right(TFT_WIDTH - 1, 0, sdk_config.fps_color, "%.0f",
+					      floorf(active_fps));
 		}
 
 		sem_release(&sync_sema);
