@@ -51,6 +51,13 @@ void game_paint(unsigned dt_usec)
 	tft_draw_string_right(TFT_WIDTH - 1, 0, status_color[sdk_sdcard_status],
 			      status_name[sdk_sdcard_status]);
 
+	char buf[32];
+
+	if (SDCARD_READY == sdk_sdcard_status) {
+		sprintf(buf, "%.3f GiB", (double)sdk_sdcard_csd.size / (1024 * 1024 * 1024));
+		tft_draw_string(0, 0, rgb_to_rgb565(127, 255, 127), buf);
+	}
+
 	DIR dir;
 	if (FR_OK == f_opendir(&dir, "/")) {
 		FILINFO file;
@@ -60,7 +67,6 @@ void game_paint(unsigned dt_usec)
 			if (!file.fname[0])
 				break;
 
-			char buf[32];
 			sprintf(buf, "%12s%s %u", file.fname, (file.fattrib & AM_DIR) ? "/" : " ",
 				(unsigned)file.fsize);
 			tft_draw_string(0, y, rgb_to_rgb565(255, 255, 255), buf);
