@@ -225,3 +225,9 @@ void sdk_turn_off(void)
 {
 	exit(0);
 }
+
+void sdk_reboot_into_slot(unsigned slot)
+{
+	printf("Cannot reboot into slot %u on PC.\n", slot);
+	exit(0);
+}

@@ -1,6 +1,7 @@
 #pragma once
 #include <pico/stdlib.h>
 
+#include <sdk/boot.h>
 #include <sdk/audio.h>
 #include <sdk/image.h>
 #include <sdk/game.h>

@@ -12,6 +12,7 @@
 #include <hardware/clocks.h>
 #include <hardware/structs/bus_ctrl.h>
 #include <hardware/structs/xip_ctrl.h>
+#include <hardware/watchdog.h>
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -78,8 +79,79 @@ void __attribute__((__noreturn__, __format__(printf, 1, 2))) sdk_panic(const cha
 	exit(1);
 }
 
+void sdk_reboot_into_slot(unsigned slot)
+{
+	unsigned target = XIP_BASE + (0x100000 * (slot % 16) + 0x100);
+
+	// Verify where we go before we leap.
+	unsigned *firmware = (unsigned *)target;
+	unsigned sp = firmware[0];
+	unsigned pc = firmware[1];
+
+	printf("Asked to reboot into: 0x%08x\n", target);
+	printf("Stack pointer:        0x%08x\n", sp);
+	printf("Reset handler:        0x%08x\n", pc);
+
+	unsigned ram_base = 0x20000000u;
+	unsigned ram_end = ram_base + 264 * 1024;
+
+	if (sp < ram_base || sp > ram_end) {
+		puts("Refusing to reboot with invalid stack pointer.");
+		return;
+	}
+
+	if (pc < XIP_BASE || pc >= (XIP_BASE + 16 * 1024 * 1024)) {
+		puts("Refusing to reboot with reset handler.");
+		return;
+	}
+
+	watchdog_hw->scratch[0] = target;
+	watchdog_enable(1, true);
+
+	while (true)
+		tight_loop_contents();
+}
+
 void __noreturn sdk_main(const struct sdk_config *conf)
 {
+	if (watchdog_hw->scratch[0]) {
+		// If a destination firmware has been configured before reboot,
+		// we want to jump into that firmware. But clear the target,
+		// so that we don't jump repeatedly.
+		unsigned target = watchdog_hw->scratch[0];
+		watchdog_hw->scratch[0] = 0;
+
+		// Our games / partitions are arranged into 1 MiB slots.
+		unsigned end = target | 0x000fffff; // 1 MiB
+		unsigned self = (unsigned)sdk_main;
+
+		// If we are to jump to ourselves, we are done.
+		if (self >= target && self <= end)
+			goto target_reached;
+
+		// Otherwise prepare SP, PC.
+		unsigned *next = (unsigned *)target;
+		unsigned sp = next[0];
+		unsigned pc = next[1];
+
+		// Configure clk_sys from clk_ref, which in turn runs from ROSC.
+		clock_configure(clk_ref, CLOCKS_CLK_REF_CTRL_SRC_VALUE_ROSC_CLKSRC_PH, 0, 12000000,
+				12000000);
+		clock_configure(clk_sys, CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLK_REF, 0, 12000000,
+				12000000);
+
+		// Turn off interrupts (NVIC ICER, NVIC ICPR)
+		hw_set_bits((io_rw_32 *)0xe000e180, 0xffffffff);
+		hw_set_bits((io_rw_32 *)0xe000e280, 0xffffffff);
+
+		scb_hw->vtor = target;
+		asm volatile("msr msp, %0; bx %1" ::"r"(sp), "r"(pc));
+
+		__builtin_unreachable();
+	}
+
+target_reached:
+
 	/* Apply configuration. */
 	sdk_config = *conf;
 

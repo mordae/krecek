@@ -116,6 +116,10 @@ void sdk_input_task(void)
 		sdk_inputs.brack_l = 2047 - remote_adc_read(SLAVE_BRACK_L_PIN);
 		sdk_inputs.brack_r = 2047 - remote_adc_read(SLAVE_BRACK_R_PIN);
 
+		// On select + start reboot to the slot 0.
+		if (sdk_inputs.select && sdk_inputs.start)
+			sdk_reboot_into_slot(0);
+
 		/* Read battery voltage. */
 		adc_select_input(BAT_VSENSE_PIN - 26);
 		int batt = adc_repeated_read(16);

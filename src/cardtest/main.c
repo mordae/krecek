@@ -1,4 +1,8 @@
+#include <hardware/clocks.h>
+#include <pico/multicore.h>
 #include <pico/stdlib.h>
+
+#include <hardware/watchdog.h>
 
 #include <tft.h>
 #include <sdk.h>
@@ -30,6 +34,10 @@ void game_input(unsigned dt_usec)
 
 	if (sdk_inputs_delta.y > 0) {
 		f_unlink("/hello.txt");
+	}
+
+	if (sdk_inputs_delta.start > 0) {
+		sdk_reboot_into_slot(15);
 	}
 }
 
