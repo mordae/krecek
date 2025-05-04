@@ -21,11 +21,11 @@ void game_input(unsigned dt_usec)
 {
 	(void)dt_usec;
 
-	if (sdk_inputs_delta.b > 0) {
+	if (sdk_inputs_delta.b > 0 || sdk_inputs_delta.horizontal > 0) {
 		selected = (selected + 1) % NUM_GAMES;
 	}
 
-	if (sdk_inputs_delta.x > 0) {
+	if (sdk_inputs_delta.x > 0 || sdk_inputs_delta.horizontal < 0) {
 		selected = (NUM_GAMES + selected - 1) % NUM_GAMES;
 	}
 

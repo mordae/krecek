@@ -255,6 +255,35 @@ void sdk_input_commit(uint32_t dt)
 	sdk_inputs_delta.joy_x = sdk_inputs.joy_x - prev_inputs.joy_x;
 	sdk_inputs_delta.joy_y = sdk_inputs.joy_y - prev_inputs.joy_y;
 
+	if (abs(sdk_inputs.joy_x) >= 512) {
+		if (!sdk_inputs.horizontal ||
+		    (prev_inputs.horizontal > 0) != (sdk_inputs.horizontal > 0)) {
+			sdk_inputs.horizontal = sdk_inputs.joy_x > 0 ? 256 : -1;
+			prev_inputs.horizontal = 0;
+		} else {
+			sdk_inputs.horizontal += (sdk_inputs.joy_x * (int)dt) >> 21;
+		}
+	} else {
+		sdk_inputs.horizontal = 0;
+		prev_inputs.horizontal = 0;
+	}
+
+	if (abs(sdk_inputs.joy_y) >= 512) {
+		if (!sdk_inputs.vertical ||
+		    (prev_inputs.vertical > 0) != (sdk_inputs.vertical > 0)) {
+			sdk_inputs.vertical = sdk_inputs.joy_y > 0 ? 256 : -1;
+			prev_inputs.vertical = 0;
+		} else {
+			sdk_inputs.vertical += (sdk_inputs.joy_y * (int)dt) >> 21;
+		}
+	} else {
+		sdk_inputs.vertical = 0;
+		prev_inputs.vertical = 0;
+	}
+
+	sdk_inputs_delta.horizontal = (sdk_inputs.horizontal >> 8) - (prev_inputs.horizontal >> 8);
+	sdk_inputs_delta.vertical = (sdk_inputs.vertical >> 8) - (prev_inputs.vertical >> 8);
+
 	sdk_inputs_delta.vol_up = sdk_inputs.vol_up - prev_inputs.vol_up;
 	sdk_inputs_delta.vol_down = sdk_inputs.vol_down - prev_inputs.vol_down;
 	sdk_inputs_delta.vol_sw = sdk_inputs.vol_sw - prev_inputs.vol_sw;

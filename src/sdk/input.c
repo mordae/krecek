@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 
+#include <stdlib.h>
 #include <task.h>
 
 #include <sdk.h>
@@ -90,6 +91,10 @@ void sdk_input_task(void)
 	static int hps_hist[16], hps_idx = 0, hps_avg = 0;
 
 	while (true) {
+		uint32_t now = time_us_32();
+		uint32_t dt_usec = now - last_event;
+		last_event = now;
+
 		sdk_inputs.a = !remote_gpio_get(SLAVE_A_PIN);
 		sdk_inputs.b = !remote_gpio_get(SLAVE_B_PIN);
 		sdk_inputs.x = !remote_gpio_get(SLAVE_X_PIN);
@@ -115,6 +120,32 @@ void sdk_input_task(void)
 		sdk_inputs.joy_y = 2047 - remote_adc_read(SLAVE_JOY_Y_PIN);
 		sdk_inputs.brack_l = 2047 - remote_adc_read(SLAVE_BRACK_L_PIN);
 		sdk_inputs.brack_r = 2047 - remote_adc_read(SLAVE_BRACK_R_PIN);
+
+		if (abs(sdk_inputs.joy_x) >= 512) {
+			if (!sdk_inputs.horizontal ||
+			    (prev_inputs.horizontal > 0) != (sdk_inputs.horizontal > 0)) {
+				sdk_inputs.horizontal = sdk_inputs.joy_x > 0 ? 256 : -1;
+				prev_inputs.horizontal = 0;
+			} else {
+				sdk_inputs.horizontal += (sdk_inputs.joy_x * (int)dt_usec) >> 21;
+			}
+		} else {
+			sdk_inputs.horizontal = 0;
+			prev_inputs.horizontal = 0;
+		}
+
+		if (abs(sdk_inputs.joy_y) >= 512) {
+			if (!sdk_inputs.vertical ||
+			    (prev_inputs.vertical > 0) != (sdk_inputs.vertical > 0)) {
+				sdk_inputs.vertical = sdk_inputs.joy_y > 0 ? 256 : -1;
+				prev_inputs.vertical = 0;
+			} else {
+				sdk_inputs.vertical += (sdk_inputs.joy_y * (int)dt_usec) >> 21;
+			}
+		} else {
+			sdk_inputs.vertical = 0;
+			prev_inputs.vertical = 0;
+		}
 
 		// On select + start reboot to the slot 0.
 		if (sdk_inputs.select && sdk_inputs.start)
@@ -180,6 +211,11 @@ void sdk_input_task(void)
 
 		sdk_inputs_delta.joy_x = sdk_inputs.joy_x - prev_inputs.joy_x;
 		sdk_inputs_delta.joy_y = sdk_inputs.joy_y - prev_inputs.joy_y;
+
+		sdk_inputs_delta.horizontal =
+			(sdk_inputs.horizontal >> 8) - (prev_inputs.horizontal >> 8);
+		sdk_inputs_delta.vertical =
+			(sdk_inputs.vertical >> 8) - (prev_inputs.vertical >> 8);
 
 		sdk_inputs_delta.vol_up = sdk_inputs.vol_up - prev_inputs.vol_up;
 		sdk_inputs_delta.vol_down = sdk_inputs.vol_down - prev_inputs.vol_down;
@@ -257,9 +293,7 @@ void sdk_input_task(void)
 		}
 
 		/* Let the game process inputs as soon as possible. */
-		uint32_t now = time_us_32();
 		game_input(now - last_event);
-		last_event = now;
 
 		task_sleep_ms(9);
 	}

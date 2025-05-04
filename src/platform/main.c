@@ -1,6 +1,5 @@
 #include <pico/stdlib.h>
 #include <sdk.h>
-#include <stdlib.h>
 #include <tft.h>
 #include <sdk.h>
 #include <math.h>
@@ -64,7 +63,6 @@ static Mario mario_p;
 
 struct menu {
 	int levels;
-	int accum;
 	int select;
 };
 
@@ -440,28 +438,15 @@ static void world_start()
 
 static void game_menu(float dt)
 {
+	(void)dt;
+
 	if (mario_p.mode == 0) {
 		mario_p.fast = 0;
 		map = maps_map0;
 
-		if (abs(sdk_inputs.joy_y) > 500) {
-			if (!menu.accum)
-				menu.select += (sdk_inputs.joy_y > 0) ? 1 : -1;
-			menu.accum += sdk_inputs.joy_y * dt;
-		} else {
-			menu.accum = 0;
-		}
-
+		menu.select += sdk_inputs_delta.vertical;
 		menu.select -= (sdk_inputs_delta.y > 0);
 		menu.select += (sdk_inputs_delta.a > 0);
-
-		if (menu.accum > 500) {
-			menu.accum -= 500;
-			menu.select += 1;
-		} else if (menu.accum < -500) {
-			menu.accum += 500;
-			menu.select -= 1;
-		}
 
 		if (menu.select > 2) {
 			menu.select = 0;
@@ -489,24 +474,9 @@ static void game_menu(float dt)
 			}
 		}
 	} else if (mario_p.mode == 3) {
-		if (abs(sdk_inputs.joy_y) > 500) {
-			if (!menu.accum)
-				menu.levels += (sdk_inputs.joy_y > 0) ? 1 : -1;
-			menu.accum += sdk_inputs.joy_y * dt;
-		} else {
-			menu.accum = 0;
-		}
-
+		menu.levels += sdk_inputs_delta.vertical;
 		menu.levels -= (sdk_inputs_delta.y > 0);
 		menu.levels += (sdk_inputs_delta.a > 0);
-
-		if (menu.accum > 500) {
-			menu.accum -= 500;
-			menu.levels += 1;
-		} else if (menu.accum < -500) {
-			menu.accum += 500;
-			menu.levels -= 1;
-		}
 
 		if (menu.levels > 7) {
 			menu.levels = 0;

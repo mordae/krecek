@@ -8,6 +8,8 @@ struct sdk_inputs {
 	int8_t aux[8];
 	int8_t hps;
 
+	int horizontal, vertical;
+
 	int16_t joy_x, joy_y;
 	int16_t brack_l, brack_r;
 
