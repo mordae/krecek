@@ -6,6 +6,10 @@
 #include <sdk.h>
 #include <tft.h>
 
+#include <cover.png.h>
+
+sdk_game_info("pong", &image_cover_png);
+
 #define PADDLE_WIDTH 4
 #define PADDLE_HEIGHT (int)(TFT_HEIGHT / 3)
 #define PADDLE_MID (PADDLE_HEIGHT / 2)

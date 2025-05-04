@@ -18,6 +18,9 @@
 #include <background-03.png.h>
 #include <background-04.png.h>
 #include <menu-button.png.h>
+#include <cover.png.h>
+
+sdk_game_info("peckovana", &image_cover_png);
 
 // Colors
 #define RED rgb_to_rgb565(255, 0, 0)

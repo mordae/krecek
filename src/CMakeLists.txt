@@ -10,6 +10,8 @@ include(../tools/png_to_header.cmake)
 
 project(krecek)
 
+option(ENABLE_OFFSETS "Compile games with different offsets for parallel flashing")
+
 list(APPEND PICO_CONFIG_HEADER_FILES ${CMAKE_CURRENT_LIST_DIR}/vendor/pico-task/include/task_hooks.h)
 pico_sdk_init()
 

@@ -9,6 +9,10 @@
 #include <stdlib.h>
 #include <tft.h>
 
+#include <cover.png.h>
+
+sdk_game_info("minesweeper", &image_cover_png);
+
 #define SPACE_EMPTY rgb_to_rgb565(0, 0, 0)
 #define SPACE_0 rgb_to_rgb565(31, 31, 31)
 #define SPACE_1 rgb_to_rgb565(255, 64, 64)

@@ -6,7 +6,6 @@
 #include <sdk.h>
 #include <sdk/remote.h>
 
-#include <stdio.h>
 #include <tft.h>
 #include <task.h>
 
@@ -21,19 +20,6 @@ void sdk_video_init(void)
 {
 	/* Initialize the TFT panel. */
 	tft_init();
-
-	/* Draw the splash screen. */
-	tft_fill(rgb_to_rgb565(255, 255, 255));
-
-	tft_draw_sprite(TFT_WIDTH / 2 - image_splash_png.width / 2,
-			TFT_HEIGHT / 2 - image_splash_png.height / 2, image_splash_png.width,
-			image_splash_png.height, image_splash_png.data, TRANSPARENT);
-
-	tft_swap_buffers();
-	tft_sync();
-
-	/* Light up the screen. */
-	tft_display_on();
 
 	/* Prepare semaphores to guard buffer access. */
 	sem_init(&paint_sema, 0, 1);
@@ -96,26 +82,27 @@ void sdk_video_start(void)
 
 void sdk_tft_task(void)
 {
+	bool on = false;
+
 	while (true) {
 		sem_acquire_blocking(&sync_sema);
 		tft_swap_buffers();
 		sem_release(&paint_sema);
 
 		tft_sync();
+
+		if (!on) {
+			/* Light up the screen. */
+			tft_display_on();
+			on = true;
+		}
+
 		task_yield();
 	}
 }
 
 void tft_dma_channel_wait_for_finish_blocking(int dma_ch)
 {
-	unsigned core = get_core_num();
-	task_t task = task_running[core];
-
-	if (NULL == task) {
-		dma_channel_wait_for_finish_blocking(dma_ch);
-		return;
-	}
-
 	while (dma_channel_is_busy(dma_ch)) {
 		task_wait_for_dma(dma_ch);
 	}

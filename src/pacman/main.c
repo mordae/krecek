@@ -13,6 +13,9 @@
 #include <ghost-orange.png.h>
 #include <ghost-blue.png.h>
 #include <ghost-pink.png.h>
+#include <cover.png.h>
+
+sdk_game_info("pacman", &image_cover_png);
 
 typedef enum {
 	EMPTY = 0,

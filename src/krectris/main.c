@@ -9,11 +9,13 @@
 #include <assert.h>
 
 #include <sdk.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <tft.h>
 
 #include <pieces.png.h>
+#include <cover.png.h>
+
+sdk_game_info("krecktris", &image_cover_png);
 
 #define RED rgb_to_rgb565(255, 0, 0)
 #define ORANGE rgb_to_rgb565(255, 191, 0)
@@ -422,7 +424,7 @@ static const char testmusic[] = "/i:sine /bpm:100 <"
 				"}";
 
 static sdk_melody_t *testmelody;
-			
+
 void game_reset(void)
 {
 	testmelody = sdk_melody_play_get(testmusic);

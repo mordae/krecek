@@ -11,6 +11,10 @@
 #include <menu.png.h>
 #include <levels.png.h>
 #include <death.png.h>
+#include <cover.png.h>
+
+sdk_game_info("platform", &image_cover_png);
+
 // Physics constants
 #define GRAVITY 90	  // Gravity for falling
 #define JUMP_STRENGTH -80 // Jump strength

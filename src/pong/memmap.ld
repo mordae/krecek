@@ -65,6 +65,8 @@ SECTIONS
         __binary_info_header_end = .;
         KEEP (*(.embedded_block))
         __embedded_block_end = .;
+        KEEP (*(.game_info))
+        __game_info_end = .;
         KEEP (*(.reset))
         /* TODO revisit this now memset/memcpy/float in ROM */
         /* bit of a hack right now to exclude all floating point and time critical (e.g. memset, memcpy) code from

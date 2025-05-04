@@ -3,7 +3,8 @@ add_executable(
   ../../src/minesweeper/main.c
 )
 
-target_link_libraries(minesweeper PRIVATE sdk m)
+generate_png_headers()
+target_link_libraries(minesweeper PRIVATE sdk m ${PNG_HEADERS_TARGET})
 
 set_property(TARGET minesweeper PROPERTY C_STANDARD 23)
 target_compile_options(minesweeper PRIVATE -Wall -Wextra -Wnull-dereference)

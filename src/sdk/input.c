@@ -82,16 +82,17 @@ void sdk_input_task(void)
 	game_reset();
 	sdk_video_start();
 
-	uint32_t last_event = time_us_32();
-
 	static int batt_hist[16], batt_idx = 0, batt_avg = 0;
 	static int temp_hist[16], temp_idx = 0, temp_avg = 0;
 	static int cc1_hist[16], cc1_idx = 0, cc1_avg = 0;
 	static int cc2_hist[16], cc2_idx = 0, cc2_avg = 0;
 	static int hps_hist[16], hps_idx = 0, hps_avg = 0;
 
+	uint32_t now = time_us_32();
+	uint32_t last_event = now - 1;
+
 	while (true) {
-		uint32_t now = time_us_32();
+		now = time_us_32();
 		uint32_t dt_usec = now - last_event;
 		last_event = now;
 
@@ -293,7 +294,7 @@ void sdk_input_task(void)
 		}
 
 		/* Let the game process inputs as soon as possible. */
-		game_input(now - last_event);
+		game_input(dt_usec);
 
 		task_sleep_ms(9);
 	}

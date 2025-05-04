@@ -3,7 +3,8 @@ add_executable(
   ../../src/cerviiik/main.c
 )
 
-target_link_libraries(cerviiik PRIVATE sdk m)
+generate_png_headers()
+target_link_libraries(cerviiik PRIVATE sdk m ${PNG_HEADERS_TARGET})
 
 set_property(TARGET cerviiik PROPERTY C_STANDARD 23)
 target_compile_options(cerviiik PRIVATE -Wall -Wextra -Wnull-dereference)
