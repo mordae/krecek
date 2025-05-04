@@ -24,6 +24,8 @@ add_library(
 
 pico_generate_pio_header(krecek ${CMAKE_CURRENT_LIST_DIR}/i2s.pio)
 target_include_directories(krecek PUBLIC include)
+generate_png_headers()
+target_link_libraries(krecek ${PNG_HEADERS_TARGET})
 krecek_set_target_options(krecek)
 
 target_link_libraries(

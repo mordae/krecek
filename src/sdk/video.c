@@ -6,10 +6,13 @@
 #include <sdk.h>
 #include <sdk/remote.h>
 
+#include <stdio.h>
 #include <tft.h>
 #include <task.h>
 
 #include <math.h>
+
+#include <assets/splash.png.h>
 
 static semaphore_t paint_sema;
 static semaphore_t sync_sema;
@@ -18,6 +21,19 @@ void sdk_video_init(void)
 {
 	/* Initialize the TFT panel. */
 	tft_init();
+
+	/* Draw the splash screen. */
+	tft_fill(rgb_to_rgb565(255, 255, 255));
+
+	tft_draw_sprite(TFT_WIDTH / 2 - image_splash_png.width / 2,
+			TFT_HEIGHT / 2 - image_splash_png.height / 2, image_splash_png.width,
+			image_splash_png.height, image_splash_png.data, TRANSPARENT);
+
+	tft_swap_buffers();
+	tft_sync();
+
+	/* Light up the screen. */
+	tft_display_on();
 
 	/* Prepare semaphores to guard buffer access. */
 	sem_init(&paint_sema, 0, 1);
@@ -92,6 +108,15 @@ void sdk_tft_task(void)
 
 void tft_dma_channel_wait_for_finish_blocking(int dma_ch)
 {
-	while (dma_channel_is_busy(dma_ch))
+	unsigned core = get_core_num();
+	task_t task = task_running[core];
+
+	if (NULL == task) {
+		dma_channel_wait_for_finish_blocking(dma_ch);
+		return;
+	}
+
+	while (dma_channel_is_busy(dma_ch)) {
 		task_wait_for_dma(dma_ch);
+	}
 }
