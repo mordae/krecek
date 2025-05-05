@@ -3,6 +3,8 @@
 #include <tft.h>
 #include <sdk.h>
 
+#include <tiles.png.h>
+
 #define TILE_SIZE 8
 #define MAP_ROWS 8
 #define MAP_COLS 8
@@ -19,7 +21,17 @@
 #define WHITE rgb_to_rgb565(255, 255, 255)
 
 static float volume = 0;
+typedef enum {
+	GRASS = 0,
+} TileType;
 
+TileType map[7][10] = {
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+
+};
 void game_start(void)
 {
 	sdk_set_output_gain_db(volume);
@@ -66,15 +78,14 @@ void game_paint(unsigned dt_usec)
 
 	for (int y = 0; y < MAP_ROWS; y++) {
 		for (int x = 0; x < MAP_COLS; x++) {
-			//sdk_draw_tile(x * TILE_SIZE, y * TILE_SIZE, &ts_platforms_png,
-			//	      map[y][x] - 1);
-			//if (!map[y][x]) {
-			//	tft_draw_rect(x * TILE_SIZE, y * TILE_SIZE,
-			//		      x * TILE_SIZE + TILE_SIZE - 1,
-			//		      y * TILE_SIZE + TILE_SIZE - 1,
-			//		      rgb_to_rgb565(0, 0, 0));
-			//	continue;
-			//}
+			sdk_draw_tile(x * TILE_SIZE, y * TILE_SIZE, &ts_tiles_png, map[y][x] - 1);
+			//	if (!map[y][x]) {
+			//		tft_draw_rect(x * TILE_SIZE, y * TILE_SIZE,
+			//			      x * TILE_SIZE + TILE_SIZE - 1,
+			//			      y * TILE_SIZE + TILE_SIZE - 1,
+			//			      rgb_to_rgb565(0, 0, 0));
+			//		continue;
+			//	}
 		}
 	}
 }
