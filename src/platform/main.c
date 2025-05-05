@@ -260,13 +260,11 @@ static void mario_movement(float dt)
 		mario_p.vx = mario_p.vx * 0.98;
 	}
 
-	// Apply gravity
 	mario_p.vy += GRAVITY * dt;
 
 	mario_p.px += mario_p.vx * dt;
 	mario_p.py += mario_p.vy * dt;
 
-	// Collision detection with floor tiles
 	int tile_x = mario_p.px / TILE_SIZE;
 	int tile_y = mario_p.py / TILE_SIZE + 1.0f / TILE_SIZE;
 
