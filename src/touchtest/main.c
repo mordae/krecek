@@ -19,6 +19,7 @@ void game_start(void)
 
 static void exchange_bits(uint8_t *tx, uint8_t *rx)
 {
+    	remote_gpio_set(SLAVE_TOUCH_CS_PIN, 0);
 	for (int i = 0; i < 8; i++) {
 		*rx <<= 1;
 
@@ -29,6 +30,7 @@ static void exchange_bits(uint8_t *tx, uint8_t *rx)
 
 		*tx <<= 1;
 	}
+	remote_gpio_set(SLAVE_TOUCH_CS_PIN, 1);
 }
 
 void game_input(unsigned __unused dt_usec)
