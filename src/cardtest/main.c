@@ -1,10 +1,3 @@
-#include <hardware/clocks.h>
-#include <pico/multicore.h>
-#include <pico/stdlib.h>
-
-#include <hardware/watchdog.h>
-
-#include <tft.h>
 #include <sdk.h>
 
 void game_start(void)
@@ -74,8 +67,9 @@ void game_paint(unsigned dt_usec)
 			if (!file.fname[0])
 				break;
 
-			tft_draw_string(0, y, rgb_to_rgb565(255, 255, 255), "%12s%s %u", file.fname,
-					(file.fattrib & AM_DIR) ? "/" : " ", (unsigned)file.fsize);
+			tft_draw_string(0, y, rgb_to_rgb565(255, 255, 255), "%-12s%s %u",
+					file.fname, (file.fattrib & AM_DIR) ? "/" : " ",
+					(unsigned)file.fsize);
 			y += 16;
 		}
 

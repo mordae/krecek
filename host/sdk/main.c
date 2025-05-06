@@ -1,11 +1,15 @@
+#define _GNU_SOURCE
+
 #include <sdk.h>
 #include <tft.h>
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include <SDL.h>
+#include <unistd.h>
 
 #define SCALE 4
 
@@ -56,6 +60,11 @@ static void sdl_error(const char *prefix)
 
 void __noreturn sdk_main(const struct sdk_config *conf)
 {
+	// Attempt to chdir to source directory of our game for sdcard data.
+	char path[PATH_MAX];
+	snprintf(path, PATH_MAX, "src/%s", basename(program_invocation_name));
+	chdir(path);
+
 	sdk_config = *conf;
 
 	if (!sdk_config.backlight)
