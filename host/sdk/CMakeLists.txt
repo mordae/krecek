@@ -1,6 +1,5 @@
 add_library(
   sdk
-  text.c
   main.c
   input.c
   audio.c

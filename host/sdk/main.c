@@ -1,5 +1,4 @@
 #include <sdk.h>
-#include <text.h>
 #include <tft.h>
 
 #include <stdarg.h>
@@ -64,9 +63,6 @@ void __noreturn sdk_main(const struct sdk_config *conf)
 
 	if (SDL_Init(SDL_INIT_VIDEO))
 		sdl_error("SDL_Init");
-
-	if (Text_Init())
-		sdl_error("Text_Init");
 
 	SDL_Window *window = SDL_CreateWindow("Game", SDL_WINDOWPOS_CENTERED,
 					      SDL_WINDOWPOS_CENTERED, TFT_WIDTH * SCALE,
