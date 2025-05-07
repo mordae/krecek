@@ -246,12 +246,12 @@ static void player_handle_game(float dt)
 	player.s.y += player.fy * dt;
 	player.s.x += player.fx * dt;
 
-	int tile_x = player.fx / TILE_SIZE;
-	int tile_y = player.fy / TILE_SIZE - 1.0f / TILE_SIZE;
+	int tile_x = player.s.x / TILE_SIZE;
+	int tile_y = player.s.y / TILE_SIZE - 1.0f / TILE_SIZE;
 
-	switch (game_map[tile_x][tile_y]) {
+	switch (game_map[tile_y][tile_x]) {
 	case PIPE_DOWN:
-		player.s.y = tile_y * TILE_SIZE + 1.0f * TILE_SIZE;
+		player.s.y = tile_y * TILE_SIZE + 1.0f / TILE_SIZE;
 		player.fy = 0;
 
 		if (sdk_inputs.y) {
