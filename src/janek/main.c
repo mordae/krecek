@@ -3,6 +3,7 @@
 #include <tft.h>
 #include <sdk.h>
 #include <stdio.h>
+#include <math.h>
 
 #include <tiles.png.h>
 #include <gametiles.png.h>
@@ -15,11 +16,12 @@
 #define MAP_COLS 10
 
 #define SPEED_WORLD 40
-
+#define PLAYER_WIDTH 30
 #define SPEED_GAME 8
 #define MAX_SPEED_GAME 30
 #define JUMP_STRENGTH 50
 #define GRAVITY 60
+#define PLAYER_HEIGHT 26
 
 #define BLUE rgb_to_rgb565(0, 0, 255)
 #define WHITE rgb_to_rgb565(255, 255, 255)
@@ -249,10 +251,14 @@ static void player_handle_game(float dt)
 	int tile_x = player.s.x / TILE_SIZE;
 	int tile_y = player.s.y / TILE_SIZE;
 
-	int up = player.s.y / TILE_SIZE;
+	int up = (player.s.y - PLAYER_HEIGHT) / TILE_SIZE;
 	int down = player.s.y / TILE_SIZE - 1.0f / TILE_SIZE;
-	int left = (player.s.x - TILE_SIZE) / TILE_SIZE;
-	int right = (player.s.x + TILE_SIZE) / TILE_SIZE;
+	int left = (player.s.x - PLAYER_WIDTH / 2) / TILE_SIZE;
+	int right = (player.s.x + PLAYER_WIDTH / 2) / TILE_SIZE;
+
+	if (left == 0) {
+		left = 1;
+	}
 
 	switch (game_map[down][tile_x]) {
 	case PIPE_DOWN:
@@ -273,8 +279,7 @@ static void player_handle_game(float dt)
 	}
 	switch (game_map[up][tile_x]) {
 	case PIPE_UP:
-
-		player.s.y = (up + 1) * TILE_SIZE;
+		player.s.y = (up + 1) * TILE_SIZE + PLAYER_HEIGHT;
 		player.fy = 0;
 		break;
 	case PIPE_LEFT:
@@ -287,7 +292,7 @@ static void player_handle_game(float dt)
 
 	switch (game_map[tile_y][left]) {
 	case PIPE_LEFT:
-		player.s.x = (left + 1) * TILE_SIZE;
+		player.s.x = 0;
 		player.fx = 0;
 		break;
 	case PIPE_DOWN:
@@ -300,7 +305,7 @@ static void player_handle_game(float dt)
 
 	switch (game_map[tile_y][right]) {
 	case PIPE_RIGHT:
-		player.s.x = (right - 1) * TILE_SIZE;
+		player.s.x = 0;
 		player.fx = 0;
 		break;
 	case PIPE_DOWN:
@@ -311,12 +316,33 @@ static void player_handle_game(float dt)
 		break;
 	}
 
+	if (sdk_inputs_delta.a == 1) {
+		player.fx = 0;
+	}
+	if (player.s.tile == 0 && player.fx > 0) {
+		player.s.tile = 2;
+	} else if (player.s.tile == 2 && player.fx > 0) {
+		player.s.tile = 2;
+	} else if (player.s.tile == 1 && player.fx < 0) {
+		player.s.tile = 3;
+	} else if (player.s.tile == 3 && player.fx < 0) {
+		player.s.tile = 1;
+	} else if (player.fx < 0) {
+		player.s.tile = 1;
+	} else if (player.fx > 0) {
+		player.s.tile = 0;
+	}
+	printf("----------------\n");
 	printf("tile_x %d\n", tile_x);
 	printf("tile_y %d\n", tile_y);
+	printf("left %d\n", left);
+	printf("right %d\n", right);
+	printf("sprites %d\n", player.s.tile);
+	printf("FX %f\n", player.fx);
+	printf("----------------\n");
 }
 static void paint_player()
 {
-	sdk_draw_sprite(&player.s);
 	if (player.s.tile == 0 && player.fx < 0) {
 		player.s.tile = 2;
 	} else if (player.s.tile == 2 && player.fx < 0) {
@@ -331,8 +357,10 @@ static void paint_player()
 		player.s.tile = 0;
 	}
 
-	tft_draw_string(0, 0, WHITE, "%-.2f", player.s.y);
-	tft_draw_string(0, 10, WHITE, "%-.2f", player.fy);
+	sdk_draw_sprite(&player.s);
+	tft_draw_string(0, 0, WHITE, "%-.2f", player.s.x);
+	tft_draw_string(0, 10, WHITE, "%-.2f", player.fx);
+	//tft_draw_pixel(player.s.x, player.s.y, white);
 	//tft_draw_pixel(player.s.x, player.s.y, white);
 }
 static void paint_janek()
