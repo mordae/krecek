@@ -247,11 +247,16 @@ static void player_handle_game(float dt)
 	player.s.x += player.fx * dt;
 
 	int tile_x = player.s.x / TILE_SIZE;
-	int tile_y = player.s.y / TILE_SIZE - 1.0f / TILE_SIZE;
+	int tile_y = player.s.y / TILE_SIZE;
 
-	switch (game_map[tile_y][tile_x]) {
+	int up = player.s.y / TILE_SIZE;
+	int down = player.s.y / TILE_SIZE - 1.0f / TILE_SIZE;
+	int left = (player.s.x - TILE_SIZE) / TILE_SIZE;
+	int right = (player.s.x + TILE_SIZE) / TILE_SIZE;
+
+	switch (game_map[down][tile_x]) {
 	case PIPE_DOWN:
-		player.s.y = tile_y * TILE_SIZE + 1.0f / TILE_SIZE;
+		player.s.y = down * TILE_SIZE + 1.0f / TILE_SIZE;
 		player.fy = 0;
 
 		if (sdk_inputs.y) {
@@ -266,6 +271,46 @@ static void player_handle_game(float dt)
 	case ROCKS:
 		break;
 	}
+	switch (game_map[up][tile_x]) {
+	case PIPE_UP:
+
+		player.s.y = (up + 1) * TILE_SIZE;
+		player.fy = 0;
+		break;
+	case PIPE_LEFT:
+	case PIPE_DOWN:
+	case PIPE_RIGHT:
+	case NOTHING:
+	case ROCKS:
+		break;
+	}
+
+	switch (game_map[tile_y][left]) {
+	case PIPE_LEFT:
+		player.s.x = (left + 1) * TILE_SIZE;
+		player.fx = 0;
+		break;
+	case PIPE_DOWN:
+	case PIPE_UP:
+	case PIPE_RIGHT:
+	case NOTHING:
+	case ROCKS:
+		break;
+	}
+
+	switch (game_map[tile_y][right]) {
+	case PIPE_RIGHT:
+		player.s.x = (right - 1) * TILE_SIZE;
+		player.fx = 0;
+		break;
+	case PIPE_DOWN:
+	case PIPE_UP:
+	case PIPE_LEFT:
+	case NOTHING:
+	case ROCKS:
+		break;
+	}
+
 	printf("tile_x %d\n", tile_x);
 	printf("tile_y %d\n", tile_y);
 }
@@ -286,7 +331,7 @@ static void paint_player()
 		player.s.tile = 0;
 	}
 
-	tft_draw_string(0, 0, WHITE, "%-.2f", player.s.x);
+	tft_draw_string(0, 0, WHITE, "%-.2f", player.s.y);
 	tft_draw_string(0, 10, WHITE, "%-.2f", player.fy);
 	//tft_draw_pixel(player.s.x, player.s.y, white);
 }
