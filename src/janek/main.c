@@ -18,29 +18,31 @@
 #define JUMP_STRENGTH 50
 #define GRAVITY 60
 
-#define multiply332 \
-	(x, f) rgb_to_rgb332(rgb332_red((x)) * f, rgb332_green((x)) * f, rgb332_blue((x)) * f)
-
-#define RED rgb_to_rgb565(255, 0, 0)
-#define RED_POWER rgb_to_rgb565(255, 63, 63)
-#define YELLOW rgb_to_rgb565(255, 255, 0)
-#define GREEN rgb_to_rgb565(0, 255, 0)
-#define GREEN_POWER rgb_to_rgb565(63, 255, 63)
 #define BLUE rgb_to_rgb565(0, 0, 255)
-#define GRAY rgb_to_rgb565(127, 127, 127)
 #define WHITE rgb_to_rgb565(255, 255, 255)
 
 static float volume = 0;
+
 typedef enum {
 	EMPTY = 0,
 	GRASS = 1,
+	PLATFORM_UP_1,
+	PLATFORM_DOWN_1,
+	PLATFORM_UP_2,
+	PLATFORM_DOWN_2,
+	PLATFORM_UP_3,
+	PLATFORM_DOWN_3,
+	DIRT = 8,
 } TileType_world;
 
 TileType_world world_map[MAP_ROWS][MAP_COLS] = {
-	{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }, { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-	{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }, { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-	{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }, { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-	{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+	{ 1, 1, 1, 1, 2, 4, 6, 1, 1, 1 }, //
+	{ 1, 1, 1, 1, 3, 5, 7, 1, 1, 1 }, //
+	{ 8, 8, 8, 8, 8, 8, 8, 8, 8, 8 }, //
+	{ 8, 8, 8, 8, 8, 8, 8, 8, 8, 8 }, //
+	{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }, //
+	{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }, //
+	{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }, //
 
 };
 
@@ -50,21 +52,26 @@ typedef enum {
 } TileType_game;
 
 TileType_game game_map[MAP_ROWS][MAP_COLS] = {
-	{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }, { 4, 2, 2, 2, 2, 2, 2, 2, 2, 5 },
-	{ 4, 0, 0, 0, 0, 0, 0, 0, 0, 5 }, { 4, 0, 0, 0, 0, 0, 0, 0, 0, 5 },
-	{ 4, 0, 0, 0, 0, 0, 0, 0, 0, 5 }, { 4, 0, 0, 0, 0, 0, 0, 0, 0, 5 },
-	{ 4, 3, 3, 3, 3, 3, 3, 3, 3, 5 },
-
+	{ 1, 2, 2, 2, 2, 2, 2, 2, 2, 1 }, //
+	{ 4, 0, 0, 0, 0, 0, 0, 0, 0, 5 }, //
+	{ 4, 0, 0, 0, 0, 0, 0, 0, 0, 5 }, //
+	{ 4, 0, 0, 0, 0, 0, 0, 0, 0, 5 }, //
+	{ 4, 0, 0, 0, 0, 0, 0, 0, 0, 5 }, //
+	{ 4, 0, 0, 0, 0, 0, 0, 0, 0, 5 }, //
+	{ 4, 3, 3, 3, 3, 3, 3, 3, 3, 5 }, //
 };
 
-//IMPORTENT//
+enum game_mode {
+	MODE_WORLD = 0,
+	MODE_GAME = 1,
+};
+
 typedef struct {
-	float status;
+	enum game_mode mode;
 } Game;
 
 static Game game;
 
-//--Janek-Sigma--//
 typedef struct {
 	float fx, fy;
 	float speed;
@@ -73,7 +80,6 @@ typedef struct {
 
 static Janek janek;
 
-//--Janek-playing-a-game--//
 typedef struct {
 	float fx, fy;
 	float speed;
@@ -82,32 +88,24 @@ typedef struct {
 
 static Player player;
 
-static void game_audio_handaling(float dt);
+static void game_handle_audio(float dt);
 
-static void game_start_world();
-static void game_start_player();
+static void janek_handle_world(float dt);
+static void paint_janek();
 
-static void janek_handaling_world(float dt);
-static void janek_sprites_world();
+static void player_handle_game(float dt);
+static void paint_player();
 
-static void player_handaling_game(float dt);
-static void player_handaling_paint();
+static void paint_world();
+static void paint_game();
 
-static void game_tile_world();
-static void game_tile_game();
-
-static void map_handaling();
-//--starting-my-sigma-game//
 void game_start(void)
 {
 	sdk_set_output_gain_db(volume);
-	game_start_world();
 }
-//--starting-world-with-janek--//
+
 static void game_start_world()
 {
-	game.status = 1;
-
 	janek.speed = SPEED_WORLD;
 
 	janek.fx = 0;
@@ -117,59 +115,65 @@ static void game_start_world()
 	janek.s.x = 5 * TILE_SIZE;
 	janek.s.y = 3.5 * TILE_SIZE;
 }
-//--starting-any-player-game--//
+
 static void game_start_player()
 {
-	game.status = 2;
-
 	player.speed = SPEED_GAME;
 
 	player.s.ts = &ts_player_png;
 	player.s.x = 5 * TILE_SIZE;
 	player.s.y = 3.5 * TILE_SIZE;
+	player.s.ox = 16;
+	player.s.oy = 31;
 }
-//--imagine-restarting--//
+
 void game_reset(void)
 {
-	game_start();
+	game_start_world();
+	game_start_player();
+
+	game.mode = MODE_WORLD;
 }
 
 void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
-	game_audio_handaling(dt);
-	if (game.status == 1) {
-		janek_handaling_world(dt);
-	} else if (game.status == 2) {
-		game_start_player();
-		player_handaling_game(dt);
+	game_handle_audio(dt);
+
+	switch (game.mode) {
+	case MODE_WORLD:
+		janek_handle_world(dt);
+		break;
+
+	case MODE_GAME:
+		player_handle_game(dt);
+		break;
 	}
 }
 
-//--Game-tile-stuff-I-dont-understand--//
-static void game_tile_world()
+static void paint_world()
 {
 	for (int y = 0; y < MAP_ROWS; y++) {
 		for (int x = 0; x < MAP_COLS; x++) {
-			sdk_draw_tile(x * TILE_SIZE, y * TILE_SIZE, &ts_tiles_png,
-				      world_map[y][x] - 1);
+			if (world_map[y][x])
+				sdk_draw_tile(x * TILE_SIZE, y * TILE_SIZE, &ts_tiles_png,
+					      world_map[y][x] - 1);
 		}
 	}
 }
 
-//--Game-tile-stuff-I-dont-understand--//
-static void game_tile_game()
+static void paint_game()
 {
 	for (int y = 0; y < MAP_ROWS; y++) {
 		for (int x = 0; x < MAP_COLS; x++) {
-			sdk_draw_tile(x * TILE_SIZE, y * TILE_SIZE, &ts_gametiles_png,
-				      game_map[y][x] - 1);
+			if (game_map[y][x])
+				sdk_draw_tile(x * TILE_SIZE, y * TILE_SIZE, &ts_gametiles_png,
+					      game_map[y][x] - 1);
 		}
 	}
 }
 
-//--Please-this-needs-to-be-a-norm--//
-static void game_audio_handaling(float dt)
+static void game_handle_audio(float dt)
 {
 	if (sdk_inputs.vol_up) {
 		volume += 12.0 * dt;
@@ -183,6 +187,7 @@ static void game_audio_handaling(float dt)
 		game_reset();
 		return;
 	}
+
 	if (sdk_inputs_delta.vol_sw > 0) {
 		if (volume < SDK_GAIN_MIN) {
 			volume = 0;
@@ -197,68 +202,44 @@ static void game_audio_handaling(float dt)
 		sdk_set_output_gain_db(volume);
 	}
 }
-//--HE-CAN-MOOOOOOOOOOOOVE--//
-static void janek_handaling_world(float dt)
+
+static void janek_handle_world(float dt)
 {
-	if (sdk_inputs.joy_x > 500 || sdk_inputs.joy_x < -500) {
+	if (sdk_inputs.joy_x > 500 || sdk_inputs.joy_x < -500)
 		janek.fx = janek.speed * sdk_inputs.joy_x / 2048;
-	}
-	if (sdk_inputs.joy_y > 500 || sdk_inputs.joy_y < -500) {
+
+	if (sdk_inputs.joy_y > 500 || sdk_inputs.joy_y < -500)
 		janek.fy = janek.speed * sdk_inputs.joy_y / 2048;
-	}
+
 	janek.s.y += janek.fy * dt;
 	janek.s.x += janek.fx * dt;
 
-	if (sdk_inputs_delta.start == 1) {
-		game.status = 2;
+	if (sdk_inputs_delta.start > 0) {
+		game.mode = MODE_GAME;
 	}
-	janek_sprites_world();
 }
-
-//--Player-game-needs-to-work--//
-static void player_handaling_game(float dt)
+static void player_handle_game(float dt)
 {
-	if (sdk_inputs.joy_x > 500) {
-		player.fx += player.speed * dt;
+	if (sdk_inputs.joy_x >= 500) {
+		player.fx += player.speed;
 	}
 
-	if (sdk_inputs.joy_x < -500) {
-		player.fx -= player.speed * dt;
+	if (sdk_inputs.joy_x <= -500) {
+		player.fx -= player.speed;
 	}
 
-	if (sdk_inputs_delta.a == 1) {
-		player.fy = -JUMP_STRENGTH;
-	}
-
-	player.fy += dt * GRAVITY;
-
-	player.s.x += player.fx;
-	player.s.y += player.fy;
-
-	player_handaling_paint();
+	player.s.y += player.fy * dt;
+	player.s.x += player.fx * dt;
 }
-
-//--What-game-tile-?--//
-static void map_handaling()
-{
-	if (game.status == 1) {
-		game_tile_world();
-	}
-	if (game.status == 2) {
-		game_tile_game();
-	}
-}
-
-//--game-panting--//
-static void player_handaling_paint()
+static void paint_player()
 {
 	sdk_draw_sprite(&player.s);
-	tft_draw_string(0, 0, WHITE, "%-.2f", player.s.y);
+	tft_draw_string(0, 0, WHITE, "%-.2f", player.fx);
 	tft_draw_string(0, 10, WHITE, "%-.2f", player.s.x);
+	//tft_draw_pixel(player.s.x, player.s.y, WHITE);
 }
 
-//--Handaling-my-world-paint--//
-static void janek_sprites_world()
+static void paint_janek()
 {
 	if (janek.fx >= 1) {
 		janek.s.tile = 2;
@@ -269,18 +250,33 @@ static void janek_sprites_world()
 	} else if (janek.fy <= -1) {
 		janek.s.tile = 3;
 	}
+
 	janek.fy = 0;
 	janek.fx = 0;
+
 	sdk_draw_sprite(&janek.s);
-	tft_draw_string(0, 0, WHITE, "%-.2f", janek.s.y);
+
+	tft_draw_string(0, 0, WHITE, "%-.2f", janek.fx);
 	tft_draw_string(0, 10, WHITE, "%-.2f", janek.s.x);
 }
 
 void game_paint(unsigned dt_usec)
 {
 	(void)dt_usec;
+
 	tft_fill(0);
-	map_handaling();
+
+	switch (game.mode) {
+	case MODE_WORLD:
+		paint_world();
+		paint_janek();
+		break;
+
+	case MODE_GAME:
+		paint_game();
+		paint_player();
+		break;
+	}
 }
 int main()
 {
