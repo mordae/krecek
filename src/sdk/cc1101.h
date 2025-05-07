@@ -13,6 +13,9 @@ void cc1101_transmit(const void *buf, size_t len);
 /* Return to idling. */
 void cc1101_idle(void);
 
+/* Get current RSSI. */
+float cc1101_get_rssi(void);
+
 /*
  * Check if a whole packet has been received and if it was,
  * copy it to the buffer and update the length to match.

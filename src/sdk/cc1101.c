@@ -6,6 +6,7 @@
 
 #include <pico/stdlib.h>
 #include <hardware/regs/clocks.h>
+#include <string.h>
 
 static void exchange_bits(const uint8_t *txbuf, uint8_t *rx)
 {
@@ -76,6 +77,9 @@ static void find_best_rate(float goal, uint8_t *m, uint8_t *e)
 {
 	float step = (CLK_SYS_HZ / 5.0f) / (1 << 28);
 	float best = 1e20;
+
+	*m = 0;
+	*e = 0;
 
 	for (int ee = 0; ee < 16; ee++) {
 		for (int mm = 0; mm < 256; mm++) {
@@ -229,6 +233,7 @@ void cc1101_init(void)
 
 void cc1101_receive(void)
 {
+	write_command(SRX);
 }
 
 void cc1101_transmit(const void *buf, size_t len)
@@ -242,6 +247,20 @@ void cc1101_idle(void)
 	write_command(SIDLE);
 }
 
+float cc1101_get_rssi(void)
+{
+	struct RSSI rssi;
+	read_register(REG_RSSI, &rssi, 1);
+	return rssi.RSSI * 0.5f - 74.0f;
+}
+
 bool cc1101_poll(void *buf, size_t *len)
 {
+	struct RXBYTES rxbytes;
+	read_register(REG_RXBYTES, &rxbytes, 1);
+
+	*len = rxbytes.NUM_RXBYTES;
+	memset(buf, 0, *len);
+
+	return (*len > 0);
 }
