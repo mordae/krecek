@@ -2,11 +2,13 @@
 #include <sdk.h>
 #include <tft.h>
 #include <sdk.h>
+#include <stdio.h>
 
 #include <tiles.png.h>
 #include <gametiles.png.h>
 #include <janek.png.h>
 #include <player.png.h>
+#include <playerrun.png.h>
 
 #define TILE_SIZE 16
 #define MAP_ROWS 7
@@ -14,7 +16,8 @@
 
 #define SPEED_WORLD 40
 
-#define SPEED_GAME 60
+#define SPEED_GAME 8
+#define MAX_SPEED_GAME 30
 #define JUMP_STRENGTH 50
 #define GRAVITY 60
 
@@ -49,6 +52,10 @@ TileType_world world_map[MAP_ROWS][MAP_COLS] = {
 typedef enum {
 	NOTHING = 0,
 	ROCKS = 1,
+	PIPE_UP,
+	PIPE_DOWN,
+	PIPE_LEFT,
+	PIPE_RIGHT,
 } TileType_game;
 
 TileType_game game_map[MAP_ROWS][MAP_COLS] = {
@@ -58,7 +65,7 @@ TileType_game game_map[MAP_ROWS][MAP_COLS] = {
 	{ 4, 0, 0, 0, 0, 0, 0, 0, 0, 5 }, //
 	{ 4, 0, 0, 0, 0, 0, 0, 0, 0, 5 }, //
 	{ 4, 0, 0, 0, 0, 0, 0, 0, 0, 5 }, //
-	{ 4, 3, 3, 3, 3, 3, 3, 3, 3, 5 }, //
+	{ 3, 3, 3, 3, 3, 3, 3, 3, 3, 1 }, //
 };
 
 enum game_mode {
@@ -120,7 +127,7 @@ static void game_start_player()
 {
 	player.speed = SPEED_GAME;
 
-	player.s.ts = &ts_player_png;
+	player.s.ts = &ts_playerrun_png;
 	player.s.x = 5 * TILE_SIZE;
 	player.s.y = 3.5 * TILE_SIZE;
 	player.s.ox = 16;
@@ -227,18 +234,62 @@ static void player_handle_game(float dt)
 	if (sdk_inputs.joy_x <= -500) {
 		player.fx -= player.speed;
 	}
+	if (player.fx >= MAX_SPEED_GAME) {
+		player.fx = MAX_SPEED_GAME;
+	}
+
+	if (player.fx <= -MAX_SPEED_GAME) {
+		player.fx = -MAX_SPEED_GAME;
+	}
+	player.fy += GRAVITY * dt;
 
 	player.s.y += player.fy * dt;
 	player.s.x += player.fx * dt;
+
+	int tile_x = player.fx / TILE_SIZE;
+	int tile_y = player.fy / TILE_SIZE - 1.0f / TILE_SIZE;
+
+	switch (game_map[tile_x][tile_y]) {
+	case PIPE_DOWN:
+		player.s.y = tile_y * TILE_SIZE + 1.0f * TILE_SIZE;
+		player.fy = 0;
+
+		if (sdk_inputs.y) {
+			player.fy = JUMP_STRENGTH;
+		}
+
+		break;
+	case PIPE_LEFT:
+	case PIPE_UP:
+	case PIPE_RIGHT:
+	case NOTHING:
+	case ROCKS:
+		break;
+	}
+	printf("tile_x %d\n", tile_x);
+	printf("tile_y %d\n", tile_y);
 }
 static void paint_player()
 {
 	sdk_draw_sprite(&player.s);
-	tft_draw_string(0, 0, WHITE, "%-.2f", player.fx);
-	tft_draw_string(0, 10, WHITE, "%-.2f", player.s.x);
-	//tft_draw_pixel(player.s.x, player.s.y, WHITE);
-}
+	if (player.s.tile == 0 && player.fx < 0) {
+		player.s.tile = 2;
+	} else if (player.s.tile == 2 && player.fx < 0) {
+		player.s.tile = 2;
+	} else if (player.s.tile == 1 && player.fx > 0) {
+		player.s.tile = 3;
+	} else if (player.s.tile == 3 && player.fx > 0) {
+		player.s.tile = 1;
+	} else if (player.fx < 0) {
+		player.s.tile = 1;
+	} else if (player.fx > 0) {
+		player.s.tile = 0;
+	}
 
+	tft_draw_string(0, 0, WHITE, "%-.2f", player.s.x);
+	tft_draw_string(0, 10, WHITE, "%-.2f", player.fy);
+	//tft_draw_pixel(player.s.x, player.s.y, white);
+}
 static void paint_janek()
 {
 	if (janek.fx >= 1) {
@@ -256,8 +307,8 @@ static void paint_janek()
 
 	sdk_draw_sprite(&janek.s);
 
-	tft_draw_string(0, 0, WHITE, "%-.2f", janek.fx);
-	tft_draw_string(0, 10, WHITE, "%-.2f", janek.s.x);
+	tft_draw_string(0, 0, WHITE, "%-.2f", janek.s.x);
+	tft_draw_string(0, 10, WHITE, "%-.2f", janek.s.y);
 }
 
 void game_paint(unsigned dt_usec)
