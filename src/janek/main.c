@@ -253,21 +253,14 @@ static void player_handle_game(float dt)
 
 	int up = (player.s.y - PLAYER_HEIGHT) / TILE_SIZE;
 	int down = player.s.y / TILE_SIZE - 1.0f / TILE_SIZE;
-	int left = (player.s.x - PLAYER_WIDTH / 2) / TILE_SIZE;
-	int right = (player.s.x + PLAYER_WIDTH / 2) / TILE_SIZE;
 
-	if (left == 0) {
-		left = 1;
-	}
+	int left = ((player.s.x - (PLAYER_WIDTH / 2.0f)) / TILE_SIZE);
+	int right = roundf((player.s.x + (PLAYER_WIDTH / 2.0f)) / TILE_SIZE);
 
 	switch (game_map[down][tile_x]) {
 	case PIPE_DOWN:
 		player.s.y = down * TILE_SIZE + 1.0f / TILE_SIZE;
 		player.fy = 0;
-
-		if (sdk_inputs.y) {
-			player.fy = JUMP_STRENGTH;
-		}
 
 		break;
 	case PIPE_LEFT:
@@ -292,7 +285,7 @@ static void player_handle_game(float dt)
 
 	switch (game_map[tile_y][left]) {
 	case PIPE_LEFT:
-		player.s.x = 0;
+		player.s.x = (left + 1) * TILE_SIZE + PLAYER_WIDTH / 2.0f;
 		player.fx = 0;
 		break;
 	case PIPE_DOWN:
