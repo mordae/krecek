@@ -18,3 +18,5 @@ struct sdk_inputs {
 
 extern struct sdk_inputs sdk_inputs;
 extern struct sdk_inputs sdk_inputs_delta;
+
+extern bool sdk_requested_screenshot;

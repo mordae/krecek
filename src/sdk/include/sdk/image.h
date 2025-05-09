@@ -43,14 +43,14 @@ inline static void sdk_draw_tile_flipped(int x, int y, const sdk_tileset_t *ts, 
 }
 
 /* Draw a tile from given tileset. */
-inline static void __unused sdk_draw_tile(int x, int y, const sdk_tileset_t *ts, uint16_t tile)
+inline static void sdk_draw_tile(int x, int y, const sdk_tileset_t *ts, uint16_t tile)
 {
 	sdk_draw_tile_flipped(x, y, ts, tile, false, false, false);
 }
 
 /* Draw rotated tile, where angle is times 90° clockwise. */
-inline static void __unused sdk_draw_tile_rotated(int x, int y, const sdk_tileset_t *ts,
-						  uint16_t tile, int angle)
+inline static void sdk_draw_tile_rotated(int x, int y, const sdk_tileset_t *ts, uint16_t tile,
+					 int angle)
 {
 	bool a = angle & 1;
 	bool b = (angle >> 1) & 1;

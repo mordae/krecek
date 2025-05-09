@@ -6,6 +6,7 @@
 #include <sdk.h>
 #include <sdk/remote.h>
 
+#include <stdio.h>
 #include <tft.h>
 #include <task.h>
 
@@ -51,6 +52,54 @@ void sdk_paint_task(void)
 		sem_acquire_blocking(&paint_sema);
 
 		game_paint(delta ? delta : 1);
+
+		if (sdk_requested_screenshot) {
+			sdk_requested_screenshot = false;
+
+			int res = f_mkdir("/screens");
+
+			if (FR_EXIST != res && FR_OK != res) {
+				printf("f_mkdir /scrshots failed\n");
+				goto fs_error;
+			}
+
+			char name[32];
+			FIL file;
+
+			for (int i = 0; i <= 99; i++) {
+				sprintf(name, "/screens/screen%02i.bmp", i);
+				int res = f_open(&file, name, FA_CREATE_NEW | FA_WRITE);
+
+				if (FR_EXIST == res)
+					continue;
+
+				if (FR_OK != res) {
+					printf("f_open %s failed\n", name);
+					goto fs_error;
+				}
+
+				goto fs_write;
+			}
+
+			printf("too many screenshots\n");
+			goto fs_error;
+
+fs_write:
+			sdk_bmp_t header;
+			sdk_bmp_init(&header, TFT_HEIGHT, TFT_WIDTH);
+
+			unsigned bw = 0;
+			f_write(&file, &header, sizeof(header), &bw);
+
+			bw = 0;
+			f_write(&file, tft_input, 2 * TFT_WIDTH * TFT_HEIGHT, &bw);
+
+			f_close(&file);
+
+			printf("wrote %s\n", name);
+		}
+
+fs_error:
 
 		if (sdk_config.show_fps) {
 			tft_draw_string_right(TFT_WIDTH - 1, 0, sdk_config.fps_color, "%.0f",

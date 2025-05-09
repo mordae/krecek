@@ -28,6 +28,8 @@ void sdk_video_start(void);
 struct sdk_inputs sdk_inputs = {};
 struct sdk_inputs sdk_inputs_delta = {};
 
+bool sdk_requested_screenshot = false;
+
 static struct sdk_inputs prev_inputs = {};
 
 static uint32_t select_held_since = 0;
@@ -147,10 +149,6 @@ void sdk_input_task(void)
 			sdk_inputs.vertical = 0;
 			prev_inputs.vertical = 0;
 		}
-
-		// On select + start reboot to the slot 0.
-		if (sdk_inputs.select && sdk_inputs.start)
-			sdk_reboot_into_slot(0);
 
 		/* Read battery voltage. */
 		adc_select_input(BAT_VSENSE_PIN - 26);
@@ -291,6 +289,15 @@ void sdk_input_task(void)
 		} else if (sdk_inputs_delta.hps < 0) {
 			// Disable headphones, enable speaker.
 			sdk_enable_headphones(false);
+		}
+
+		// On select + start reboot to the slot 0.
+		if (sdk_inputs.select && sdk_inputs.start > 0)
+			sdk_reboot_into_slot(0);
+
+		// On select + Y take a screenshot.
+		if (sdk_inputs.select && sdk_inputs_delta.y > 0) {
+			sdk_requested_screenshot = true;
 		}
 
 		/* Let the game process inputs as soon as possible. */
