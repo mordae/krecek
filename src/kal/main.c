@@ -3,56 +3,40 @@
 #include <sdk.h>
 #include <tft.h>
 
-#include <numer.png.h>
-//#include <buttons.png.h>
+#include <number.png.h>
 
 #define GRAY rgb_to_rgb565(63, 63, 63)
 
-// button
-struct kal {
-	int pos;
-};
-static struct kal kal;
-
-// gotta add tileset for tilemap
-
-typedef enum {
-	FLOOR = 0,
-	WALL = 1,
-} TileType;
-
-TileType map[15][20] = {
-	{ 0, 0, 0, 0, 0 },
-	{ 1, 1, 1, 1, 1 },
-};
+static int position;
 
 void game_reset(void)
 {
+	position = 5;
 }
 
 void game_input(unsigned dt_usec)
 {
 	(void)dt_usec;
 
-	kal.pos = 5;
+	position = 5;
 
 	if (sdk_inputs.joy_x > 300) {
-		kal.pos = 6;
+		position = 6;
 	} else if (sdk_inputs.joy_x < -300) {
-		kal.pos = 4;
+		position = 4;
 	} else if (sdk_inputs.joy_y > 300) {
-		kal.pos = 8;
+		position = 8;
 	} else if (sdk_inputs.joy_y < -300) {
-		kal.pos = 2;
+		position = 2;
 	}
 	if (sdk_inputs.joy_x < -300 && sdk_inputs.joy_y < -300) {
-		kal.pos = 1;
+		position = 1;
 	} else if (sdk_inputs.joy_x > 300 && sdk_inputs.joy_y < -300) {
-		kal.pos = 3;
+		position = 3;
 	} else if (sdk_inputs.joy_x < -300 && sdk_inputs.joy_y > 300) {
-		kal.pos = 7;
+		position = 7;
 	} else if (sdk_inputs.joy_y > 300 && sdk_inputs.joy_x > 300) {
-		kal.pos = 9;
+		position = 9;
 	}
 }
 
@@ -60,7 +44,8 @@ void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(1);
 
-	sdk_draw_tile(5, TFT_BOTTOM - 26, &ts_numer_png, kal.pos - 1);
+	sdk_draw_tile(5, TFT_BOTTOM - 26, &ts_number_png, position - 1);
+
 	/*
 	sdk_draw_tile(31, TFT_BOTTOM - 26, &ts_buttons_png, 0);
 	sdk_draw_tile(31 + 7 * 3, TFT_BOTTOM - 26, &ts_buttons_png, 2);
