@@ -19,32 +19,22 @@ def rgb888_to_rgb565(r, g, b):
 
 @click.command()
 @click.argument("input_file", type=click.File("rb"))
+@click.option("-n", "--name", type=str)
 @click.option(
-    "-d",
-    "--outdir",
-    type=click.Path(
-        dir_okay=True,
-        file_okay=False,
-        writable=True,
-        executable=True,
-        exists=False,
-    ),
-    default=".",
-    help="Output directory (default: current directory)",
+    "-o",
+    "--output",
+    type=click.Path(dir_okay=False, writable=True, resolve_path=True),
+    help="Output file name",
 )
-def convert(input_file: BinaryIO, outdir: str):
+def convert(input_file: BinaryIO, name: str, output: str):
     """Convert PNG image to C header with RGB565 static array"""
     try:
-        # Create output directory if it doesn't exist
-        os.makedirs(outdir, exist_ok=True)
-
-        base_name = os.path.basename(input_file.name)
-        var_name = sanitize_identifier(base_name).lower()
-        output_file = os.path.join(outdir, base_name + ".h")
+        os.makedirs(os.path.dirname(output), exist_ok=True)
+        var_name = sanitize_identifier(name).lower()
 
         img = Image.open(input_file).convert("RGB")
 
-        with open(output_file, "w") as f:
+        with open(output, "w") as f:
             f.write("#pragma once\n")
             f.write("#include <sdk/image.h>\n\n")
 
