@@ -26,6 +26,12 @@ struct sdk_tileset {
 
 typedef struct sdk_tileset sdk_tileset_t;
 
+/* Draw whole image. */
+inline static void sdk_draw_image(int x, int y, const sdk_image_t *image)
+{
+	tft_draw_sprite(x, y, image->width, image->height, image->data, TRANSPARENT);
+}
+
 /* Get pointer to given tile inside the tileset. */
 inline static const color_t *sdk_get_tile_data(const sdk_tileset_t *ts, uint16_t tile)
 {

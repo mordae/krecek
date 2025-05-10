@@ -9,7 +9,9 @@
 #include <kurecidzokej.png.h>
 #include <platforms.png.h>
 #include <menu.png.h>
-#include <levels.png.h>
+#include <menu-cursor.png.h>
+#include <levels1to4.png.h>
+#include <levels5to8.png.h>
 #include <death.png.h>
 #include <cover.png.h>
 
@@ -28,12 +30,10 @@ sdk_game_info("platform", &image_cover_png);
 	(x, f) rgb_to_rgb332(rgb332_red((x)) * f, rgb332_green((x)) * f, rgb332_blue((x)) * f)
 
 // Color definitions (using palette indices)
-#define RED rgb_to_rgb565(255, 0, 0)
-#define RED_POWER rgb_to_rgb565(255, 63, 63)
+#define RED rgb_to_rgb565(194, 20, 20)
 #define YELLOW rgb_to_rgb565(255, 255, 0)
 #define GREEN rgb_to_rgb565(0, 255, 0)
-#define GREEN_POWER rgb_to_rgb565(63, 255, 63)
-#define BLUE rgb_to_rgb565(0, 0, 255)
+#define BLUE rgb_to_rgb565(23, 62, 224)
 #define GRAY rgb_to_rgb565(127, 127, 127)
 #define WHITE rgb_to_rgb565(255, 255, 255)
 
@@ -514,55 +514,67 @@ void game_paint(unsigned dt_usec)
 {
 	(void)dt_usec;
 
-	tft_fill(0);
+	if (mario_p.mode == 0) {
+		sdk_draw_image(0, 0, &image_menu_png);
+		sdk_draw_tile(82, 32 + 22 * menu.select, &ts_menu_cursor_png, 0);
+	} else if (mario_p.mode == 3) {
+		color_t bg = menu.levels >> 2 ? BLUE : RED;
 
-	tft_set_origin(mario_p.px - TFT_WIDTH / 2.0 + 3.5, 0);
+		for (int i = 0; i < 4; i++) {
+			tft_draw_rect(79, 6 + 28 * i, 79 + 70, 6 + 25 + 28 * i,
+				      (menu.levels & 3) == i ? bg : WHITE);
+		}
 
-	//sdk_draw_tile(0, 0, &ts_menu_png, 0);
+		if (menu.levels >> 2) {
+			sdk_draw_image(0, 0, &image_levels5to8_png);
+		} else {
+			sdk_draw_image(0, 0, &image_levels1to4_png);
+		}
+	} else if (mario_p.mode == 4) {
+		sdk_draw_tile(0, 0, &ts_death_png, 1);
+	} else {
+		tft_fill(0);
+		tft_set_origin(mario_p.px - TFT_WIDTH / 2.0 + 3.5, 0);
 
-	// Draw tile map
-	for (int y = 0; y < MAP_ROWS; y++) {
-		for (int x = 0; x < MAP_COLS; x++) {
-			sdk_draw_tile(x * TILE_SIZE, y * TILE_SIZE, &ts_platforms_png,
-				      map[y][x] - 1);
-			if (!map[y][x]) {
-				tft_draw_rect(x * TILE_SIZE, y * TILE_SIZE,
-					      x * TILE_SIZE + TILE_SIZE - 1,
-					      y * TILE_SIZE + TILE_SIZE - 1,
-					      rgb_to_rgb565(0, 0, 0));
-				continue;
+		// Draw tile map
+		for (int y = 0; y < MAP_ROWS; y++) {
+			for (int x = 0; x < MAP_COLS; x++) {
+				sdk_draw_tile(x * TILE_SIZE, y * TILE_SIZE, &ts_platforms_png,
+					      map[y][x] - 1);
+				if (!map[y][x]) {
+					tft_draw_rect(x * TILE_SIZE, y * TILE_SIZE,
+						      x * TILE_SIZE + TILE_SIZE - 1,
+						      y * TILE_SIZE + TILE_SIZE - 1,
+						      rgb_to_rgb565(0, 0, 0));
+					continue;
+				}
 			}
 		}
-	}
-	//tft_draw_rect(mario_p.px, mario_p.py, mario_p.px + TILE_SIZE, mario_p.py - TILE_SIZE, RED);
-	mario_p.s.x = mario_p.px;
-	mario_p.s.y = mario_p.py;
 
-	if (mario_p.vx > 0)
-		mario_p.s.tile = 0;
-	else if (mario_p.vx < 0)
-		mario_p.s.tile = 1;
-	if (!mario_p.alive)
-		mario_p.s.tile = 4;
+		mario_p.s.x = mario_p.px;
+		mario_p.s.y = mario_p.py;
 
-	sdk_draw_sprite(&mario_p.s);
-	if (map == maps_map1 || map == maps_map1c) {
-		sdk_draw_sprite(&jockey.s);
+		if (mario_p.vx > 0)
+			mario_p.s.tile = 0;
+		else if (mario_p.vx < 0)
+			mario_p.s.tile = 1;
+		if (!mario_p.alive)
+			mario_p.s.tile = 4;
+
+		sdk_draw_sprite(&mario_p.s);
+
+		if (map == maps_map1 || map == maps_map1c) {
+			sdk_draw_sprite(&jockey.s);
+		}
+
+		tft_set_origin(0, 0);
+
+		if (mario_p.fast) {
+			tft_draw_string(0, 0, rgb_to_rgb565(255, 255, 0), "%-.2f", mario_p.time);
+		}
+
+		//tft_draw_pixel(mario_p.px + 0.5, mario_p.py - 0.5, WHITE);
 	}
-	tft_set_origin(0, 0);
-	if (mario_p.fast) {
-		tft_draw_string(0, 0, rgb_to_rgb565(255, 255, 0), "%-.2f", mario_p.time);
-	}
-	if (mario_p.mode == 0) {
-		sdk_draw_tile(0, 0, &ts_menu_png, menu.select);
-	}
-	if (mario_p.mode == 3) {
-		sdk_draw_tile(0, 0, &ts_levels_png, menu.levels);
-	}
-	if (mario_p.mode == 4) {
-		sdk_draw_tile(0, 0, &ts_death_png, 1);
-	}
-	//tft_draw_pixel(mario_p.px + 0.5, mario_p.py - 0.5, WHITE);
 }
 
 int main()

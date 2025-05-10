@@ -18,7 +18,7 @@ struct sdk_sprite {
 
 typedef struct sdk_sprite sdk_sprite_t;
 
-inline static void __unused sdk_draw_sprite(const sdk_sprite_t *s)
+inline static void sdk_draw_sprite(const sdk_sprite_t *s)
 {
 	bool a = s->angle & 1;
 	bool b = s->angle >> 1;
@@ -30,7 +30,7 @@ inline static void __unused sdk_draw_sprite(const sdk_sprite_t *s)
 	sdk_draw_tile_flipped(s->x - s->ox, s->y - s->oy, s->ts, s->tile, flip_x, flip_y, swap_xy);
 }
 
-inline static bool __unused sdk_sprite_is_opaque_xy(const sdk_sprite_t *s, int sx, int sy)
+inline static bool sdk_sprite_is_opaque_xy(const sdk_sprite_t *s, int sx, int sy)
 {
 	if (sx < 0 || sx >= s->ts->width)
 		return false;
@@ -42,7 +42,7 @@ inline static bool __unused sdk_sprite_is_opaque_xy(const sdk_sprite_t *s, int s
 	return data[sy * s->ts->width + sx] != TRANSPARENT;
 }
 
-inline static int __unused sdk_sprites_collide(const sdk_sprite_t *s1, const sdk_sprite_t *s2)
+inline static int sdk_sprites_collide(const sdk_sprite_t *s1, const sdk_sprite_t *s2)
 {
 	int points = 0;
 
