@@ -298,6 +298,22 @@ void sdk_input_task(void)
 		// On select + Y take a screenshot.
 		if (sdk_inputs.select && sdk_inputs_delta.y > 0) {
 			sdk_requested_screenshot = true;
+			sdk_inputs_delta.y = 0;
+		}
+
+		// Prevent inputs while holding select.
+		if (sdk_inputs.select) {
+			sdk_inputs.a = prev_inputs.a;
+			sdk_inputs.b = prev_inputs.b;
+			sdk_inputs.x = prev_inputs.x;
+			sdk_inputs.y = prev_inputs.y;
+			sdk_inputs.start = prev_inputs.start;
+
+			sdk_inputs_delta.a = 0;
+			sdk_inputs_delta.b = 0;
+			sdk_inputs_delta.x = 0;
+			sdk_inputs_delta.y = 0;
+			sdk_inputs_delta.start = 0;
 		}
 
 		/* Let the game process inputs as soon as possible. */

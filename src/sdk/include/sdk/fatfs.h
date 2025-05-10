@@ -9,3 +9,5 @@ extern struct sdcard_csd sdk_sdcard_csd;
 #else
 #include "hostff.h"
 #endif
+
+extern const char *f_strerror(int err);

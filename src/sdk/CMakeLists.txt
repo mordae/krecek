@@ -4,6 +4,7 @@ add_library(
   audio.c
   melody.c
   melody-lexer.c
+  scene.c
   video.c
   input.c
   slave.c

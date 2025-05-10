@@ -10,7 +10,8 @@ add_library(
   sdcard.c
   ../../src/sdk/melody.c
   ../../src/sdk/melody-lexer.c
-  ${CMAKE_CURRENT_LIST_DIR}/../../src/vendor/pico-tft/font.c
+  ../../src/sdk/scene.c
+  ../../src/vendor/pico-tft/font.c
 )
 
 if (TARGET SDL2::SDL2main)

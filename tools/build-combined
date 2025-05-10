@@ -7,8 +7,7 @@ fi
 cmake --build build/combined
 
 firmwares=$(
-  grep ENABLE_OFFSETS src/*/CMakeLists.txt \
-    | cut -d: -f1 | sed -e 's#/CMakeLists.txt##' -e 's#src/##' -e 's#.*#build/combined/\0/\0.uf2#'
+  ls -1 src/*/memmap.ld | sed -e 's#/memmap.ld##' -e 's#src/##' -e 's#.*#build/combined/\0/\0.uf2#'
 )
 
 cat ${firmwares} >build/combined.uf2

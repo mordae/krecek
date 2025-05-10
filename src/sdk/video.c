@@ -58,10 +58,10 @@ void sdk_paint_task(void)
 		if (sdk_requested_screenshot) {
 			sdk_requested_screenshot = false;
 
-			int res = f_mkdir("/screens");
+			int err = f_mkdir("/screens");
 
-			if (FR_EXIST != res && FR_OK != res) {
-				printf("f_mkdir /scrshots failed\n");
+			if (err && FR_EXIST != err) {
+				printf("sdk: f_mkdir /screens failed: %s\n", f_strerror(err));
 				goto fs_error;
 			}
 
@@ -69,28 +69,32 @@ void sdk_paint_task(void)
 
 			for (int i = 0; i <= 99; i++) {
 				sprintf(name, "/screens/screen%02i.bmp", i);
-				int res = f_open(&file, name, FA_CREATE_NEW | FA_WRITE);
+				if ((err = f_open(&file, name, FA_CREATE_NEW | FA_WRITE))) {
+					if (FR_EXIST == err)
+						continue;
 
-				if (FR_EXIST == res)
-					continue;
-
-				if (FR_OK != res) {
-					printf("f_open %s failed\n", name);
+					printf("sdk: f_open %s failed: %s\n", name,
+					       f_strerror(err));
 					goto fs_error;
 				}
 
 				goto fs_write;
 			}
 
-			printf("too many screenshots\n");
+			printf("sdk: Too many screenshots\n");
 			goto fs_error;
 
 fs_write:
-			sdk_bmp_write_header(&file, TFT_WIDTH, TFT_HEIGHT);
-			sdk_bmp_write_frame(&file, tft_input);
-			f_close(&file);
+			if ((err = sdk_bmp_write_frame(&file, tft_input))) {
+				printf("sdk: sdk_bmp_write_frame %s failed: %s\n", name,
+				       f_strerror(err));
+			}
 
-			printf("wrote %s\n", name);
+			if ((err = f_close(&file))) {
+				printf("sdk: f_close %s failed: %s\n", name, f_strerror(err));
+			} else {
+				printf("sdk: Wrote %s\n", name);
+			}
 		}
 
 fs_error:

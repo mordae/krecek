@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <sdk/sdcard.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -72,8 +73,12 @@ FRESULT f_open(FIL *fp, const TCHAR *path, BYTE mode)
 
 	fp->fp = fopen(path, fmode);
 
-	if (!fp->fp)
-		return FR_NO_FILE;
+	if (!fp->fp) {
+		if (EEXIST == errno)
+			return FR_EXIST;
+
+		return FR_NO_PATH;
+	}
 
 	return FR_OK;
 }
@@ -215,6 +220,9 @@ FRESULT f_mkdir(const TCHAR *path)
 	if (0 == mkdir(path, 0777))
 		return FR_OK;
 
+	if (EEXIST == errno)
+		return FR_EXIST;
+
 	return FR_NO_PATH;
 }
 
@@ -351,4 +359,38 @@ FRESULT f_rmdir(const TCHAR *path)
 		return FR_OK;
 
 	return FR_NO_PATH;
+}
+
+const char *f_strerror(int err)
+{
+	static const char *errors[21] = {
+		"Succeeded",
+		"Hard I/O Error",
+		"Assertion failed",
+		"Drive not ready",
+		"File not found",
+		"Path not found",
+		"Invalid path format",
+		"Directory full",
+		"Access denied",
+		"Invalid FIL/DIR",
+		"Write protected",
+		"Invalid drive num",
+		"No work area",
+		"No FAT volume",
+		"Aborted",
+		"Timeout",
+		"Operation rejected",
+		"No LFN buffer",
+		"Too many open files",
+		"Invalid parameter",
+		"Invalid file format",
+	};
+
+	err = abs(err);
+
+	if (err >= 21)
+		return "Unknown error";
+
+	return errors[err];
 }

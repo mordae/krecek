@@ -1,5 +1,6 @@
 #include <sdk.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <task.h>
 
 #include <pico/mutex.h>
@@ -64,4 +65,38 @@ void sdk_card_task(void)
 void sdk_card_init(void)
 {
 	mutex_init(&sdk_sdcard_mutex);
+}
+
+const char *f_strerror(int err)
+{
+	static const char *errors[21] = {
+		"Succeeded",
+		"Hard I/O Error",
+		"Assertion failed",
+		"Drive not ready",
+		"File not found",
+		"Path not found",
+		"Invalid path format",
+		"Directory full",
+		"Access denied",
+		"Invalid FIL/DIR",
+		"Write protected",
+		"Invalid drive num",
+		"No work area",
+		"No FAT volume",
+		"Aborted",
+		"Timeout",
+		"Operation rejected",
+		"No LFN buffer",
+		"Too many open files",
+		"Invalid parameter",
+		"Invalid file format",
+	};
+
+	err = abs(err);
+
+	if (err >= 21)
+		return "Unknown error";
+
+	return errors[err];
 }
