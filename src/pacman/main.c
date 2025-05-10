@@ -291,11 +291,11 @@ void game_input(unsigned dt_usec)
 			map[y][x] = 0;
 
 			if (eaten == 1) {
-				sdk_melody_play("e");
+				sdk_melody_play("/i:square e");
 				pacman.score += 10;
 			} else if (eaten == 2) {
 				pacman.score += 0;
-				sdk_melody_play("g-");
+				sdk_melody_play("/i:square g-");
 			} else if (eaten == 3) {
 				pacman.score += 50;
 			} else if (eaten > 3) {
