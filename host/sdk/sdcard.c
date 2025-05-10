@@ -34,7 +34,7 @@ FRESULT f_open(FIL *fp, const TCHAR *path, BYTE mode)
 
 	const char *fmode;
 
-	switch (mode) {
+	switch (mode & ~FA_OPEN_ALWAYS) {
 	case FA_READ:
 		fmode = "r";
 		break;

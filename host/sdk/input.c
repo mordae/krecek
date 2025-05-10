@@ -238,6 +238,8 @@ void sdk_input_handle(const SDL_Event *event)
 
 void sdk_input_commit(uint32_t dt)
 {
+	float fdt = dt / 1000000.0f;
+
 	/* Dummy current control and temperature readings. */
 	sdk_inputs.batt_mv = 3900.0f;
 	sdk_inputs.cc_mv = 400.0f;
@@ -252,8 +254,8 @@ void sdk_input_commit(uint32_t dt)
 	sdk_inputs_delta.x = sdk_inputs.x - prev_inputs.x;
 	sdk_inputs_delta.y = sdk_inputs.y - prev_inputs.y;
 
-	sdk_inputs_delta.joy_x = sdk_inputs.joy_x - prev_inputs.joy_x;
-	sdk_inputs_delta.joy_y = sdk_inputs.joy_y - prev_inputs.joy_y;
+	sdk_inputs_delta.joy_x = roundf(sdk_inputs.joy_x * fdt);
+	sdk_inputs_delta.joy_y = roundf(sdk_inputs.joy_y * fdt);
 
 	if (abs(sdk_inputs.joy_x) >= 512) {
 		if (!sdk_inputs.horizontal ||
@@ -290,8 +292,8 @@ void sdk_input_commit(uint32_t dt)
 
 	sdk_inputs_delta.hps = sdk_inputs.hps - prev_inputs.hps;
 
-	sdk_inputs_delta.brack_l = sdk_inputs.brack_l - prev_inputs.brack_l;
-	sdk_inputs_delta.brack_r = sdk_inputs.brack_r - prev_inputs.brack_r;
+	sdk_inputs_delta.brack_l = roundf(sdk_inputs.brack_l * fdt);
+	sdk_inputs_delta.brack_r = roundf(sdk_inputs.brack_r * fdt);
 
 	for (int i = 0; i < 8; i++)
 		sdk_inputs_delta.aux[i] = sdk_inputs.aux[i] - prev_inputs.aux[i];

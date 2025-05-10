@@ -1,13 +1,15 @@
 add_executable(
-  experiment_editor
+  experiment-editor
   ../../src/experiment-editor/main.c
+  ../../src/experiment-editor/root.c
+  ../../src/experiment-editor/level.c
 )
 
 generate_png_headers()
-target_link_libraries(experiment_editor PRIVATE sdk m ${PNG_HEADERS_TARGET})
+target_link_libraries(experiment-editor PRIVATE sdk m ${PNG_HEADERS_TARGET})
 
-set_property(TARGET experiment_editor PROPERTY C_STANDARD 23)
-target_compile_options(experiment_editor PRIVATE -Wall -Wextra -Wnull-dereference)
-target_include_directories(experiment_editor PRIVATE include)
+set_property(TARGET experiment-editor PROPERTY C_STANDARD 23)
+target_compile_options(experiment-editor PRIVATE -Wall -Wextra -Wnull-dereference)
+target_include_directories(experiment-editor PRIVATE include)
 
-install(TARGETS experiment_editor DESTINATION bin)
+install(TARGETS experiment-editor DESTINATION bin)

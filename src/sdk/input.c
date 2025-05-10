@@ -1,3 +1,4 @@
+#include <math.h>
 #include <pico/stdlib.h>
 
 #include <hardware/adc.h>
@@ -97,6 +98,8 @@ void sdk_input_task(void)
 		now = time_us_32();
 		uint32_t dt_usec = now - last_event;
 		last_event = now;
+
+		float fdt = dt_usec / 1000000.0f;
 
 		sdk_inputs.a = !remote_gpio_get(SLAVE_A_PIN);
 		sdk_inputs.b = !remote_gpio_get(SLAVE_B_PIN);
@@ -208,8 +211,8 @@ void sdk_input_task(void)
 		sdk_inputs_delta.x = sdk_inputs.x - prev_inputs.x;
 		sdk_inputs_delta.y = sdk_inputs.y - prev_inputs.y;
 
-		sdk_inputs_delta.joy_x = sdk_inputs.joy_x - prev_inputs.joy_x;
-		sdk_inputs_delta.joy_y = sdk_inputs.joy_y - prev_inputs.joy_y;
+		sdk_inputs_delta.joy_x = roundf(sdk_inputs.joy_x * fdt);
+		sdk_inputs_delta.joy_y = roundf(sdk_inputs.joy_y * fdt);
 
 		sdk_inputs_delta.horizontal =
 			(sdk_inputs.horizontal >> 8) - (prev_inputs.horizontal >> 8);
@@ -222,8 +225,8 @@ void sdk_input_task(void)
 
 		sdk_inputs_delta.hps = sdk_inputs.hps - prev_inputs.hps;
 
-		sdk_inputs_delta.brack_l = sdk_inputs.brack_l - prev_inputs.brack_l;
-		sdk_inputs_delta.brack_r = sdk_inputs.brack_r - prev_inputs.brack_r;
+		sdk_inputs_delta.brack_l = roundf(sdk_inputs.brack_l * fdt);
+		sdk_inputs_delta.brack_r = roundf(sdk_inputs.brack_r * fdt);
 
 		for (int i = 0; i < 8; i++)
 			sdk_inputs_delta.aux[i] = sdk_inputs.aux[i] - prev_inputs.aux[i];

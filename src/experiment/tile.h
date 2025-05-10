@@ -16,12 +16,14 @@ typedef enum TileEffect {
 	NUM_TILE_EFFECTS,
 } TileEffect;
 
+#define MAX_MAPS (1 << 7)
+
 typedef struct __packed Tile {
 	uint8_t tile_id;
 
 	union __packed {
 		struct __packed {
-			uint16_t map : 7;
+			uint16_t map : 7; // => MAX_MAPS
 			uint16_t px : 5;
 			uint16_t py : 4;
 		};
