@@ -17,6 +17,8 @@
 static semaphore_t paint_sema;
 static semaphore_t sync_sema;
 
+static FIL file; /* For screenshots. */
+
 void sdk_video_init(void)
 {
 	/* Initialize the TFT panel. */
@@ -64,7 +66,6 @@ void sdk_paint_task(void)
 			}
 
 			char name[32];
-			FIL file;
 
 			for (int i = 0; i <= 99; i++) {
 				sprintf(name, "/screens/screen%02i.bmp", i);
@@ -85,15 +86,8 @@ void sdk_paint_task(void)
 			goto fs_error;
 
 fs_write:
-			sdk_bmp_t header;
-			sdk_bmp_init(&header, TFT_HEIGHT, TFT_WIDTH);
-
-			unsigned bw = 0;
-			f_write(&file, &header, sizeof(header), &bw);
-
-			bw = 0;
-			f_write(&file, tft_input, 2 * TFT_WIDTH * TFT_HEIGHT, &bw);
-
+			sdk_bmp_write_header(&file, TFT_WIDTH, TFT_HEIGHT);
+			sdk_bmp_write_frame(&file, tft_input);
 			f_close(&file);
 
 			printf("wrote %s\n", name);
