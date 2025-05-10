@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <sdk.h>
 
 sdk_scene_t *sdk_scene_stack = NULL;
