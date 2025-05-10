@@ -2,21 +2,28 @@
 #include <math.h>
 
 #include <sdk.h>
+#include <stdio.h>
 #include <tft.h>
 
-#include "common.h"
+#include "tile.h"
 
 #include <tileset.png.h>
 #include <player.png.h>
+
+#include <maps/map00.bin.h>
+#include <maps/map01.bin.h>
 
 #define GRAY rgb_to_rgb565(127, 127, 127)
 
 #define TILE_SIZE 8
 
-extern uint32_t maps_map1[MAP_ROWS][MAP_COLS];
-extern uint32_t maps_map2[MAP_ROWS][MAP_COLS];
+#define NUM_MAPS 2
+static const void *maps[NUM_MAPS] = {
+	maps_map00_bin,
+	maps_map01_bin,
+};
 
-static Tile (*map)[MAP_COLS] = (void *)maps_map2;
+static const Tile (*map)[MAP_COLS] = (const void *)maps_map00_bin;
 
 struct character {
 	sdk_sprite_t s;
@@ -48,11 +55,11 @@ void game_input(unsigned dt_usec)
 	float dt = dt_usec / 1000000.0f;
 
 	if (sdk_inputs_delta.x > 0) {
-		map = (void *)maps_map1;
+		map = maps[0];
 	}
 
 	if (sdk_inputs_delta.y > 0) {
-		map = (void *)maps_map2;
+		map = maps[1];
 	}
 
 	float move_x = player.speed * sdk_inputs.joy_x / 2048.0f;
@@ -121,18 +128,13 @@ void game_input(unsigned dt_usec)
 	Tile tile = map[pos_y][pos_x];
 
 	if (tile.effect == TILE_EFFECT_TELEPORT) {
-		switch (tile.map) {
-		case 0:
-			map = (void *)maps_map1;
-			break;
-
-		case 1:
-			map = (void *)maps_map2;
-			break;
+		if (tile.map < NUM_MAPS) {
+			map = maps[tile.map];
+			player.s.x = (TILE_SIZE * tile.px) + 3.5f;
+			player.s.y = (TILE_SIZE * tile.py) + 3.5f;
+		} else {
+			printf("Cannot teleport to map%02x\n", tile.map);
 		}
-
-		player.s.x = (TILE_SIZE * tile.px) + 3.5f;
-		player.s.y = (TILE_SIZE * tile.py) + 3.5f;
 	}
 }
 

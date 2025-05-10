@@ -1,12 +1,11 @@
 add_executable(
   experiment
   ../../src/experiment/main.c
-  ../../src/experiment/maps/map1.c
-  ../../src/experiment/maps/map2.c
 )
 
 generate_png_headers()
-target_link_libraries(experiment PRIVATE sdk m ${PNG_HEADERS_TARGET})
+generate_bin_headers()
+target_link_libraries(experiment PRIVATE sdk m ${PNG_HEADERS_TARGET} ${BIN_HEADERS_TARGET})
 
 set_property(TARGET experiment PROPERTY C_STANDARD 23)
 target_compile_options(experiment PRIVATE -Wall -Wextra -Wnull-dereference)

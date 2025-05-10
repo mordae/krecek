@@ -17,6 +17,7 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
 endif()
 
 include(../tools/png_to_header.cmake)
+include(../tools/bin_to_header.cmake)
 
 add_compile_definitions(RUNNING_ON_HOST=1)
 # Screen to simulate:

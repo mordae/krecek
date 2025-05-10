@@ -1,12 +1,12 @@
 #include <pico/stdlib.h>
 #include <sdk.h>
+#include <string.h>
 #include <tft.h>
 #include <sdk.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
-#include "../../src/experiment/common.h"
+#include "../../src/experiment/tile.h"
 
 #include <tileset.png.h>
 
@@ -14,12 +14,7 @@
 
 #define NUM_TPS 2
 
-extern uint32_t maps_map1[MAP_ROWS][MAP_COLS];
-extern uint32_t maps_map2[MAP_ROWS][MAP_COLS];
-
 static Tile map[MAP_ROWS][MAP_COLS];
-
-static int last_map = 0;
 
 static int sel_x = 0;
 static int sel_y = 0;
@@ -29,14 +24,6 @@ static float cur_y = 0;
 
 static int moving_x = -1;
 static int moving_y = -1;
-
-void game_start(void)
-{
-}
-
-void game_reset(void)
-{
-}
 
 void game_input(unsigned dt_usec)
 {
@@ -67,9 +54,8 @@ void game_input(unsigned dt_usec)
 		map[sel_y][sel_x].tile_id = (map[sel_y][sel_x].tile_id + 1) % ts_tileset_png.count;
 	}
 
-	if (sdk_inputs_delta.y > 0) {
-		map[sel_y][sel_x].u32 = 0;
-	}
+	if (sdk_inputs_delta.y > 0)
+		memset(&map[sel_y][sel_x], 0, sizeof(Tile));
 
 	if (sdk_inputs_delta.x > 0) {
 		if (moving_x < 0 && map[sel_y][sel_x].effect == TILE_EFFECT_TELEPORT) {
@@ -110,38 +96,6 @@ void game_input(unsigned dt_usec)
 		if (map[sel_y][sel_x].effect == TILE_EFFECT_TELEPORT) {
 			map[sel_y][sel_x].map = (map[sel_y][sel_x].map + 1) % NUM_TPS;
 		}
-	}
-
-	if (sdk_inputs_delta.aux[0] > 0) {
-		if (last_map == 0) {
-			last_map = 1;
-			memcpy(map, maps_map1, sizeof map);
-		} else if (last_map == 1) {
-			last_map = 2;
-			memcpy(map, maps_map2, sizeof map);
-		} else {
-			last_map = 0;
-			memset(map, 0, sizeof map);
-		}
-	}
-
-	if (sdk_inputs_delta.start > 0) {
-		printf("Map dump:\n");
-		printf("---------\n");
-		printf("{\n");
-		for (int row = 0; row < MAP_ROWS; row++) {
-			printf("\t{");
-			for (int col = 0; col < MAP_COLS; col++) {
-				if (col) {
-					printf(", 0x%08x", (unsigned)map[row][col].u32);
-				} else {
-					printf("0x%08x", (unsigned)map[row][col].u32);
-				}
-			}
-			printf("},\n");
-		}
-		printf("}\n");
-		printf("---------\n");
 	}
 }
 
