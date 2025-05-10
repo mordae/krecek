@@ -1,5 +1,28 @@
 # Krecek
 
+## Combined Firmware Image
+
+Every game gets 1 MiB.
+
+| ID | Game        |
+|---:|-------------|
+|  0 | Menu        |
+|  1 | Cerviiik    |
+|  2 | Pong        |
+|  3 | Krectris    |
+|  4 | Minesweeper |
+|  5 | Pacman      |
+|  6 | Peckovana   |
+|  7 | Platform    |
+|  8 | Tecka       |
+|  9 | Janek       |
+| 10 | Kalkulacka  |
+| 11 | Scoundrel   |
+| 12 | Smileyrace  |
+| 13 |             |
+| 14 |             |
+| 15 |             |
+
 ## Development on Krecek
 
 ```bash

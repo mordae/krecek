@@ -6,10 +6,12 @@
 #include <stdlib.h>
 #include <sdk.h>
 #include <tft.h>
-#include <stdio.h>
 
 #include <krecek-cards.png.h>
 #include <health-counter.png.h>
+#include <cover.png.h>
+
+sdk_game_info("scoundrel", &image_cover_png);
 
 #define GRAY rgb_to_rgb565(170, 170, 170)
 #define RED rgb_to_rgb565(255, 64, 64)

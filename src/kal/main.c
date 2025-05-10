@@ -4,6 +4,9 @@
 #include <tft.h>
 
 #include <number.png.h>
+#include <cover.png.h>
+
+sdk_game_info("kal", &image_cover_png);
 
 #define GRAY rgb_to_rgb565(63, 63, 63)
 

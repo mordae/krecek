@@ -11,6 +11,10 @@
 #include <player.png.h>
 #include <playerrun.png.h>
 
+#include <cover.png.h>
+
+sdk_game_info("janek", &image_cover_png);
+
 #define TILE_SIZE 16
 #define MAP_ROWS 7
 #define MAP_COLS 10
