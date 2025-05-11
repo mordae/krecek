@@ -110,8 +110,10 @@ fail:
 	}
 }
 
-static bool screens_handle(sdk_event_t event)
+static bool screens_handle(sdk_event_t event, int depth)
 {
+	(void)depth;
+
 	switch (event) {
 	case SDK_PRESSED_B:
 	case SDK_TICK_EAST:

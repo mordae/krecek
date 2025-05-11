@@ -42,8 +42,10 @@ static void games_paint(float dt, int depth)
 		sdk_draw_tile(dots_left + i * 4, 120 - 5, &ts_select_png, selected == i);
 }
 
-static bool games_handle(sdk_event_t event)
+static bool games_handle(sdk_event_t event, int depth)
 {
+	(void)depth;
+
 	switch (event) {
 	case SDK_PRESSED_B:
 	case SDK_TICK_EAST:

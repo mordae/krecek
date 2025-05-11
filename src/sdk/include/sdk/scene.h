@@ -62,7 +62,7 @@ typedef struct sdk_scene {
 	 * Called from the top down.
 	 * First handler to return true stops the propagation.
 	 */
-	bool (*handle)(sdk_event_t event);
+	bool (*handle)(sdk_event_t event, int depth);
 
 	/* Scene was pushed to the stack. */
 	void (*pushed)(void);
@@ -70,8 +70,26 @@ typedef struct sdk_scene {
 	/* Scene was popped from the stack. */
 	void (*popped)(void);
 
+	/* Scene was obscured by another on top of it. */
+	void (*obscured)(void);
+
+	/* Scene was revealed and is now again at the top. */
+	void (*revealed)(void);
+
 	/* Parent scene. Scenes form a stack. */
 	struct sdk_scene *parent;
+
+	/*
+	 * Secondary stack frozen before paints and handling events.
+	 * This allows safe stack operations from inside the callbacks.
+	 */
+	struct sdk_scene *shadow;
+
+	/*
+	 * For the shadow stack walking, indicates whether the scene
+	 * is part of the stack and should continue to receive events.
+	 */
+	bool on_stack;
 } sdk_scene_t;
 
 /* Stack of visible game scenes. */

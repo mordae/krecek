@@ -1,8 +1,10 @@
 add_executable(
   experiment-editor
   ../../src/experiment-editor/main.c
+  ../../src/experiment-editor/common.c
   ../../src/experiment-editor/root.c
   ../../src/experiment-editor/level.c
+  ../../src/experiment-editor/target.c
 )
 
 generate_png_headers()

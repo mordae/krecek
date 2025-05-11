@@ -30,8 +30,10 @@ static void root_paint(float dt, int depth)
 	}
 }
 
-static bool root_handle(sdk_event_t event)
+static bool root_handle(sdk_event_t event, int depth)
 {
+	(void)depth;
+
 	switch (event) {
 	case SDK_PRESSED_Y:
 		current_scene = (current_scene + 1) % NUM_SCENES;

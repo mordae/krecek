@@ -1,8 +1,10 @@
 add_executable(
   experiment-editor
   main.c
+  common.c
   root.c
   level.c
+  target.c
 )
 target_include_directories(experiment-editor PRIVATE include)
 generate_png_headers()
