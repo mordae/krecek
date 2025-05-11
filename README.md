@@ -21,7 +21,7 @@ Every game gets 1 MiB.
 | 12 | Smileyrace  |
 | 13 |             |
 | 14 |             |
-| 15 |             |
+| 15 | Experiment  |
 
 ## Development on Krecek
 

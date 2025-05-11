@@ -58,7 +58,7 @@ static void root_paint(float dt, int depth)
 	for (int y = 0; y < MAP_ROWS; y++) {
 		for (int x = 0; x < MAP_COLS; x++) {
 			uint32_t tile_id = root_cursor.map[y][x].tile_id;
-			color_t color = (tile_id * 0x9e3779b9) >> 16;
+			color_t color = preview_colors[tile_id];
 			int x0 = 36 + x * 6;
 			int y0 = 12 + y * 6;
 			tft_draw_rect(x0, y0, x0 + 5, y0 + 5, color);
@@ -100,6 +100,7 @@ static bool root_handle(sdk_event_t event, int depth)
 
 static void root_pushed(void)
 {
+	load_preview_colors();
 	load_map_ids();
 	selected = clamp(selected, 0, map_count);
 }

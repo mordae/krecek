@@ -6,8 +6,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <tileset.png.h>
+
 int map_count = 0;
 uint8_t map_ids[MAX_MAPS];
+
+color_t preview_colors[TS_TILESET_PNG_COUNT];
 
 struct cursor root_cursor = { .level = NO_LEVEL, .has_level = -NO_LEVEL };
 struct cursor target_cursor = { .level = NO_LEVEL, .has_level = -NO_LEVEL };
@@ -119,5 +123,24 @@ void load_map_ids(void)
 close_fail:
 	if ((err = f_closedir(&dir))) {
 		printf("f_closedir /assets/maps failed: %s\n", f_strerror(err));
+	}
+}
+
+void load_preview_colors(void)
+{
+	int pixels = TILESET_PNG_WIDTH * TILESET_PNG_WIDTH;
+
+	for (int i = 0; i < TS_TILESET_PNG_COUNT; i++) {
+		const color_t *data = sdk_get_tile_data(&ts_tileset_png, i);
+		int r = 0, g = 0, b = 0;
+
+		for (int j = 0; j < pixels; j++) {
+			color_t px = data[j];
+			r += (px & 0b1111100000000000) >> 11;
+			g += (px & 0b0000011111100000) >> 5;
+			b += (px & 0b0000000000011111) >> 0;
+		}
+
+		preview_colors[i] = rgb565(r / pixels, g / pixels, b / pixels);
 	}
 }

@@ -65,11 +65,15 @@ def convert(input_file: BinaryIO, name: str, output: str):
             f.write("};\n")
 
             if img.height % img.width == 0:
+                f.write(
+                    f"\n#define TS_{var_name.upper()}_COUNT {img.height // img.width}\n"
+                )
+
                 f.write(f"\nstatic const sdk_tileset_t ts_{var_name} = {{\n\t")
 
                 f.write(f".width = {img.width},\n\t")
                 f.write(f".height = {img.width},\n\t")
-                f.write(f".count = {img.height // img.width},\n\t")
+                f.write(f".count = TS_{var_name.upper()}_COUNT,\n\t")
                 f.write(".tiles = {\n")
 
                 for i in range(img.height // img.width):

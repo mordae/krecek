@@ -35,7 +35,10 @@ inline static void sdk_draw_image(int x, int y, const sdk_image_t *image)
 /* Get pointer to given tile inside the tileset. */
 inline static const color_t *sdk_get_tile_data(const sdk_tileset_t *ts, uint16_t tile)
 {
-	tile = tile % ts->count;
+	if (tile >= ts->count) {
+		tile = tile % ts->count;
+	}
+
 	return ts->tiles[tile];
 }
 

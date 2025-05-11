@@ -3,6 +3,7 @@
 
 #include <sdk.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <tft.h>
 
 #include "tile.h"
@@ -12,6 +13,10 @@
 
 #include <maps/map00.bin.h>
 #include <maps/map01.bin.h>
+
+#include <cover.png.h>
+
+sdk_game_info("experiment", &image_cover_png);
 
 #define GRAY rgb_to_rgb565(127, 127, 127)
 
@@ -54,23 +59,17 @@ void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
 
-	if (sdk_inputs_delta.x > 0) {
-		map = maps[0];
-	}
+	float move_x =
+		abs(sdk_inputs.joy_x) >= 512 ? player.speed * dt * sdk_inputs.joy_x / 2048.0f : 0;
+	float move_y =
+		abs(sdk_inputs.joy_y) >= 512 ? player.speed * dt * sdk_inputs.joy_y / 2048.0f : 0;
 
-	if (sdk_inputs_delta.y > 0) {
-		map = maps[1];
-	}
-
-	float move_x = player.speed * sdk_inputs.joy_x / 2048.0f;
-	float move_y = player.speed * sdk_inputs.joy_y / 2048.0f;
-
-	if (fabsf(move_x) + fabs(move_y) > 0.1f) {
+	if (move_x || move_y) {
 		int pos_x = player.s.x / TILE_SIZE;
 		int pos_y = player.s.y / TILE_SIZE;
 
-		float next_x = player.s.x + dt * move_x;
-		float next_y = player.s.y + dt * move_y;
+		float next_x = player.s.x + move_x;
+		float next_y = player.s.y + move_y;
 
 		next_x = clamp(next_x, TILE_SIZE / 4.0f, TFT_RIGHT - TILE_SIZE / 4.0f);
 		next_y = clamp(next_y, TILE_SIZE / 4.0f, TFT_BOTTOM - TILE_SIZE / 4.0f);
@@ -107,15 +106,13 @@ void game_input(unsigned dt_usec)
 		if (fabsf(move_x) > fabsf(move_y)) {
 			if (move_x > 0) {
 				player.s.tile = 6;
-			} else {
+			} else if (move_x < 0) {
 				player.s.tile = 4;
 			}
-		} else {
-			if (move_y > 0) {
-				player.s.tile = 2;
-			} else {
-				player.s.tile = 0;
-			}
+		} else if (move_y > 0) {
+			player.s.tile = 2;
+		} else if (move_y < 0) {
+			player.s.tile = 0;
 		}
 
 		player.s.tile &= ~1;

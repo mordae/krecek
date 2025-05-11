@@ -55,3 +55,9 @@ void save_level(struct cursor *cursor);
 
 /* Load `map_ids` and `map_count`. */
 void load_map_ids(void);
+
+/* Preview colors for each tileset tile. */
+extern color_t preview_colors[];
+
+/* Load above colors. Called by root. */
+void load_preview_colors(void);

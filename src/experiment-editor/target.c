@@ -58,25 +58,25 @@ static void target_paint(float dt, int depth)
 		tft_draw_string(8, 12 + 16 * i, WHITE, "%02x", map_ids[idx]);
 	}
 
-	float light = sinf(((time_us_32() << 12) >> 12) * 2 * M_PI / (1 << 20));
-	int gray = 128 + 127 * light;
-	color_t color = rgb_to_rgb565(gray, 255, gray);
-
-	tft_draw_rect(34, 12, 157, 105, inside_map ? color : GREEN);
+	tft_draw_rect(34, 12, 157, 105, inside_map ? WHITE : GREEN);
 
 	for (int y = 0; y < MAP_ROWS; y++) {
 		for (int x = 0; x < MAP_COLS; x++) {
 			uint32_t tile_id = target_cursor.map[y][x].tile_id;
-			color_t color = (tile_id * 0x9e3779b9) >> 16;
+			color_t color = preview_colors[tile_id];
 			int x0 = 36 + x * 6;
 			int y0 = 14 + y * 6;
 			tft_draw_rect(x0, y0, x0 + 5, y0 + 5, color);
 		}
 	}
 
+	float light = sinf(((time_us_32() << 12) >> 12) * 2 * M_PI / (1 << 20));
+	int gray = 128 + 127 * light;
+	color_t color = rgb_to_rgb565(gray, 255, gray);
+
 	tft_draw_rect(36 + target_cursor.px * 6, 14 + target_cursor.py * 6,
 		      36 + (target_cursor.px + 1) * 6 - 1, 14 + (target_cursor.py + 1) * 6 - 1,
-		      inside_map ? color : GREEN);
+		      inside_map ? color : WHITE);
 }
 
 static bool target_handle(sdk_event_t event, int depth)
