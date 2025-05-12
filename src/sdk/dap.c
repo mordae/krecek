@@ -174,7 +174,12 @@ void dap_reset(void)
 
 static inline uint32_t dap_parity(uint32_t value)
 {
-	return __builtin_popcount(value) & 1;
+	uint32_t fold1 = (value >> 16) ^ value;
+	uint32_t fold2 = (fold1 >> 8) ^ fold1;
+	uint32_t fold3 = (fold2 >> 4) ^ fold2;
+	uint32_t fold4 = (fold3 >> 2) ^ fold3;
+	uint32_t parity = (fold4 >> 1) ^ fold4;
+	return parity & 1;
 }
 
 static enum dap_status dap_try_put(uint8_t req, uint32_t value)
