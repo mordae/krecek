@@ -20,7 +20,7 @@ Every game gets 1 MiB.
 | 11 | Scoundrel   |
 | 12 | Smileyrace  |
 | 13 |             |
-| 14 |             |
+| 14 | Deep        |
 | 15 | Experiment  |
 
 ## Development on Krecek
