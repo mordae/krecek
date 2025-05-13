@@ -32,7 +32,7 @@ def convert(input_file: BinaryIO, name: str, output: str):
         os.makedirs(os.path.dirname(output), exist_ok=True)
         var_name = sanitize_identifier(name).lower()
 
-        img = Image.open(input_file).convert("RGB")
+        img = Image.open(input_file).convert("RGBA")
 
         with open(output, "w") as f:
             f.write("#pragma once\n")
@@ -49,7 +49,9 @@ def convert(input_file: BinaryIO, name: str, output: str):
             pixels = []
             for y in range(img.height):
                 for x in range(img.width):
-                    r, g, b = cast(tuple[int, int, int], img.getpixel((x, y)))
+                    r, g, b, a = cast(tuple[int, int, int, int], img.getpixel((x, y)))
+                    if a < 128:
+                        r, g, b = 255, 63, 255
                     rgb565 = rgb888_to_rgb565(r, g, b)
                     pixels.append(f"0x{rgb565:04x}")
 
