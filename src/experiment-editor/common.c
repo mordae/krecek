@@ -88,7 +88,7 @@ static int cmp_uint8(const void *a, const void *b)
 void load_map_ids(void)
 {
 	int err;
-	DIR dir;
+	static DIR dir;
 
 	map_count = 0;
 

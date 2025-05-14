@@ -58,7 +58,7 @@ void game_paint(unsigned dt_usec)
 	tft_draw_string_right(TFT_WIDTH - 1, 2, status_color[sdk_sdcard_status], "%s",
 			      status_name[sdk_sdcard_status]);
 
-	DIR dir;
+	static DIR dir;
 	if (FR_OK == f_opendir(&dir, "/")) {
 		FILINFO file;
 		int y = 24;
