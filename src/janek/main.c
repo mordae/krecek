@@ -257,7 +257,6 @@ static void player_handle_game(float dt)
 
 	int up = (player.s.y - PLAYER_HEIGHT) / TILE_SIZE;
 	int down = player.s.y / TILE_SIZE - 1.0f / TILE_SIZE;
-
 	int left = ((player.s.x - (PLAYER_WIDTH / 2.0f)) / TILE_SIZE);
 	int right = roundf((player.s.x + (PLAYER_WIDTH / 2.0f)) / TILE_SIZE);
 
@@ -300,6 +299,15 @@ static void player_handle_game(float dt)
 		break;
 	}
 
+	printf("----------------\n");
+	printf("tile_x %d\n", tile_x);
+	printf("tile_y %d\n", tile_y);
+	printf("left %d\n", left);
+	printf("right %d\n", right);
+	printf("sprites %d\n", player.s.tile);
+	printf("FX %f\n", player.fx);
+	printf("----------------\n");
+
 	switch (game_map[tile_y][right]) {
 	case PIPE_RIGHT:
 		player.s.x = 0;
@@ -329,14 +337,6 @@ static void player_handle_game(float dt)
 	} else if (player.fx > 0) {
 		player.s.tile = 0;
 	}
-	printf("----------------\n");
-	printf("tile_x %d\n", tile_x);
-	printf("tile_y %d\n", tile_y);
-	printf("left %d\n", left);
-	printf("right %d\n", right);
-	printf("sprites %d\n", player.s.tile);
-	printf("FX %f\n", player.fx);
-	printf("----------------\n");
 }
 static void paint_player()
 {

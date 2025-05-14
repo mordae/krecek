@@ -89,6 +89,9 @@ static struct pacman pacman;
 
 static struct ghost_blue ghost_blue;
 
+static void game_handel_enemy(float dt);
+
+static void blue_ghost_handel(float dt);
 void game_start(void)
 {
 	pacman.speed = 32;
@@ -128,34 +131,34 @@ void game_input(unsigned dt_usec)
 	if (sdk_inputs_delta.a > 0 || sdk_inputs.joy_y > 300) {
 		if (!pacman.dx) {
 			pacman.dy = 1;
-			ghost_blue.gbdy = 1;
+			//	ghost_blue.gbdy = 1;
 		} else {
 			pacman.fdy = 1, pacman.fdx = 0;
-			ghost_blue.fgbdy = 1, ghost_blue.fgbdx = 0;
+			//	ghost_blue.fgbdy = 1, ghost_blue.fgbdx = 0;
 		}
 	} else if (sdk_inputs_delta.y > 0 || sdk_inputs.joy_y < -300) {
 		if (!pacman.dx) {
 			pacman.dy = -1;
-			ghost_blue.gbdy = -1;
+			//	ghost_blue.gbdy = -1;
 		} else {
 			pacman.fdy = -1, pacman.fdx = 0;
-			ghost_blue.fgbdy = -1, ghost_blue.fgbdx = 0;
+			//	ghost_blue.fgbdy = -1, ghost_blue.fgbdx = 0;
 		}
 	} else if (sdk_inputs_delta.b > 0 || sdk_inputs.joy_x > 300) {
 		if (!pacman.dy) {
 			pacman.dx = 1;
-			ghost_blue.gbdx = 1;
+			//	ghost_blue.gbdx = 1;
 		} else {
 			pacman.fdx = 1, pacman.fdy = 0;
-			ghost_blue.fgbdx = 1, ghost_blue.fgbdy = 0;
+			//	ghost_blue.fgbdx = 1, ghost_blue.fgbdy = 0;
 		}
 	} else if (sdk_inputs_delta.x > 0 || sdk_inputs.joy_x < -300) {
 		if (!pacman.dy) {
 			pacman.dx = -1;
-			ghost_blue.gbdx = -1;
+			//	ghost_blue.gbdx = -1;
 		} else {
 			pacman.fdx = -1, pacman.fdy = 0;
-			ghost_blue.fgbdx = -1, ghost_blue.fgbdy = 0;
+			//	ghost_blue.fgbdx = -1, ghost_blue.fgbdy = 0;
 		}
 	}
 
@@ -220,88 +223,124 @@ void game_input(unsigned dt_usec)
 			pacman.s.x = future_x;
 			pacman.s.y = future_y;
 		}
+	}
 
-		if (ghost_blue.gbdy || ghost_blue.gbdx) {
-			float future_gbx =
-				clamp(ghost_blue.s.x + ghost_blue.gbdx * dt * ghost_blue.speed,
-				      8 * 0.5, TFT_RIGHT - 8 * 0.5);
-			float future_gby =
-				clamp(ghost_blue.s.y + ghost_blue.gbdy * dt * ghost_blue.speed,
-				      8 * 0.5, TFT_BOTTOM - 8 * 0.5);
+	if (pacman.dx > 0) {
+		pacman.s.angle = 0;
+	} else if (pacman.dx < 0) {
+		pacman.s.angle = 2;
+	} else if (pacman.dy > 0) {
+		pacman.s.angle = 1;
+	} else if (pacman.dy < 0) {
+		pacman.s.angle = 3;
+	}
 
-			int future_tile_gbx = 0, future_tile_gby = 0;
+	if (moved) {
+		uint32_t now = time_us_32();
+		pacman.s.tile = (now >> 16) & 1;
+	} else {
+		pacman.s.tile = 0;
+	}
 
-			if (ghost_blue.gbdx > 0) {
-				// Moving right
-				float ideal_gby = (roundf(future_gby / 8 - 0.5f)) * 8 + 0.5 * 8;
-				future_gby = future_gby * 0.8 + ideal_gby * 0.2;
-				future_tile_gbx = (future_gbx + 0.5 * PACMAN_SIZE) / 8;
-				future_tile_gby = future_gby / 8;
-			} else if (ghost_blue.gbdx < 0) {
-				// Moving left
-				float ideal_gby = (roundf(future_gby / 8 - 0.5f)) * 8 + 0.5 * 8;
-				future_gby = future_gby * 0.8 + ideal_gby * 0.2;
-				future_tile_gbx = (future_gbx - 0.5 * PACMAN_SIZE) / 8;
-				future_tile_gby = future_gby / 8;
-			} else if (ghost_blue.gbdy > 0) {
-				// Moving down
-				float ideal_gbx = (roundf(future_gbx / 8 - 0.5f)) * 8 + 0.5 * 8;
-				future_gbx = future_gbx * 0.8 + ideal_gbx * 0.2;
-				future_tile_gby = (future_gby + 0.5 * PACMAN_SIZE) / 8;
-				future_tile_gbx = future_gbx / 8;
-			} else if (ghost_blue.gbdy < 0) {
-				// Moving up
-				float ideal_gbx = (roundf(future_gbx / 8 - 0.5f)) * 8 + 0.5 * 8;
-				future_x = future_gbx * 0.8 + ideal_gbx * 0.2;
-				future_tile_gby = (future_gby - 0.5 * PACMAN_SIZE) / 8;
-				future_tile_gbx = future_gbx / 8;
-			}
+	if (d < 0.25) {
+		int x = pacman.s.x / 8;
+		int y = pacman.s.y / 8;
 
-			int future_tile_gb = map[future_tile_gby][future_tile_gbx];
+		int eaten = map[y][x];
+		map[y][x] = 0;
 
-			if (future_tile_gb <= CHERRY || future_tile_gb == INVISIBLE_WALL) {
-				moved = true;
-				ghost_blue.s.x = future_gbx;
-				ghost_blue.s.y = future_gby;
-			}
+		if (eaten == 1) {
+			sdk_melody_play("/i:square e");
+			pacman.score += 10;
+		} else if (eaten == 2) {
+			pacman.score += 0;
+			sdk_melody_play("/i:square g-");
+		} else if (eaten == 3) {
+			pacman.score += 50;
+		} else if (eaten > 3) {
+			pacman.score -= 10000;
 		}
+	}
+	game_handel_enemy(dt);
+}
 
-		if (pacman.dx > 0) {
-			pacman.s.angle = 0;
-		} else if (pacman.dx < 0) {
-			pacman.s.angle = 2;
-		} else if (pacman.dy > 0) {
-			pacman.s.angle = 1;
-		} else if (pacman.dy < 0) {
-			pacman.s.angle = 3;
-		}
+static void game_handel_enemy(float dt)
+{
+	blue_ghost_handel(dt);
+}
+static void blue_ghost_handel(float dt)
+{
+	float future_gbx = clamp(ghost_blue.s.x + ghost_blue.gbdx * dt * ghost_blue.speed, 8 * 0.5,
+				 TFT_RIGHT - 8 * 0.5);
+	float future_gby = clamp(ghost_blue.s.y + ghost_blue.gbdy * dt * ghost_blue.speed, 8 * 0.5,
+				 TFT_BOTTOM - 8 * 0.5);
 
-		if (moved) {
-			uint32_t now = time_us_32();
-			pacman.s.tile = (now >> 16) & 1;
-		} else {
-			pacman.s.tile = 0;
-		}
+	if (pacman.s.x > ghost_blue.s.x) {
+		//if (!ghost_blue.gbdx) {
+		ghost_blue.gbdx = 1;
+		//ghost_blue.gbdy = 0;
+		//} else {
+		//	ghost_blue.fgbdy = 0;
+		//}
+	} else if (pacman.s.x < ghost_blue.s.x) {
+		//if (!ghost_blue.gbdx) {
+		ghost_blue.gbdx = -1;
+		//ghost_blue.gbdy = 0;
+		//} else {
+		//	ghost_blue.fgbdx = -1;
+		//}
+	}
 
-		if (d < 0.25) {
-			int x = pacman.s.x / 8;
-			int y = pacman.s.y / 8;
+	if (pacman.s.y > ghost_blue.s.y) {
+		//if (!ghost_blue.gbdx) {
+		ghost_blue.gbdy = 1;
+		//ghost_blue.gbdx = 0;
+		//} else {
+		//	ghost_blue.fgbdy = -1;
+		//}
+	} else if (pacman.s.y < ghost_blue.s.y) {
+		//if (!ghost_blue.gbdy) {
+		ghost_blue.gbdy = -1;
+		//ghost_blue.gbdx = 0;
+		//} else {
+		//	ghost_blue.fgbdy = -1;
+		//}
+	}
 
-			int eaten = map[y][x];
-			map[y][x] = 0;
+	int future_tile_gbx = 0, future_tile_gby = 0;
 
-			if (eaten == 1) {
-				sdk_melody_play("/i:square e");
-				pacman.score += 10;
-			} else if (eaten == 2) {
-				pacman.score += 0;
-				sdk_melody_play("/i:square g-");
-			} else if (eaten == 3) {
-				pacman.score += 50;
-			} else if (eaten > 3) {
-				pacman.score -= 10000;
-			}
-		}
+	if (ghost_blue.gbdx == 1) {
+		// Moving right
+		float ideal_gby = (roundf(future_gby / 8 - 0.5f)) * 8 + 0.5 * 8;
+		future_gby = future_gby * 0.8 + ideal_gby * 0.2;
+		future_tile_gbx = (future_gbx + 0.5 * PACMAN_SIZE) / 8;
+		future_tile_gby = future_gby / 8;
+	} else if (ghost_blue.gbdx == -1) {
+		// Moving left
+		float ideal_gby = (roundf(future_gby / 8 - 0.5f)) * 8 + 0.5 * 8;
+		future_gby = future_gby * 0.8 + ideal_gby * 0.2;
+		future_tile_gbx = (future_gbx - 0.5 * PACMAN_SIZE) / 8;
+		future_tile_gby = future_gby / 8;
+	}
+	if (ghost_blue.gbdy == 1) {
+		// Moving down
+		float ideal_gbx = (roundf(future_gbx / 8 - 0.5f)) * 8 + 0.5 * 8;
+		future_gbx = future_gbx * 0.8 + ideal_gbx * 0.2;
+		future_tile_gby = (future_gby + 0.5 * PACMAN_SIZE) / 8;
+		future_tile_gbx = future_gbx / 8;
+	} else if (ghost_blue.gbdy == -1) {
+		// Moving up
+		float ideal_gbx = (roundf(future_gbx / 8 - 0.5f)) * 8 + 0.5 * 8;
+		future_gbx = future_gbx * 0.8 + ideal_gbx * 0.2;
+		future_tile_gby = (future_gby - 0.5 * PACMAN_SIZE) / 8;
+		future_tile_gbx = future_gbx / 8;
+	}
+
+	int future_tile_gb = map[future_tile_gby][future_tile_gbx];
+
+	if (future_tile_gb <= CHERRY || future_tile_gb == INVISIBLE_WALL) {
+		ghost_blue.s.x = future_gbx;
+		ghost_blue.s.y = future_gby;
 	}
 }
 
@@ -388,7 +427,6 @@ static void draw_tile(TileType type, int x, int y)
 		break;
 	}
 }
-
 void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
@@ -403,6 +441,7 @@ void game_paint(unsigned __unused dt_usec)
 	tft_draw_string(0 + 10, TFT_BOTTOM - 16, BLUE, "%i", pacman.score);
 
 	sdk_draw_sprite(&ghost_blue.s);
+	tft_draw_pixel(ghost_blue.s.x, ghost_blue.s.y, WHITE);
 }
 
 int main()
