@@ -1,5 +1,5 @@
-#include "volume.h"
-#include "common.h"
+//#include "volume.h"
+//#include "common.h"
 
 #include <math.h>
 #include <pico/stdlib.h>
@@ -58,7 +58,7 @@ void game_reset(void)
 void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
-	game_handle_audio(dt, volume);
+	//game_handle_audio(dt, volume);
 
 	float move_step = dt * 2.0f;
 	float rot_step = dt * 2.5f;
@@ -130,6 +130,12 @@ void game_paint(unsigned dt_usec)
 		color_t color = rgb_to_rgb565(shade, 0, 0);
 
 		tft_draw_vline(x, start_y, end_y, color);
+
+		if ((x / 4) % 2 == 0) {
+			color = rgb_to_rgb565(shade, shade / 2, 0);
+		} else {
+			color = rgb_to_rgb565(shade, 0, shade / 2);
+		}
 	}
 }
 static void tft_fill_rect(int x, int y, int w, int h, color_t color)
