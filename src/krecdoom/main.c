@@ -67,10 +67,10 @@ void game_input(unsigned dt_usec)
 	float move_step = dt * 2.0f;
 	float rot_step = dt * 2.5f;
 
-	if (sdk_inputs.joy_x < -500) {
+	if (sdk_inputs.joy_x > -500) {
 		player.angle -= rot_step;
 	}
-	if (sdk_inputs.joy_x > 500) {
+	if (sdk_inputs.joy_x < 500) {
 		player.angle += rot_step;
 	}
 	player.dx = cosf(player.angle);
@@ -95,51 +95,81 @@ void game_input(unsigned dt_usec)
 }
 void game_paint(unsigned dt_usec)
 {
-	float dt = dt_usec / 1000000.0f;
+	(void)dt_usec;
+
 	tft_fill_rect(0, 0, 160, 60, rgb_to_rgb565(100, 100, 255));
 	tft_fill_rect(0, 60, 160, 60, rgb_to_rgb565(50, 50, 50));
 
-	player.fov = 0.8f;
-
 	for (int x = 0; x < 160; x++) {
-		player.ray_angle = player.angle - player.fov / 2 + (x / 160.0f) * player.fov;
+		float cameraX = 2.0f * x / 160.0f - 1.0f;
 
-		player.ray_x = cosf(player.ray_angle);
-		player.ray_y = sinf(player.ray_angle);
+		float rayDirX = cosf(player.angle) + sinf(player.angle) * cameraX * player.fov;
+		float rayDirY = sinf(player.angle) - cosf(player.angle) * cameraX * player.fov;
 
-		player.distance = 0.0f;
+		int mapX = (int)player.x;
+		int mapY = (int)player.y;
 
-		while (player.distance < 16.0f) {
-			float test_x = player.x + player.ray_x * player.distance;
-			float test_y = player.y + player.ray_y * player.distance;
+		float deltaDistX = fabsf(1.0f / rayDirX);
+		float deltaDistY = fabsf(1.0f / rayDirY);
 
-			if (test_x < 0 || test_y < 0 || test_x >= MAP_WIDTH || test_y >= MAP_HEIGHT)
-				break;
+		float sideDistX, sideDistY;
+		int stepX, stepY;
 
-			if (world_map[(int)test_y][(int)test_x] != 0)
-				break;
-
-			player.distance += 0.05f;
+		if (rayDirX < 0) {
+			stepX = -1;
+			sideDistX = (player.x - mapX) * deltaDistX;
+		} else {
+			stepX = 1;
+			sideDistX = (mapX + 1.0f - player.x) * deltaDistX;
 		}
-		int wall_height = (int)(120.0f / player.distance);
-		if (wall_height > 120)
-			wall_height = 120;
 
-		int start_y = (120 - wall_height) / 2;
-		int end_y = start_y + wall_height;
+		if (rayDirY < 0) {
+			stepY = -1;
+			sideDistY = (player.y - mapY) * deltaDistY;
+		} else {
+			stepY = 1;
+			sideDistY = (mapY + 1.0f - player.y) * deltaDistY;
+		}
 
-		int shade = 255 - (int)(player.distance * 12.0f);
+		int hit = 0;
+		int side = 0;
+		while (!hit && mapX >= 0 && mapY >= 0 && mapX < MAP_WIDTH && mapY < MAP_HEIGHT) {
+			if (sideDistX < sideDistY) {
+				sideDistX += deltaDistX;
+				mapX += stepX;
+				side = 0;
+			} else {
+				sideDistY += deltaDistY;
+				mapY += stepY;
+				side = 1;
+			}
+			if (world_map[mapY][mapX] == WALL)
+				hit = 1;
+		}
+
+		float perpWallDist = side == 0 ? (sideDistX - deltaDistX) :
+						 (sideDistY - deltaDistY);
+		if (perpWallDist < 0.01f)
+			perpWallDist = 0.01f;
+
+		int lineHeight = (int)(120.0f / perpWallDist);
+		if (lineHeight > 120)
+			lineHeight = 120;
+
+		int drawStart = (120 - lineHeight) / 2;
+		int drawEnd = drawStart + lineHeight;
+
+		int shade = 255 - (int)(perpWallDist * 12.0f);
 		if (shade < 0)
 			shade = 0;
-		color_t color = rgb_to_rgb565(shade, 0, 0);
 
-		tft_draw_vline(x, start_y, end_y, color);
-
-		if ((x / 4) % 2 == 0) {
-			color = rgb_to_rgb565(shade, shade / 2, 0);
+		color_t color;
+		if (side == 1) {
+			color = rgb_to_rgb565(shade / 2, 0, 0);
 		} else {
-			color = rgb_to_rgb565(shade, 0, shade / 2);
+			color = rgb_to_rgb565(shade, 0, 0);
 		}
+		tft_draw_vline(x, drawStart, drawEnd, color);
 	}
 }
 static void tft_fill_rect(int x, int y, int w, int h, color_t color)
