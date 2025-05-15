@@ -48,6 +48,10 @@ static void tft_draw_vline(int x, int y1, int y2, color_t color);
 void game_start(void)
 {
 	sdk_set_output_gain_db(volume);
+	player.x = 1.5f;
+	player.y = 1.5f;
+	player.angle = 0.0f;
+	player.fov = 0.8f;
 }
 
 void game_reset(void)
@@ -72,7 +76,7 @@ void game_input(unsigned dt_usec)
 	player.dx = cosf(player.angle);
 	player.dy = sinf(player.angle);
 
-	if (sdk_inputs.joy_x < -500) {
+	if (sdk_inputs.joy_y < -500) {
 		player.nx = player.x + player.dx * move_step;
 		player.ny = player.y + player.dy * move_step;
 		if (world_map[(int)player.ny][(int)player.nx] == 0) {
@@ -80,7 +84,7 @@ void game_input(unsigned dt_usec)
 			player.y = player.ny;
 		}
 	}
-	if (sdk_inputs.joy_x > 500) {
+	if (sdk_inputs.joy_y > 500) {
 		player.nx = player.x - player.dx * move_step;
 		player.ny = player.y - player.dy * move_step;
 		if (world_map[(int)player.ny][(int)player.nx] == 0) {
