@@ -2,6 +2,8 @@ add_executable(
   krecdoom
   volume.c
   main.c
+  maps/map1.c
+  maps/map2.c
 )
 target_include_directories(krecdoom PRIVATE include)
 generate_png_headers()

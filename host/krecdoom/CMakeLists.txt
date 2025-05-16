@@ -1,6 +1,8 @@
 add_executable(
   krecdoom
   ../../src/krecdoom/main.c
+  ../../src/krecdoom/maps/map1.c
+  ../../src/krecdoom/maps/map2.c
 )
 
 generate_png_headers()

@@ -26,6 +26,7 @@ typedef struct {
 static Player player;
 
 extern TileType maps_map1[MAP_HEIGHT][MAP_WIDTH];
+extern TileType maps_map2[MAP_HEIGHT][MAP_WIDTH];
 
 TileType (*map)[MAP_WIDTH] = maps_map1;
 
@@ -81,6 +82,13 @@ void game_input(unsigned dt_usec)
 			player.x = player.nx;
 			player.y = player.ny;
 		}
+	}
+
+	if (sdk_inputs_delta.a == 1) {
+		map = maps_map1;
+	}
+	if (sdk_inputs_delta.b == 1) {
+		map = maps_map2;
 	}
 }
 void game_paint(unsigned dt_usec)

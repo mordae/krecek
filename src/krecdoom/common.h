@@ -1,7 +1,7 @@
 #pragma once
 
-#define MAP_WIDTH 8
-#define MAP_HEIGHT 8
+#define MAP_WIDTH 16
+#define MAP_HEIGHT 16
 
 typedef enum {
 	EMPTY = 0,
