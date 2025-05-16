@@ -15,6 +15,7 @@
 #define WHITE rgb_to_rgb565(255, 255, 255)
 
 TileType (*map)[MAP_WIDTH] = maps_map1;
+Player player;
 
 float volume = 0;
 

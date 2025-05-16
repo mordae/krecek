@@ -7,8 +7,6 @@
 #include <stdio.h>
 #include <tft.h>
 
-TileType (*map)[MAP_WIDTH] = maps_map1;
-
 void game_player_inputs(float dt)
 {
 	float move_step = dt * 2.0f;

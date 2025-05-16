@@ -19,12 +19,9 @@ typedef struct {
 	float distance;
 } Player;
 
-static Player player;
-
 extern TileType maps_map1[MAP_HEIGHT][MAP_WIDTH];
 extern TileType maps_map2[MAP_HEIGHT][MAP_WIDTH];
-#ifndef COMMON_H
-#define COMMON_H
 
-extern TileType (*map)[MAP_WIDTH];
-#endif
+extern TileType (*map)[MAP_WIDTH]; // Only declare here — define in main.c
+
+extern Player player;
