@@ -16,7 +16,7 @@ extern Zombik zombik;
 #define PLAYER_H
 
 void game_zombie_handle(float dt);
-void game_zombie_paint(void);
+void game_zombie_paint(float dt);
 void game_zombie_start(void);
 
 #endif

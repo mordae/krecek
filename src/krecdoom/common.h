@@ -27,3 +27,5 @@ extern TileType maps_map2[MAP_HEIGHT][MAP_WIDTH];
 extern TileType (*map)[MAP_WIDTH]; // Only declare here — define in main.c
 
 extern Player player;
+
+extern float z_buffer[SCREEN_WIDTH];

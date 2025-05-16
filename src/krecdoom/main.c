@@ -18,6 +18,7 @@ TileType (*map)[MAP_WIDTH] = maps_map1;
 Player player;
 
 float volume = 0;
+float z_buffer[SCREEN_WIDTH];
 
 void game_handle_audio(float dt, float volume);
 void game_player_inputs(float dt);
@@ -63,6 +64,10 @@ void game_paint(unsigned dt_usec)
 	float dt = dt_usec / 1000000.0f;
 	tft_fill_rect(0, 0, 160, 60, rgb_to_rgb565(100, 100, 255));
 	tft_fill_rect(0, 60, 160, 60, rgb_to_rgb565(50, 50, 50));
+
+	for (int x = 0; x < SCREEN_WIDTH; x++) {
+		z_buffer[x] = 1000.0f;
+	}
 
 	for (int x = 0; x < 160; x++) {
 		float cameraX = 2.0f * x / 160.0f - 1.0f;
@@ -115,6 +120,8 @@ void game_paint(unsigned dt_usec)
 						 (sideDistY - deltaDistY);
 		if (perpWallDist < 0.01f)
 			perpWallDist = 0.01f;
+
+		z_buffer[x] = perpWallDist;
 
 		int lineHeight = (int)(120.0f / perpWallDist);
 		if (lineHeight > 120)
