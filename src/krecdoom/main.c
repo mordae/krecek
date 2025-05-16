@@ -21,6 +21,9 @@ float volume = 0;
 
 void game_handle_audio(float dt, float volume);
 void game_player_inputs(float dt);
+void game_zombie_paint(float dt);
+void game_zombie_handle(float dt);
+void game_zombie_start(void);
 
 static void tft_fill_rect(int x, int y, int w, int h, color_t color);
 static void tft_draw_vline(int x, int y1, int y2, color_t color);
@@ -29,10 +32,11 @@ static void game_map(int map_change);
 void game_start(void)
 {
 	sdk_set_output_gain_db(volume);
+	player.fov = 0.8f;
 	player.x = 1.5f;
 	player.y = 1.5f;
-	player.angle = 0.0f;
-	player.fov = 0.8f;
+	player.angle = 0.0;
+	game_zombie_start();
 }
 
 void game_reset(void)
@@ -52,11 +56,11 @@ void game_input(unsigned dt_usec)
 	game_player_inputs(dt);
 
 	game_map(map_change);
+	game_zombie_handle(dt);
 }
 void game_paint(unsigned dt_usec)
 {
-	(void)dt_usec;
-
+	float dt = dt_usec / 1000000.0f;
 	tft_fill_rect(0, 0, 160, 60, rgb_to_rgb565(100, 100, 255));
 	tft_fill_rect(0, 60, 160, 60, rgb_to_rgb565(50, 50, 50));
 
@@ -131,6 +135,7 @@ void game_paint(unsigned dt_usec)
 		}
 		tft_draw_vline(x, drawStart, drawEnd, color);
 	}
+	game_zombie_paint(dt);
 }
 
 static void tft_fill_rect(int x, int y, int w, int h, color_t color)

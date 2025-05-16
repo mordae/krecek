@@ -2,6 +2,7 @@ add_executable(
   krecdoom
   volume.c
   maps.c
+  enemy.c
   main.c
   player.c
   maps/map1.c

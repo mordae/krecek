@@ -4,6 +4,7 @@ add_executable(
   ../../src/krecdoom/volume.c
   ../../src/krecdoom/player.c
   ../../src/krecdoom/maps.c
+  ../../src/krecdoom/enemy.c
   ../../src/krecdoom/maps/map1.c
   ../../src/krecdoom/maps/map2.c
 )
