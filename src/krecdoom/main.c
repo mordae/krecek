@@ -1,5 +1,7 @@
-//#include "volume.h"
+#include "volume.h"
 #include "common.h"
+#include "maps.h"
+#include "player.h"
 
 #include <math.h>
 #include <pico/stdlib.h>
@@ -12,29 +14,16 @@
 #define BLUE rgb_to_rgb565(0, 0, 255)
 #define WHITE rgb_to_rgb565(255, 255, 255)
 
-typedef struct {
-	float x, y;
-	float angle;
-	float dx, dy;
-	float nx, ny;
-	float fov;
-	float ray_angle;
-	float ray_x, ray_y;
-	float distance;
-} Player;
-
-static Player player;
-
-extern TileType maps_map1[MAP_HEIGHT][MAP_WIDTH];
-extern TileType maps_map2[MAP_HEIGHT][MAP_WIDTH];
-
 TileType (*map)[MAP_WIDTH] = maps_map1;
 
 float volume = 0;
 
 void game_handle_audio(float dt, float volume);
+void game_player_inputs(float dt);
+
 static void tft_fill_rect(int x, int y, int w, int h, color_t color);
 static void tft_draw_vline(int x, int y1, int y2, color_t color);
+static void game_map(int map_change);
 
 void game_start(void)
 {
@@ -53,10 +42,16 @@ void game_reset(void)
 void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
-	//game_handle_audio(dt, volume);
+	game_handle_audio(dt, volume);
+
+	int map_change = 0;
+	if (sdk_inputs_delta.a == 1)
+		map_change = 1;
 
 	float move_step = dt * 2.0f;
 	float rot_step = dt * 2.5f;
+
+	game_player_inputs(dt);
 
 	if (sdk_inputs.joy_x > -500) {
 		player.angle -= rot_step;
@@ -83,13 +78,7 @@ void game_input(unsigned dt_usec)
 			player.y = player.ny;
 		}
 	}
-
-	if (sdk_inputs_delta.a == 1) {
-		map = maps_map1;
-	}
-	if (sdk_inputs_delta.b == 1) {
-		map = maps_map2;
-	}
+	game_map(map_change);
 }
 void game_paint(unsigned dt_usec)
 {
@@ -189,6 +178,24 @@ static void tft_draw_vline(int x, int y1, int y2, color_t color)
 	}
 	for (int y = y1; y <= y2; y++) {
 		tft_draw_pixel(x, y, color);
+	}
+}
+static void game_map(int map_change)
+{
+	if (map_change > 0) {
+		if (map == maps_map2) {
+			map = maps_map1;
+		} else if (map == maps_map1) {
+			map = maps_map2;
+		}
+	}
+
+	if (map_change < 0) {
+		if (map == maps_map2) {
+			map = maps_map1;
+		} else if (map == maps_map1) {
+			map = maps_map2;
+		}
 	}
 }
 
