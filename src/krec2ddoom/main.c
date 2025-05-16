@@ -1,5 +1,5 @@
 //#include "volume.h"
-#include "common.h"
+//#include "common.h"
 
 #include <math.h>
 #include <pico/stdlib.h>
@@ -11,6 +11,9 @@
 
 #define BLUE rgb_to_rgb565(0, 0, 255)
 #define WHITE rgb_to_rgb565(255, 255, 255)
+
+#define MAP_WIDTH 8
+#define MAP_HEIGHT 8
 
 typedef struct {
 	float x, y;
@@ -25,9 +28,16 @@ typedef struct {
 
 static Player player;
 
-extern TileType maps_map1[MAP_HEIGHT][MAP_WIDTH];
+typedef enum {
+	EMPTY = 0,
+	WALL = 1,
+} TileType;
 
-TileType (*map)[MAP_WIDTH] = maps_map1;
+TileType world_map[MAP_HEIGHT][MAP_WIDTH] = {
+	{ 1, 1, 1, 1, 1, 1, 1, 1 }, { 1, 0, 0, 0, 0, 0, 0, 1 }, { 1, 0, 1, 0, 1, 0, 0, 1 },
+	{ 1, 0, 1, 0, 1, 0, 0, 1 }, { 1, 0, 0, 0, 0, 0, 0, 1 }, { 1, 0, 1, 1, 1, 1, 0, 1 },
+	{ 1, 0, 0, 0, 0, 0, 0, 1 }, { 1, 1, 1, 1, 1, 1, 1, 1 },
+};
 
 float volume = 0;
 
@@ -69,7 +79,7 @@ void game_input(unsigned dt_usec)
 	if (sdk_inputs.joy_y < -500) {
 		player.nx = player.x + player.dx * move_step;
 		player.ny = player.y + player.dy * move_step;
-		if (map[(int)player.ny][(int)player.nx] == 0) {
+		if (world_map[(int)player.ny][(int)player.nx] == 0) {
 			player.x = player.nx;
 			player.y = player.ny;
 		}
@@ -77,7 +87,7 @@ void game_input(unsigned dt_usec)
 	if (sdk_inputs.joy_y > 500) {
 		player.nx = player.x - player.dx * move_step;
 		player.ny = player.y - player.dy * move_step;
-		if (map[(int)player.ny][(int)player.nx] == 0) {
+		if (world_map[(int)player.ny][(int)player.nx] == 0) {
 			player.x = player.nx;
 			player.y = player.ny;
 		}
@@ -133,7 +143,7 @@ void game_paint(unsigned dt_usec)
 				mapY += stepY;
 				side = 1;
 			}
-			if (map[mapY][mapX] == WALL)
+			if (world_map[mapY][mapX] == WALL)
 				hit = 1;
 		}
 
@@ -162,7 +172,6 @@ void game_paint(unsigned dt_usec)
 		tft_draw_vline(x, drawStart, drawEnd, color);
 	}
 }
-
 static void tft_fill_rect(int x, int y, int w, int h, color_t color)
 {
 	for (int i = 0; i < h; i++) {
