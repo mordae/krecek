@@ -49,36 +49,8 @@ void game_input(unsigned dt_usec)
 	if (sdk_inputs_delta.a == 1)
 		map_change = 1;
 
-	float move_step = dt * 2.0f;
-	float rot_step = dt * 2.5f;
-
 	game_player_inputs(dt);
 
-	if (sdk_inputs.joy_x > -500) {
-		player.angle -= rot_step;
-	}
-	if (sdk_inputs.joy_x < 500) {
-		player.angle += rot_step;
-	}
-	player.dx = cosf(player.angle);
-	player.dy = sinf(player.angle);
-
-	if (sdk_inputs.joy_y < -500) {
-		player.nx = player.x + player.dx * move_step;
-		player.ny = player.y + player.dy * move_step;
-		if (map[(int)player.ny][(int)player.nx] == 0) {
-			player.x = player.nx;
-			player.y = player.ny;
-		}
-	}
-	if (sdk_inputs.joy_y > 500) {
-		player.nx = player.x - player.dx * move_step;
-		player.ny = player.y - player.dy * move_step;
-		if (map[(int)player.ny][(int)player.nx] == 0) {
-			player.x = player.nx;
-			player.y = player.ny;
-		}
-	}
 	game_map(map_change);
 }
 void game_paint(unsigned dt_usec)

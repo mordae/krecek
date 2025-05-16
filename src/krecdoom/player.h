@@ -1,5 +1,5 @@
-#ifndef MAPS_H
-#define MAPS_H
+#ifndef PLAYER_H
+#define PLAYER_H
 
 void game_player_inputs(float dt);
 
