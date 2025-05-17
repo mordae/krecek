@@ -12,13 +12,6 @@
 #define DAP_INSERT_IDLE_CYCLES 0
 #endif
 
-/*
- * How many to count to for half of a bit period.
- */
-#if !defined(DAP_DELAY_CYCLES)
-#define DAP_DELAY_CYCLES 25
-#endif
-
 static int swdio_pin = -1;
 static int swclk_pin = -1;
 
@@ -362,8 +355,8 @@ bool dap_setup_mem(uint32_t *idr)
 		return false;
 	}
 
-	/* Setup CSW */
-	if (!dap_set_reg(DAP_AP0, 0x80000052)) {
+	/* Setup CSW with TAR auto-increment, aligned 32b transfers */
+	if (!dap_set_reg(DAP_AP0, 0xa2000052)) {
 		puts("dap: failed to set AP0");
 		return false;
 	}

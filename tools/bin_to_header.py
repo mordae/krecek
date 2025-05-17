@@ -32,7 +32,7 @@ def convert(input_file: BinaryIO, name: str, output: str):
             f.write(f"#define {var_name.upper()}_SIZE {len(data)}\n")
 
             f.write(
-                f"static const uint8_t {var_name}[{var_name.upper()}_SIZE] = {{\n\t"
+                f"static const uint8_t __attribute__((aligned(4))) {var_name}[{var_name.upper()}_SIZE] = {{\n\t"
             )
             items: list[str] = []
 

@@ -2,6 +2,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/*
+ * How many to count to for half of a bit period.
+ */
+#if !defined(DAP_DELAY_CYCLES)
+#define DAP_DELAY_CYCLES (CLK_SYS_HZ / (5000000))
+#endif
+
 enum dap_register {
 	DAP_DP0 = 0x00,
 	DAP_DP4 = 0x08,
@@ -86,6 +93,6 @@ bool dap_peek_many(uint32_t addr, uint32_t *values, int len);
 bool dap_poke(uint32_t addr, uint32_t value);
 
 /*
- * Read multiple consecutive words to target's memory.
+ * Write multiple consecutive words to target's memory.
  */
 bool dap_poke_many(uint32_t addr, const uint32_t *values, int len);

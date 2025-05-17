@@ -21,7 +21,7 @@
 #include <task.h>
 
 #include <sdk.h>
-#include <sdk/remote.h>
+#include <sdk/slave.h>
 
 /* From video.c */
 void sdk_video_start(void);
@@ -37,37 +37,6 @@ static uint32_t select_held_since = 0;
 
 void sdk_input_init(void)
 {
-	/* Enable ADC. */
-	remote_poke(ADC_BASE + ADC_CS_OFFSET, ADC_CS_EN_BITS);
-
-	/* A, B, X, Y, START - pullup */
-	remote_gpio_pad_set(0, 1, 1, 1, 0, 1, 0, SLAVE_A_PIN);
-	remote_gpio_pad_set(0, 1, 1, 1, 0, 1, 0, SLAVE_B_PIN);
-	remote_gpio_pad_set(0, 1, 1, 1, 0, 1, 0, SLAVE_X_PIN);
-	remote_gpio_pad_set(0, 1, 1, 1, 0, 1, 0, SLAVE_Y_PIN);
-	remote_gpio_pad_set(0, 1, 1, 1, 0, 1, 0, SLAVE_START_PIN);
-
-	/* AUX[0-7] - pullup */
-	remote_gpio_pad_set(0, 1, 1, 1, 0, 1, 0, SLAVE_AUX0_PIN);
-	remote_gpio_pad_set(0, 1, 1, 1, 0, 1, 0, SLAVE_AUX1_PIN);
-	remote_gpio_pad_set(0, 1, 1, 1, 0, 1, 0, SLAVE_AUX2_PIN);
-	remote_gpio_pad_set(0, 1, 1, 1, 0, 1, 0, SLAVE_AUX3_PIN);
-	remote_gpio_pad_set(0, 1, 1, 1, 0, 1, 0, SLAVE_AUX4_PIN);
-	remote_gpio_pad_set(0, 1, 1, 1, 0, 1, 0, SLAVE_AUX5_PIN);
-	remote_gpio_pad_set(0, 1, 1, 1, 0, 1, 0, SLAVE_AUX6_PIN);
-	remote_gpio_pad_set(0, 1, 1, 1, 0, 1, 0, SLAVE_AUX7_PIN);
-
-	/* BRACK_R, BRACK_L, JOY_X, JOY_Y - no pulls */
-	remote_gpio_pad_set(0, 1, 1, 0, 0, 1, 0, SLAVE_BRACK_L_PIN);
-	remote_gpio_pad_set(0, 1, 1, 0, 0, 1, 0, SLAVE_BRACK_R_PIN);
-	remote_gpio_pad_set(0, 1, 1, 0, 0, 1, 0, SLAVE_JOY_X_PIN);
-	remote_gpio_pad_set(0, 1, 1, 0, 0, 1, 0, SLAVE_JOY_Y_PIN);
-
-	/* VOL_UP, VOL_DOWN, VOL_SW, SELECT - pullup */
-	remote_qspi_pad_set(1, 1, 1, 1, 0, 1, 0, SLAVE_VOL_UP_QSPI_PIN);
-	remote_qspi_pad_set(1, 1, 1, 1, 0, 1, 0, SLAVE_VOL_DOWN_QSPI_PIN);
-	remote_qspi_pad_set(1, 1, 1, 1, 0, 1, 0, SLAVE_VOL_SW_QSPI_PIN);
-	remote_qspi_pad_set(1, 1, 1, 1, 0, 1, 0, SLAVE_SELECT_QSPI_PIN);
 }
 
 static int adc_repeated_read(int n)
@@ -101,31 +70,57 @@ void sdk_input_task(void)
 
 		float fdt = dt_usec / 1000000.0f;
 
-		sdk_inputs.a = !remote_gpio_get(SLAVE_A_PIN);
-		sdk_inputs.b = !remote_gpio_get(SLAVE_B_PIN);
-		sdk_inputs.x = !remote_gpio_get(SLAVE_X_PIN);
-		sdk_inputs.y = !remote_gpio_get(SLAVE_Y_PIN);
+		static struct mailbin mailbin;
+		static uint32_t stdout_tail = 0;
+		static bool ready = false;
 
-		sdk_inputs.vol_up = !remote_qspi_get(SLAVE_VOL_UP_QSPI_PIN);
-		sdk_inputs.vol_down = !remote_qspi_get(SLAVE_VOL_DOWN_QSPI_PIN);
-		sdk_inputs.vol_sw = !remote_qspi_get(SLAVE_VOL_SW_QSPI_PIN);
+		if (!sdk_slave_fetch_mailbin(&mailbin))
+			continue;
 
-		sdk_inputs.aux[0] = !remote_gpio_get(SLAVE_AUX0_PIN);
-		sdk_inputs.aux[1] = !remote_gpio_get(SLAVE_AUX1_PIN);
-		sdk_inputs.aux[2] = !remote_gpio_get(SLAVE_AUX2_PIN);
-		sdk_inputs.aux[3] = !remote_gpio_get(SLAVE_AUX3_PIN);
-		sdk_inputs.aux[0] = !remote_gpio_get(SLAVE_AUX4_PIN);
-		sdk_inputs.aux[1] = !remote_gpio_get(SLAVE_AUX5_PIN);
-		sdk_inputs.aux[2] = !remote_gpio_get(SLAVE_AUX6_PIN);
-		sdk_inputs.aux[3] = !remote_gpio_get(SLAVE_AUX7_PIN);
+		if (MAILBIN_MAGIC != mailbin.magic)
+			continue;
 
-		sdk_inputs.start = !remote_gpio_get(SLAVE_START_PIN);
-		sdk_inputs.select = !remote_qspi_get(SLAVE_SELECT_QSPI_PIN);
+		if (!ready) {
+			ready = true;
+			puts("sdk: mailbin ready");
+		}
 
-		sdk_inputs.joy_x = 2047 - remote_adc_read(SLAVE_JOY_X_PIN);
-		sdk_inputs.joy_y = 2047 - remote_adc_read(SLAVE_JOY_Y_PIN);
-		sdk_inputs.brack_l = 2047 - remote_adc_read(SLAVE_BRACK_L_PIN);
-		sdk_inputs.brack_r = 2047 - remote_adc_read(SLAVE_BRACK_R_PIN);
+		if (stdout_tail != mailbin.stdout_head) {
+			printf("\x1b[44m");
+
+			while (stdout_tail != mailbin.stdout_head) {
+				int c = mailbin.stdout_buffer[stdout_tail++ % MAILBIN_STDOUT_SIZE];
+				putchar(c);
+			}
+
+			printf("\x1b[0m");
+		}
+
+		sdk_inputs.a = !((mailbin.gpio_input >> SLAVE_A_PIN) & 1);
+		sdk_inputs.b = !((mailbin.gpio_input >> SLAVE_B_PIN) & 1);
+		sdk_inputs.x = !((mailbin.gpio_input >> SLAVE_X_PIN) & 1);
+		sdk_inputs.y = !((mailbin.gpio_input >> SLAVE_Y_PIN) & 1);
+
+		sdk_inputs.vol_up = !((mailbin.qspi_input >> SLAVE_VOL_UP_QSPI_PIN) & 1);
+		sdk_inputs.vol_down = !((mailbin.qspi_input >> SLAVE_VOL_DOWN_QSPI_PIN) & 1);
+		sdk_inputs.vol_sw = !((mailbin.qspi_input >> SLAVE_VOL_SW_QSPI_PIN) & 1);
+
+		sdk_inputs.aux[0] = !((mailbin.gpio_input >> SLAVE_AUX0_PIN) & 1);
+		sdk_inputs.aux[1] = !((mailbin.gpio_input >> SLAVE_AUX1_PIN) & 1);
+		sdk_inputs.aux[2] = !((mailbin.gpio_input >> SLAVE_AUX2_PIN) & 1);
+		sdk_inputs.aux[3] = !((mailbin.gpio_input >> SLAVE_AUX3_PIN) & 1);
+		sdk_inputs.aux[0] = !((mailbin.gpio_input >> SLAVE_AUX4_PIN) & 1);
+		sdk_inputs.aux[1] = !((mailbin.gpio_input >> SLAVE_AUX5_PIN) & 1);
+		sdk_inputs.aux[2] = !((mailbin.gpio_input >> SLAVE_AUX6_PIN) & 1);
+		sdk_inputs.aux[3] = !((mailbin.gpio_input >> SLAVE_AUX7_PIN) & 1);
+
+		sdk_inputs.start = !((mailbin.gpio_input >> SLAVE_START_PIN) & 1);
+		sdk_inputs.select = !((mailbin.qspi_input >> SLAVE_SELECT_QSPI_PIN) & 1);
+
+		sdk_inputs.joy_x = 2047 - mailbin.adc[SLAVE_JOY_X_PIN - 26];
+		sdk_inputs.joy_y = 2047 - mailbin.adc[SLAVE_JOY_Y_PIN - 26];
+		sdk_inputs.brack_l = 2047 - mailbin.adc[SLAVE_BRACK_L_PIN - 26];
+		sdk_inputs.brack_r = 2047 - mailbin.adc[SLAVE_BRACK_R_PIN - 26];
 
 		if (abs(sdk_inputs.joy_x) >= 512) {
 			if (!sdk_inputs.horizontal ||

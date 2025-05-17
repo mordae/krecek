@@ -170,27 +170,21 @@ target_reached:
 	gpio_init(CHG_ISET2_PIN);
 	gpio_set_pulls(CHG_ISET2_PIN, 0, 0);
 
-	/* Adjust system clock before we start doing anything. */
-	set_sys_clock_khz(CLK_SYS_HZ / KHZ, true);
-	clock_configure(clk_peri, 0, CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS, CLK_SYS_HZ,
-			CLK_SYS_HZ);
+	uint32_t t0 = time_us_32();
 
 	/* Park the slave chip. */
 	sdk_slave_park();
 
-	/* Prevent power-off. */
-	remote_gpio_pad_set(0, 1, 1, 1, 0, 1, 0, SLAVE_OFF_PIN);
-	remote_gpio_set(SLAVE_OFF_PIN, 1);
+	/* Initialize it, because that also latches our power. */
+	sdk_slave_init();
+
+	uint32_t t1 = time_us_32();
 
 	/* Park ICs connected to this chip over SPI. */
 	gpio_init(TFT_CS_PIN);
 	gpio_init(SD_CS_PIN);
 	gpio_set_pulls(TFT_CS_PIN, 1, 0);
 	gpio_set_pulls(SD_CS_PIN, 1, 0);
-
-	/* Park ICs connected to slave over SPI. */
-	remote_gpio_pad_set(0, 1, 1, 1, 0, 1, 0, SLAVE_RF_CS_PIN);
-	remote_gpio_pad_set(0, 1, 1, 1, 0, 1, 0, SLAVE_TOUCH_CS_PIN);
 
 	/* Initialize the ADC. */
 	adc_init();
@@ -230,7 +224,10 @@ target_reached:
 		}
 	}
 
-	printf("sdk: Hello, welcome to Krecek!\n");
+	puts("\n---- boot ----");
+	puts("sdk: Hello, welcome to Krecek!");
+
+	printf("sdk: slave programmed in %u μs\n", (unsigned)(t1 - t0));
 
 	/*
 	 * Seed random number generator from ADC inputs, including
@@ -243,9 +240,6 @@ target_reached:
 	}
 
 	task_init();
-
-	sdk_slave_init();
-	puts("sdk: slave init done");
 
 	sdk_video_init();
 	puts("sdk: video init done");
@@ -263,9 +257,14 @@ target_reached:
 	puts("sdk: card init done");
 
 	game_start();
+	puts("sdk: game started");
 
 	sdk_audio_start();
+	puts("sdk: audio started");
+
 	multicore_launch_core1(task_run_loop);
+	puts("sdk: core1 launched");
+
 	task_run_loop();
 }
 
@@ -364,5 +363,5 @@ uint32_t sdk_random()
 
 void sdk_turn_off(void)
 {
-	remote_gpio_set(SLAVE_OFF_PIN, 0);
+	remote_poke(SIO_BASE + SIO_GPIO_OUT_SET_OFFSET, 1u << SLAVE_OFF_PIN);
 }

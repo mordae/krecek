@@ -2,10 +2,12 @@ cmake_minimum_required(VERSION 3.21)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(PICO_BOARD krecek-011)
+set(PICO_USE_FASTEST_SUPPORTED_CLOCK ON)
 list(APPEND PICO_BOARD_HEADER_DIRS ${CMAKE_CURRENT_LIST_DIR}/include/boards)
-
 set(PICO_SDK_PURE_C 1)
+
 include($ENV{PICO_SDK_PATH}/pico_sdk_init.cmake)
+
 include(../tools/png_to_header.cmake)
 include(../tools/bin_to_header.cmake)
 
@@ -27,6 +29,7 @@ function(krecek_set_target_options target)
 endfunction()
 
 add_subdirectory(vendor)
+add_subdirectory(slave)
 add_subdirectory(sdk)
 add_subdirectory(tecka)
 add_subdirectory(cerviiik)
@@ -52,7 +55,7 @@ add_subdirectory(janek)
 add_subdirectory(audiotest)
 add_subdirectory(radiotest)
 add_subdirectory(cardtest)
-add_subdirectory(touchtest)
+#add_subdirectory(touchtest)
 add_subdirectory(kal)
 add_subdirectory(krecdoom)
 add_subdirectory(krec2ddoom)

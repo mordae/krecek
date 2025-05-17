@@ -6,6 +6,7 @@
 
 #include <pico/stdlib.h>
 #include <hardware/regs/clocks.h>
+#include <stdio.h>
 #include <string.h>
 
 static void exchange_bits(const uint8_t *txbuf, uint8_t *rx)

@@ -120,7 +120,7 @@ void sdk_audio_init(void)
 	gpio_set_pulls(DSP_CCLK_PIN, true, false);
 
 	if (0 > nau88c22_reset(&dsp)) {
-		printf("sdk: failed to reset SDP\n");
+		printf("sdk: failed to reset DSP\n");
 	} else {
 		printf("sdk: DSP reset\n");
 	}

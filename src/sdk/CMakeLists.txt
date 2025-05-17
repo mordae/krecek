@@ -12,7 +12,6 @@ add_library(
   dap.c
   nau88c22.c
   comms.c
-  cc1101.c
   sdcard_task.c
 
   # card & filesystem
@@ -31,6 +30,9 @@ krecek_set_target_options(krecek)
 
 target_link_libraries(
   krecek
+
+  # src/sdk/slave/
+  slave_packed_lib
 
   # vendor/
   pico_stdio_usb_simple

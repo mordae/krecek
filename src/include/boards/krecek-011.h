@@ -14,7 +14,7 @@
 #endif
 
 /* System clock */
-#define CLK_SYS_HZ 132000000
+#define CLK_SYS_HZ SYS_CLK_HZ
 
 /* For SDK I2S */
 #define SDK_PIO pio0
