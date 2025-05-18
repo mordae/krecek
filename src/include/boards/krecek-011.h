@@ -14,6 +14,11 @@
 #endif
 
 /* System clock */
+#define SYS_CLK_HZ 132000000
+#define PLL_SYS_REFDIV 1
+#define PLL_SYS_VCO_FREQ_HZ 1584000000
+#define PLL_SYS_POSTDIV1 6
+#define PLL_SYS_POSTDIV2 2
 #define CLK_SYS_HZ SYS_CLK_HZ
 
 /* For SDK I2S */
