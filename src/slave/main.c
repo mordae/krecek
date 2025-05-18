@@ -189,7 +189,7 @@ int main()
 			touch_total[t] += total - touch_hist[t][touch_idx];
 			touch_hist[t][touch_idx] = total;
 
-			mailbin.touch[t] = touch_total[t] / 16 / 16;
+			mailbin.touch[t] = touch_total[t] / 16;
 		}
 
 		touch_idx = (touch_idx + 1) % 16;
