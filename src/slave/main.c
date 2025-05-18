@@ -40,14 +40,10 @@ static int touch_read(uint8_t word)
 {
 	uint16_t response;
 
-	spi_init(SLAVE_TOUCH_SPI, SLAVE_TOUCH_SPI_BAUDRATE);
-
 	gpio_put(SLAVE_TOUCH_CS_PIN, 0);
 	spi_write_blocking(SLAVE_TOUCH_SPI, &word, 1);
 	spi_read_blocking(SLAVE_TOUCH_SPI, 0x00, (uint8_t *)&response, 2);
 	gpio_put(SLAVE_TOUCH_CS_PIN, 1);
-
-	spi_deinit(SLAVE_TOUCH_SPI);
 
 	response = __builtin_bswap16(response);
 	return (response & 0b0111111111111000) >> 3;
@@ -93,6 +89,9 @@ int main()
 	gpio_disable_pulls(SLAVE_RF_XOSC_PIN);
 	clock_gpio_init_int_frac16(SLAVE_RF_XOSC_PIN,
 				   CLOCKS_CLK_GPOUT0_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB, 2, 0);
+
+	/* Prepare the shared SPI link. */
+	spi_init(SLAVE_TOUCH_SPI, MIN(SLAVE_TOUCH_SPI_BAUDRATE, SLAVE_RF_SPI_BAUDRATE));
 
 	/* Ready the ADC. */
 	adc_init();
@@ -175,7 +174,7 @@ int main()
 			adc_total[a] += total - adc_hist[a][adc_idx];
 			adc_hist[a][adc_idx] = total;
 
-			mailbin.adc[a] = adc_total[a] / 16 / 16;
+			mailbin.adc[a] = adc_total[a] >> 4;
 		}
 
 		adc_idx = (adc_idx + 1) % 16;
@@ -189,7 +188,7 @@ int main()
 			touch_total[t] += total - touch_hist[t][touch_idx];
 			touch_hist[t][touch_idx] = total;
 
-			mailbin.touch[t] = touch_total[t] / 16;
+			mailbin.touch[t] = touch_total[t] >> 4;
 		}
 
 		touch_idx = (touch_idx + 1) % 16;

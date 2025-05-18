@@ -15,6 +15,7 @@ struct sdk_inputs {
 
 	float batt_mv, cc_mv, temp, hps_mv;
 	float tx, ty, t1, t2, tp;
+	float jx, jy, bl, br;
 };
 
 extern struct sdk_inputs sdk_inputs;

@@ -134,10 +134,20 @@ void sdk_input_task(void)
 		sdk_inputs.t2 = z2;
 		sdk_inputs.tp = tp >= 0.01f ? tp : 0.0f;
 
-		sdk_inputs.joy_x = 2047 - mailbin.adc[SLAVE_JOY_X_PIN - 26];
-		sdk_inputs.joy_y = 2047 - mailbin.adc[SLAVE_JOY_Y_PIN - 26];
-		sdk_inputs.brack_l = 2047 - mailbin.adc[SLAVE_BRACK_L_PIN - 26];
-		sdk_inputs.brack_r = 2047 - mailbin.adc[SLAVE_BRACK_R_PIN - 26];
+		int joy_x = INT16_MAX - mailbin.adc[SLAVE_JOY_X_PIN - 26];
+		int joy_y = INT16_MAX - mailbin.adc[SLAVE_JOY_Y_PIN - 26];
+		int brack_l = INT16_MAX - mailbin.adc[SLAVE_BRACK_L_PIN - 26];
+		int brack_r = INT16_MAX - mailbin.adc[SLAVE_BRACK_R_PIN - 26];
+
+		sdk_inputs.joy_x = joy_x >> 4;
+		sdk_inputs.joy_y = joy_y >> 4;
+		sdk_inputs.brack_l = brack_l >> 4;
+		sdk_inputs.brack_r = brack_r >> 4;
+
+		sdk_inputs.jx = clamp(joy_x / (float)INT16_MAX, -1, 1);
+		sdk_inputs.jy = clamp(joy_y / (float)INT16_MAX, -1, 1);
+		sdk_inputs.bl = clamp(brack_l / (float)INT16_MAX, -1, 1);
+		sdk_inputs.br = clamp(brack_r / (float)INT16_MAX, -1, 1);
 
 		if (abs(sdk_inputs.joy_x) >= 512) {
 			if (!sdk_inputs.horizontal ||
@@ -226,6 +236,9 @@ void sdk_input_task(void)
 		sdk_inputs_delta.joy_x = roundf(sdk_inputs.joy_x * fdt);
 		sdk_inputs_delta.joy_y = roundf(sdk_inputs.joy_y * fdt);
 
+		sdk_inputs_delta.jx = roundf(sdk_inputs.jx * fdt);
+		sdk_inputs_delta.jy = roundf(sdk_inputs.jx * fdt);
+
 		sdk_inputs_delta.horizontal =
 			(sdk_inputs.horizontal >> 8) - (prev_inputs.horizontal >> 8);
 		sdk_inputs_delta.vertical =
@@ -239,6 +252,9 @@ void sdk_input_task(void)
 
 		sdk_inputs_delta.brack_l = roundf(sdk_inputs.brack_l * fdt);
 		sdk_inputs_delta.brack_r = roundf(sdk_inputs.brack_r * fdt);
+
+		sdk_inputs_delta.bl = roundf(sdk_inputs.bl * fdt);
+		sdk_inputs_delta.br = roundf(sdk_inputs.br * fdt);
 
 		for (int i = 0; i < 8; i++)
 			sdk_inputs_delta.aux[i] = sdk_inputs.aux[i] - prev_inputs.aux[i];

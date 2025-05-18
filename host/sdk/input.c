@@ -248,14 +248,18 @@ void sdk_input_commit(uint32_t dt)
 	sdk_inputs.hps_mv = 2100.0f;
 	sdk_inputs.hps = 0;
 
-	/* Calculate input deltas */
-	sdk_inputs_delta.a = sdk_inputs.a - prev_inputs.a;
-	sdk_inputs_delta.b = sdk_inputs.b - prev_inputs.b;
-	sdk_inputs_delta.x = sdk_inputs.x - prev_inputs.x;
-	sdk_inputs_delta.y = sdk_inputs.y - prev_inputs.y;
+	/* Approximated joystick inputs. */
+	sdk_inputs.joy_x = 2047 * joy_right - 2047 * joy_left;
+	sdk_inputs.joy_y = 2047 * joy_down - 2047 * joy_up;
+
+	sdk_inputs.jx = joy_right - joy_left;
+	sdk_inputs.jy = joy_down - joy_up;
 
 	sdk_inputs_delta.joy_x = roundf(sdk_inputs.joy_x * fdt);
 	sdk_inputs_delta.joy_y = roundf(sdk_inputs.joy_y * fdt);
+
+	sdk_inputs_delta.jx = roundf(sdk_inputs.jx * fdt);
+	sdk_inputs_delta.jy = roundf(sdk_inputs.jy * fdt);
 
 	if (abs(sdk_inputs.joy_x) >= 512) {
 		if (!sdk_inputs.horizontal ||
@@ -286,6 +290,12 @@ void sdk_input_commit(uint32_t dt)
 	sdk_inputs_delta.horizontal = (sdk_inputs.horizontal >> 8) - (prev_inputs.horizontal >> 8);
 	sdk_inputs_delta.vertical = (sdk_inputs.vertical >> 8) - (prev_inputs.vertical >> 8);
 
+	/* Calculate input deltas */
+	sdk_inputs_delta.a = sdk_inputs.a - prev_inputs.a;
+	sdk_inputs_delta.b = sdk_inputs.b - prev_inputs.b;
+	sdk_inputs_delta.x = sdk_inputs.x - prev_inputs.x;
+	sdk_inputs_delta.y = sdk_inputs.y - prev_inputs.y;
+
 	sdk_inputs_delta.vol_up = sdk_inputs.vol_up - prev_inputs.vol_up;
 	sdk_inputs_delta.vol_down = sdk_inputs.vol_down - prev_inputs.vol_down;
 	sdk_inputs_delta.vol_sw = sdk_inputs.vol_sw - prev_inputs.vol_sw;
@@ -304,9 +314,6 @@ void sdk_input_commit(uint32_t dt)
 	sdk_inputs_delta.cc_mv = sdk_inputs.cc_mv - prev_inputs.cc_mv;
 	sdk_inputs_delta.temp = sdk_inputs.temp - prev_inputs.temp;
 	sdk_inputs_delta.hps_mv = sdk_inputs.hps_mv - prev_inputs.hps_mv;
-
-	sdk_inputs.joy_x = 2047 * joy_right - 2047 * joy_left;
-	sdk_inputs.joy_y = 2047 * joy_down - 2047 * joy_up;
 
 	prev_inputs = sdk_inputs;
 
