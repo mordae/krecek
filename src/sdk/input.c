@@ -21,6 +21,7 @@
 #include <task.h>
 
 #include <sdk.h>
+#include <sdk/remote.h>
 #include <sdk/slave.h>
 
 /* From video.c */
@@ -49,6 +50,62 @@ static int adc_repeated_read(int n)
 	return value;
 }
 
+static struct mailbin mailbin;
+
+static bool refresh_mailbin(void)
+{
+	static uint32_t stdout_tail = 0;
+	static bool ready = false;
+
+	if (!sdk_slave_fetch_mailbin(&mailbin))
+		return false;
+
+	if (MAILBIN_MAGIC != mailbin.magic)
+		return false;
+
+	if (!ready) {
+		ready = true;
+		puts("sdk: mailbin ready");
+	}
+
+	if (stdout_tail != mailbin.stdout_head) {
+		printf("\x1b[44m");
+
+		while (stdout_tail != mailbin.stdout_head) {
+			int c = mailbin.stdout_buffer[stdout_tail++ % MAILBIN_STDOUT_SIZE];
+			putchar(c);
+		}
+
+		printf("\x1b[0m");
+	}
+
+	for (int i = 0; i < MAILBIN_RF_SLOTS; i++) {
+		if (!mailbin.rf_rx_size[i])
+			continue;
+
+		uint8_t buf[64];
+		remote_peek_many(mailbin.rf_rx_addr[i], (uint32_t *)buf,
+				 (mailbin.rf_rx_size[i] + 3) >> 2);
+
+		remote_poke(MAILBIN_BASE + offsetof(struct mailbin, rf_rx_size) + 4 * i, 0);
+
+		if (mailbin.rf_rx_size[i] < 4)
+			continue;
+
+		sdk_message_t msg = {
+			.type = SDK_MSG_RF,
+			.rf = {
+			     .addr = buf[1],
+			     .data = buf + 2,
+			     .length = mailbin.rf_rx_size[i] - 4,
+			 },
+		};
+		game_inbox(msg);
+	}
+
+	return true;
+}
+
 void sdk_input_task(void)
 {
 	game_reset();
@@ -70,43 +127,8 @@ void sdk_input_task(void)
 
 		float fdt = dt_usec / 1000000.0f;
 
-		static struct mailbin mailbin;
-		static uint32_t stdout_tail = 0;
-		static uint32_t rf_rx_tail = 0;
-		static bool ready = false;
-
-		if (!sdk_slave_fetch_mailbin(&mailbin))
-			continue;
-
-		if (MAILBIN_MAGIC != mailbin.magic)
-			continue;
-
-		if (!ready) {
-			ready = true;
-			puts("sdk: mailbin ready");
-		}
-
-		if (stdout_tail != mailbin.stdout_head) {
-			printf("\x1b[44m");
-
-			while (stdout_tail != mailbin.stdout_head) {
-				int c = mailbin.stdout_buffer[stdout_tail++ % MAILBIN_STDOUT_SIZE];
-				putchar(c);
-			}
-
-			printf("\x1b[0m");
-		}
-
-		if (rf_rx_tail != mailbin.rf_rx_head) {
-			printf("\x1b[42m");
-
-			while (rf_rx_tail != mailbin.rf_rx_head) {
-				uint8_t x = mailbin.rf_rx_buffer[rf_rx_tail++ % MAILBIN_RF_RX_SIZE];
-				printf("%02hhx", x);
-			}
-
-			printf("\x1b[0m\n");
-		}
+		if (!refresh_mailbin())
+			goto fail;
 
 		sdk_inputs.a = !((mailbin.gpio_input >> SLAVE_A_PIN) & 1);
 		sdk_inputs.b = !((mailbin.gpio_input >> SLAVE_B_PIN) & 1);
@@ -362,6 +384,7 @@ void sdk_input_task(void)
 		/* Let the game process inputs as soon as possible. */
 		game_input(dt_usec);
 
+fail:
 		task_sleep_ms(9);
 	}
 }

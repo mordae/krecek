@@ -19,7 +19,8 @@ typedef struct sdk_message {
 			uint32_t data;
 		} ir;
 		struct {
-			uint8_t *body;
+			uint8_t addr;
+			uint8_t *data;
 			int length;
 		} rf;
 	};

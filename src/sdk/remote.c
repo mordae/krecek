@@ -12,6 +12,12 @@ uint32_t remote_peek(uint32_t addr)
 	return out;
 }
 
+void remote_peek_many(uint32_t addr, uint32_t *data, int len)
+{
+	if (!dap_peek_many(addr, data, len))
+		panic("dap_peek_many(0x%08x) failed\n", (unsigned)addr);
+}
+
 void remote_poke(uint32_t addr, uint32_t value)
 {
 	if (!dap_poke(addr, value))

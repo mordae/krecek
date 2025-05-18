@@ -14,13 +14,10 @@
 #include "common.h"
 #include "cc1101.h"
 
-volatile struct mailbin mailbin __section(".mailbin");
+struct mailbin mailbin __section(".mailbin");
 
-static void mailbin_rf_rx_out_byte(uint8_t x)
-{
-	mailbin.rf_rx_buffer[mailbin.rf_rx_head % MAILBIN_RF_RX_SIZE] = x;
-	mailbin.rf_rx_head++;
-}
+static uint8_t rxbuf[MAILBIN_RF_SLOTS][CC1101_MAXLEN] __aligned(MAILBIN_RF_SLOTS *CC1101_MAXLEN);
+static uint8_t txbuf[MAILBIN_RF_SLOTS][CC1101_MAXLEN] __aligned(MAILBIN_RF_SLOTS *CC1101_MAXLEN);
 
 #define REG_SET_FIELD(name, value) (((value) << (name##_LSB)) & (name##_BITS))
 
@@ -74,6 +71,12 @@ int main()
 
 	/* Ready mailbin. */
 	memset((void *)&mailbin, 0, sizeof(mailbin));
+
+	for (int i = 0; i < MAILBIN_RF_SLOTS; i++) {
+		mailbin.rf_rx_addr[i] = (uint32_t)&rxbuf[i];
+		mailbin.rf_tx_addr[i] = (uint32_t)&txbuf[i];
+	}
+
 	mailbin.gpio_input = ~0u;
 	mailbin.qspi_input = ~0u;
 	mailbin.magic = MAILBIN_MAGIC;
@@ -206,18 +209,31 @@ int main()
 
 		touch_idx = (touch_idx + 1) % 16;
 
-		static uint8_t buf[CC1101_MAXLEN];
-		int len = cc1101_poll(buf);
+		for (int i = 0; i < MAILBIN_RF_SLOTS; i++) {
+			if (!mailbin.rf_rx_size[i]) {
+				int len = cc1101_poll(rxbuf[i]);
 
-		for (int i = 0; i < len; i++)
-			mailbin_rf_rx_out_byte(buf[i]);
-
-		if (mailbin.rf_tx_size) {
-			cc1101_transmit((const void *)mailbin.rf_tx_buffer, mailbin.rf_tx_size);
-			mailbin.rf_tx_size = 0;
-		} else {
-			cc1101_receive();
+				if (len > 0) {
+					mailbin.rf_rx_size[i] = len;
+				} else {
+					break;
+				}
+			}
 		}
+
+		bool transmitting = false;
+
+		for (int i = 0; i < MAILBIN_RF_SLOTS; i++) {
+			if (mailbin.rf_tx_size[i]) {
+				cc1101_transmit(txbuf[i], mailbin.rf_tx_size[i]);
+				mailbin.rf_tx_size[i] = 0;
+				transmitting = true;
+				break;
+			}
+		}
+
+		if (!transmitting)
+			cc1101_receive();
 
 		now += 1000;
 		sleep_until(now);

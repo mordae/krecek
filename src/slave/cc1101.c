@@ -195,7 +195,7 @@ void cc1101_init(spi_inst_t *_spi)
 	write_register(REG_MDMCFG0, &mdmcfg0, 1);
 
 	struct DEVIATN deviatn = {
-		.DEVIATION_E = 1, /* 1587, 3174, 6348, 12695, ... */
+		.DEVIATION_E = 2, /* 1587, 3174, 6348, 12695, ... */
 		.DEVIATION_M = 0,
 	};
 	write_register(REG_DEVIATN, &deviatn, 1);
