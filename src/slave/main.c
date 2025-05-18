@@ -225,8 +225,9 @@ int main()
 
 		for (int i = 0; i < MAILBIN_RF_SLOTS; i++) {
 			if (mailbin.rf_tx_size[i]) {
-				cc1101_transmit(txbuf[i], mailbin.rf_tx_size[i]);
-				mailbin.rf_tx_size[i] = 0;
+				if (cc1101_transmit(txbuf[i], mailbin.rf_tx_size[i]))
+					mailbin.rf_tx_size[i] = 0;
+
 				transmitting = true;
 				break;
 			}
