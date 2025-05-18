@@ -202,12 +202,15 @@ void cc1101_init(spi_inst_t *_spi)
 
 	struct FREND0 frend0 = {
 		.LODIV_BUF_CURRENT_TX = 1,
-		.PA_POWER = 7,
+		.PA_POWER = 1,
 	};
 	write_register(REG_FREND0, &frend0, 1);
 
-	uint8_t patable[8] = { 0x00, 0x88, 0xca, 0xc5, 0xc3, 0xc2, 0xc1, 0xc0 };
-	write_register(REG_PATABLE, patable, 8);
+	// uint8_t patable[] = { 0x00, 0x88, 0xca, 0xc5, 0xc3, 0xc2, 0xc1, 0xc0 };
+	// write_register(REG_PATABLE, patable, sizeof(patable));
+
+	uint8_t patable[] = { 0xc0, 0xc0 };
+	write_register(REG_PATABLE, patable, sizeof(patable));
 
 	command(SCAL);
 }
