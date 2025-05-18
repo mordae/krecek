@@ -219,13 +219,11 @@ bool cc1101_receive(void)
 	struct TXBYTES txbytes;
 	status = read_register(REG_TXBYTES, &txbytes, 1);
 
-	if (txbytes.NUM_TXBYTES)
-		return false; /* Still has bytes in the TX FIFO. */
-
 	if (status.STATE == STATUS_STATE_RX)
 		return true; /* Already there. */
 
 	if (status.STATE == STATUS_STATE_IDLE) {
+		command(SFRX);
 		command(SRX);
 		return true;
 	}
