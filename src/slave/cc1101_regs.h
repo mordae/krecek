@@ -125,6 +125,24 @@ enum {
 	STATE_TXFIFO_UNDERFLOW = 0x16,
 };
 
+enum {
+	STATUS_STATE_IDLE = 0,
+	STATUS_STATE_RX,
+	STATUS_STATE_TX,
+	STATUS_STATE_FSTXON,
+	STATUS_STATE_CALIBRATE,
+	STATUS_STATE_SETTLING,
+	STATUS_STATE_RXFIFO_OVERFLOW,
+	STATUS_STATE_TXFIFO_UNDERFLOW,
+};
+
+// Chip Status Byte
+struct STATUS {
+	uint8_t FIFO_BYTES_AVAILABLE : 4;
+	uint8_t STATE : 3;
+	uint8_t CHIP_RDY : 1;
+};
+
 // GDO2 Output Pin Configuration
 struct IOCFG2 {
 	uint8_t GDO2_CFG : 6; // Function (0x29 default)
@@ -292,14 +310,12 @@ struct MDMCFG3 {
 
 // Modem Configuration
 struct MDMCFG2 {
-	// 000 = No preamble/sync
-	// 001 = 15/16 sync word bits detected
-	// 010 = 16/16 sync word bits detected
-	// 011 = 30/32 sync word bits detected
-	uint8_t SYNC_MODE : 2;
-
-	// Require carrier sense above threshold
-	uint8_t CARRIER_SENSE : 1;
+	// x00 = No preamble/sync
+	// x01 = 15/16 sync word bits detected
+	// x10 = 16/16 sync word bits detected
+	// x11 = 30/32 sync word bits detected
+	// 1xx = carrier sense above threshold
+	uint8_t SYNC_MODE : 3;
 
 	// Enable machester coding
 	uint8_t MANCHESTER_EN : 1;

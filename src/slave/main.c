@@ -12,8 +12,15 @@
 #include <string.h>
 
 #include "common.h"
+#include "cc1101.h"
 
-struct mailbin mailbin __section(".mailbin");
+volatile struct mailbin mailbin __section(".mailbin");
+
+static void mailbin_rf_rx_out_byte(uint8_t x)
+{
+	mailbin.rf_rx_buffer[mailbin.rf_rx_head % MAILBIN_RF_RX_SIZE] = x;
+	mailbin.rf_rx_head++;
+}
 
 #define REG_SET_FIELD(name, value) (((value) << (name##_LSB)) & (name##_BITS))
 
@@ -66,7 +73,7 @@ int main()
 	gpio_set_dir(SLAVE_TOUCH_CS_PIN, GPIO_OUT);
 
 	/* Ready mailbin. */
-	memset(&mailbin, 0, sizeof(mailbin));
+	memset((void *)&mailbin, 0, sizeof(mailbin));
 	mailbin.gpio_input = ~0u;
 	mailbin.qspi_input = ~0u;
 	mailbin.magic = MAILBIN_MAGIC;
@@ -143,6 +150,10 @@ int main()
 	gpio_set_function(SLAVE_TOUCH_MOSI_PIN, GPIO_FUNC_SPI);
 	gpio_set_function(SLAVE_TOUCH_SCK_PIN, GPIO_FUNC_SPI);
 
+	/* Initialize CC1101 for RF communication. */
+	cc1101_init(SLAVE_RF_SPI);
+	cc1101_receive();
+
 	puts("slave: configured");
 
 	static int adc_hist[4][16];
@@ -159,6 +170,8 @@ int main()
 		0b11000111,
 		0b10110111,
 	};
+
+	uint64_t now = time_us_64();
 
 	while (true) {
 		mailbin.gpio_input = sio_hw->gpio_in;
@@ -193,6 +206,20 @@ int main()
 
 		touch_idx = (touch_idx + 1) % 16;
 
-		sleep_ms(1);
+		static uint8_t buf[CC1101_MAXLEN];
+		int len = cc1101_poll(buf);
+
+		for (int i = 0; i < len; i++)
+			mailbin_rf_rx_out_byte(buf[i]);
+
+		if (mailbin.rf_tx_size) {
+			cc1101_transmit((const void *)mailbin.rf_tx_buffer, mailbin.rf_tx_size);
+			mailbin.rf_tx_size = 0;
+		} else {
+			cc1101_receive();
+		}
+
+		now += 1000;
+		sleep_until(now);
 	}
 }

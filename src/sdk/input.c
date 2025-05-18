@@ -72,6 +72,7 @@ void sdk_input_task(void)
 
 		static struct mailbin mailbin;
 		static uint32_t stdout_tail = 0;
+		static uint32_t rf_rx_tail = 0;
 		static bool ready = false;
 
 		if (!sdk_slave_fetch_mailbin(&mailbin))
@@ -94,6 +95,17 @@ void sdk_input_task(void)
 			}
 
 			printf("\x1b[0m");
+		}
+
+		if (rf_rx_tail != mailbin.rf_rx_head) {
+			printf("\x1b[42m");
+
+			while (rf_rx_tail != mailbin.rf_rx_head) {
+				uint8_t x = mailbin.rf_rx_buffer[rf_rx_tail++ % MAILBIN_RF_RX_SIZE];
+				printf("%02hhx", x);
+			}
+
+			printf("\x1b[0m\n");
 		}
 
 		sdk_inputs.a = !((mailbin.gpio_input >> SLAVE_A_PIN) & 1);

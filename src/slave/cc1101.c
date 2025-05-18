@@ -2,81 +2,71 @@
 #include "cc1101_regs.h"
 
 #include <math.h>
-#include <sdk/remote.h>
 
 #include <pico/stdlib.h>
-#include <hardware/regs/clocks.h>
 #include <stdio.h>
 #include <string.h>
 
-static void exchange_bits(const uint8_t *txbuf, uint8_t *rx)
+static spi_inst_t *spi = NULL;
+
+static struct STATUS read_register(uint8_t addr, void *buf, int len)
 {
-	uint8_t tx = *txbuf;
+	addr |= FLAG_READ;
 
-	for (int i = 0; i < 8; i++) {
-		*rx <<= 1;
+	if (len > 1)
+		addr |= FLAG_BURST;
 
-		remote_gpio_set(SLAVE_TOUCH_MOSI_PIN, tx >> 7);
-		remote_gpio_set(SLAVE_TOUCH_SCK_PIN, 1);
-		*rx |= remote_gpio_get(SLAVE_TOUCH_MISO_PIN);
-		remote_gpio_set(SLAVE_TOUCH_SCK_PIN, 0);
+	gpio_put(SLAVE_RF_CS_PIN, 0);
 
-		tx <<= 1;
-	}
-}
-
-static void read_register(uint8_t addr, void *buf, int len)
-{
-	remote_gpio_set(SLAVE_RF_CS_PIN, 0);
-
-	while (remote_gpio_get(SLAVE_TOUCH_MISO_PIN))
+	while (gpio_get(SLAVE_TOUCH_MISO_PIN))
 		/* wait */;
 
-	for (int i = 0; i < len; i++) {
-		uint8_t status;
-		exchange_bits(&addr, &status);
+	struct STATUS status;
+	spi_write_read_blocking(spi, &addr, (uint8_t *)&status, 1);
+	spi_read_blocking(spi, 0x00, buf, len);
 
-		uint8_t null = 0;
-		exchange_bits(&null, buf + i);
-	}
+	gpio_put(SLAVE_RF_CS_PIN, 1);
 
-	remote_gpio_set(SLAVE_RF_CS_PIN, 1);
+	return status;
 }
 
-static void write_register(uint8_t addr, const void *data, int len)
+static struct STATUS write_register(uint8_t addr, const void *data, int len)
 {
-	remote_gpio_set(SLAVE_RF_CS_PIN, 0);
+	if (len > 1)
+		addr |= FLAG_BURST;
 
-	while (remote_gpio_get(SLAVE_TOUCH_MISO_PIN))
+	gpio_put(SLAVE_RF_CS_PIN, 0);
+
+	while (gpio_get(SLAVE_TOUCH_MISO_PIN))
 		/* wait */;
 
-	for (int i = 0; i < len; i++) {
-		uint8_t status;
-		exchange_bits(&addr, &status);
+	struct STATUS status;
+	spi_write_read_blocking(spi, &addr, (uint8_t *)&status, 1);
+	spi_write_blocking(spi, data, len);
 
-		uint8_t null;
-		exchange_bits(data, &null);
-	}
+	gpio_put(SLAVE_RF_CS_PIN, 1);
 
-	remote_gpio_set(SLAVE_RF_CS_PIN, 1);
+	return status;
 }
 
-static void write_command(uint8_t addr)
+static struct STATUS command(uint8_t addr)
 {
-	remote_gpio_set(SLAVE_RF_CS_PIN, 0);
+	gpio_put(SLAVE_RF_CS_PIN, 0);
 
-	while (remote_gpio_get(SLAVE_TOUCH_MISO_PIN))
+	while (gpio_get(SLAVE_TOUCH_MISO_PIN))
 		/* wait */;
 
-	uint8_t status;
-	exchange_bits(&addr, &status);
+	struct STATUS status;
+	spi_write_read_blocking(spi, &addr, (uint8_t *)&status, 1);
 
-	remote_gpio_set(SLAVE_RF_CS_PIN, 1);
+	gpio_put(SLAVE_RF_CS_PIN, 1);
+
+	return status;
 }
 
 static void find_best_rate(float goal, uint8_t *m, uint8_t *e)
 {
-	float step = (CLK_SYS_HZ / 5.0f) / (1 << 28);
+	float step = 26000000.0f / (1 << 28);
 	float best = 1e20;
 
 	*m = 0;
@@ -96,20 +86,11 @@ static void find_best_rate(float goal, uint8_t *m, uint8_t *e)
 	}
 }
 
-void cc1101_init(void)
+void cc1101_init(spi_inst_t *_spi)
 {
-	remote_gpio_pad_set(0, 1, 0, 1, 0, 1, 0, SLAVE_RF_CS_PIN);
-	remote_gpio_pad_set(0, 1, 0, 1, 0, 1, 0, SLAVE_TOUCH_MISO_PIN);
-	remote_gpio_pad_set(0, 1, 0, 0, 1, 1, 0, SLAVE_TOUCH_MOSI_PIN);
-	remote_gpio_pad_set(0, 1, 0, 0, 1, 1, 0, SLAVE_TOUCH_SCK_PIN);
+	spi = _spi;
 
-	remote_gpio_pad_set(0, 1, 0, 0, 0, 1, 1, SLAVE_RF_XOSC_PIN);
-	remote_poke(CLOCKS_BASE + CLOCKS_CLK_GPOUT0_DIV_OFFSET, 5 << 8);
-	remote_poke(CLOCKS_BASE + CLOCKS_CLK_GPOUT0_CTRL_OFFSET, (1 << 12) | (1 << 11));
-	remote_poke(IO_BANK0_BASE + IO_BANK0_GPIO0_CTRL_OFFSET + 8 * SLAVE_RF_XOSC_PIN,
-		    IO_BANK0_GPIO21_CTRL_FUNCSEL_VALUE_CLOCKS_GPOUT_0);
-
-	write_command(SRES);
+	command(SRES);
 
 	struct IOCFG0 iocfg0 = { .TEMP_SENSOR_ENABLE = 1 };
 	write_register(REG_IOCFG0, &iocfg0, 1);
@@ -125,7 +106,7 @@ void cc1101_init(void)
 	struct PKTCTRL1 pktctrl1 = {
 		.ADR_CHK = 0b11,
 		.APPEND_STATUS = 1,
-		.CRC_AUTOFLUSH = 0,
+		.CRC_AUTOFLUSH = 1,
 		.PQT = 0,
 	};
 	write_register(REG_PKTCTRL1, &pktctrl1, 1);
@@ -149,8 +130,8 @@ void cc1101_init(void)
 	struct FSCTRL0 fsctrl0 = { .FREQOFF = 0 };
 	write_register(REG_FSCTRL0, &fsctrl0, 1);
 
-	float freq_target = 433925000.0f;
-	float freq_step = (CLK_SYS_HZ / 5.0f) / (1 << 16);
+	float freq_target = 434100000.0f;
+	float freq_step = 26000000.0f / (1 << 16);
 	unsigned freq = roundf(freq_target / freq_step);
 
 	struct FREQ2 freq2 = { .FREQ = freq >> 16 };
@@ -182,7 +163,7 @@ void cc1101_init(void)
 	// 3 3  58_929
 
 	uint8_t drate_m, drate_e;
-	find_best_rate(6000.0f, &drate_m, &drate_e);
+	find_best_rate(16000.0f, &drate_m, &drate_e);
 
 	struct MDMCFG4 mdmcfg4 = {
 		.CHANBW_E = 3,
@@ -195,16 +176,15 @@ void cc1101_init(void)
 	write_register(REG_MDMCFG3, &mdmcfg3, 1);
 
 	struct MDMCFG2 mdmcfg2 = {
-		.CARRIER_SENSE = 0,
-		.SYNC_MODE = 2,
+		.SYNC_MODE = 0b001, /* 15/16 bits, no carrier sense */
 		.MANCHESTER_EN = 0,
-		.MOD_FORMAT = 1, // GFSK
+		.MOD_FORMAT = 0b001, /* GFSK */
 	};
 	write_register(REG_MDMCFG2, &mdmcfg2, 1);
 
 	struct MDMCFG1 mdmcfg1 = {
-		.CHANSPC_E = 0,	   // TODO
-		.NUM_PREAMBLE = 0, // 2 bytes
+		.CHANSPC_E = 0,	       // TODO
+		.NUM_PREAMBLE = 0b000, // 2 bytes
 		.FEC_EN = 0,
 	};
 	write_register(REG_MDMCFG1, &mdmcfg1, 1);
@@ -215,37 +195,73 @@ void cc1101_init(void)
 	write_register(REG_MDMCFG0, &mdmcfg0, 1);
 
 	struct DEVIATN deviatn = {
-		.DEVIATION_E = 1,
-		.DEVIATION_M = 7,
+		.DEVIATION_E = 1, /* 1587, 3174, 6348, 12695, ... */
+		.DEVIATION_M = 0,
 	};
 	write_register(REG_DEVIATN, &deviatn, 1);
 
 	struct FREND0 frend0 = {
 		.LODIV_BUF_CURRENT_TX = 1,
-		.PA_POWER = 1,
+		.PA_POWER = 7,
 	};
 	write_register(REG_FREND0, &frend0, 1);
 
 	uint8_t patable[8] = { 0x00, 0x88, 0xca, 0xc5, 0xc3, 0xc2, 0xc1, 0xc0 };
-	write_register(REG_PATABLE | FLAG_BURST, patable, 8);
+	write_register(REG_PATABLE, patable, 8);
 
-	write_command(SCAL);
+	command(SCAL);
 }
 
-void cc1101_receive(void)
+bool cc1101_receive(void)
 {
-	write_command(SRX);
+	struct STATUS status = command(SNOP);
+
+	struct TXBYTES txbytes;
+	status = read_register(REG_TXBYTES, &txbytes, 1);
+
+	if (txbytes.NUM_TXBYTES)
+		return false; /* Still has bytes in the TX FIFO. */
+
+	if (status.STATE == STATUS_STATE_RX)
+		return true; /* Already there. */
+
+	if (status.STATE == STATUS_STATE_IDLE) {
+		command(SRX);
+		return true;
+	}
+
+	return false; /* Busy in other state. */
 }
 
-void cc1101_transmit(const void *buf, size_t len)
+bool cc1101_transmit(const void *buf, size_t len)
 {
+	struct STATUS status;
+	struct RXBYTES rxbytes;
+
+	status = read_register(REG_RXBYTES, &rxbytes, 1);
+
+	if (status.STATE == STATUS_STATE_TX)
+		return false; /* Busy transmitting. */
+
+	if (rxbytes.NUM_RXBYTES)
+		return false; /* Busy receiving a packet. */
+
+	/* Go back to IDLE and flush the TX FIFO. */
+	command(SIDLE);
+	command(SFTX);
+
+	/* Write the packet and begin transmit. */
 	write_register(REG_FIFO, buf, len);
-	write_command(STX);
+	command(STX);
+
+	return true;
 }
 
 void cc1101_idle(void)
 {
-	write_command(SIDLE);
+	command(SIDLE);
+	command(SFRX);
+	command(SFTX);
 }
 
 float cc1101_get_rssi(void)
@@ -255,13 +271,19 @@ float cc1101_get_rssi(void)
 	return rssi.RSSI * 0.5f - 74.0f;
 }
 
-bool cc1101_poll(void *buf, size_t *len)
+int cc1101_poll(void *buf)
 {
+	struct STATUS status;
+
 	struct RXBYTES rxbytes;
-	read_register(REG_RXBYTES, &rxbytes, 1);
+	status = read_register(REG_RXBYTES, &rxbytes, 1);
 
-	*len = rxbytes.NUM_RXBYTES;
-	memset(buf, 0, *len);
+	if (!rxbytes.NUM_RXBYTES)
+		return -1;
 
-	return (*len > 0);
+	if (status.STATE != STATUS_STATE_IDLE)
+		return -1;
+
+	read_register(REG_FIFO, buf, rxbytes.NUM_RXBYTES);
+	return rxbytes.NUM_RXBYTES;
 }

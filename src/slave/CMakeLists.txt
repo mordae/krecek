@@ -1,4 +1,4 @@
-add_executable(slave main.c stdio.c)
+add_executable(slave main.c stdio.c cc1101.c)
 
 target_link_libraries(
   slave

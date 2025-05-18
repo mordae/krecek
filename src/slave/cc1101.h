@@ -1,25 +1,33 @@
 #pragma once
 #include <stddef.h>
+#include <hardware/spi.h>
 
 /* Reset and configure the chip. */
-void cc1101_init(void);
+void cc1101_init(spi_inst_t *spi);
 
-/* Begin receiving. */
-void cc1101_receive(void);
+/*
+ * Begin receiving. Returns false when busy.
+ */
+bool cc1101_receive(void);
 
-/* Transmit given buffer. */
-void cc1101_transmit(const void *buf, size_t len);
+/*
+ * Transmit given buffer.
+ * Returns true when queued and false when not ready.
+ */
+bool cc1101_transmit(const void *buf, size_t len);
 
-/* Return to idling. */
+/* Return to idling and flush both FIFOs. */
 void cc1101_idle(void);
 
 /* Get current RSSI. */
 float cc1101_get_rssi(void);
 
+#define CC1101_MAXLEN 64
+
 /*
  * Check if a whole packet has been received and if it was,
- * copy it to the buffer and update the length to match.
+ * copy it to the buffer and return its length.
  *
- * Neither buffer nor length are modified unless `true` is returned.
+ * Otherwise return a negative number.
  */
-bool cc1101_poll(void *buf, size_t *len);
+int cc1101_poll(void *buf);

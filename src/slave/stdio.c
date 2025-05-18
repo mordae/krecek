@@ -5,7 +5,8 @@
 
 static void mailbin_stdio_out_char(char c)
 {
-	mailbin.stdout_buffer[(mailbin.stdout_head++) % MAILBIN_STDOUT_SIZE] = c;
+	mailbin.stdout_buffer[mailbin.stdout_head % MAILBIN_STDOUT_SIZE] = c;
+	mailbin.stdout_head++;
 }
 
 static void mailbin_stdio_out_chars(const char *buf, int length)
