@@ -176,6 +176,9 @@ int main()
 
 	uint64_t now = time_us_64();
 
+	int next_tx_buf = 0;
+	int next_rx_buf = 0;
+
 	while (true) {
 		mailbin.gpio_input = sio_hw->gpio_in;
 		mailbin.qspi_input = sio_hw->gpio_hi_in;
@@ -210,12 +213,15 @@ int main()
 		touch_idx = (touch_idx + 1) % 16;
 
 		for (int i = 0; i < MAILBIN_RF_SLOTS; i++) {
-			if (!mailbin.rf_rx_size[i]) {
-				int len = cc1101_poll(rxbuf[i]);
+			int s = (next_rx_buf + i) % MAILBIN_RF_SLOTS;
+
+			if (!mailbin.rf_rx_size[s]) {
+				int len = cc1101_poll(rxbuf[s]);
 
 				if (len > 0) {
-					mailbin.rf_rx_size[i] = len;
+					mailbin.rf_rx_size[s] = len;
 				} else {
+					next_rx_buf = s;
 					break;
 				}
 			}
@@ -224,11 +230,14 @@ int main()
 		bool transmitting = false;
 
 		for (int i = 0; i < MAILBIN_RF_SLOTS; i++) {
-			if (mailbin.rf_tx_size[i]) {
-				if (cc1101_transmit(txbuf[i], mailbin.rf_tx_size[i]))
-					mailbin.rf_tx_size[i] = 0;
+			int s = (next_tx_buf + i) % MAILBIN_RF_SLOTS;
+
+			if (mailbin.rf_tx_size[s]) {
+				if (cc1101_transmit(txbuf[s], mailbin.rf_tx_size[s]))
+					mailbin.rf_tx_size[s] = 0;
 
 				transmitting = true;
+				next_tx_buf = s;
 				break;
 			}
 		}

@@ -54,8 +54,6 @@ void game_input(unsigned dt_usec)
 		remote_peek_many(MAILBIN_BASE + offsetof(struct mailbin, rf_tx_addr), addrs,
 				 MAILBIN_RF_SLOTS);
 
-		bool sent = false;
-
 		for (int i = 0; i < MAILBIN_RF_SLOTS; i++) {
 			if (sizes[i])
 				continue;
@@ -72,12 +70,8 @@ void game_input(unsigned dt_usec)
 			remote_poke(MAILBIN_BASE + offsetof(struct mailbin, rf_tx_size) + i * 4,
 				    len + 2);
 
-			sent = true;
 			break;
 		}
-
-		if (!sent)
-			puts("no free rf tx buffer");
 	}
 }
 
