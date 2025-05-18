@@ -96,13 +96,18 @@ void sdk_slave_init()
 #endif
 
 	/* Upload firmware. */
-	const uint32_t *firmware = (const uint32_t *)slave_bin;
-
 	static_assert((SLAVE_BIN_SIZE & 3) == 0);
 
-	for (int i = 0; i < SLAVE_BIN_SIZE >> 2; i++) {
-		if (!dap_poke(SRAM_BASE + (i << 2), firmware[i]))
+	uint32_t sofar = 0;
+
+	while (sofar < SLAVE_BIN_SIZE) {
+		uint32_t len = MIN(1024, SLAVE_BIN_SIZE - sofar);
+		const uint32_t *chunk = (const uint32_t *)(slave_bin + sofar);
+
+		if (!dap_poke_many(SRAM_BASE + sofar, chunk, len >> 2))
 			sdk_panic("slave firmware upload failed");
+
+		sofar += len;
 	}
 
 	puts("sdk: slave firmware uploaded");
