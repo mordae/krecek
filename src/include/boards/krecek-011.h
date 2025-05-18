@@ -80,6 +80,13 @@
 #define HP_SENSE_PIN 28
 #define BAT_VSENSE_PIN 29
 
+/* Slave SPI shared between Touch and RF */
+#define SLAVE_RF_SPI spi0
+#define SLAVE_RF_SPI_BAUDRATE 6000000
+
+#define SLAVE_TOUCH_SPI spi0
+#define SLAVE_TOUCH_SPI_BAUDRATE 4000000
+
 /* Slave pinout */
 #define SLAVE_TOUCH_MISO_PIN 0
 #define SLAVE_TOUCH_CS_PIN 1

@@ -2,6 +2,7 @@
 #include <hardware/clocks.h>
 #include <hardware/adc.h>
 #include <hardware/pll.h>
+#include <hardware/spi.h>
 
 #include <hardware/structs/pads_qspi.h>
 
@@ -35,6 +36,23 @@ static void qspi_pad_set(bool od, bool ie, int drive, bool pue, bool pde, bool s
 	pads_qspi_hw->io[remap[pad]] = reg;
 }
 
+static int touch_read(uint8_t word)
+{
+	uint16_t response;
+
+	spi_init(SLAVE_TOUCH_SPI, SLAVE_TOUCH_SPI_BAUDRATE);
+
+	gpio_put(SLAVE_TOUCH_CS_PIN, 0);
+	spi_write_blocking(SLAVE_TOUCH_SPI, &word, 1);
+	spi_read_blocking(SLAVE_TOUCH_SPI, 0x00, (uint8_t *)&response, 2);
+	gpio_put(SLAVE_TOUCH_CS_PIN, 1);
+
+	spi_deinit(SLAVE_TOUCH_SPI);
+
+	response = __builtin_bswap16(response);
+	return (response & 0b0111111111111000) >> 3;
+}
+
 int main()
 {
 	/* Latch power on. */
@@ -43,11 +61,13 @@ int main()
 
 	/* Avoid triggering CC1101. */
 	gpio_init(SLAVE_RF_CS_PIN);
-	gpio_set_pulls(SLAVE_RF_CS_PIN, true, false);
+	gpio_put(SLAVE_RF_CS_PIN, 1);
+	gpio_set_dir(SLAVE_RF_CS_PIN, GPIO_OUT);
 
 	/* Avoid triggering TSC2046. */
 	gpio_init(SLAVE_TOUCH_CS_PIN);
-	gpio_set_pulls(SLAVE_TOUCH_CS_PIN, true, false);
+	gpio_put(SLAVE_TOUCH_CS_PIN, 1);
+	gpio_set_dir(SLAVE_TOUCH_CS_PIN, GPIO_OUT);
 
 	/* Ready mailbin. */
 	memset(&mailbin, 0, sizeof(mailbin));
@@ -119,7 +139,27 @@ int main()
 	qspi_pad_set(1, 1, 1, 1, 0, 1, 0, SLAVE_VOL_SW_QSPI_PIN);
 	qspi_pad_set(1, 1, 1, 1, 0, 1, 0, SLAVE_SELECT_QSPI_PIN);
 
+	/* Shared SPI lanes */
+	gpio_set_function(SLAVE_TOUCH_MISO_PIN, GPIO_FUNC_SPI);
+	gpio_set_function(SLAVE_TOUCH_MOSI_PIN, GPIO_FUNC_SPI);
+	gpio_set_function(SLAVE_TOUCH_SCK_PIN, GPIO_FUNC_SPI);
+
 	puts("slave: configured");
+
+	static int adc_hist[4][16];
+	static int adc_total[4];
+	static int adc_idx;
+
+	static int touch_hist[4][16];
+	static int touch_total[4];
+	static int touch_idx;
+
+	uint8_t touch_words[4] = {
+		0b10010111,
+		0b11010111,
+		0b11000111,
+		0b10110111,
+	};
 
 	while (true) {
 		mailbin.gpio_input = sio_hw->gpio_in;
@@ -129,12 +169,31 @@ int main()
 			int total = 0;
 			adc_select_input(a);
 
-			for (int i = 0; i < 32; i++)
+			for (int i = 0; i < 16; i++)
 				total += adc_read();
 
-			mailbin.adc[a] = total >> 5;
+			adc_total[a] += total - adc_hist[a][adc_idx];
+			adc_hist[a][adc_idx] = total;
+
+			mailbin.adc[a] = adc_total[a] / 16 / 16;
 		}
 
-		sleep_ms(10);
+		adc_idx = (adc_idx + 1) % 16;
+
+		for (int t = 0; t < 4; t++) {
+			int total = 0;
+
+			for (int i = 0; i < 16; i++)
+				total += touch_read(touch_words[t]);
+
+			touch_total[t] += total - touch_hist[t][touch_idx];
+			touch_hist[t][touch_idx] = total;
+
+			mailbin.touch[t] = touch_total[t] / 16 / 16;
+		}
+
+		touch_idx = (touch_idx + 1) % 16;
+
+		sleep_ms(1);
 	}
 }

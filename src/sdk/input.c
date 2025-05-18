@@ -117,6 +117,32 @@ void sdk_input_task(void)
 		sdk_inputs.start = !((mailbin.gpio_input >> SLAVE_START_PIN) & 1);
 		sdk_inputs.select = !((mailbin.qspi_input >> SLAVE_SELECT_QSPI_PIN) & 1);
 
+		float tx = 1.0f - mailbin.touch[0] / 4096.0f;
+		float ty = mailbin.touch[1] / 4096.0f;
+		float z1 = 1.0f - mailbin.touch[2] / 4096.0f;
+		float z2 = mailbin.touch[3] / 4096.0f;
+		float tp = 0.0f;
+
+		float p1 = 0.0f;
+		float p2 = 0.0f;
+
+		if (tx && z1 >= 0.01)
+			p1 = z1 / tx;
+
+		if (ty && z2 >= 0.01)
+			p2 = z2 / ty;
+
+		tp = clamp((p1 ? p1 : p2) + (p2 ? p2 : p1), 0, 1);
+
+		tx = clamp(tx / 0.9f, 0, 1);
+		ty = clamp((ty - 0.1f) / 0.9f, 0, 1);
+
+		sdk_inputs.tx = tx;
+		sdk_inputs.ty = ty;
+		sdk_inputs.t1 = z1;
+		sdk_inputs.t2 = z2;
+		sdk_inputs.tp = tp >= 0.01f ? tp : 0.0f;
+
 		sdk_inputs.joy_x = 2047 - mailbin.adc[SLAVE_JOY_X_PIN - 26];
 		sdk_inputs.joy_y = 2047 - mailbin.adc[SLAVE_JOY_Y_PIN - 26];
 		sdk_inputs.brack_l = 2047 - mailbin.adc[SLAVE_BRACK_L_PIN - 26];
