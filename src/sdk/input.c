@@ -121,18 +121,9 @@ void sdk_input_task(void)
 		float ty = mailbin.touch[1] / 4096.0f;
 		float z1 = 1.0f - mailbin.touch[2] / 4096.0f;
 		float z2 = mailbin.touch[3] / 4096.0f;
-		float tp = 0.0f;
 
-		float p1 = 0.0f;
-		float p2 = 0.0f;
-
-		if (tx && z1 >= 0.01)
-			p1 = z1 / tx;
-
-		if (ty && z2 >= 0.01)
-			p2 = z2 / ty;
-
-		tp = clamp((p1 ? p1 : p2) + (p2 ? p2 : p1), 0, 1);
+		float tp = 0.9f * z2 * (2.0f + 1.8f * tx + 0.7f * ty) / ty;
+		tp = powf(clamp(tp, 0, 1), 2);
 
 		tx = clamp(tx / 0.9f, 0, 1);
 		ty = clamp((ty - 0.1f) / 0.9f, 0, 1);
