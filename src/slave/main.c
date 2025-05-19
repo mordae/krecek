@@ -155,7 +155,12 @@ int main()
 
 	/* Initialize CC1101 for RF communication. */
 	cc1101_init(SLAVE_RF_SPI);
-	cc1101_receive();
+
+	/* Perform calibration */
+	cc1101_calibrate();
+
+	/* Begin receiving. */
+	cc1101_begin_receive();
 
 	puts("slave: configured");
 
@@ -178,9 +183,6 @@ int main()
 
 	int next_tx_buf = 0;
 	int next_rx_buf = 0;
-
-	bool transmitting = false;
-	cc1101_receive();
 
 	while (true) {
 		mailbin.gpio_input = sio_hw->gpio_in;
@@ -219,9 +221,9 @@ int main()
 			int s = (next_rx_buf + i) % MAILBIN_RF_SLOTS;
 
 			if (!mailbin.rf_rx_size[s]) {
-				int len = cc1101_poll(rxbuf[s]);
+				int len = cc1101_receive(rxbuf[s]);
 
-				if (len > 0) {
+				if (len >= 0) {
 					mailbin.rf_rx_size[s] = len;
 				} else {
 					next_rx_buf = s;
@@ -230,25 +232,20 @@ int main()
 			}
 		}
 
-		if (transmitting) {
-			transmitting = false;
-		} else if (cc1101_get_rssi() < -100.0f) {
-			for (int i = 0; i < MAILBIN_RF_SLOTS; i++) {
-				int s = (next_tx_buf + i) % MAILBIN_RF_SLOTS;
+		for (int i = 0; i < MAILBIN_RF_SLOTS; i++) {
+			int s = (next_tx_buf + i) % MAILBIN_RF_SLOTS;
 
-				if (mailbin.rf_tx_size[s]) {
-					if (cc1101_transmit(txbuf[s], mailbin.rf_tx_size[s]))
-						mailbin.rf_tx_size[s] = 0;
-
-					transmitting = true;
-					next_tx_buf = s;
+			if (mailbin.rf_tx_size[s]) {
+				if (cc1101_transmit(txbuf[s], mailbin.rf_tx_size[s])) {
+					mailbin.rf_tx_size[s] = 0;
+					next_tx_buf = (s + 1) % MAILBIN_RF_SLOTS;
 					break;
 				}
+
+				next_tx_buf = s;
+				break;
 			}
 		}
-
-		if (!transmitting)
-			cc1101_receive();
 
 		now += 1000;
 		sleep_until(now);

@@ -83,7 +83,7 @@ static bool refresh_mailbin(void)
 		if (!mailbin.rf_rx_size[i])
 			continue;
 
-		uint8_t buf[64];
+		static uint8_t buf[64];
 		remote_peek_many(mailbin.rf_rx_addr[i], (uint32_t *)buf,
 				 (mailbin.rf_rx_size[i] + 3) >> 2);
 

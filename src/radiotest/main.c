@@ -78,7 +78,7 @@ void game_input(unsigned dt_usec)
 {
 	(void)dt_usec;
 
-	if (sdk_inputs.tp) {
+	if (sdk_inputs.tp > 0.5f) {
 		lx = sdk_inputs.tx * TFT_RIGHT;
 		ly = sdk_inputs.ty * TFT_BOTTOM;
 
