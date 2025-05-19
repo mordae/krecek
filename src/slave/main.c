@@ -179,6 +179,9 @@ int main()
 	int next_tx_buf = 0;
 	int next_rx_buf = 0;
 
+	bool transmitting = false;
+	cc1101_receive();
+
 	while (true) {
 		mailbin.gpio_input = sio_hw->gpio_in;
 		mailbin.qspi_input = sio_hw->gpio_hi_in;
@@ -227,18 +230,20 @@ int main()
 			}
 		}
 
-		bool transmitting = false;
+		if (transmitting) {
+			transmitting = false;
+		} else if (cc1101_get_rssi() < -100.0f) {
+			for (int i = 0; i < MAILBIN_RF_SLOTS; i++) {
+				int s = (next_tx_buf + i) % MAILBIN_RF_SLOTS;
 
-		for (int i = 0; i < MAILBIN_RF_SLOTS; i++) {
-			int s = (next_tx_buf + i) % MAILBIN_RF_SLOTS;
+				if (mailbin.rf_tx_size[s]) {
+					if (cc1101_transmit(txbuf[s], mailbin.rf_tx_size[s]))
+						mailbin.rf_tx_size[s] = 0;
 
-			if (mailbin.rf_tx_size[s]) {
-				if (cc1101_transmit(txbuf[s], mailbin.rf_tx_size[s]))
-					mailbin.rf_tx_size[s] = 0;
-
-				transmitting = true;
-				next_tx_buf = s;
-				break;
+					transmitting = true;
+					next_tx_buf = s;
+					break;
+				}
 			}
 		}
 
