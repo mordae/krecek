@@ -19,7 +19,9 @@ struct mailbin mailbin __section(".mailbin");
 static uint8_t rxbuf[MAILBIN_RF_SLOTS][CC1101_MAXLEN] __aligned(MAILBIN_RF_SLOTS *CC1101_MAXLEN);
 static uint8_t txbuf[MAILBIN_RF_SLOTS][CC1101_MAXLEN] __aligned(MAILBIN_RF_SLOTS *CC1101_MAXLEN);
 
-static uint8_t rf_channel = 41;
+#define BASE_FREQ 433050000.0f
+#define CHANNEL 25000.0f
+static uint8_t rf_channel = 42;
 
 #define REG_SET_FIELD(name, value) (((value) << (name##_LSB)) & (name##_BITS))
 
@@ -79,6 +81,7 @@ int main()
 		mailbin.rf_tx_addr[i] = (uint32_t)&txbuf[i];
 	}
 
+	mailbin.rf_channel = rf_channel;
 	mailbin.gpio_input = ~0u;
 	mailbin.qspi_input = ~0u;
 	mailbin.magic = MAILBIN_MAGIC;
@@ -93,9 +96,9 @@ int main()
 
 	/*
 	 * Reconfigure pll_usb we don't need for CC1101 we do need.
-	 * 51.2 MHz is close enough for ADC 48 MHz and exactly 2x for CC1101.
+	 * 52 MHz is close enough for ADC 48 MHz and exactly 2x for CC1101.
 	 */
-	pll_init(pll_usb, 1, 1536000000, 6, 5);
+	pll_init(pll_usb, 1, 1560000000, 6, 5);
 
 	/* Start clocking CC1101. */
 	gpio_disable_pulls(SLAVE_RF_XOSC_PIN);
@@ -157,6 +160,9 @@ int main()
 
 	/* Initialize CC1101 for RF communication. */
 	cc1101_init(SLAVE_RF_SPI);
+
+	/* Set default frequency. */
+	cc1101_set_freq(BASE_FREQ + CHANNEL * rf_channel);
 
 	/* Perform calibration */
 	cc1101_calibrate();
@@ -221,7 +227,9 @@ int main()
 
 		if (rf_channel != (mailbin.rf_channel & 0xff)) {
 			rf_channel = mailbin.rf_channel;
-			cc1101_set_channel(rf_channel);
+			float freq = 433050000.0f + 25000.0f * rf_channel;
+			printf("CH%hhu %.0f\n", rf_channel, freq);
+			cc1101_set_freq(freq);
 		}
 
 		for (int i = 0; i < MAILBIN_RF_SLOTS; i++) {

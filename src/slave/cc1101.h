@@ -34,6 +34,6 @@ float cc1101_get_rssi(void);
 int cc1101_receive(void *buf);
 
 /*
- * Hop to specified channel.
+ * Tune to a different frequency.
  */
-void cc1101_set_channel(uint8_t ch);
+void cc1101_set_freq(float freq_target);

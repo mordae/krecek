@@ -9,7 +9,7 @@
 
 static spi_inst_t *spi = NULL;
 
-#define FOSC 25600000.0f
+#define FOSC 26000000.0f
 
 static struct STATUS read_register_unsafe(uint8_t addr, void *buf, int len)
 {
@@ -126,6 +126,21 @@ static void find_best_rate(float goal, uint8_t *m, uint8_t *e)
 	}
 }
 
+static void set_freq(float freq_target)
+{
+	float freq_step = FOSC / (1 << 16);
+	unsigned freq = roundf(freq_target / freq_step);
+
+	struct FREQ2 freq2 = { .FREQ = freq >> 16 };
+	struct FREQ1 freq1 = { .FREQ = freq >> 8 };
+	struct FREQ0 freq0 = { .FREQ = freq };
+
+	command(SIDLE);
+	write_register(REG_FREQ2, &freq2, 1);
+	write_register(REG_FREQ1, &freq1, 1);
+	write_register(REG_FREQ0, &freq0, 1);
+}
+
 void cc1101_init(spi_inst_t *_spi)
 {
 	spi = _spi;
@@ -161,7 +176,7 @@ void cc1101_init(spi_inst_t *_spi)
 	struct ADDR addr = { .DEVICE_ADDR = 1 }; // TODO
 	write_register(REG_ADDR, &addr, 1);
 
-	struct CHANNR channr = { .CHAN = 42 - 1 };
+	struct CHANNR channr = { .CHAN = 0 };
 	write_register(REG_CHANNR, &channr, 1);
 
 	struct FSCTRL1 fsctrl1 = { .FREQ_IF = 16 }; // 412_500 kHz
@@ -170,17 +185,7 @@ void cc1101_init(spi_inst_t *_spi)
 	struct FSCTRL0 fsctrl0 = { .FREQOFF = 0 };
 	write_register(REG_FSCTRL0, &fsctrl0, 1);
 
-	float freq_target = 433075000.0f;
-	float freq_step = FOSC / (1 << 16);
-	unsigned freq = roundf(freq_target / freq_step);
-
-	struct FREQ2 freq2 = { .FREQ = freq >> 16 };
-	struct FREQ1 freq1 = { .FREQ = freq >> 8 };
-	struct FREQ0 freq0 = { .FREQ = freq };
-
-	write_register(REG_FREQ2, &freq2, 1);
-	write_register(REG_FREQ1, &freq1, 1);
-	write_register(REG_FREQ0, &freq0, 1);
+	set_freq(433925000.0f);
 
 	// Channel Bandwidth
 	//
@@ -223,14 +228,14 @@ void cc1101_init(spi_inst_t *_spi)
 	write_register(REG_MDMCFG2, &mdmcfg2, 1);
 
 	struct MDMCFG1 mdmcfg1 = {
-		.CHANSPC_E = 0,	       /* for 25 kHz */
+		.CHANSPC_E = 0,
 		.NUM_PREAMBLE = 0b000, /* 2 bytes */
 		.FEC_EN = 0,
 	};
 	write_register(REG_MDMCFG1, &mdmcfg1, 1);
 
 	struct MDMCFG0 mdmcfg0 = {
-		.CHANSPC_M = 0, /* for 25 kHz */
+		.CHANSPC_M = 0,
 	};
 	write_register(REG_MDMCFG0, &mdmcfg0, 1);
 
@@ -305,10 +310,9 @@ float cc1101_get_rssi(void)
 	return rssi.RSSI * 0.5f - 74.0f;
 }
 
-void cc1101_set_channel(uint8_t ch)
+void cc1101_set_freq(float freq_target)
 {
-	struct CHANNR channr = { .CHAN = ch };
-	write_register(REG_CHANNR, &channr, 1);
+	set_freq(freq_target);
 }
 
 bool cc1101_transmit(const void *buf, int len)

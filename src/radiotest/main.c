@@ -44,12 +44,12 @@ void game_input(unsigned dt_usec)
 		tx_cursor();
 	}
 
-	if (sdk_inputs_delta.vertical > 0) {
+	if (sdk_inputs_delta.vertical < 0) {
 		channel = clamp(channel + 1, SDK_RF_CHANNEL_MIN, SDK_RF_CHANNEL_MAX);
 		sdk_set_rf_channel(channel);
 	}
 
-	if (sdk_inputs_delta.vertical < 0) {
+	if (sdk_inputs_delta.vertical > 0) {
 		channel = clamp(channel - 1, SDK_RF_CHANNEL_MIN, SDK_RF_CHANNEL_MAX);
 		sdk_set_rf_channel(channel);
 	}

@@ -220,6 +220,6 @@ bool sdk_set_rf_channel(int ch)
 	if (ch < 1 || ch > 69)
 		return false;
 
-	remote_poke(MAILBIN_BASE + offsetof(struct mailbin, rf_channel), ch - 1);
+	remote_poke(MAILBIN_BASE + offsetof(struct mailbin, rf_channel), ch);
 	return true;
 }
