@@ -32,3 +32,8 @@ float cc1101_get_rssi(void);
  * Otherwise return a negative number.
  */
 int cc1101_receive(void *buf);
+
+/*
+ * Hop to specified channel.
+ */
+void cc1101_set_channel(uint8_t ch);

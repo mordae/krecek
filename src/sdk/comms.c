@@ -214,3 +214,12 @@ bool sdk_send_rf(uint8_t addr, const uint8_t *data, int len)
 
 	return false;
 }
+
+bool sdk_set_rf_channel(int ch)
+{
+	if (ch < 1 || ch > 69)
+		return false;
+
+	remote_poke(MAILBIN_BASE + offsetof(struct mailbin, rf_channel), ch - 1);
+	return true;
+}

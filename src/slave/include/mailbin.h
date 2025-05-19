@@ -11,6 +11,7 @@ struct mailbin {
 	uint32_t gpio_input, qspi_input;
 	uint16_t adc[4];
 	uint16_t touch[4];
+	uint32_t rf_channel;
 	uint32_t stdout_head;
 	int rf_rx_size[MAILBIN_RF_SLOTS];
 	uint32_t rf_rx_addr[MAILBIN_RF_SLOTS];

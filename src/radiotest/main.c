@@ -12,9 +12,7 @@
 
 static int lx, ly, rx, ry;
 
-void game_start(void)
-{
-}
+static int channel = SDK_RF_CHANNEL;
 
 void game_inbox(sdk_message_t msg)
 {
@@ -45,6 +43,16 @@ void game_input(unsigned dt_usec)
 
 		tx_cursor();
 	}
+
+	if (sdk_inputs_delta.vertical > 0) {
+		channel = clamp(channel + 1, SDK_RF_CHANNEL_MIN, SDK_RF_CHANNEL_MAX);
+		sdk_set_rf_channel(channel);
+	}
+
+	if (sdk_inputs_delta.vertical < 0) {
+		channel = clamp(channel - 1, SDK_RF_CHANNEL_MIN, SDK_RF_CHANNEL_MAX);
+		sdk_set_rf_channel(channel);
+	}
 }
 
 void game_paint(unsigned dt_usec)
@@ -52,6 +60,8 @@ void game_paint(unsigned dt_usec)
 	(void)dt_usec;
 
 	tft_fill(0);
+
+	tft_draw_string(0, 0, rgb_to_rgb565(127, 0, 0), "%i", channel);
 
 	tft_draw_rect(rx - 1, ry - 1, rx + 1, ry + 1, rgb_to_rgb565(255, 0, 0));
 	tft_draw_rect(lx - 1, ly - 1, lx + 1, ly + 1, rgb_to_rgb565(0, 255, 0));

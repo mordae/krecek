@@ -10,6 +10,10 @@
  */
 bool sdk_send_ir(uint32_t word);
 
+#define SDK_RF_CHANNEL 42
+#define SDK_RF_CHANNEL_MIN 41
+#define SDK_RF_CHANNEL_MAX 69
+
 #define SDK_RF_ALL 255
 #define SDK_RF_MAX 60
 
@@ -18,6 +22,21 @@ bool sdk_send_ir(uint32_t word);
  * Address can be 0x00 or 0xff for broadcast.
  */
 bool sdk_send_rf(uint8_t addr, const uint8_t *data, int len);
+
+/*
+ * Tune to a different channel.
+ *
+ * We are using LPD433 channels 1-69.
+ * In Czechia, following applies:
+ *
+ * - For channels 1-40 the device must transmit at most 10% of time.
+ * - For channels 41-69 no limits apply, device can transmit all the time.
+ *
+ * Default channel is 42, because of how cool the number is.
+ *
+ * https://ctu.gov.cz/sites/default/files/obsah/vo-r10-072021-8.pdf#page=2
+ */
+bool sdk_set_rf_channel(int ch);
 
 /*
  * Decode IR sample.

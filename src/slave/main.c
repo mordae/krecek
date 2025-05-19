@@ -19,6 +19,8 @@ struct mailbin mailbin __section(".mailbin");
 static uint8_t rxbuf[MAILBIN_RF_SLOTS][CC1101_MAXLEN] __aligned(MAILBIN_RF_SLOTS *CC1101_MAXLEN);
 static uint8_t txbuf[MAILBIN_RF_SLOTS][CC1101_MAXLEN] __aligned(MAILBIN_RF_SLOTS *CC1101_MAXLEN);
 
+static uint8_t rf_channel = 41;
+
 #define REG_SET_FIELD(name, value) (((value) << (name##_LSB)) & (name##_BITS))
 
 static void qspi_pad_set(bool od, bool ie, int drive, bool pue, bool pde, bool schmitt,
@@ -91,9 +93,9 @@ int main()
 
 	/*
 	 * Reconfigure pll_usb we don't need for CC1101 we do need.
-	 * 52 MHz is close enough for ADC 48 MHz and exactly 2x for CC1101.
+	 * 51.2 MHz is close enough for ADC 48 MHz and exactly 2x for CC1101.
 	 */
-	pll_init(pll_usb, 1, 1560000000, 6, 5);
+	pll_init(pll_usb, 1, 1536000000, 6, 5);
 
 	/* Start clocking CC1101. */
 	gpio_disable_pulls(SLAVE_RF_XOSC_PIN);
@@ -216,6 +218,11 @@ int main()
 		}
 
 		touch_idx = (touch_idx + 1) % 16;
+
+		if (rf_channel != (mailbin.rf_channel & 0xff)) {
+			rf_channel = mailbin.rf_channel;
+			cc1101_set_channel(rf_channel);
+		}
 
 		for (int i = 0; i < MAILBIN_RF_SLOTS; i++) {
 			int s = (next_rx_buf + i) % MAILBIN_RF_SLOTS;
