@@ -322,8 +322,8 @@ bool cc1101_transmit(const void *buf, int len)
 	if (STATUS_STATE_TX == status.STATE)
 		return false; /* Busy transmitting. */
 
-	/* Begin TX. Will switch to RX when done. */
-	command(STX);
+	/* Prepare for TX. */
+	command(SFSTXON);
 
 	while (true) {
 		struct STATUS status = read_status_safe();
@@ -334,25 +334,22 @@ bool cc1101_transmit(const void *buf, int len)
 			continue;
 
 		case STATUS_STATE_TXFIFO_UNDERFLOW:
-			puts("cc1101: TX FIFO underflow");
+			puts("cc1101: TXFIFO_UNDERFLOW");
 			command(SFTX);
-
-			/* We were too slow I guess. Do not retry. */
-			return true;
+			continue;
 
 		case STATUS_STATE_FSTXON:
-			puts("cc1101: FSTXON?!");
-			command(SIDLE);
+			write_register(REG_FIFO, data, len);
+			command(STX);
 			continue;
+
+		case STATUS_STATE_TX:
+			return true;
 
 		case STATUS_STATE_RXFIFO_OVERFLOW:
 			puts("cc1101: RXFIFO_OVERFLOW?!");
 			command(SFRX);
 			continue;
-
-		case STATUS_STATE_TX:
-			write_register(REG_FIFO, data, len);
-			return true;
 
 		case STATUS_STATE_IDLE:
 		case STATUS_STATE_RX:

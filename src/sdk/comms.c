@@ -1,11 +1,17 @@
-#include <math.h>
 #include <pico/stdlib.h>
 
 #include <hardware/pwm.h>
 
 #include <sdk.h>
-#include <stdlib.h>
+#include <sdk/remote.h>
+
+#include <mailbin.h>
 #include <task.h>
+
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 static unsigned slice;
 static unsigned chan;
@@ -172,4 +178,39 @@ void sdk_comms_init(void)
 
 	alarm_pool_init_default();
 	(void)add_alarm_in_us(1000, send_ir_bit, NULL, true);
+}
+
+bool sdk_send_rf(uint8_t addr, const uint8_t *data, int len)
+{
+	if (len > SDK_RF_MAX) {
+		printf("sdk: sdk_send_rf(len=%i) too long\n", len);
+		return true;
+	}
+
+	int sizes[MAILBIN_RF_SLOTS];
+	uint32_t addrs[MAILBIN_RF_SLOTS];
+
+	remote_peek_many(MAILBIN_BASE + offsetof(struct mailbin, rf_tx_size), (uint32_t *)sizes,
+			 MAILBIN_RF_SLOTS);
+
+	remote_peek_many(MAILBIN_BASE + offsetof(struct mailbin, rf_tx_addr), addrs,
+			 MAILBIN_RF_SLOTS);
+
+	for (int i = 0; i < MAILBIN_RF_SLOTS; i++) {
+		if (sizes[i])
+			continue;
+
+		static uint8_t buf[SDK_RF_MAX + 4] __aligned(SDK_RF_MAX + 4);
+
+		buf[0] = len + 1;
+		buf[1] = addr;
+		memcpy(buf + 2, data, len);
+
+		remote_poke_many(addrs[i], (void *)buf, (len + 2 + 3) >> 2);
+		remote_poke(MAILBIN_BASE + offsetof(struct mailbin, rf_tx_size) + i * 4, len + 2);
+
+		return true;
+	}
+
+	return false;
 }

@@ -1,4 +1,3 @@
-#include <ctype.h>
 #include <hardware/regs/clocks.h>
 #include <pico/stdlib.h>
 
@@ -19,59 +18,21 @@ void game_start(void)
 
 void game_inbox(sdk_message_t msg)
 {
-	if (msg.type != SDK_MSG_RF)
-		return;
-
-	printf("\x1b[42;30m[%02hhx] ", msg.rf.addr);
-
-	for (int j = 0; j < msg.rf.length; j++)
-		printf("%02hhx", msg.rf.data[j]);
-
-	printf("  | ");
-
-	for (int j = 0; j < msg.rf.length; j++) {
-		char c = msg.rf.data[j];
-
-		if (isalnum(c) || ispunct(c)) {
-			putchar(c);
-		} else {
-			putchar('.');
+	if (SDK_MSG_RF == msg.type) {
+		if (2 != msg.rf.length) {
+			printf("game_inbox: invalid RF len=%i\n", msg.rf.length);
+			return;
 		}
+
+		rx = msg.rf.data[0];
+		ry = msg.rf.data[1];
 	}
-
-	printf("\x1b[0m\n");
-
-	rx = msg.rf.data[0];
-	ry = msg.rf.data[1];
 }
 
 static void tx_cursor(void)
 {
-	int sizes[MAILBIN_RF_SLOTS];
-	uint32_t addrs[MAILBIN_RF_SLOTS];
-
-	remote_peek_many(MAILBIN_BASE + offsetof(struct mailbin, rf_tx_size), (uint32_t *)sizes,
-			 MAILBIN_RF_SLOTS);
-
-	remote_peek_many(MAILBIN_BASE + offsetof(struct mailbin, rf_tx_addr), addrs,
-			 MAILBIN_RF_SLOTS);
-
-	for (int i = 0; i < MAILBIN_RF_SLOTS; i++) {
-		if (sizes[i])
-			continue;
-
-		uint8_t buf[16];
-
-		buf[0] = 3;
-		buf[1] = 255;
-		buf[2] = lx;
-		buf[3] = ly;
-
-		remote_poke_many(addrs[i], (void *)buf, 1);
-		remote_poke(MAILBIN_BASE + offsetof(struct mailbin, rf_tx_size) + i * 4, 4);
-
-		break;
-	}
+	uint8_t msg[] = { lx, ly };
+	sdk_send_rf(SDK_RF_ALL, msg, sizeof(msg));
 }
 
 void game_input(unsigned dt_usec)

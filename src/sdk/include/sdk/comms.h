@@ -10,6 +10,15 @@
  */
 bool sdk_send_ir(uint32_t word);
 
+#define SDK_RF_ALL 255
+#define SDK_RF_MAX 60
+
+/*
+ * Send up to SDK_MAX_RF_SIZE=60 bytes of data over radio.
+ * Address can be 0x00 or 0xff for broadcast.
+ */
+bool sdk_send_rf(uint8_t addr, const uint8_t *data, int len);
+
 /*
  * Decode IR sample.
  *

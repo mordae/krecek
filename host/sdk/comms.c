@@ -19,3 +19,11 @@ void sdk_decode_ir(int16_t sample)
 {
 	return sdk_decode_ir_raw(sample, NULL, NULL, NULL);
 }
+
+bool sdk_send_rf(uint8_t addr, const uint8_t *data, int len)
+{
+	(void)addr;
+	(void)data;
+	(void)len;
+	return true;
+}
