@@ -1,5 +1,6 @@
 #include <pico/stdlib.h>
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
@@ -40,6 +41,8 @@ struct ball {
 
 static struct paddle paddle1, paddle2;
 static struct ball ball;
+
+static bool i_am_host = true;
 
 const char *left_paddle_melody = "/i:square /bpm:100 /pll (f) C-";
 const char *right_paddle_melody = "/i:square /bpm:100 /prr (f) E-";
@@ -82,6 +85,32 @@ void game_start(void)
 {
 }
 
+void game_inbox(sdk_message_t msg)
+{
+	if (SDK_MSG_RF != msg.type)
+		return;
+
+	if (i_am_host) {
+		if (1 != msg.rf.length) {
+			printf("game_inbox: invalid RF len=%i\n", msg.rf.length);
+			return;
+		}
+
+		paddle2.y = msg.rf.data[0];
+	} else {
+		if (5 != msg.rf.length) {
+			printf("game_inbox: invalid RF len=%i\n", msg.rf.length);
+			return;
+		}
+
+		paddle1.y = msg.rf.data[0];
+		ball.x = msg.rf.data[1];
+		ball.y = msg.rf.data[2];
+		paddle1.score = msg.rf.data[3];
+		paddle2.score = msg.rf.data[4];
+	}
+}
+
 static void new_round(void)
 {
 	paddle1.y = PADDLE_HEIGHT * 1;
@@ -108,26 +137,34 @@ void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
 
-	/* Joys have value from -2048 to +2047. */
-	if (sdk_inputs.joy_y > 500)
-		paddle1.y += PADDLE_SPEED * dt;
-	else if (sdk_inputs.joy_y < -500)
-		paddle1.y -= PADDLE_SPEED * dt;
+	if (sdk_inputs_delta.start > 0) {
+		i_am_host = !i_am_host;
+	}
 
-	if (paddle1.y < 0)
-		paddle1.y = 0;
-	else if (paddle1.y > TFT_BOTTOM - PADDLE_HEIGHT)
-		paddle1.y = TFT_BOTTOM - PADDLE_HEIGHT;
+	if (i_am_host) {
+		if (sdk_inputs.joy_y > 500)
+			paddle1.y += PADDLE_SPEED * dt;
+		else if (sdk_inputs.joy_y < -500)
+			paddle1.y -= PADDLE_SPEED * dt;
 
-	if (sdk_inputs.a)
-		paddle2.y += PADDLE_SPEED * dt;
-	else if (sdk_inputs.y)
-		paddle2.y -= PADDLE_SPEED * dt;
+		if (paddle1.y < 0)
+			paddle1.y = 0;
+		else if (paddle1.y > TFT_BOTTOM - PADDLE_HEIGHT)
+			paddle1.y = TFT_BOTTOM - PADDLE_HEIGHT;
+	} else {
+		if (sdk_inputs.joy_y > 500)
+			paddle2.y += PADDLE_SPEED * dt;
+		else if (sdk_inputs.joy_y < -500)
+			paddle2.y -= PADDLE_SPEED * dt;
 
-	if (paddle2.y < 0)
-		paddle2.y = 0;
-	else if (paddle2.y > TFT_BOTTOM - PADDLE_HEIGHT)
-		paddle2.y = TFT_BOTTOM - PADDLE_HEIGHT;
+		if (paddle2.y < 0)
+			paddle2.y = 0;
+		else if (paddle2.y > TFT_BOTTOM - PADDLE_HEIGHT)
+			paddle2.y = TFT_BOTTOM - PADDLE_HEIGHT;
+	}
+
+	if (!i_am_host)
+		return;
 
 	/* ball is moving */
 	ball.x += ball.dx * dt;
@@ -198,6 +235,14 @@ void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
 
+	if (i_am_host) {
+		uint8_t msg[5] = { paddle1.y, ball.x, ball.y, paddle1.score, paddle2.score };
+		sdk_send_rf(0, msg, sizeof(msg));
+	} else {
+		uint8_t msg[1] = { paddle2.y };
+		sdk_send_rf(0, msg, sizeof(msg));
+	}
+
 	for (int i = 0; i < TFT_HEIGHT; i += 20) {
 		tft_draw_rect(TFT_WIDTH / 2, i + 5, TFT_WIDTH / 2, i + 10 + 5, ball.color);
 	}
@@ -215,6 +260,8 @@ void game_paint(unsigned __unused dt_usec)
 
 	tft_draw_string(0 + 10, 0, BLUE, "%i", paddle1.score);
 	tft_draw_string_right(TFT_RIGHT - 10, 0, GREEN, "%i", paddle2.score);
+
+	tft_draw_string(0, 0, rgb_to_rgb565(255, 0, 0), i_am_host ? "H" : "G");
 }
 
 int main()
