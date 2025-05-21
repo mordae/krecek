@@ -1,6 +1,14 @@
 #pragma once
 #include <stdint.h>
 
+#define SDK_RF_CHANNEL_MIN_UNSAFE 1
+#define SDK_RF_CHANNEL_MIN 41
+#define SDK_RF_CHANNEL 42
+#define SDK_RF_CHANNEL_MAX 69
+
+#define SDK_RF_ALL 255
+#define SDK_RF_MAX 60
+
 /*
  * Schedule 32b to transmit over IR.
  *
@@ -9,13 +17,6 @@
  * that we can only send at most about 2000 bits per second.
  */
 bool sdk_send_ir(uint32_t word);
-
-#define SDK_RF_CHANNEL 42
-#define SDK_RF_CHANNEL_MIN 41
-#define SDK_RF_CHANNEL_MAX 69
-
-#define SDK_RF_ALL 255
-#define SDK_RF_MAX 60
 
 /*
  * Send up to SDK_MAX_RF_SIZE=60 bytes of data over radio.
