@@ -4,7 +4,7 @@
 #include <text.png.h>
 #include <select.png.h>
 
-#define NUM_GAMES 16
+#define NUM_GAMES 32
 const sdk_game_info_t *games[NUM_GAMES];
 static int selected = 0;
 
@@ -70,10 +70,10 @@ static bool games_handle(sdk_event_t event, int depth)
 static void games_pushed(void)
 {
 	for (int i = 0; i < NUM_GAMES; i++) {
-		unsigned base = XIP_BASE + (i * 1024 * 1024) + 256;
+		unsigned base = XIP_BASE + (i * 512 * 1024) + 256;
 
 		for (int j = 0; j < 1024; j++) {
-			if (strncmp("KRECEK0", (const char *)(base + j), 8))
+			if (strncmp("KRECEK1", (const char *)(base + j), 8))
 				continue;
 
 			games[i] = (const void *)(base + j);

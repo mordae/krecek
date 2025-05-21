@@ -9,14 +9,14 @@ typedef struct sdk_game_info {
 
 #define sdk_game_info(name, cover)                                               \
 	sdk_game_info_t __attribute__((section(".game_info"))) sdk_game_info = { \
-		.magic = "KRECEK0",                                              \
+		.magic = "KRECEK1",                                              \
 		.na##me = (name),                                                \
 		.cover_image = (cover),                                          \
 	}
 
 /*
  * Reboot the console into firmware in given slot.
- * We have 16 slots numbered from 0 to 15.
- * Each has 1 MiB of flash space.
+ * We have 32 slots numbered from 0 to 31.
+ * Each has 512 KiB of flash space.
  */
 void sdk_reboot_into_slot(unsigned slot);

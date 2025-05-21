@@ -81,7 +81,7 @@ void __attribute__((__noreturn__, __format__(printf, 1, 2))) sdk_panic(const cha
 
 void sdk_reboot_into_slot(unsigned slot)
 {
-	unsigned target = XIP_BASE + (0x100000 * (slot % 16) + 0x100);
+	unsigned target = XIP_BASE + (0x80000 * (slot % 32) + 0x100);
 
 	// Verify where we go before we leap.
 	unsigned *firmware = (unsigned *)target;

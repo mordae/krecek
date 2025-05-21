@@ -30,7 +30,7 @@ void game_input(unsigned dt_usec)
 	}
 
 	if (sdk_inputs_delta.start > 0) {
-		sdk_reboot_into_slot(15);
+		sdk_reboot_into_slot(0);
 	}
 }
 
