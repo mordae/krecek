@@ -6,11 +6,13 @@
 #include <sdk.h>
 #include <tft.h>
 
+#include <level1.png.h>
 #include <arnost.png.h>
 #include <cover.png.h>
 
 sdk_game_info("arnost", &image_cover_png);
 
+#define BLACK rgb_to_rgb565(0, 0, 0)
 #define GRAY rgb_to_rgb565(63, 63, 63)
 #define WHITE rgb_to_rgb565(255, 255, 255)
 #define PINK rgb_to_rgb565(255, 0, 180)
@@ -214,9 +216,9 @@ void game_input(unsigned dt_usec)
 
 void game_paint(unsigned __unused dt_usec)
 {
-	tft_fill(0);
+	sdk_draw_image(0, 0, &image_level1_png);
 
-	tft_draw_string(0, 0, WHITE, "%i", score);
+	tft_draw_string(2, 1, BLACK, "%i", score);
 
 	/* tft_draw_rect(drop_x + 3, TFT_HEIGHT / 3 / 4 + 11, drop_x + 3, TFT_HEIGHT / 3 / 4 + 14,
 	*	      WHITE);
