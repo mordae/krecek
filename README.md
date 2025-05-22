@@ -19,7 +19,7 @@ Every game gets 512 KiB.
 | 10 | Kalkulacka  | 0x10500000 |
 | 11 | Scoundrel   | 0x10580000 |
 | 12 | Smileyrace  | 0x10600000 |
-| 13 |             | 0x10680000 |
+| 13 | Arnost      | 0x10680000 |
 | 14 | Deep        | 0x10700000 |
 | 15 | Experiment  | 0x10780000 |
 | 16 |             | 0x10800000 |
