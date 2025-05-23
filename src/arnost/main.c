@@ -8,6 +8,7 @@
 
 #include <level1.png.h>
 #include <arnost.png.h>
+#include <people.png.h>
 #include <cover.png.h>
 
 sdk_game_info("arnost", &image_cover_png);
@@ -72,11 +73,16 @@ sdk_game_info("arnost", &image_cover_png);
  */
 
 static sdk_sprite_t bird;
+static sdk_sprite_t human1;
+static sdk_sprite_t human2;
 
+// speed of movement???
 static float bird_dir = 30;
+static float human1_dir = 15;
+static float human2_dir = 5;
 
-static float human_pos = 110;
-static float human_dir = 6;
+// old code static float human_pos = 110;
+// old code static float human_dir = 6;
 
 static float drop_x = 0;
 static float drop_y = 0;
@@ -88,6 +94,27 @@ static const float GRAVITY = 200.0f; // gravity acceleration (px/s²)
 
 static int score = 0;
 
+// Cum decore, Tielmann Susato, arr. Jos van den Borre 1551
+static const char music1[] = "/i:flute > /bpm:60 { "
+			     "f-fg a-a- aa#Ca a#-g- g-g- g-g- gaa#g a-f- f-fg a-a- aa#Ca a#-g- "
+			     "gaa#g a-gf edfe f--- C-C- a-a- D-D- C--- aa#Ca a#agf edfe f--- "
+			     "C-C- a-a- D-D- C--- aa#Ca a#agf edfe f--- "
+			     "}";
+
+static const char music2[] = "/i:string > /bpm:60 { "
+			     "f-f- f-f- f-f- d-d- e-e- d-d- e-d- f-f- f-f- f-f- f-ef g-e- "
+			     "d-dd f-dd c-c- c--- f-f- f-f- f-a#a g--- f-ff f-dd c-c- c--- "
+			     "f-f- f-f- f-a#a g--- f-ff f-dd c-c- c--- "
+			     "}";
+
+static const char music3[] = "/i:sine > /bpm:60 { "
+			     "f-f- f-f- f-f- d-d- e-e- d-d- e-d- f-f- f-f- f-f- f-ef g-e- "
+			     "d-dd f-dd c-c- c--- f-f- f-f- f-a#a g--- f-ff f-dd c-c- c--- "
+			     "f-f- f-f- f-a#a g--- f-ff f-dd c-c- c--- "
+			     "}";
+
+static sdk_melody_t *melody1, *melody2, *melody3;
+
 void game_start(void)
 {
 }
@@ -98,6 +125,17 @@ void game_reset(void)
 	bird.tile = 0;
 	bird.y = 6;
 	bird.x = TFT_WIDTH / 2.0f - bird.ts->width / 2.0f;
+	human1.ts = &ts_people_png;
+	human1.tile = 0;
+	human1.y = 100;
+	human1.x = TFT_WIDTH / 2.0f - human1.ts->width / 2.0f;
+	human2.ts = &ts_people_png;
+	human2.tile = 0;
+	human2.y = 80;
+	human2.x = TFT_WIDTH / 2.0f - human2.ts->width / 2.0f;
+	melody1 = sdk_melody_play_get(music1);
+	melody2 = sdk_melody_play_get(music2);
+	melody3 = sdk_melody_play_get(music3);
 }
 
 static int sign(int x)
@@ -114,6 +152,7 @@ void init_drop()
 	drop_active = true;
 }
 
+// collision of objects
 static bool rects_overlap(int x0, int y0, int x1, int y1, int a0, int b0, int a1, int b1)
 {
 	int tmp;
@@ -168,13 +207,32 @@ void game_input(unsigned dt_usec)
 	}
 
 	// Move human by their speed.
-	human_pos += human_dir * dt;
+	human1.x += human1_dir * dt;
 
 	// Change human direction when hitting ends of the screen.
-	if (human_pos <= 0 || human_pos >= TFT_RIGHT - 5) {
-		human_dir = -human_dir;
-		printf("human hit wall, human_dir=%f\n", human_dir);
+	if (human1.x <= 0 || human1.x >= TFT_RIGHT - human1.ts->width) {
+		human1_dir = -human1_dir;
+		printf("human hit wall, human_dir=%f\n", human1_dir);
 	}
+
+	// Move human by their speed.
+	human2.x += human2_dir * dt;
+
+	// Change human direction when hitting ends of the screen.
+	if (human2.x <= 0 || human2.x >= TFT_RIGHT - human2.ts->width) {
+		human2_dir = -human2_dir;
+		printf("human hit wall, human_dir=%f\n", human2_dir);
+	}
+
+	/* old code: Move human by their speed.
+	* human_pos += human_dir * dt;
+	*
+	* Change human direction when hitting ends of the screen.
+	* if (human_pos <= 0 || human_pos >= TFT_RIGHT - 5) {
+	*	human_dir = -human_dir;
+	*	printf("human hit wall, human_dir=%f\n", human_dir);
+	* }
+	*/
 
 	// drop movement
 	// drop_y += drop_y * dt;
@@ -205,8 +263,15 @@ void game_input(unsigned dt_usec)
 			drop_active = false;
 		}
 
-		if (rects_overlap(drop_x, drop_y, drop_x + 1, drop_y + 3, human_pos, 100,
-				  human_pos + 5, 112)) {
+		if (rects_overlap(drop_x, drop_y, drop_x + 1, drop_y + 3, human1.x, 100,
+				  human1.x + 10, 112)) {
+			// au, co to bylo?!
+			drop_active = false;
+			score += 1;
+		}
+
+		if (rects_overlap(drop_x, drop_y, drop_x + 1, drop_y + 3, human2.x, 80,
+				  human2.x + 10, 92)) {
 			// au, co to bylo?!
 			drop_active = false;
 			score += 1;
@@ -223,16 +288,27 @@ void game_paint(unsigned __unused dt_usec)
 	/* tft_draw_rect(drop_x + 3, TFT_HEIGHT / 3 / 4 + 11, drop_x + 3, TFT_HEIGHT / 3 / 4 + 14,
 	*	      WHITE);
 	*/
-	tft_draw_rect(human_pos, 100, human_pos + 5, 112, AZURE);
+	// old code of huma: tft_draw_rect(human_pos, 100, human_pos + 5, 112, AZURE);
 
 	// paint only active drop
 	if (drop_active) {
 		tft_draw_rect(drop_x, drop_y, drop_x + 1, drop_y + 3, WHITE);
 	}
 
+	// Draw srpite of bird.
 	bird.flip_x = bird_dir > 0;
 	bird.tile = fmodf((5.0f * time_us_32()) / 1000000.0f, 5.0f);
 	sdk_draw_sprite(&bird);
+
+	// Draw sprite of human1.
+	human1.flip_x = human1_dir < 0;
+	human1.tile = fmodf((4.0f * time_us_32()) / 1000000.0f, 4.0f);
+	sdk_draw_sprite(&human1);
+
+	// Draw sprite of human2.
+	human2.flip_x = human2_dir < 0;
+	human2.tile = fmodf((4.0f * time_us_32()) / 1000000.0f, 4.0f);
+	sdk_draw_sprite(&human2);
 }
 
 int main()
