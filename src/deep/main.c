@@ -2,6 +2,7 @@
 #include <math.h>
 
 #include <sdk.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <tft.h>
 
@@ -20,6 +21,7 @@ typedef struct Character {
 	sdk_sprite_t s;
 	float phase;
 	float speed;
+	float x, y;
 } Character;
 
 static Character player = {
@@ -27,26 +29,45 @@ static Character player = {
 		.ts = &ts_player_png,
 		.ox = 7.5f,
 		.oy = 14.0f,
+		.x = TFT_WIDTH / 2.0f,
+		.y = TFT_HEIGHT / 2.0f,
 	},
 };
 
 static Level level;
 
+static void change_floor(void)
+{
+	level.seed = 0x1337 + level.floor - 1;
+
+	uint32_t t0 = time_us_32();
+	level_generate(&level);
+	uint32_t t1 = time_us_32();
+
+	printf("level generated in %u us\n", (unsigned)(t1 - t0));
+
+	player.x = level.sx * TILE_SIZE + 0.5f * TILE_SIZE;
+	player.y = level.sy * TILE_SIZE + 0.5f * TILE_SIZE;
+}
+
 void game_reset(void)
 {
-	player.s.tile = 0;
-	player.s.x = TFT_WIDTH / 2.0f;
-	player.s.y = TFT_HEIGHT / 2.0f;
-	player.speed = 50.0f;
-
-	level.seed = 0x1337;
 	level.floor = 1;
-	level_generate(&level);
+	change_floor();
+
+	player.speed = 50.0f;
+	player.s.tile = 0;
 }
 
 void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
+
+	if (sdk_inputs.a) {
+		player.speed = 200.0f;
+	} else {
+		player.speed = 50.0f;
+	}
 
 	float move_x =
 		abs(sdk_inputs.joy_x) >= 512 ? player.speed * dt * sdk_inputs.joy_x / 2048.0f : 0;
@@ -54,11 +75,11 @@ void game_input(unsigned dt_usec)
 		abs(sdk_inputs.joy_y) >= 512 ? player.speed * dt * sdk_inputs.joy_y / 2048.0f : 0;
 
 	if (move_x || move_y) {
-		int pos_x = player.s.x / TILE_SIZE;
-		int pos_y = player.s.y / TILE_SIZE;
+		int pos_x = player.x / TILE_SIZE;
+		int pos_y = player.y / TILE_SIZE;
 
-		float next_x = player.s.x + move_x;
-		float next_y = player.s.y + move_y;
+		float next_x = player.x + move_x;
+		float next_y = player.y + move_y;
 
 		next_x = clamp(next_x, 0, TILE_SIZE * MAP_SIZE - 1);
 		next_y = clamp(next_y, 0, TILE_SIZE * MAP_SIZE - 1);
@@ -68,9 +89,9 @@ void game_input(unsigned dt_usec)
 		if (pos_x != next_pos_x && move_x) {
 			if (level.map[pos_y][next_pos_x].solid) {
 				if (move_x > 0) {
-					next_x = ceilf(player.s.x) - 1e-3;
+					next_x = ceilf(player.x) - 1e-3;
 				} else {
-					next_x = floor(player.s.x);
+					next_x = floor(player.x);
 				}
 			}
 		}
@@ -78,15 +99,15 @@ void game_input(unsigned dt_usec)
 		if (pos_y != next_pos_y && move_y) {
 			if (level.map[next_pos_y][pos_x].solid) {
 				if (move_y > 0) {
-					next_y = ceilf(player.s.y) - 1e-3;
+					next_y = ceilf(player.y) - 1e-3;
 				} else {
-					next_y = floor(player.s.y);
+					next_y = floor(player.y);
 				}
 			}
 		}
 
-		player.s.x = next_x;
-		player.s.y = next_y;
+		player.x = next_x;
+		player.y = next_y;
 
 		player.s.flip_x = 0;
 
@@ -105,17 +126,25 @@ void game_input(unsigned dt_usec)
 			player.phase = 0.25;
 		}
 	}
+
+	int pos_x = player.x / TILE_SIZE;
+	int pos_y = player.y / TILE_SIZE;
+
+	if (pos_x == level.ex && pos_y == level.ey) {
+		level.floor++;
+		change_floor();
+	}
 }
 
 void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(rgb_to_rgb565(0, 0, 0));
 
-	int pos_x = player.s.x / TILE_SIZE;
-	int pos_y = player.s.y / TILE_SIZE;
+	int pos_x = player.x / TILE_SIZE;
+	int pos_y = player.y / TILE_SIZE;
 
-	float origin_x = player.s.x - TFT_WIDTH / 2.0f;
-	float origin_y = player.s.y - TFT_HEIGHT / 2.0f;
+	float origin_x = player.x - TFT_WIDTH / 2.0f;
+	float origin_y = player.y - TFT_HEIGHT / 2.0f;
 
 	tft_set_origin(origin_x, origin_y);
 
@@ -133,13 +162,8 @@ void game_paint(unsigned __unused dt_usec)
 
 	tft_set_origin(0, 0);
 
-	float sx = player.s.x;
-	float sy = player.s.y;
-	player.s.x = TFT_WIDTH / 2.0f;
-	player.s.y = TFT_HEIGHT / 2.0f;
+	tft_draw_string(3, 3, rgb_to_rgb565(255, 0, 0), "%i", level.floor);
 	sdk_draw_sprite(&player.s);
-	player.s.x = sx;
-	player.s.y = sy;
 }
 
 int main()

@@ -6,7 +6,12 @@
 #endif
 
 #define TILE_SIZE 16
-#define MAP_SIZE 64
+#define MAP_SIZE_BITS 5
+#define MAP_SIZE (1 << MAP_SIZE_BITS)
+#define MAP_MAX (MAP_SIZE - 1)
+
+#define ROOM_BITS 3
+#define ROOM_SIZE (1 << ROOM_BITS)
 
 typedef enum TileType {
 	TILE_NONE = 0,
@@ -29,8 +34,9 @@ static_assert(sizeof(Tile) == 4);
 
 typedef struct Level {
 	uint32_t seed;
-	uint32_t floor;
+	int floor;
 	Tile map[MAP_SIZE][MAP_SIZE];
+	uint8_t sx, sy, ex, ey;
 } Level;
 
 void level_generate(Level *level);
