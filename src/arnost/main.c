@@ -126,11 +126,11 @@ void game_reset(void)
 	bird.y = 6;
 	bird.x = TFT_WIDTH / 2.0f - bird.ts->width / 2.0f;
 	human1.ts = &ts_people_png;
-	human1.tile = 0;
+	human1.tile = 8;
 	human1.y = 100;
 	human1.x = TFT_WIDTH / 2.0f - human1.ts->width / 2.0f;
 	human2.ts = &ts_people_png;
-	human2.tile = 0;
+	human2.tile = 4;
 	human2.y = 80;
 	human2.x = TFT_WIDTH / 2.0f - human2.ts->width / 2.0f;
 	melody1 = sdk_melody_play_get(music1);
@@ -302,12 +302,12 @@ void game_paint(unsigned __unused dt_usec)
 
 	// Draw sprite of human1.
 	human1.flip_x = human1_dir < 0;
-	human1.tile = fmodf((4.0f * time_us_32()) / 1000000.0f, 4.0f);
+	human1.tile = 8 + fmodf((4.0f * time_us_32()) / 1000000.0f, 4.0f);
 	sdk_draw_sprite(&human1);
 
 	// Draw sprite of human2.
 	human2.flip_x = human2_dir < 0;
-	human2.tile = fmodf((4.0f * time_us_32()) / 1000000.0f, 4.0f);
+	human2.tile = 4 + fmodf((4.0f * time_us_32()) / 1000000.0f, 4.0f);
 	sdk_draw_sprite(&human2);
 }
 
