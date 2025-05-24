@@ -95,19 +95,19 @@ static const float GRAVITY = 200.0f; // gravity acceleration (px/s²)
 static int score = 0;
 
 // Cum decore, Tielmann Susato, arr. Jos van den Borre 1551
-static const char music1[] = "/i:flute > /bpm:60 { "
+static const char music1[] = "/i:flute (p) > /bpm:60 { "
 			     "f-fg a-a- aa#Ca a#-g- g-g- g-g- gaa#g a-f- f-fg a-a- aa#Ca a#-g- "
 			     "gaa#g a-gf edfe f--- C-C- a-a- D-D- C--- aa#Ca a#agf edfe f--- "
 			     "C-C- a-a- D-D- C--- aa#Ca a#agf edfe f--- "
 			     "}";
 
-static const char music2[] = "/i:string > /bpm:60 { "
+static const char music2[] = "/i:string (p) > /bpm:60 { "
 			     "f-f- f-f- f-f- d-d- e-e- d-d- e-d- f-f- f-f- f-f- f-ef g-e- "
 			     "d-dd f-dd c-c- c--- f-f- f-f- f-a#a g--- f-ff f-dd c-c- c--- "
 			     "f-f- f-f- f-a#a g--- f-ff f-dd c-c- c--- "
 			     "}";
 
-static const char music3[] = "/i:sine > /bpm:60 { "
+static const char music3[] = "/i:sine (p) > /bpm:60 { "
 			     "f-f- f-f- f-f- d-d- e-e- d-d- e-d- f-f- f-f- f-f- f-ef g-e- "
 			     "d-dd f-dd c-c- c--- f-f- f-f- f-a#a g--- f-ff f-dd c-c- c--- "
 			     "f-f- f-f- f-a#a g--- f-ff f-dd c-c- c--- "
@@ -141,15 +141,6 @@ void game_reset(void)
 static int sign(int x)
 {
 	return x >= 0 ? 1 : -1;
-}
-
-// Start shit droping from pigeon.
-void init_drop()
-{
-	drop_x = bird.x + 8 - sign(bird_dir) * 4; // Střed ptáka
-	drop_y = bird.y + 8;			  // Těsně pod ptákem
-	drop_velocity = 0;
-	drop_active = true;
 }
 
 // collision of objects
@@ -246,7 +237,11 @@ void game_input(unsigned dt_usec)
 
 	// Make drop by push "a".
 	if (sdk_inputs_delta.a > 0 && !drop_active) {
-		init_drop();
+		drop_x = bird.x + 8 - sign(bird_dir) * 4; // Střed ptáka
+		drop_y = bird.y + 8;			  // Těsně pod ptákem
+		drop_velocity = 0;
+		drop_active = true;
+		sdk_melody_play("/i:phi D#");
 		printf("package delivery pending\n");
 	}
 
@@ -267,6 +262,7 @@ void game_input(unsigned dt_usec)
 				  human1.x + 10, 112)) {
 			// au, co to bylo?!
 			drop_active = false;
+			sdk_melody_play("/i:square g");
 			score += 1;
 		}
 
@@ -274,6 +270,7 @@ void game_input(unsigned dt_usec)
 				  human2.x + 10, 92)) {
 			// au, co to bylo?!
 			drop_active = false;
+			sdk_melody_play("/i:square g");
 			score += 1;
 		}
 	}
