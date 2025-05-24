@@ -146,11 +146,6 @@ void game_reset(void)
 	melody3 = sdk_melody_play_get(music3);
 }
 
-static int sign(int x)
-{
-	return x >= 0 ? 1 : -1;
-}
-
 // collision of objects
 static bool rects_overlap(int x0, int y0, int x1, int y1, int a0, int b0, int a1, int b1)
 {

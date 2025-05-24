@@ -150,11 +150,6 @@ void game_input(unsigned dt_usec)
 		scale = (scale + 1) % NUM_SCALES;
 }
 
-int sign(int x)
-{
-	return x >= 0 ? 1 : -1;
-}
-
 void game_paint(unsigned dt_usec)
 {
 	(void)dt_usec;

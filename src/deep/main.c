@@ -3,7 +3,6 @@
 
 #include <sdk.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <tft.h>
 
 #include "level.h"
@@ -59,6 +58,31 @@ void game_reset(void)
 	player.s.tile = 0;
 }
 
+static void move_and_slide(Character *ch, float dx, float dy)
+{
+	float nx = ch->x + dx;
+	float ny = ch->y + dy;
+
+	int tx = ch->x / TILE_SIZE;
+	int ty = ch->y / TILE_SIZE;
+
+	int tnx = nx / TILE_SIZE;
+	int tny = ny / TILE_SIZE;
+
+	bool x_solid = level.map[ty][tnx].solid;
+	bool y_solid = level.map[tny][tx].solid;
+	bool xy_solid = level.map[tny][tnx].solid;
+
+	if (!xy_solid && !x_solid && !y_solid) {
+		ch->x = clamp(ch->x + dx, 0, MAP_SIZE * TILE_SIZE - 1e-9f);
+		ch->y = clamp(ch->y + dy, 0, MAP_SIZE * TILE_SIZE - 1e-9f);
+	} else if (!x_solid) {
+		ch->x = clamp(ch->x + dx, 0, MAP_SIZE * TILE_SIZE - 1e-9f);
+	} else if (!y_solid) {
+		ch->y = clamp(ch->y + dy, 0, MAP_SIZE * TILE_SIZE - 1e-9f);
+	}
+}
+
 void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
@@ -69,45 +93,11 @@ void game_input(unsigned dt_usec)
 		player.speed = 50.0f;
 	}
 
-	float move_x =
-		abs(sdk_inputs.joy_x) >= 512 ? player.speed * dt * sdk_inputs.joy_x / 2048.0f : 0;
-	float move_y =
-		abs(sdk_inputs.joy_y) >= 512 ? player.speed * dt * sdk_inputs.joy_y / 2048.0f : 0;
+	float move_x = fabsf(sdk_inputs.jx) >= 0.25f ? player.speed * sdk_inputs.jx : 0;
+	float move_y = fabsf(sdk_inputs.jy) >= 0.25f ? player.speed * sdk_inputs.jy : 0;
 
 	if (move_x || move_y) {
-		int pos_x = player.x / TILE_SIZE;
-		int pos_y = player.y / TILE_SIZE;
-
-		float next_x = player.x + move_x;
-		float next_y = player.y + move_y;
-
-		next_x = clamp(next_x, 0, TILE_SIZE * MAP_SIZE - 1);
-		next_y = clamp(next_y, 0, TILE_SIZE * MAP_SIZE - 1);
-		int next_pos_x = next_x / TILE_SIZE;
-		int next_pos_y = next_y / TILE_SIZE;
-
-		if (pos_x != next_pos_x && move_x) {
-			if (level.map[pos_y][next_pos_x].solid) {
-				if (move_x > 0) {
-					next_x = ceilf(player.x) - 1e-3;
-				} else {
-					next_x = floor(player.x);
-				}
-			}
-		}
-
-		if (pos_y != next_pos_y && move_y) {
-			if (level.map[next_pos_y][pos_x].solid) {
-				if (move_y > 0) {
-					next_y = ceilf(player.y) - 1e-3;
-				} else {
-					next_y = floor(player.y);
-				}
-			}
-		}
-
-		player.x = next_x;
-		player.y = next_y;
+		move_and_slide(&player, move_x * dt, move_y * dt);
 
 		player.s.flip_x = 0;
 
