@@ -3,6 +3,7 @@
 
 #include <sdk.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <tft.h>
 
 #include "level.h"
@@ -87,7 +88,7 @@ void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
 
-	if (sdk_inputs.a) {
+	if (sdk_inputs.start) {
 		player.speed = 200.0f;
 	} else {
 		player.speed = 50.0f;
@@ -126,6 +127,39 @@ void game_input(unsigned dt_usec)
 	}
 }
 
+static uint32_t xorshift_seed = 0x1337;
+
+static inline uint32_t xorshift(void)
+{
+	uint32_t x = xorshift_seed;
+	x ^= x << 13;
+	x ^= x >> 17;
+	x ^= x << 5;
+	xorshift_seed = x;
+	return x;
+}
+
+static inline uint32_t xorshift_bits(unsigned bits)
+{
+	return xorshift() >> (32 - bits);
+}
+
+static inline int estimate_distance(int x0, int y0, int x1, int y1)
+{
+	int x = abs(x1 - x0);
+	int y = abs(y1 - y0);
+
+	int taxicab = x + y;
+	int chebyshev = MAX(x, y);
+	return (taxicab * 7 + chebyshev * 9) >> 4;
+}
+
+static inline color_t color_mul(color_t color, uint8_t amount)
+{
+	return rgb_to_rgb565((rgb565_red(color) * amount) >> 8, (rgb565_green(color) * amount) >> 8,
+			     (rgb565_blue(color) * amount) >> 8);
+}
+
 void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(rgb_to_rgb565(0, 0, 0));
@@ -150,9 +184,27 @@ void game_paint(unsigned __unused dt_usec)
 		}
 	}
 
+	static int avg_range = 40 << 8;
+	int range = (46 << 8) + xorshift_bits(4 + 8);
+	avg_range += (range - avg_range) >> 3;
+	range = avg_range >> 8;
+
+	for (int x = 0; x < TFT_WIDTH; x++) {
+		for (int y = 0; y < TFT_HEIGHT; y++) {
+			int dist = estimate_distance(TFT_WIDTH / 2, TFT_HEIGHT / 2, x, y);
+			dist += xorshift_bits(2);
+
+			if (dist > range) {
+				dist -= range;
+				int mag = MAX(0, 255 - ((dist * dist) >> 3));
+				tft_input[x][y] = color_mul(tft_input[x][y], mag);
+			}
+		}
+	}
+
 	tft_set_origin(0, 0);
 
-	tft_draw_string(3, 3, rgb_to_rgb565(255, 0, 0), "%i", level.floor);
+	// tft_draw_string(3, 3, rgb_to_rgb565(255, 0, 0), "%i", level.floor);
 	sdk_draw_sprite(&player.s);
 }
 

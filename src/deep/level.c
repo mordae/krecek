@@ -249,6 +249,7 @@ void level_generate(Level *level)
 		for (int x = 0; x <= MAP_MAX; x++) {
 			if (scratch[y][x]) {
 				level->map[y][x].tile_id = 2 + xorshift_bits(2);
+				level->map[y][x].solid = 0;
 			} else {
 				level->map[y][x].tile_id = 1;
 				level->map[y][x].solid = 1;
