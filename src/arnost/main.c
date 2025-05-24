@@ -10,6 +10,7 @@
 #include <arnost.png.h>
 #include <people.png.h>
 #include <cover.png.h>
+#include <drop.png.h>
 
 sdk_game_info("arnost", &image_cover_png);
 
@@ -75,6 +76,7 @@ sdk_game_info("arnost", &image_cover_png);
 static sdk_sprite_t bird;
 static sdk_sprite_t human1;
 static sdk_sprite_t human2;
+static sdk_sprite_t drop;
 
 // speed of movement???
 static float bird_dir = 30;
@@ -84,8 +86,8 @@ static float human2_dir = 5;
 // old code static float human_pos = 110;
 // old code static float human_dir = 6;
 
-static float drop_x = 0;
-static float drop_y = 0;
+//static float drop_x = 0;
+//static float drop_y = 0;
 
 // Globální proměnné pro stav kapky
 static bool drop_active = false;
@@ -95,19 +97,19 @@ static const float GRAVITY = 200.0f; // gravity acceleration (px/s²)
 static int score = 0;
 
 // Cum decore, Tielmann Susato, arr. Jos van den Borre 1551
-static const char music1[] = "/i:flute (p) > /bpm:60 { "
+static const char music1[] = "/i:flute (ppp) > /bpm:60 { "
 			     "f-fg a-a- aa#Ca a#-g- g-g- g-g- gaa#g a-f- f-fg a-a- aa#Ca a#-g- "
 			     "gaa#g a-gf edfe f--- C-C- a-a- D-D- C--- aa#Ca a#agf edfe f--- "
 			     "C-C- a-a- D-D- C--- aa#Ca a#agf edfe f--- "
 			     "}";
 
-static const char music2[] = "/i:string (p) > /bpm:60 { "
+static const char music2[] = "/i:string (ppp) > /bpm:60 { "
 			     "f-f- f-f- f-f- d-d- e-e- d-d- e-d- f-f- f-f- f-f- f-ef g-e- "
 			     "d-dd f-dd c-c- c--- f-f- f-f- f-a#a g--- f-ff f-dd c-c- c--- "
 			     "f-f- f-f- f-a#a g--- f-ff f-dd c-c- c--- "
 			     "}";
 
-static const char music3[] = "/i:sine (p) > /bpm:60 { "
+static const char music3[] = "/i:sine (ppp) > /bpm:60 { "
 			     "f-f- f-f- f-f- d-d- e-e- d-d- e-d- f-f- f-f- f-f- f-ef g-e- "
 			     "d-dd f-dd c-c- c--- f-f- f-f- f-a#a g--- f-ff f-dd c-c- c--- "
 			     "f-f- f-f- f-a#a g--- f-ff f-dd c-c- c--- "
@@ -133,6 +135,12 @@ void game_reset(void)
 	human2.tile = 4;
 	human2.y = 80;
 	human2.x = TFT_WIDTH / 2.0f - human2.ts->width / 2.0f;
+	drop.ts = &ts_drop_png;
+	drop.tile = 0;
+	drop.y = 4;
+	drop.x = TFT_WIDTH / 2.0f - drop.ts->width / 2.0f;
+	drop.ox = 4.0f;
+	drop.oy = 7.0f;
 	melody1 = sdk_melody_play_get(music1);
 	melody2 = sdk_melody_play_get(music2);
 	melody3 = sdk_melody_play_get(music3);
@@ -237,8 +245,8 @@ void game_input(unsigned dt_usec)
 
 	// Make drop by push "a".
 	if (sdk_inputs_delta.a > 0 && !drop_active) {
-		drop_x = bird.x + 8 - sign(bird_dir) * 4; // Střed ptáka
-		drop_y = bird.y + 8;			  // Těsně pod ptákem
+		drop.x = bird.x + 8 - sign(bird_dir) * 4; // Střed ptáka
+		drop.y = bird.y + 16;			  // Těsně pod ptákem
 		drop_velocity = 0;
 		drop_active = true;
 		sdk_melody_play("/i:phi D#");
@@ -251,14 +259,14 @@ void game_input(unsigned dt_usec)
 		drop_velocity += GRAVITY * dt;
 
 		// Aktualizace pozice
-		drop_y += drop_velocity * dt;
+		drop.y += drop_velocity * dt;
 
 		// Kontrola dopadu na zem
-		if (drop_y >= TFT_HEIGHT) {
+		if (drop.y >= TFT_HEIGHT) {
 			drop_active = false;
 		}
 
-		if (rects_overlap(drop_x, drop_y, drop_x + 1, drop_y + 3, human1.x, 100,
+		if (rects_overlap(drop.x, drop.y, drop.x + 1, drop.y + 3, human1.x, 100,
 				  human1.x + 10, 112)) {
 			// au, co to bylo?!
 			drop_active = false;
@@ -266,7 +274,7 @@ void game_input(unsigned dt_usec)
 			score += 1;
 		}
 
-		if (rects_overlap(drop_x, drop_y, drop_x + 1, drop_y + 3, human2.x, 80,
+		if (rects_overlap(drop.x, drop.y, drop.x + 1, drop.y + 3, human2.x, 80,
 				  human2.x + 10, 92)) {
 			// au, co to bylo?!
 			drop_active = false;
@@ -289,7 +297,9 @@ void game_paint(unsigned __unused dt_usec)
 
 	// paint only active drop
 	if (drop_active) {
-		tft_draw_rect(drop_x, drop_y, drop_x + 1, drop_y + 3, WHITE);
+		// tft_draw_rect(drop_x, drop_y, drop_x + 1, drop_y + 3, WHITE);
+		drop.tile = fmodf((10.0f * time_us_32()) / 1000000.0f, 2.0f);
+		sdk_draw_sprite(&drop);
 	}
 
 	// Draw srpite of bird.
