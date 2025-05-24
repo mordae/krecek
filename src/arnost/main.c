@@ -17,33 +17,9 @@ sdk_game_info("arnost", &image_cover_png);
 #define BLACK rgb_to_rgb565(0, 0, 0)
 #define GRAY rgb_to_rgb565(63, 63, 63)
 #define WHITE rgb_to_rgb565(255, 255, 255)
-#define PINK rgb_to_rgb565(255, 0, 180)
-#define BROWN rgb_to_rgb565(60, 15, 0)
-#define AZURE rgb_to_rgb565(0, 232, 255)
-
-/*
- *  _    _      _
- * | |  | |    | |
- * | |__| | ___| |_ __
- * |  __  |/ _ \ | '_ \
- * | |  | |  __/ | |_) |
- * |_|  |_|\___|_| .__/
- *               | |
- *               |_|
- *
- *
- */
-
-/* vice
- * radkovy
- * komentar
- */
-
-//  jednoradkovy komentar az do konce radku
-
-// && = a pokud také platí..., pokud platí obě podmínky před i za && je celý výrok pravdivý
-// || = nebo, pokud platí levá strana, prava strana nebo obe, je vyrok pravdivy
-// ! = negace výroku, logicky opak
+// #define PINK rgb_to_rgb565(255, 0, 180)
+// #define BROWN rgb_to_rgb565(60, 15, 0)
+// #define AZURE rgb_to_rgb565(0, 232, 255)
 
 /*
  *   _____                        _____            _
@@ -59,7 +35,7 @@ sdk_game_info("arnost", &image_cover_png);
  * Tlačítkem "a" se vykálí  ve vzduchu.
  * Dole pod Arnoštem na ulici chodí náhodně CHODCI, JEZEVČÍCI a další BYTOSTI.
  * V rámci ulice jsou zde SOCHY, TRUHLÍKY S KVĚTINAMI, KOŠ.
- * Pokud zasáhne připočítají se mu body. -> ZVUK při zásahu.
+ * Pokud zasáhne připočítají se mu body.
  * Hra je omezena na ČAS.
  * BODOVÉ OHODNOCENÍ zásahů.
  * Arnošt může NĚCO SEZOBNOUT. -> ZVUK při sežrání.
@@ -78,25 +54,19 @@ static sdk_sprite_t human1;
 static sdk_sprite_t human2;
 static sdk_sprite_t drop;
 
-// speed of movement???
+// Speed of movement
 static float bird_dir = 30;
 static float human1_dir = 15;
 static float human2_dir = 5;
 
-// old code static float human_pos = 110;
-// old code static float human_dir = 6;
-
-//static float drop_x = 0;
-//static float drop_y = 0;
-
-// Globální proměnné pro stav kapky
+// Globals for drop
 static bool drop_active = false;
 static float drop_velocity = 0;
 static const float GRAVITY = 200.0f; // gravity acceleration (px/s²)
 
 static int score = 0;
 
-// Cum decore, Tielmann Susato, arr. Jos van den Borre 1551
+// Music:Cum decore, 1551, Tielmann Susato, arr. Jos van den Borre
 static const char music1[] = "/i:flute (ppp) > /bpm:60 { "
 			     "f-fg a-a- aa#Ca a#-g- g-g- g-g- gaa#g a-f- f-fg a-a- aa#Ca a#-g- "
 			     "gaa#g a-gf edfe f--- C-C- a-a- D-D- C--- aa#Ca a#agf edfe f--- "
@@ -146,7 +116,7 @@ void game_reset(void)
 	melody3 = sdk_melody_play_get(music3);
 }
 
-// collision of objects
+// Collision of objects
 static bool rects_overlap(int x0, int y0, int x1, int y1, int a0, int b0, int a1, int b1)
 {
 	int tmp;
@@ -218,45 +188,25 @@ void game_input(unsigned dt_usec)
 		printf("human hit wall, human_dir=%f\n", human2_dir);
 	}
 
-	/* old code: Move human by their speed.
-	* human_pos += human_dir * dt;
-	*
-	* Change human direction when hitting ends of the screen.
-	* if (human_pos <= 0 || human_pos >= TFT_RIGHT - 5) {
-	*	human_dir = -human_dir;
-	*	printf("human hit wall, human_dir=%f\n", human_dir);
-	* }
-	*/
-
-	// drop movement
-	// drop_y += drop_y * dt;
-
-	// if (sdk_inputs_delta.start > 0) {
-	//	drop_y = -drop_y;
-	// }
-
-	// drop acceleration
-	// drop_y = drop_y + 0.1 * drop_y * dt;
-
 	// Make drop by push "a".
 	if (sdk_inputs_delta.a > 0 && !drop_active) {
-		drop.x = bird.x + 8 - sign(bird_dir) * 4; // Střed ptáka
-		drop.y = bird.y + 16;			  // Těsně pod ptákem
+		drop.x = bird.x + 8 - sign(bird_dir) * 4; // Center of the pigeon
+		drop.y = bird.y + 16;			  // Just below the pigeon
 		drop_velocity = 0;
 		drop_active = true;
 		sdk_melody_play("/i:phi D#");
 		printf("package delivery pending\n");
 	}
 
-	// Aktualizace kapky, pokud je aktivní
+	// Update of drop
 	if (drop_active) {
-		// Aplikace gravitace
+		// Aplication of gravity
 		drop_velocity += GRAVITY * dt;
 
-		// Aktualizace pozice
+		// Update of drop position
 		drop.y += drop_velocity * dt;
 
-		// Kontrola dopadu na zem
+		// Detection of drop fall to ground
 		if (drop.y >= TFT_HEIGHT) {
 			drop_active = false;
 		}
@@ -267,6 +217,7 @@ void game_input(unsigned dt_usec)
 			drop_active = false;
 			sdk_melody_play("/i:square g");
 			score += 1;
+			// human1 stop for 1 second, jump 6px, running for 4 seconds
 		}
 
 		if (rects_overlap(drop.x, drop.y, drop.x + 1, drop.y + 3, human2.x, 80,
@@ -275,6 +226,7 @@ void game_input(unsigned dt_usec)
 			drop_active = false;
 			sdk_melody_play("/i:square g");
 			score += 1;
+			// human2 stop for 1 second, jump 6px, running for 4 seconds
 		}
 	}
 }
@@ -285,14 +237,8 @@ void game_paint(unsigned __unused dt_usec)
 
 	tft_draw_string(2, 1, BLACK, "%i", score);
 
-	/* tft_draw_rect(drop_x + 3, TFT_HEIGHT / 3 / 4 + 11, drop_x + 3, TFT_HEIGHT / 3 / 4 + 14,
-	*	      WHITE);
-	*/
-	// old code of huma: tft_draw_rect(human_pos, 100, human_pos + 5, 112, AZURE);
-
-	// paint only active drop
+	// Paint only active drop.
 	if (drop_active) {
-		// tft_draw_rect(drop_x, drop_y, drop_x + 1, drop_y + 3, WHITE);
 		drop.tile = fmodf((10.0f * time_us_32()) / 1000000.0f, 2.0f);
 		sdk_draw_sprite(&drop);
 	}
