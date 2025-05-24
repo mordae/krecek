@@ -161,19 +161,19 @@ void level_generate(Level *level)
 
 	for (int y = 1; y < MAP_MAX; y++) {
 		for (int x = 1; x < MAP_MAX; x++) {
-			int t1 = scratch[y - 1][x - 1];
-			int t2 = scratch[y - 1][x + 0];
-			int t3 = scratch[y - 1][x + 1];
+			int t7 = scratch[y - 1][x - 1];
+			int t8 = scratch[y - 1][x + 0];
+			int t9 = scratch[y - 1][x + 1];
 			int t4 = scratch[y + 0][x - 1];
 			int t5 = scratch[y + 0][x + 0];
 			int t6 = scratch[y + 0][x + 1];
-			int t7 = scratch[y + 1][x - 1];
-			int t8 = scratch[y + 1][x + 0];
-			int t9 = scratch[y + 1][x + 1];
+			int t1 = scratch[y + 1][x - 1];
+			int t2 = scratch[y + 1][x + 0];
+			int t3 = scratch[y + 1][x + 1];
 
-			int mask = (!!t1 << 8) | (!!t2 << 7) | (!!t3 << 6) | (!!t4 << 5) |
-				   (!!t5 << 4) | (!!t6 << 3) | (!!t7 << 2) | (!!t8 << 1) |
-				   (!!t9 << 0);
+			int mask = (!!t7 << 8) | (!!t8 << 7) | (!!t9 << 6) | (!!t4 << 5) |
+				   (!!t5 << 4) | (!!t6 << 3) | (!!t1 << 2) | (!!t2 << 1) |
+				   (!!t3 << 0);
 
 			int masks[] = { 0b001111001, 0b111010010, 0b111110111, 0b111110111,
 					0b010010111 };
@@ -213,10 +213,10 @@ void level_generate(Level *level)
 		if (scratch[y][x])
 			continue;
 
-		int t2 = scratch[y - 1][x];
+		int t8 = scratch[y - 1][x];
 		int t4 = scratch[y][x - 1];
 		int t6 = scratch[y][x + 1];
-		int t8 = scratch[y + 1][x];
+		int t2 = scratch[y + 1][x];
 
 		if (t2 && t8 && t2 != t8) {
 			if (t2 + t8 == 5) {
@@ -245,20 +245,48 @@ void level_generate(Level *level)
 		}
 	}
 
+	/*
+	 * Table converting 4b wall present/missing state (8462)
+	 * into central tile id to actually use.
+	 */
+	const uint8_t tile_lut[16] = {
+		0x00, // 0000  ----
+		0x00, // 0001  ---2
+		0x07, // 0010  --6-
+		0x01, // 0011  --62
+		0x09, // 0100  -4--
+		0x04, // 0101  -4-2
+		0x08, // 0110  -46-
+		0x0a, // 0111  -462
+		0x0b, // 1000  8---
+		0x00, // 1001  8--2
+		0x03, // 1010  8-6-
+		0x02, // 1011  8-62
+		0x06, // 1100  84--
+		0x05, // 1101  84-2
+		0x08, // 1110  846-
+		0x0a, // 1111  8462
+	};
+
 	for (int y = 0; y <= MAP_MAX; y++) {
 		for (int x = 0; x <= MAP_MAX; x++) {
 			if (scratch[y][x]) {
-				level->map[y][x].tile_id = 2 + xorshift_bits(2);
+				level->map[y][x].tile_id = 12 + xorshift_bits(2);
 				level->map[y][x].solid = 0;
 			} else {
-				level->map[y][x].tile_id = 1;
+				int t8 = y > 0 ? !scratch[y - 1][x] : 0;
+				int t2 = y < MAP_MAX ? !scratch[y + 1][x] : 0;
+				int t4 = x > 0 ? !scratch[y][x - 1] : 0;
+				int t6 = x < MAP_MAX ? !scratch[y][x + 1] : 0;
+
+				uint8_t key = (t8 << 3) | (t4 << 2) | (t6 << 1) | (t2 << 0);
+
+				level->map[y][x].tile_id = tile_lut[key];
 				level->map[y][x].solid = 1;
-				if ((y < MAP_MAX && 0 == scratch[y + 1][x]) || (y == MAP_MAX))
-					level->map[y][x].tile_id = 0;
 			}
 		}
 	}
 
-	level->map[level->sy][level->sx].tile_id = 6;
-	level->map[level->ey][level->ex].tile_id = 7;
+	level->map[level->sy][level->sx].tile_id = 16;
+	level->map[level->ey][level->ex].tile_id = 17;
 }

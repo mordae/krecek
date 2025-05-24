@@ -28,7 +28,7 @@ static Character player = {
 	.s = {
 		.ts = &ts_player_png,
 		.ox = 7.5f,
-		.oy = 14.0f,
+		.oy = 14.5f,
 		.x = TFT_WIDTH / 2.0f,
 		.y = TFT_HEIGHT / 2.0f,
 	},
