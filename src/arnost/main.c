@@ -165,28 +165,40 @@ void game_input(unsigned dt_usec)
 	}
 
 	// Change pigeon direction when hitting ends of the screen.
-	if (bird.x <= 0 || bird.x >= TFT_RIGHT - bird.ts->width) {
+	if (bird.x < 0 || bird.x > TFT_RIGHT - bird.ts->width) {
 		bird_dir = -bird_dir;
 		printf("bird hit wall, bird_dir=%f\n", bird_dir);
 	}
+
+	bird.x = clamp(bird.x, 0, TFT_RIGHT - bird.ts->width);
+	// if (bird.x < 0) {
+	// 	bird.x = 0;
+	// }
+	//
+	// if (bird.x > TFT_RIGHT) {
+	// 	bird.x = TFT_RIGHT;
+	// }
 
 	// Move human by their speed.
 	human1.x += human1_dir * dt;
 
 	// Change human direction when hitting ends of the screen.
-	if (human1.x <= 0 || human1.x >= TFT_RIGHT - human1.ts->width) {
+	if (human1.x < -20 || human1.x > TFT_RIGHT + 20 - human1.ts->width) {
 		human1_dir = -human1_dir;
 		printf("human hit wall, human_dir=%f\n", human1_dir);
 	}
+	human1.x = clamp(human1.x, -20, TFT_RIGHT + 20 - human1.ts->width);
 
 	// Move human by their speed.
 	human2.x += human2_dir * dt;
 
 	// Change human direction when hitting ends of the screen.
-	if (human2.x <= 0 || human2.x >= TFT_RIGHT - human2.ts->width) {
+	if (human2.x < -20 || human2.x > TFT_RIGHT + 20 - human2.ts->width) {
 		human2_dir = -human2_dir;
 		printf("human hit wall, human_dir=%f\n", human2_dir);
 	}
+
+	human2.x = clamp(human2.x, -20, TFT_RIGHT + 20 - human2.ts->width);
 
 	// Make drop by push "a".
 	if (sdk_inputs_delta.a > 0 && !drop_active) {
