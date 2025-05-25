@@ -72,6 +72,10 @@ static bool drop_active = false;
 static float drop_velocity = 0;
 static const float GRAVITY = 200.0f; // gravity acceleration (px/s²)
 
+// Humans stop
+static float stop_human1 = -1.0f;
+static float stop_human2 = -1.0f;
+
 static int score = 0;
 
 // Music:Cum decore, 1551, Tielmann Susato, arr. Jos van den Borre
@@ -126,6 +130,8 @@ void game_reset(void)
 	melody1 = sdk_melody_play_get(music1);
 	melody2 = sdk_melody_play_get(music2);
 	melody3 = sdk_melody_play_get(music3);
+	stop_human1 = -1;
+	stop_human2 = -1;
 }
 
 // Collision of objects
@@ -203,8 +209,12 @@ void game_input(unsigned dt_usec)
 	drone.x = clamp(drone.x, -20, TFT_RIGHT + 20 - drone.ts->width);
 	drone.y = bird.y + 18 * sinf(drone.x * 0.05f);
 
-	// Move human by their speed.
-	human1.x += human1_dir * dt;
+	// Move human by their speed, if not stopped.
+	if (stop_human1 < 0) {
+		human1.x += human1_dir * dt;
+	} else {
+		stop_human1 -= dt;
+	}
 
 	// Change human direction when hitting ends of the screen.
 	if (human1.x < -20 || human1.x > TFT_RIGHT + 20 - human1.ts->width) {
@@ -213,8 +223,12 @@ void game_input(unsigned dt_usec)
 	}
 	human1.x = clamp(human1.x, -20, TFT_RIGHT + 20 - human1.ts->width);
 
-	// Move human by their speed.
-	human2.x += human2_dir * dt;
+	// Move human by their speed, if not stopped.
+	if (stop_human2 < 0) {
+		human2.x += human2_dir * dt;
+	} else {
+		stop_human2 -= dt;
+	}
 
 	// Change human direction when hitting ends of the screen.
 	if (human2.x < -20 || human2.x > TFT_RIGHT + 20 - human2.ts->width) {
@@ -253,6 +267,7 @@ void game_input(unsigned dt_usec)
 			drop_active = false;
 			sdk_melody_play("/i:square g");
 			score += 1;
+			stop_human1 = 1.0f;
 			// human1 stop for 1 second, jump 6px, running for 4 seconds
 		}
 
@@ -262,6 +277,7 @@ void game_input(unsigned dt_usec)
 			drop_active = false;
 			sdk_melody_play("/i:square g");
 			score += 1;
+			stop_human2 = 1.0f;
 			// human2 stop for 1 second, jump 6px, running for 4 seconds
 		}
 	}
@@ -286,12 +302,20 @@ void game_paint(unsigned __unused dt_usec)
 
 	// Draw sprite of human1.
 	human1.flip_x = human1_dir < 0;
-	human1.tile = 8 + fmodf((4.0f * time_us_32()) / 1000000.0f, 4.0f);
+	if (stop_human1 >= 0) {
+		human1.tile = 9;
+	} else {
+		human1.tile = 8 + fmodf((4.0f * time_us_32()) / 1000000.0f, 4.0f);
+	}
 	sdk_draw_sprite(&human1);
 
 	// Draw sprite of human2.
 	human2.flip_x = human2_dir < 0;
-	human2.tile = 4 + fmodf((4.0f * time_us_32()) / 1000000.0f, 4.0f);
+	if (stop_human2 >= 0) {
+		human2.tile = 5;
+	} else {
+		human2.tile = 4 + fmodf((4.0f * time_us_32()) / 1000000.0f, 4.0f);
+	}
 	sdk_draw_sprite(&human2);
 
 	// Draw sprite of drone.
