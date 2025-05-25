@@ -154,12 +154,6 @@ static inline int estimate_distance(int x0, int y0, int x1, int y1)
 	return (taxicab * 7 + chebyshev * 9) >> 4;
 }
 
-static inline color_t color_mul(color_t color, uint8_t amount)
-{
-	return rgb_to_rgb565((rgb565_red(color) * amount) >> 8, (rgb565_green(color) * amount) >> 8,
-			     (rgb565_blue(color) * amount) >> 8);
-}
-
 void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(rgb_to_rgb565(0, 0, 0));
@@ -196,7 +190,7 @@ void game_paint(unsigned __unused dt_usec)
 
 			if (dist > range) {
 				dist -= range;
-				int mag = MAX(0, 255 - ((dist * dist) >> 3));
+				int mag = MAX(0, 32 - ((dist * dist) >> 6));
 				tft_input[x][y] = color_mul(tft_input[x][y], mag);
 			}
 		}

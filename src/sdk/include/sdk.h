@@ -15,6 +15,7 @@
 #include <sdk/sdcard.h>
 #include <sdk/fatfs.h>
 #include <sdk/scene.h>
+#include <sdk/color.h>
 
 #if !defined(__noreturn)
 #define __noreturn __attribute__((__noreturn__))
