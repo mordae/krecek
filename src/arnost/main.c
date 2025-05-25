@@ -11,6 +11,7 @@
 #include <people.png.h>
 #include <cover.png.h>
 #include <drop.png.h>
+#include <drone.png.h>
 
 sdk_game_info("arnost", &image_cover_png);
 
@@ -47,17 +48,24 @@ sdk_game_info("arnost", &image_cover_png);
  * Jezevčík se pokusí sežrat Arnošta, pokud přiletí moc blízko. -> ZVUK štěkajícího jezevčíka.
  * DÍTĚ se pokusí arnošta chytit, pokud přiletí moc blízko. -> ZVUK chechtajícího se dítěte.
  * HŘIBÁTOR a PAPARATZI.
+ *
+ * Náhodná událost: STAR TREK - náhodně se objeví skupina ze Star Treku, budou sondovat prostředí
+ * a během toho je potřeba aby, je Arnošt sestřelil. Po sestřelení se zase od teleportují. Za to bude 10 bódů a achivment.
+ *
+ * Náhodná událost: Objeví se drone, který lítá i nahoru a dolů. Arnošt se mu musí vyhnout. Jinak přijde o obody.
  */
 
 static sdk_sprite_t bird;
 static sdk_sprite_t human1;
 static sdk_sprite_t human2;
 static sdk_sprite_t drop;
+static sdk_sprite_t drone;
 
 // Speed of movement
 static float bird_dir = 30;
 static float human1_dir = 15;
 static float human2_dir = 5;
+static float drone_dir = 40;
 
 // Globals for drop
 static bool drop_active = false;
@@ -111,6 +119,10 @@ void game_reset(void)
 	drop.x = TFT_WIDTH / 2.0f - drop.ts->width / 2.0f;
 	drop.ox = 4.0f;
 	drop.oy = 7.0f;
+	drone.ts = &ts_drone_png;
+	drone.tile = 0;
+	drone.y = 10;
+	drone.x = TFT_WIDTH / 2.0f - human1.ts->width / 2.0f;
 	melody1 = sdk_melody_play_get(music1);
 	melody2 = sdk_melody_play_get(music2);
 	melody3 = sdk_melody_play_get(music3);
@@ -178,6 +190,18 @@ void game_input(unsigned dt_usec)
 	// if (bird.x > TFT_RIGHT) {
 	// 	bird.x = TFT_RIGHT;
 	// }
+
+	// Move drone by their speed.
+	drone.x += drone_dir * dt;
+
+	// Change drone direction when hitting ends of the screen.
+	if (drone.x < -20 || drone.x > TFT_RIGHT + 20 - drone.ts->width) {
+		drone_dir = -drone_dir;
+		printf("drone hit wall, drone_dir=%f\n", drone_dir);
+	}
+
+	drone.x = clamp(drone.x, -20, TFT_RIGHT + 20 - drone.ts->width);
+	drone.y = bird.y + 18 * sinf(drone.x * 0.05f);
 
 	// Move human by their speed.
 	human1.x += human1_dir * dt;
@@ -255,7 +279,7 @@ void game_paint(unsigned __unused dt_usec)
 		sdk_draw_sprite(&drop);
 	}
 
-	// Draw srpite of bird.
+	// Draw sprite of bird.
 	bird.flip_x = bird_dir > 0;
 	bird.tile = fmodf((5.0f * time_us_32()) / 1000000.0f, 5.0f);
 	sdk_draw_sprite(&bird);
@@ -269,6 +293,11 @@ void game_paint(unsigned __unused dt_usec)
 	human2.flip_x = human2_dir < 0;
 	human2.tile = 4 + fmodf((4.0f * time_us_32()) / 1000000.0f, 4.0f);
 	sdk_draw_sprite(&human2);
+
+	// Draw sprite of drone.
+	drone.flip_x = drone_dir < 0;
+	drone.tile = fmodf((16.0f * time_us_32()) / 1000000.0f, 4.0f);
+	sdk_draw_sprite(&drone);
 }
 
 int main()
