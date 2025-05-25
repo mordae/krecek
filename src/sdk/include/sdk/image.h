@@ -54,7 +54,8 @@ inline static void sdk_draw_tile_flipped(int x, int y, const sdk_tileset_t *ts, 
 /* Draw a tile from given tileset. */
 inline static void sdk_draw_tile(int x, int y, const sdk_tileset_t *ts, uint16_t tile)
 {
-	sdk_draw_tile_flipped(x, y, ts, tile, false, false, false);
+	const color_t *data = sdk_get_tile_data(ts, tile);
+	tft_draw_sprite(x, y, ts->width, ts->height, data, TRANSPARENT);
 }
 
 /* Draw rotated tile, where angle is times 90° clockwise. */
