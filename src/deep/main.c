@@ -8,7 +8,7 @@
 
 #include "level.h"
 
-#include <tileset.png.h>
+#include <tileset-16x16.png.h>
 #include <player.png.h>
 
 #include <cover.png.h>
@@ -173,7 +173,7 @@ void game_paint(unsigned __unused dt_usec)
 
 	for (int y = y0; y <= y1; y++) {
 		for (int x = x0; x <= x1; x++) {
-			sdk_draw_tile(x * TILE_SIZE, y * TILE_SIZE, &ts_tileset_png,
+			sdk_draw_tile(x * TILE_SIZE, y * TILE_SIZE, &ts_tileset_16x16_png,
 				      level.map[y][x].tile_id);
 		}
 	}

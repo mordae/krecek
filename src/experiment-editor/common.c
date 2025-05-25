@@ -128,7 +128,7 @@ close_fail:
 
 void load_preview_colors(void)
 {
-	int pixels = TILESET_PNG_WIDTH * TILESET_PNG_WIDTH;
+	int pixels = ts_tileset_png.width * ts_tileset_png.height;
 
 	for (int i = 0; i < TS_TILESET_PNG_COUNT; i++) {
 		const color_t *data = sdk_get_tile_data(&ts_tileset_png, i);

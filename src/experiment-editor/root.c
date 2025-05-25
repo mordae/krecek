@@ -1,4 +1,5 @@
 #include "common.h"
+#include <tileset.png.h>
 
 #define WHITE rgb_to_rgb565(255, 255, 255)
 
@@ -57,7 +58,7 @@ static void root_paint(float dt, int depth)
 
 	for (int y = 0; y < MAP_ROWS; y++) {
 		for (int x = 0; x < MAP_COLS; x++) {
-			uint32_t tile_id = root_cursor.map[y][x].tile_id;
+			uint32_t tile_id = root_cursor.map[y][x].tile_id % TS_TILESET_PNG_COUNT;
 			color_t color = preview_colors[tile_id];
 			int x0 = 36 + x * 6;
 			int y0 = 12 + y * 6;

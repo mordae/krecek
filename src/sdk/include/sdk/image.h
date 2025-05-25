@@ -12,7 +12,7 @@
 struct sdk_image {
 	uint16_t width;
 	uint16_t height;
-	color_t data[];
+	const color_t *data;
 };
 
 typedef struct sdk_image sdk_image_t;
