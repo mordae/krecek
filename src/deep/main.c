@@ -11,7 +11,7 @@
 #include <tileset-16x16.png.h>
 #include <walls-32x64.png.h>
 #include <floors-32x32.png.h>
-#include <player.png.h>
+#include <player-32x32.png.h>
 
 #include <cover.png.h>
 
@@ -19,21 +19,144 @@ sdk_game_info("deep", &image_cover_png);
 
 #define GRAY rgb_to_rgb565(127, 127, 127)
 
+typedef enum Orientation {
+	NORTH,
+	SOUTH,
+	EAST,
+	WEST,
+} Orientation;
+
+typedef struct Frame {
+	uint32_t next : 8;  /* Frame after this one */
+	uint32_t tile : 8;  /* Tile to show */
+	uint32_t flip : 1;  /* Mirror tile along X */
+	uint32_t msec : 10; /* Milliseconds to dwell */
+	uint32_t tag : 5;   /* Arbitrary value */
+} Frame;
+
+typedef struct Animation {
+	const Frame *frames;
+	const Frame *frame;
+	float timeout;
+} Animation;
+
+#define TAG_BUSY 1
+#define TAG_WALKING 2
+
+static const Frame player_frames[] = {
+	/* Idle */
+	[0x00] = { 0x00, 15, 0, 100, 0 },
+
+	/* Idle Up */
+	[0x01] = { 0x01, 0, 0, 100, 0 },
+
+	/* Idle Down */
+	[0x02] = { 0x02, 2, 0, 100, 0 },
+
+	/* Idle Right */
+	[0x03] = { 0x03, 5, 0, 100, 0 },
+
+	/* Idle Left */
+	[0x04] = { 0x04, 5, 1, 100, 0 },
+
+	/* Walk Up Loop */
+	[0x10] = { 0x11, 0, 0, 150, TAG_WALKING },
+	[0x11] = { 0x10, 1, 0, 150, TAG_WALKING },
+
+	/* Walk Down Loop */
+	[0x18] = { 0x19, 2, 0, 150, TAG_WALKING },
+	[0x19] = { 0x18, 3, 0, 150, TAG_WALKING },
+
+	/* Walk Right Loop */
+	[0x20] = { 0x21, 4, 0, 125, TAG_WALKING },
+	[0x21] = { 0x22, 5, 0, 125, TAG_WALKING },
+	[0x22] = { 0x23, 6, 0, 125, TAG_WALKING },
+	[0x23] = { 0x20, 7, 0, 125, TAG_WALKING },
+
+	/* Walk Left Loop */
+	[0x28] = { 0x29, 4, 1, 125, TAG_WALKING },
+	[0x29] = { 0x2a, 5, 1, 125, TAG_WALKING },
+	[0x2a] = { 0x2b, 6, 1, 125, TAG_WALKING },
+	[0x2b] = { 0x28, 7, 1, 125, TAG_WALKING },
+
+	/* Attack Up */
+	[0x30] = { 0x31, 8, 0, 50, TAG_BUSY },
+	[0x31] = { 0x32, 9, 0, 50, TAG_BUSY },
+	[0x32] = { 0x33, 10, 0, 100, TAG_BUSY },
+	[0x33] = { 0x33, 11, 0, 100, 0 },
+
+	/* Attack Down */
+	[0x38] = { 0x39, 12, 0, 50, TAG_BUSY },
+	[0x39] = { 0x3a, 13, 0, 50, TAG_BUSY },
+	[0x3a] = { 0x3b, 14, 0, 100, TAG_BUSY },
+	[0x3b] = { 0x3b, 15, 0, 100, 0 },
+
+	/* Attack Right */
+	[0x40] = { 0x41, 16, 0, 50, TAG_BUSY },
+	[0x41] = { 0x42, 17, 0, 50, TAG_BUSY },
+	[0x42] = { 0x43, 18, 0, 100, TAG_BUSY },
+	[0x43] = { 0x43, 19, 0, 100, 0 },
+
+	/* Attack Left */
+	[0x48] = { 0x49, 20, 0, 50, TAG_BUSY },
+	[0x49] = { 0x4a, 21, 0, 50, TAG_BUSY },
+	[0x4a] = { 0x4b, 22, 0, 100, TAG_BUSY },
+	[0x4b] = { 0x4b, 23, 0, 100, 0 },
+};
+
+static int player_walk[] = {
+	[NORTH] = 0x10,
+	[SOUTH] = 0x18,
+	[EAST] = 0x20,
+	[WEST] = 0x28,
+};
+
+static int player_attacks[] = {
+	[NORTH] = 0x30,
+	[SOUTH] = 0x38,
+	[EAST] = 0x40,
+	[WEST] = 0x48,
+};
+
+static void set_frame(Animation *a, sdk_sprite_t *s, uint8_t frame_id)
+{
+	a->frame = &a->frames[frame_id];
+	a->timeout = a->frame->msec * 1e-3;
+	s->tile = a->frame->tile;
+	s->flip_x = a->frame->flip;
+}
+
+static void animate(Animation *a, sdk_sprite_t *s, float dt)
+{
+	a->timeout -= dt;
+
+	if (a->timeout > 0)
+		return;
+
+	set_frame(a, s, a->frame->next);
+}
+
 typedef struct Character {
 	sdk_sprite_t s;
-	float phase;
+	Animation a;
+	Orientation o;
 	float speed;
 	float x, y;
 } Character;
 
 static Character player = {
 	.s = {
-		.ts = &ts_player_png,
-		.ox = 7.5f,
-		.oy = 14.5f,
+		.ts = &ts_player_32x32_png,
+		.ox = 15.5f,
+		.oy = 29.0f,
 		.x = TFT_WIDTH / 2.0f,
 		.y = TFT_HEIGHT / 2.0f,
 	},
+	.a = {
+		.frames = player_frames,
+		.frame = player_frames,
+	},
+	.o = SOUTH,
 };
 
 static Level level;
@@ -50,6 +173,8 @@ static void change_floor(void)
 
 	player.x = level.sx * TILE_SIZE + 0.5f * TILE_SIZE;
 	player.y = level.sy * TILE_SIZE + 0.5f * TILE_SIZE;
+
+	set_frame(&player.a, &player.s, 0x00);
 }
 
 void game_reset(void)
@@ -96,30 +221,32 @@ void game_input(unsigned dt_usec)
 		player.speed = 50.0f;
 	}
 
+	if (sdk_inputs_delta.a > 0 && !(player.a.frame->tag & TAG_BUSY)) {
+		set_frame(&player.a, &player.s, player_attacks[player.o]);
+	}
+
 	float jx = sdk_inputs.jx + sdk_inputs.jy;
 	float jy = sdk_inputs.jx - sdk_inputs.jy;
 
 	float move_x = fabsf(jx) >= 0.25f ? player.speed * jx : 0;
 	float move_y = fabsf(jy) >= 0.25f ? player.speed * jy : 0;
 
-	if (move_x || move_y) {
-		move_and_slide(&player, move_x * dt, move_y * dt);
+	if ((move_x || move_y)) {
+		if (player.a.frame->tag & TAG_BUSY) {
+			move_and_slide(&player, move_x * dt * 0.25f, move_y * dt * 0.25f);
+		} else {
+			move_and_slide(&player, move_x * dt, move_y * dt);
 
-		player.s.flip_x = 0;
+			Orientation po = player.o;
 
-		if (fabsf(sdk_inputs.jx) > fabsf(sdk_inputs.jy)) {
-			player.s.tile = 4 + fmodf(player.phase * 4, 4);
-			player.s.flip_x = (sdk_inputs.jx < 0);
-			player.phase += dt * 1.5;
-		} else if (sdk_inputs.jy > 0) {
-			player.s.tile = 2 + fmodf(player.phase * 2, 2);
-			player.phase += dt * 2;
-		} else if (sdk_inputs.jy < 0) {
-			player.s.tile = 0 + fmodf(player.phase * 2, 2);
-			player.phase += dt * 2;
-		} else if (player.s.tile >= 4 && player.s.tile < 8) {
-			player.s.tile = 5;
-			player.phase = 0.25;
+			if (fabsf(sdk_inputs.jx) > fabsf(sdk_inputs.jy)) {
+				player.o = sdk_inputs.jx < 0 ? WEST : EAST;
+			} else {
+				player.o = sdk_inputs.jy < 0 ? NORTH : SOUTH;
+			}
+
+			if (player.o != po || !(player.a.frame->tag & TAG_WALKING))
+				set_frame(&player.a, &player.s, player_walk[player.o]);
 		}
 	}
 
@@ -130,6 +257,8 @@ void game_input(unsigned dt_usec)
 		level.floor++;
 		change_floor();
 	}
+
+	animate(&player.a, &player.s, dt);
 }
 
 static uint32_t xorshift_seed = 0x1337;
@@ -176,10 +305,16 @@ void game_paint(unsigned __unused dt_usec)
 
 	for (int y = y1; y >= y0; y--) {
 		for (int x = x0; x <= x1; x++) {
-			if (!level.map[y][x].solid)
-				sdk_draw_tile((x + y) * TILE_SIZE, (x - y) * TILE_SIZE - TILE_SIZE,
-					      &ts_floors_32x32_png, level.map[y][x].tile_id);
+			if (level.map[y][x].solid)
+				continue;
 
+			sdk_draw_tile((x + y) * TILE_SIZE, (x - y) * TILE_SIZE - TILE_SIZE,
+				      &ts_floors_32x32_png, level.map[y][x].tile_id);
+		}
+	}
+
+	for (int y = y1; y >= y0; y--) {
+		for (int x = x0; x <= x1; x++) {
 			if (pos_y == y && pos_x == x) {
 				tft_set_origin(0, 0);
 				sdk_draw_sprite(&player.s);
