@@ -2,6 +2,13 @@
 #include <pico/stdlib.h>
 #include <sdk/image.h>
 
+struct sdk_rect {
+	int x0, x1;
+	int y0, y1;
+};
+
+typedef struct sdk_rect sdk_rect_t;
+
 struct sdk_sprite {
 	float x, y;   // Sprite coordinates
 	float ox, oy; // Origin offset
@@ -30,49 +37,96 @@ inline static void sdk_draw_sprite(const sdk_sprite_t *s)
 	sdk_draw_tile_flipped(s->x - s->ox, s->y - s->oy, s->ts, s->tile, flip_x, flip_y, swap_xy);
 }
 
-inline static bool sdk_sprite_is_opaque_xy(const sdk_sprite_t *s, int sx, int sy)
+inline static sdk_rect_t sdk_rect_intersect(sdk_rect_t a, sdk_rect_t b)
 {
-	if (sx < 0 || sx >= s->ts->width)
-		return false;
+	a.x0 = MAX(a.x0, b.x0);
+	a.x1 = MIN(a.x1, b.x1);
+	a.y0 = MAX(a.y0, b.y0);
+	a.y1 = MIN(a.y1, b.y1);
+	return a;
+}
 
-	if (sy < 0 || sy >= s->ts->height)
-		return false;
+inline static sdk_rect_t sdk_sprite_get_overlap(const sdk_sprite_t *a, const sdk_sprite_t *b)
+{
+	sdk_rect_t ra;
+	ra.x0 = a->x - a->ox;
+	ra.y0 = a->y - a->oy;
+	ra.x1 = ra.x0 + a->ts->width;
+	ra.y1 = ra.y0 + a->ts->height;
+
+	sdk_rect_t rb;
+	rb.x0 = b->x - b->ox;
+	rb.y0 = b->y - b->oy;
+	rb.x1 = rb.x0 + b->ts->width;
+	rb.y1 = rb.y0 + b->ts->height;
+
+	return sdk_rect_intersect(ra, rb);
+}
+
+inline static color_t sdk_sprite_sample_world(const sdk_sprite_t *s, int x, int y)
+{
+	bool a = s->angle & 1;
+	bool b = s->angle >> 1;
+
+	bool flip_x = s->flip_x ^ b;
+	bool flip_y = s->flip_y ^ (b ^ a);
+	bool swap_xy = s->swap_xy ^ a;
+
+	int right = s->ts->width - 1;
+	int bottom = s->ts->height - 1;
+
+	int rx = (x - s->x) + s->ox;
+	int ry = (y - s->y) + s->oy;
+
+	int sx = flip_x ? right - rx : rx;
+	int sy = flip_y ? bottom - ry : ry;
+
+	if (swap_xy) {
+		int tmp = sx;
+		sx = sy;
+		sy = tmp;
+	}
+
+	if (sx < 0 || sy < 0 || sx > right || sy > bottom) {
+		return TRANSPARENT;
+	}
 
 	const color_t *data = sdk_get_tile_data(s->ts, s->tile);
-	return data[sy * s->ts->width + sx] != TRANSPARENT;
+	return data[(y * s->ts->width) + x];
+}
+
+inline static bool sdk_sprites_collide_bbox(const sdk_sprite_t *s1, const sdk_sprite_t *s2)
+{
+	sdk_rect_t overlap = sdk_sprite_get_overlap(s1, s2);
+
+	if (overlap.x1 <= overlap.x0 || overlap.y1 <= overlap.y0)
+		return false;
+
+	return true;
 }
 
 inline static int sdk_sprites_collide(const sdk_sprite_t *s1, const sdk_sprite_t *s2)
 {
+	sdk_rect_t overlap = sdk_sprite_get_overlap(s1, s2);
+
+	if (overlap.x1 <= overlap.x0 || overlap.y1 <= overlap.y0)
+		return 0;
+
 	int points = 0;
 
-	int s1x = s1->x - s1->ox;
-	int s1y = s1->y - s1->oy;
-	int s1w = s1->ts->width;
-	int s1h = s1->ts->height;
+	for (int y = overlap.y0; y < overlap.y1; y++) {
+		for (int x = overlap.x0; x < overlap.x1; x++) {
+			color_t c1 = sdk_sprite_sample_world(s1, x, y);
 
-	int s2x = s2->x - s2->ox;
-	int s2y = s2->y - s2->oy;
-	int s2w = s2->ts->width;
-	int s2h = s2->ts->height;
+			if (TRANSPARENT == c1)
+				continue;
 
-	if (s1x + s1w <= s2x || s2x + s2w <= s1x)
-		return 0;
+			color_t c2 = sdk_sprite_sample_world(s2, x, y);
 
-	if (s1y + s1h <= s2y || s2y + s2h <= s1y)
-		return 0;
+			if (TRANSPARENT == c2)
+				continue;
 
-	for (int y = s1y; y < s1y + s1w; y++) {
-		for (int x = s1x; x < s1x + s1h; x++) {
-			int s1lx = x - s1x;
-			int s1ly = y - s1y;
-
-			int s2lx = x - s2x;
-			int s2ly = y - s2y;
-
-			if (sdk_sprite_is_opaque_xy(s1, s1lx, s1ly) &&
-			    sdk_sprite_is_opaque_xy(s2, s2lx, s2ly))
-				points++;
+			points++;
 		}
 	}
 
