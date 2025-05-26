@@ -43,7 +43,7 @@ typedef struct Animation {
 	float timeout;
 } Animation;
 
-#define TAG_BUSY 1
+#define TAG_ATTACKING 1
 #define TAG_WALKING 2
 
 static const Frame player_frames[] = {
@@ -83,27 +83,27 @@ static const Frame player_frames[] = {
 	[0x2b] = { 0x28, 7, 1, 125, TAG_WALKING },
 
 	/* Attack Up */
-	[0x30] = { 0x31, 8, 0, 50, TAG_BUSY },
-	[0x31] = { 0x32, 9, 0, 50, TAG_BUSY },
-	[0x32] = { 0x33, 10, 0, 100, TAG_BUSY },
+	[0x30] = { 0x31, 8, 0, 50, TAG_ATTACKING },
+	[0x31] = { 0x32, 9, 0, 50, TAG_ATTACKING },
+	[0x32] = { 0x33, 10, 0, 100, TAG_ATTACKING },
 	[0x33] = { 0x33, 11, 0, 100, 0 },
 
 	/* Attack Down */
-	[0x38] = { 0x39, 12, 0, 50, TAG_BUSY },
-	[0x39] = { 0x3a, 13, 0, 50, TAG_BUSY },
-	[0x3a] = { 0x3b, 14, 0, 100, TAG_BUSY },
+	[0x38] = { 0x39, 12, 0, 50, TAG_ATTACKING },
+	[0x39] = { 0x3a, 13, 0, 50, TAG_ATTACKING },
+	[0x3a] = { 0x3b, 14, 0, 100, TAG_ATTACKING },
 	[0x3b] = { 0x3b, 15, 0, 100, 0 },
 
 	/* Attack Right */
-	[0x40] = { 0x41, 16, 0, 50, TAG_BUSY },
-	[0x41] = { 0x42, 17, 0, 50, TAG_BUSY },
-	[0x42] = { 0x43, 18, 0, 100, TAG_BUSY },
+	[0x40] = { 0x41, 16, 0, 50, TAG_ATTACKING },
+	[0x41] = { 0x42, 17, 0, 50, TAG_ATTACKING },
+	[0x42] = { 0x43, 18, 0, 100, TAG_ATTACKING },
 	[0x43] = { 0x43, 19, 0, 100, 0 },
 
 	/* Attack Left */
-	[0x48] = { 0x49, 20, 0, 50, TAG_BUSY },
-	[0x49] = { 0x4a, 21, 0, 50, TAG_BUSY },
-	[0x4a] = { 0x4b, 22, 0, 100, TAG_BUSY },
+	[0x48] = { 0x49, 20, 0, 50, TAG_ATTACKING },
+	[0x49] = { 0x4a, 21, 0, 50, TAG_ATTACKING },
+	[0x4a] = { 0x4b, 22, 0, 100, TAG_ATTACKING },
 	[0x4b] = { 0x4b, 23, 0, 100, 0 },
 };
 
@@ -224,7 +224,7 @@ void game_input(unsigned dt_usec)
 		player.speed = 50.0f;
 	}
 
-	if (sdk_inputs_delta.a > 0 && !(player.a.frame->tag & TAG_BUSY)) {
+	if (sdk_inputs_delta.a > 0 && !(player.a.frame->tag & TAG_ATTACKING)) {
 		set_frame(&player.a, &player.s, player_attacks[player.o]);
 	}
 
@@ -235,21 +235,26 @@ void game_input(unsigned dt_usec)
 	float move_y = fabsf(jy) >= 0.25f ? player.speed * jy : 0;
 
 	if ((move_x || move_y)) {
-		if (player.a.frame->tag & TAG_BUSY) {
+		Orientation po = player.o;
+
+		if (fabsf(sdk_inputs.jx) > fabsf(sdk_inputs.jy)) {
+			player.o = sdk_inputs.jx < 0 ? WEST : EAST;
+		} else {
+			player.o = sdk_inputs.jy < 0 ? NORTH : SOUTH;
+		}
+
+		if (player.a.frame->tag & TAG_ATTACKING) {
 			move_and_slide(&player, move_x * dt * 0.25f, move_y * dt * 0.25f);
 		} else {
 			move_and_slide(&player, move_x * dt, move_y * dt);
+		}
 
-			Orientation po = player.o;
-
-			if (fabsf(sdk_inputs.jx) > fabsf(sdk_inputs.jy)) {
-				player.o = sdk_inputs.jx < 0 ? WEST : EAST;
-			} else {
-				player.o = sdk_inputs.jy < 0 ? NORTH : SOUTH;
-			}
-
-			if (player.o != po || !(player.a.frame->tag & TAG_WALKING))
+		if (player.o != po) {
+			if (player.a.frame->tag & TAG_ATTACKING) {
+				set_frame(&player.a, &player.s, player_attacks[player.o]);
+			} else if (!(player.a.frame->tag & TAG_WALKING)) {
 				set_frame(&player.a, &player.s, player_walk[player.o]);
+			}
 		}
 	}
 
