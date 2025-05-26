@@ -288,6 +288,17 @@ void level_generate(Level *level)
 		}
 	}
 
+	for (int y = 1; y < MAP_MAX; y++) {
+		for (int x = 1; x < MAP_MAX; x++) {
+			if (!scratch[y][x])
+				continue;
+
+			if (!xorshift_bits(MAP_SIZE_BITS)) {
+				level->map[y][x].enemy_id = 1;
+			}
+		}
+	}
+
 	level->map[level->sy][level->sx].tile_id = 4;
 	level->map[level->ey][level->ex].tile_id = 5;
 #else

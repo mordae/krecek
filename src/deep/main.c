@@ -12,6 +12,7 @@
 #include <walls-32x64.png.h>
 #include <floors-32x32.png.h>
 #include <player-32x32.png.h>
+#include <enemies-32x32.png.h>
 
 #include <cover.png.h>
 
@@ -33,6 +34,8 @@ typedef struct Frame {
 	uint32_t msec : 10; /* Milliseconds to dwell */
 	uint32_t tag : 5;   /* Arbitrary value */
 } Frame;
+
+static_assert(sizeof(Frame) == 4);
 
 typedef struct Animation {
 	const Frame *frames;
@@ -313,6 +316,9 @@ void game_paint(unsigned __unused dt_usec)
 		}
 	}
 
+	uint32_t now = time_us_32();
+	uint32_t enemy_frame = (now >> 18) & 3;
+
 	for (int y = y1; y >= y0; y--) {
 		for (int x = x0; x <= x1; x++) {
 			if (pos_y == y && pos_x == x) {
@@ -320,6 +326,12 @@ void game_paint(unsigned __unused dt_usec)
 				sdk_draw_sprite(&player.s);
 				tft_set_origin((player.x + player.y) - TFT_WIDTH / 2.0f,
 					       (player.x - player.y) - TFT_HEIGHT / 2.0f);
+			}
+
+			if (level.map[y][x].enemy_id) {
+				sdk_draw_tile((x + y) * TILE_SIZE, (x - y) * TILE_SIZE - TILE_SIZE,
+					      &ts_enemies_32x32_png,
+					      4 * (level.map[y][x].enemy_id - 1) + enemy_frame);
 			}
 
 			if (level.map[y][x].solid)

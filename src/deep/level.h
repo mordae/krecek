@@ -24,7 +24,7 @@ typedef enum TileType {
 
 typedef struct __packed Tile {
 	uint8_t tile_id;
-	uint8_t _unused1;
+	uint8_t enemy_id;
 	uint8_t _unused2;
 	bool solid : 1;
 	TileType type : 7;
