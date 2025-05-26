@@ -245,33 +245,34 @@ void level_generate(Level *level)
 		}
 	}
 
+#if 1
 	/*
 	 * Table converting 4b wall present/missing state (8462)
 	 * into central tile id to actually use.
 	 */
-	const uint8_t tile_lut[16] = {
+	const uint8_t wall_lut[16] = {
 		0x00, // 0000  ----
-		0x00, // 0001  ---2
-		0x07, // 0010  --6-
-		0x01, // 0011  --62
-		0x09, // 0100  -4--
-		0x04, // 0101  -4-2
-		0x08, // 0110  -46-
-		0x0a, // 0111  -462
-		0x0b, // 1000  8---
-		0x00, // 1001  8--2
-		0x03, // 1010  8-6-
-		0x02, // 1011  8-62
-		0x06, // 1100  84--
-		0x05, // 1101  84-2
-		0x08, // 1110  846-
-		0x0a, // 1111  8462
+		0x01, // 0001  ---2
+		0x02, // 0010  --6-
+		0x09, // 0011  --62
+		0x02, // 0100  -4--
+		0x0a, // 0101  -4-2
+		0x02, // 0110  -46-
+		0x05, // 0111  -462
+		0x01, // 1000  8---
+		0x01, // 1001  8--2
+		0x08, // 1010  8-6-
+		0x04, // 1011  8-62
+		0x0b, // 1100  84--
+		0x06, // 1101  84-2
+		0x07, // 1110  846-
+		0x03, // 1111  8462
 	};
 
 	for (int y = 0; y <= MAP_MAX; y++) {
 		for (int x = 0; x <= MAP_MAX; x++) {
 			if (scratch[y][x]) {
-				level->map[y][x].tile_id = 12 + xorshift_bits(2);
+				level->map[y][x].tile_id = 0 + xorshift_bits(2);
 				level->map[y][x].solid = 0;
 			} else {
 				int t8 = y > 0 ? !scratch[y - 1][x] : 0;
@@ -281,12 +282,23 @@ void level_generate(Level *level)
 
 				uint8_t key = (t8 << 3) | (t4 << 2) | (t6 << 1) | (t2 << 0);
 
-				level->map[y][x].tile_id = tile_lut[key];
+				level->map[y][x].tile_id = wall_lut[key];
 				level->map[y][x].solid = 1;
 			}
 		}
 	}
 
-	level->map[level->sy][level->sx].tile_id = 16;
-	level->map[level->ey][level->ex].tile_id = 17;
+	level->map[level->sy][level->sx].tile_id = 4;
+	level->map[level->ey][level->ex].tile_id = 5;
+#else
+	for (int y = 0; y < MAP_SIZE; y++) {
+		for (int x = 0; x < MAP_SIZE; x++) {
+			level->map[y][x].tile_id = scratch[y][x] ? 0 : 9;
+			level->map[y][x].solid = (0 == scratch[y][x]);
+		}
+	}
+
+	level->map[level->sy][level->sx].tile_id = 4;
+	level->map[level->ey][level->ex].tile_id = 5;
+#endif
 }

@@ -9,6 +9,8 @@
 #include "level.h"
 
 #include <tileset-16x16.png.h>
+#include <walls-32x64.png.h>
+#include <floors-32x32.png.h>
 #include <player.png.h>
 
 #include <cover.png.h>
@@ -89,27 +91,30 @@ void game_input(unsigned dt_usec)
 	float dt = dt_usec / 1000000.0f;
 
 	if (sdk_inputs.start) {
-		player.speed = 200.0f;
+		player.speed = 100.0f;
 	} else {
 		player.speed = 50.0f;
 	}
 
-	float move_x = fabsf(sdk_inputs.jx) >= 0.25f ? player.speed * sdk_inputs.jx : 0;
-	float move_y = fabsf(sdk_inputs.jy) >= 0.25f ? player.speed * sdk_inputs.jy : 0;
+	float jx = sdk_inputs.jx + sdk_inputs.jy;
+	float jy = sdk_inputs.jx - sdk_inputs.jy;
+
+	float move_x = fabsf(jx) >= 0.25f ? player.speed * jx : 0;
+	float move_y = fabsf(jy) >= 0.25f ? player.speed * jy : 0;
 
 	if (move_x || move_y) {
 		move_and_slide(&player, move_x * dt, move_y * dt);
 
 		player.s.flip_x = 0;
 
-		if (fabsf(move_x) > fabsf(move_y)) {
+		if (fabsf(sdk_inputs.jx) > fabsf(sdk_inputs.jy)) {
 			player.s.tile = 4 + fmodf(player.phase * 4, 4);
-			player.s.flip_x = (move_x < 0);
+			player.s.flip_x = (sdk_inputs.jx < 0);
 			player.phase += dt * 1.5;
-		} else if (move_y > 0) {
+		} else if (sdk_inputs.jy > 0) {
 			player.s.tile = 2 + fmodf(player.phase * 2, 2);
 			player.phase += dt * 2;
-		} else if (move_y < 0) {
+		} else if (sdk_inputs.jy < 0) {
 			player.s.tile = 0 + fmodf(player.phase * 2, 2);
 			player.phase += dt * 2;
 		} else if (player.s.tile >= 4 && player.s.tile < 8) {
@@ -161,23 +166,35 @@ void game_paint(unsigned __unused dt_usec)
 	int pos_x = player.x / TILE_SIZE;
 	int pos_y = player.y / TILE_SIZE;
 
-	float origin_x = player.x - TFT_WIDTH / 2.0f;
-	float origin_y = player.y - TFT_HEIGHT / 2.0f;
+	tft_set_origin((player.x + player.y) - TFT_WIDTH / 2.0f,
+		       (player.x - player.y) - TFT_HEIGHT / 2.0f);
 
-	tft_set_origin(origin_x, origin_y);
+	int y0 = clamp(pos_y - TFT_HEIGHT / 2 / TILE_SIZE - 2, 0, MAP_MAX);
+	int y1 = clamp(pos_y + TFT_HEIGHT / 2 / TILE_SIZE + 2, 0, MAP_MAX);
+	int x0 = clamp(pos_x - TFT_WIDTH / 2 / TILE_SIZE - 0, 0, MAP_MAX);
+	int x1 = clamp(pos_x + TFT_WIDTH / 2 / TILE_SIZE + 0, 0, MAP_MAX);
 
-	int y0 = clamp(pos_y - TFT_HEIGHT / 2 / TILE_SIZE - 1, 0, MAP_SIZE - 1);
-	int y1 = clamp(pos_y + TFT_HEIGHT / 2 / TILE_SIZE + 1, 0, MAP_SIZE - 1);
-	int x0 = clamp(pos_x - TFT_WIDTH / 2 / TILE_SIZE - 1, 0, MAP_SIZE - 1);
-	int x1 = clamp(pos_x + TFT_WIDTH / 2 / TILE_SIZE + 1, 0, MAP_SIZE - 1);
-
-	for (int y = y0; y <= y1; y++) {
+	for (int y = y1; y >= y0; y--) {
 		for (int x = x0; x <= x1; x++) {
-			sdk_draw_tile(x * TILE_SIZE, y * TILE_SIZE, &ts_tileset_16x16_png,
-				      level.map[y][x].tile_id);
+			if (!level.map[y][x].solid)
+				sdk_draw_tile((x + y) * TILE_SIZE, (x - y) * TILE_SIZE - TILE_SIZE,
+					      &ts_floors_32x32_png, level.map[y][x].tile_id);
+
+			if (pos_y == y && pos_x == x) {
+				tft_set_origin(0, 0);
+				sdk_draw_sprite(&player.s);
+				tft_set_origin((player.x + player.y) - TFT_WIDTH / 2.0f,
+					       (player.x - player.y) - TFT_HEIGHT / 2.0f);
+			}
+
+			if (level.map[y][x].solid)
+				sdk_draw_tile((x + y) * TILE_SIZE,
+					      (x - y) * TILE_SIZE - 3 * TILE_SIZE,
+					      &ts_walls_32x64_png, level.map[y][x].tile_id);
 		}
 	}
 
+#if 1
 	static int avg_range = 40 << 8;
 	int range = (46 << 8) + xorshift_bits(4 + 8);
 	avg_range += (range - avg_range) >> 3;
@@ -195,11 +212,14 @@ void game_paint(unsigned __unused dt_usec)
 			}
 		}
 	}
+#endif
 
 	tft_set_origin(0, 0);
 
-	// tft_draw_string(3, 3, rgb_to_rgb565(255, 0, 0), "%i", level.floor);
-	sdk_draw_sprite(&player.s);
+#if 0
+	tft_draw_string(0, 0, rgb_to_rgb565(127, 0, 0), "%i. %.0f,%.0f\n", level.floor, player.x,
+			player.y);
+#endif
 }
 
 int main()
