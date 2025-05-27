@@ -55,26 +55,28 @@ sdk_game_info("arnost", &image_cover_png);
  * Náhodná událost: Objeví se drone, který lítá i nahoru a dolů. Arnošt se mu musí vyhnout. Jinak přijde o obody.
  */
 
+// definice rozvržení paměti pro člověka
+
+struct human {
+	sdk_sprite_t s;
+	float dir;
+	float stop;
+};
+
+static struct human human1, human2;
+
 static sdk_sprite_t bird;
-static sdk_sprite_t human1;
-static sdk_sprite_t human2;
 static sdk_sprite_t drop;
 static sdk_sprite_t drone;
 
 // Speed of movement
 static float bird_dir = 30;
-static float human1_dir = 15;
-static float human2_dir = 5;
 static float drone_dir = 40;
 
 // Globals for drop
 static bool drop_active = false;
 static float drop_velocity = 0;
 static const float GRAVITY = 200.0f; // gravity acceleration (px/s²)
-
-// Humans stop
-static float stop_human1 = -1.0f;
-static float stop_human2 = -1.0f;
 
 static int score = 0;
 
@@ -109,29 +111,36 @@ void game_reset(void)
 	bird.tile = 0;
 	bird.y = 6;
 	bird.x = TFT_WIDTH / 2.0f - bird.ts->width / 2.0f;
-	human1.ts = &ts_people_png;
-	human1.tile = 8;
-	human1.y = 100;
-	human1.x = TFT_WIDTH / 2.0f - human1.ts->width / 2.0f;
-	human2.ts = &ts_people_png;
-	human2.tile = 4;
-	human2.y = 80;
-	human2.x = TFT_WIDTH / 2.0f - human2.ts->width / 2.0f;
+
+	human1.s.ts = &ts_people_png;
+	human1.s.tile = 8;
+	human1.s.y = 100;
+	human1.s.x = TFT_WIDTH / 2.0f - human1.s.ts->width / 2.0f;
+	human1.stop = -1;
+	human1.dir = 15;
+
+	human2.s.ts = &ts_people_png;
+	human2.s.tile = 4;
+	human2.s.y = 80;
+	human2.s.x = TFT_WIDTH / 2.0f - human2.s.ts->width / 2.0f;
+	human2.stop = -1;
+	human2.dir = 5;
+
 	drop.ts = &ts_drop_png;
 	drop.tile = 0;
 	drop.y = 4;
 	drop.x = TFT_WIDTH / 2.0f - drop.ts->width / 2.0f;
 	drop.ox = 4.0f;
 	drop.oy = 7.0f;
+
 	drone.ts = &ts_drone_png;
 	drone.tile = 0;
 	drone.y = 10;
-	drone.x = TFT_WIDTH / 2.0f - human1.ts->width / 2.0f;
+	drone.x = TFT_WIDTH / 2.0f - human1.s.ts->width / 2.0f;
+
 	melody1 = sdk_melody_play_get(music1);
 	melody2 = sdk_melody_play_get(music2);
 	melody3 = sdk_melody_play_get(music3);
-	stop_human1 = -1;
-	stop_human2 = -1;
 }
 
 // Collision of objects
@@ -210,33 +219,33 @@ void game_input(unsigned dt_usec)
 	drone.y = bird.y + 18 * sinf(drone.x * 0.05f);
 
 	// Move human by their speed, if not stopped.
-	if (stop_human1 < 0) {
-		human1.x += human1_dir * dt;
+	if (human1.stop < 0) {
+		human1.s.x += human1.dir * dt;
 	} else {
-		stop_human1 -= dt;
+		human1.stop -= dt;
 	}
 
 	// Change human direction when hitting ends of the screen.
-	if (human1.x < -20 || human1.x > TFT_RIGHT + 20 - human1.ts->width) {
-		human1_dir = -human1_dir;
-		printf("human hit wall, human_dir=%f\n", human1_dir);
+	if (human1.s.x < -20 || human1.s.x > TFT_RIGHT + 20 - human1.s.ts->width) {
+		human1.dir = -human1.dir;
+		printf("human hit wall, human_dir=%f\n", human1.dir);
 	}
-	human1.x = clamp(human1.x, -20, TFT_RIGHT + 20 - human1.ts->width);
+	human1.s.x = clamp(human1.s.x, -20, TFT_RIGHT + 20 - human1.s.ts->width);
 
 	// Move human by their speed, if not stopped.
-	if (stop_human2 < 0) {
-		human2.x += human2_dir * dt;
+	if (human2.stop < 0) {
+		human2.s.x += human2.dir * dt;
 	} else {
-		stop_human2 -= dt;
+		human2.stop -= dt;
 	}
 
 	// Change human direction when hitting ends of the screen.
-	if (human2.x < -20 || human2.x > TFT_RIGHT + 20 - human2.ts->width) {
-		human2_dir = -human2_dir;
-		printf("human hit wall, human_dir=%f\n", human2_dir);
+	if (human2.s.x < -20 || human2.s.x > TFT_RIGHT + 20 - human2.s.ts->width) {
+		human2.dir = -human2.dir;
+		printf("human hit wall, human_dir=%f\n", human2.dir);
 	}
 
-	human2.x = clamp(human2.x, -20, TFT_RIGHT + 20 - human2.ts->width);
+	human2.s.x = clamp(human2.s.x, -20, TFT_RIGHT + 20 - human2.s.ts->width);
 
 	// Make drop by push "a".
 	if (sdk_inputs_delta.a > 0 && !drop_active) {
@@ -261,23 +270,23 @@ void game_input(unsigned dt_usec)
 			drop_active = false;
 		}
 
-		if (rects_overlap(drop.x, drop.y, drop.x + 1, drop.y + 3, human1.x, 100,
-				  human1.x + 10, 112)) {
+		if (rects_overlap(drop.x, drop.y, drop.x + 1, drop.y + 3, human1.s.x, 100,
+				  human1.s.x + 10, 112)) {
 			// au, co to bylo?!
 			drop_active = false;
 			sdk_melody_play("/i:square g");
 			score += 1;
-			stop_human1 = 1.0f;
+			human1.stop = 1.0f;
 			// human1 stop for 1 second, jump 6px, running for 4 seconds
 		}
 
-		if (rects_overlap(drop.x, drop.y, drop.x + 1, drop.y + 3, human2.x, 80,
-				  human2.x + 10, 92)) {
+		if (rects_overlap(drop.x, drop.y, drop.x + 1, drop.y + 3, human2.s.x, 80,
+				  human2.s.x + 10, 92)) {
 			// au, co to bylo?!
 			drop_active = false;
 			sdk_melody_play("/i:square g");
 			score += 1;
-			stop_human2 = 1.0f;
+			human2.stop = 1.0f;
 			// human2 stop for 1 second, jump 6px, running for 4 seconds
 		}
 	}
@@ -301,22 +310,34 @@ void game_paint(unsigned __unused dt_usec)
 	sdk_draw_sprite(&bird);
 
 	// Draw sprite of human1.
-	human1.flip_x = human1_dir < 0;
-	if (stop_human1 >= 0) {
-		human1.tile = 9;
+	human1.s.flip_x = human1.dir < 0;
+	if (human1.stop >= 0) {
+		human1.s.tile = 9;
 	} else {
-		human1.tile = 8 + fmodf((4.0f * time_us_32()) / 1000000.0f, 4.0f);
+		human1.s.tile = 8 + fmodf((4.0f * time_us_32()) / 1000000.0f, 4.0f);
 	}
-	sdk_draw_sprite(&human1);
+	sdk_draw_sprite(&human1.s);
 
 	// Draw sprite of human2.
-	human2.flip_x = human2_dir < 0;
-	if (stop_human2 >= 0) {
-		human2.tile = 5;
+	human2.s.flip_x = human2.dir < 0;
+	if (human2.stop > 0) {
+		human2.s.tile = 5;
+		//}
+		//if (jump_up_human2 >= 0.5f) {
+		//    	human2.s.tile = 5;
+		//    	human2.s.y += human2.s.y - dt
+		//}
+		//if (jump_down_human2 >= 0.5f) {
+		//    	human2.s.tile = 5;
+		//    	human2.s.y += human2.s.y + dt
+		//}
+		//if (panic_human2) {
+		//human2.s.tile = 4 + fmodf((8.0f * time_us_32()) / 1000000.0f, 4.0f);
+		//
 	} else {
-		human2.tile = 4 + fmodf((4.0f * time_us_32()) / 1000000.0f, 4.0f);
+		human2.s.tile = 4 + fmodf((4.0f * time_us_32()) / 1000000.0f, 4.0f);
 	}
-	sdk_draw_sprite(&human2);
+	sdk_draw_sprite(&human2.s);
 
 	// Draw sprite of drone.
 	drone.flip_x = drone_dir < 0;
