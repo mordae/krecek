@@ -3,7 +3,6 @@
 
 #include <sdk.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <tft.h>
 
 #include "level.h"
@@ -107,14 +106,21 @@ static const Frame player_frames[] = {
 	[0x4b] = { 0x4b, 23, 0, 100, 0 },
 };
 
-static int player_walk[] = {
+static uint8_t player_idles[] = {
+	[NORTH] = 0x01,
+	[SOUTH] = 0x02,
+	[EAST] = 0x03,
+	[WEST] = 0x04,
+};
+
+static uint8_t player_walks[] = {
 	[NORTH] = 0x10,
 	[SOUTH] = 0x18,
 	[EAST] = 0x20,
 	[WEST] = 0x28,
 };
 
-static int player_attacks[] = {
+static uint8_t player_attacks[] = {
 	[NORTH] = 0x30,
 	[SOUTH] = 0x38,
 	[EAST] = 0x40,
@@ -151,7 +157,7 @@ static Character player = {
 	.s = {
 		.ts = &ts_player_32x32_png,
 		.ox = 15.5f,
-		.oy = 29.0f,
+		.oy = 22.0f,
 		.x = TFT_WIDTH / 2.0f,
 		.y = TFT_HEIGHT / 2.0f,
 	},
@@ -245,17 +251,15 @@ void game_input(unsigned dt_usec)
 
 		if (player.a.frame->tag & TAG_ATTACKING) {
 			move_and_slide(&player, move_x * dt * 0.25f, move_y * dt * 0.25f);
+			if (player.o != po)
+				set_frame(&player.a, &player.s, player_attacks[player.o]);
 		} else {
 			move_and_slide(&player, move_x * dt, move_y * dt);
+			if (player.o != po)
+				set_frame(&player.a, &player.s, player_walks[player.o]);
 		}
-
-		if (player.o != po) {
-			if (player.a.frame->tag & TAG_ATTACKING) {
-				set_frame(&player.a, &player.s, player_attacks[player.o]);
-			} else if (!(player.a.frame->tag & TAG_WALKING)) {
-				set_frame(&player.a, &player.s, player_walk[player.o]);
-			}
-		}
+	} else if (player.a.frame->tag & TAG_WALKING) {
+		set_frame(&player.a, &player.s, player_idles[player.o]);
 	}
 
 	int pos_x = player.x / TILE_SIZE;
@@ -284,16 +288,6 @@ static inline uint32_t xorshift(void)
 static inline uint32_t xorshift_bits(unsigned bits)
 {
 	return xorshift() >> (32 - bits);
-}
-
-static inline int estimate_distance(int x0, int y0, int x1, int y1)
-{
-	int x = abs(x1 - x0);
-	int y = abs(y1 - y0);
-
-	int taxicab = x + y;
-	int chebyshev = MAX(x, y);
-	return (taxicab * 7 + chebyshev * 9) >> 4;
 }
 
 void game_paint(unsigned __unused dt_usec)
@@ -351,24 +345,28 @@ void game_paint(unsigned __unused dt_usec)
 	int range = (46 << 8) + xorshift_bits(4 + 8);
 	avg_range += (range - avg_range) >> 3;
 	range = avg_range >> 8;
+	int range2 = range * range;
 
 	for (int x = 0; x < TFT_WIDTH; x++) {
 		for (int y = 0; y < TFT_HEIGHT; y++) {
-			int dist = estimate_distance(TFT_WIDTH / 2, TFT_HEIGHT / 2, x, y);
-			dist += xorshift_bits(2);
+			int dx = (TFT_WIDTH / 2 - x - 3) + xorshift_bits(3);
+			int dy = (TFT_HEIGHT / 2 - y - 3) + xorshift_bits(3);
+			int dist2 = (dx * dx) + (dy * dy);
 
-			if (dist > range) {
-				dist -= range;
-				int mag = MAX(0, 32 - ((dist * dist) >> 6));
+			if (dist2 > range2) {
+				dist2 -= range2;
+				int mag = MAX(0, 32 - (dist2 >> 8));
 				tft_input[x][y] = color_mul(tft_input[x][y], mag);
 			}
 		}
 	}
+
 #endif
 
 	tft_set_origin(0, 0);
 
 #if 0
+	tft_draw_pixel(TFT_WIDTH / 2, TFT_HEIGHT / 2, rgb_to_rgb565(255, 0, 0));
 	tft_draw_string(0, 0, rgb_to_rgb565(127, 0, 0), "%i. %.0f,%.0f\n", level.floor, player.x,
 			player.y);
 #endif
