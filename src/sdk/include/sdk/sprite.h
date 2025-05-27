@@ -92,7 +92,7 @@ inline static color_t sdk_sprite_sample_world(const sdk_sprite_t *s, int x, int 
 	}
 
 	const color_t *data = sdk_get_tile_data(s->ts, s->tile);
-	return data[(y * s->ts->width) + x];
+	return data[(sy * s->ts->width) + sx];
 }
 
 inline static bool sdk_sprites_collide_bbox(const sdk_sprite_t *s1, const sdk_sprite_t *s2)
