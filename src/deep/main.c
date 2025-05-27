@@ -307,11 +307,9 @@ void game_paint(unsigned __unused dt_usec)
 
 	for (int y = y1; y >= y0; y--) {
 		for (int x = x0; x <= x1; x++) {
-			if (level.map[y][x].solid)
-				continue;
-
 			sdk_draw_tile((x + y) * TILE_SIZE, (x - y) * TILE_SIZE - TILE_SIZE,
-				      &ts_floors_32x32_png, level.map[y][x].tile_id);
+				      &ts_floors_32x32_png,
+				      level.map[y][x].solid ? 0 : level.map[y][x].tile_id);
 		}
 	}
 
