@@ -47,19 +47,19 @@ typedef struct Animation {
 
 static const Frame player_frames[] = {
 	/* Idle */
-	[0x00] = { 0x00, 15, 0, 100, 0 },
+	[0x00] = { 0x00, 25, 0, 100, 0 },
 
 	/* Idle Up */
-	[0x01] = { 0x01, 0, 0, 100, 0 },
+	[0x01] = { 0x01, 24, 0, 100, 0 },
 
 	/* Idle Down */
-	[0x02] = { 0x02, 2, 0, 100, 0 },
+	[0x02] = { 0x02, 25, 0, 100, 0 },
 
 	/* Idle Right */
-	[0x03] = { 0x03, 5, 0, 100, 0 },
+	[0x03] = { 0x03, 26, 0, 100, 0 },
 
 	/* Idle Left */
-	[0x04] = { 0x04, 5, 1, 100, 0 },
+	[0x04] = { 0x04, 27, 0, 100, 0 },
 
 	/* Walk Up Loop */
 	[0x10] = { 0x11, 0, 0, 150, TAG_WALKING },
@@ -255,7 +255,7 @@ void game_input(unsigned dt_usec)
 				set_frame(&player.a, &player.s, player_attacks[player.o]);
 		} else {
 			move_and_slide(&player, move_x * dt, move_y * dt);
-			if (player.o != po)
+			if (player.o != po || !(player.a.frame->tag & TAG_WALKING))
 				set_frame(&player.a, &player.s, player_walks[player.o]);
 		}
 	} else if (player.a.frame->tag & TAG_WALKING) {
