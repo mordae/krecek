@@ -46,19 +46,19 @@ typedef struct Animation {
 
 static const Frame player_frames[] = {
 	/* Idle */
-	[0x00] = { 0x00, 25, 0, 100, 0 },
+	[0x00] = { 0x00, 29, 0, 100, 0 },
 
 	/* Idle Up */
-	[0x01] = { 0x01, 24, 0, 100, 0 },
+	[0x01] = { 0x01, 28, 0, 100, 0 },
 
 	/* Idle Down */
-	[0x02] = { 0x02, 25, 0, 100, 0 },
+	[0x02] = { 0x02, 29, 0, 100, 0 },
 
 	/* Idle Right */
-	[0x03] = { 0x03, 26, 0, 100, 0 },
+	[0x03] = { 0x03, 30, 0, 100, 0 },
 
 	/* Idle Left */
-	[0x04] = { 0x04, 27, 0, 100, 0 },
+	[0x04] = { 0x04, 31, 0, 100, 0 },
 
 	/* Walk Up Loop */
 	[0x10] = { 0x11, 0, 0, 150, TAG_WALKING },
@@ -75,34 +75,34 @@ static const Frame player_frames[] = {
 	[0x23] = { 0x20, 7, 0, 125, TAG_WALKING },
 
 	/* Walk Left Loop */
-	[0x28] = { 0x29, 4, 1, 125, TAG_WALKING },
-	[0x29] = { 0x2a, 5, 1, 125, TAG_WALKING },
-	[0x2a] = { 0x2b, 6, 1, 125, TAG_WALKING },
-	[0x2b] = { 0x28, 7, 1, 125, TAG_WALKING },
+	[0x28] = { 0x29, 8, 0, 125, TAG_WALKING },
+	[0x29] = { 0x2a, 9, 0, 125, TAG_WALKING },
+	[0x2a] = { 0x2b, 10, 0, 125, TAG_WALKING },
+	[0x2b] = { 0x28, 11, 0, 125, TAG_WALKING },
 
 	/* Attack Up */
-	[0x30] = { 0x31, 8, 0, 50, TAG_ATTACKING },
-	[0x31] = { 0x32, 9, 0, 50, TAG_ATTACKING },
-	[0x32] = { 0x33, 10, 0, 100, TAG_ATTACKING },
-	[0x33] = { 0x33, 11, 0, 100, 0 },
+	[0x30] = { 0x31, 12, 0, 50, TAG_ATTACKING },
+	[0x31] = { 0x32, 13, 0, 50, TAG_ATTACKING },
+	[0x32] = { 0x33, 14, 0, 50, TAG_ATTACKING },
+	[0x33] = { 0x33, 15, 0, 100, 0 },
 
 	/* Attack Down */
-	[0x38] = { 0x39, 12, 0, 50, TAG_ATTACKING },
-	[0x39] = { 0x3a, 13, 0, 50, TAG_ATTACKING },
-	[0x3a] = { 0x3b, 14, 0, 100, TAG_ATTACKING },
-	[0x3b] = { 0x3b, 15, 0, 100, 0 },
+	[0x38] = { 0x39, 16, 0, 50, TAG_ATTACKING },
+	[0x39] = { 0x3a, 17, 0, 50, TAG_ATTACKING },
+	[0x3a] = { 0x3b, 18, 0, 50, TAG_ATTACKING },
+	[0x3b] = { 0x3b, 19, 0, 100, 0 },
 
 	/* Attack Right */
-	[0x40] = { 0x41, 16, 0, 50, TAG_ATTACKING },
-	[0x41] = { 0x42, 17, 0, 50, TAG_ATTACKING },
-	[0x42] = { 0x43, 18, 0, 100, TAG_ATTACKING },
-	[0x43] = { 0x43, 19, 0, 100, 0 },
+	[0x40] = { 0x41, 20, 0, 50, TAG_ATTACKING },
+	[0x41] = { 0x42, 21, 0, 50, TAG_ATTACKING },
+	[0x42] = { 0x43, 22, 0, 50, TAG_ATTACKING },
+	[0x43] = { 0x43, 23, 0, 100, 0 },
 
 	/* Attack Left */
-	[0x48] = { 0x49, 20, 0, 50, TAG_ATTACKING },
-	[0x49] = { 0x4a, 21, 0, 50, TAG_ATTACKING },
-	[0x4a] = { 0x4b, 22, 0, 100, TAG_ATTACKING },
-	[0x4b] = { 0x4b, 23, 0, 100, 0 },
+	[0x48] = { 0x49, 24, 0, 50, TAG_ATTACKING },
+	[0x49] = { 0x4a, 25, 0, 50, TAG_ATTACKING },
+	[0x4a] = { 0x4b, 26, 0, 50, TAG_ATTACKING },
+	[0x4b] = { 0x4b, 27, 0, 100, 0 },
 };
 
 static uint8_t player_idles[] = {
