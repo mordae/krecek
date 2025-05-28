@@ -3,25 +3,26 @@
 Keymap on desktop:
 
 `L`
-:    toggle tile
+:    cycle through tiles forward
+
+`P`
+:    cycle through tiles backward
 
 `O`
 :    clear tile
 
-`k`
+`L`
 :    toggle portal destination selection mod
 
 `1` - `4`
 :    toggle collisions
 
 `5`
-:    cycle effects
+:    save tile id
 
 `6`
-:    change parameter
+:    paste tile id
+`enter`
+:    save map
 
-`0`
-:    cycle maps
-
-`Enter`
-:    Print map
+write "touch src/experiment/assets/maps/mapTHENAMEOFTHEMAP.bin" in the terminal to create an empty map
