@@ -7,7 +7,6 @@
 
 #include "level.h"
 
-#include <tileset-16x16.png.h>
 #include <walls-32x64.png.h>
 #include <floors-32x32.png.h>
 #include <player-32x32.png.h>

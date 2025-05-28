@@ -1,7 +1,7 @@
 #include "level.h"
 #include <stdlib.h>
 #include <string.h>
-#include <tileset-16x16.png.h>
+#include <sdk.h>
 
 static uint8_t scratch[MAP_SIZE][MAP_SIZE];
 
