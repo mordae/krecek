@@ -363,5 +363,5 @@ uint32_t sdk_random()
 
 void sdk_turn_off(void)
 {
-	remote_poke(SIO_BASE + SIO_GPIO_OUT_SET_OFFSET, 1u << SLAVE_OFF_PIN);
+	remote_poke(SIO_BASE + SIO_GPIO_OUT_CLR_OFFSET, 1u << SLAVE_OFF_PIN);
 }

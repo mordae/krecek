@@ -62,6 +62,7 @@ int main()
 	/* Latch power on. */
 	gpio_init(SLAVE_OFF_PIN);
 	gpio_put(SLAVE_OFF_PIN, 1);
+	gpio_set_dir(SLAVE_OFF_PIN, GPIO_OUT);
 
 	/* Avoid triggering CC1101. */
 	gpio_init(SLAVE_RF_CS_PIN);
