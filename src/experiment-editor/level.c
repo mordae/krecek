@@ -9,6 +9,7 @@
 #define GRAY rgb_to_rgb565(127, 127, 127)
 
 static int saving = -1;
+static int saved_tile_id = 0;
 
 static void level_paint(float dt, int depth)
 {
@@ -129,6 +130,10 @@ static bool level_handle(sdk_event_t event, int depth)
 		tile->tile_id = (tile->tile_id + 1) % ts_tileset_png.count;
 		return true;
 
+	case SDK_PRESSED_B:
+		tile->tile_id = (ts_tileset_png.count + tile->tile_id - 1) % ts_tileset_png.count;
+		return true;
+
 	case SDK_PRESSED_Y:
 		memset(tile, 0, sizeof(*tile));
 		return true;
@@ -151,6 +156,14 @@ static bool level_handle(sdk_event_t event, int depth)
 
 	case SDK_PRESSED_AUX4:
 		tile->collides_right ^= 1;
+		return true;
+
+	case SDK_PRESSED_AUX5:
+		saved_tile_id = tile->tile_id;
+		return true;
+
+	case SDK_PRESSED_AUX6:
+		tile->tile_id = saved_tile_id;
 		return true;
 
 	case SDK_PRESSED_SELECT:
