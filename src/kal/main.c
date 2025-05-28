@@ -5,6 +5,9 @@
 
 #include <number.png.h>
 #include <cover.png.h>
+#include <buttons.png.h>
+#include <buttonsselect.png.h>
+#include <back.png.h>
 
 sdk_game_info("kal", &image_cover_png);
 
@@ -46,16 +49,19 @@ void game_input(unsigned dt_usec)
 void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(1);
+	sdk_draw_tile(0, 0, &ts_back_png, 0);
 
 	sdk_draw_tile(5, TFT_BOTTOM - 26, &ts_number_png, position - 1);
 
-	/*
-	sdk_draw_tile(31, TFT_BOTTOM - 26, &ts_buttons_png, 0);
-	sdk_draw_tile(31 + 7 * 3, TFT_BOTTOM - 26, &ts_buttons_png, 2);
-	sdk_draw_tile(31 + 14 * 3, TFT_BOTTOM - 26, &ts_buttons_png, 4);
-	sdk_draw_tile(31 + 21 * 3, TFT_BOTTOM - 26, &ts_buttons_png, 6);
-	sdk_draw_tile(31 + 28 * 3, TFT_BOTTOM - 26, &ts_buttons_png, 8);
-	*/
+	for (int i = 35; i < 36; i++) {
+		sdk_draw_tile(i, TFT_BOTTOM - 26, &ts_buttons_png, 0);
+		sdk_draw_tile(i + 15 * 1, TFT_BOTTOM - 26, &ts_buttons_png, 1);
+		sdk_draw_tile(i + 15 * 2, TFT_BOTTOM - 26, &ts_buttons_png, 2);
+		sdk_draw_tile(i + 15 * 3, TFT_BOTTOM - 26, &ts_buttons_png, 3);
+		sdk_draw_tile(i + 15 * 4, TFT_BOTTOM - 26, &ts_buttons_png, 4);
+		sdk_draw_tile(i + 15 * 5, TFT_BOTTOM - 26, &ts_buttons_png, 5);
+		sdk_draw_tile(i + 15 * 6, TFT_BOTTOM - 26, &ts_buttons_png, 6);
+	}
 }
 
 int main()
