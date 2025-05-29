@@ -1,6 +1,5 @@
 #include "common.h"
 #include <math.h>
-#include <stdlib.h>
 
 Player g_player;
 Wall g_walls[100];    // Example: Allocate space for up to 100 walls

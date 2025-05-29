@@ -1,8 +1,6 @@
 #ifndef COLORS_H
 #define COLORS_H
 
-#include <stdint.h>
-#include "graphics.h"
 #define MY_BLUE rgb_to_rgb565(0, 0, 255)
 #define MY_RED rgb_to_rgb565(255, 0, 0)
 #define MY_YELLOW rgb_to_rgb565(255, 255, 0)

@@ -1,7 +1,6 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include <stdint.h>  // For uint16_t
 #include <stdbool.h> // For bool
 #include <math.h>    // For tanf, M_PI
 
@@ -51,11 +50,9 @@ typedef struct {
 	bool is_flying; // If player is in flying mode (no gravity)
 } Player;
 
-// --- Global Game State ---
-extern Player g_player;
-extern Wall g_walls[500]; // Max walls (adjust size as needed for your scene)
+extern Wall g_walls[500]; // Should be extern
 extern int g_num_walls;
-extern Sector g_sectors[50]; // Max sectors (adjust size as needed for your scene)
+extern Sector g_sectors[50]; // Should be extern
 extern int g_num_sectors;
 
 #endif // COMMON_H
