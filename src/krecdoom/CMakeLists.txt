@@ -1,13 +1,11 @@
-add_executable(
-  krecdoom
-  volume.c
-  maps.c
-  enemy.c
-  main.c
-  player.c
-  math_utils.c
-  graphics.c
+add_executable(krecdoom
+    main.c
+    graphics.c
+    math_utils.c
+    player.c    
+    volume.c
 )
+
 target_include_directories(krecdoom PRIVATE include)
 generate_png_headers()
 target_link_libraries(krecdoom krecek ${PNG_HEADERS_TARGET})
