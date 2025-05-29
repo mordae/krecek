@@ -5,8 +5,8 @@ add_executable(
   enemy.c
   main.c
   player.c
-  maps/map1.c
-  maps/map2.c
+  math_utils.c
+  graphics.c
 )
 target_include_directories(krecdoom PRIVATE include)
 generate_png_headers()
