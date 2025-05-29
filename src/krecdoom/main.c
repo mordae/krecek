@@ -1,4 +1,5 @@
-#include "common.h" #include "graphics.h"
+#include "common.h"
+#include "graphics.h"
 #include "volume.h"
 
 #include <pico/stdlib.h> // Pico SDK standard library
@@ -72,6 +73,7 @@ void game_input(unsigned dt_usec)
 
 void game_paint(unsigned dt_usec)
 {
+	tft_fill(0);
 	for (int i = 0; i < g_num_sectors; i++) {
 		draw_sector(i);
 	}
