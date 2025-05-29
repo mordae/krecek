@@ -2,6 +2,7 @@
 #include "graphics.h"
 #include "volume.h"
 #include "maps.h"
+#include "math_utils.h"
 #include "colors.h"
 
 #include <pico/stdlib.h> // Pico SDK standard library
