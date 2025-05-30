@@ -222,7 +222,7 @@ void init_scene_pillars(void)
 	for (int i = 0; i < num_pillar_sides; i++) {
 		float angle = (float)i * (360.0f / (float)num_pillar_sides);
 		right_pillar_base_points[i].x =
-			right_pillar_x + pillar_radius * g_cos_table[(int)angle % ANCHOR_MAX];
+			right_pillar_x + pillar_radius * g_cos_table[(int)angle % ANGLE_MAX];
 		right_pillar_base_points[i].y =
 			right_pillar_y + pillar_radius * g_sin_table[(int)angle % ANGLE_MAX];
 	}

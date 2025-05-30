@@ -1,23 +1,23 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include <stdbool.h> // For bool
-#include <math.h>    // For tanf, M_PI
+#include <stdbool.h>
+#include <math.h>
 
 #include "graphics.h"
 #include "colors.h"
 
-#define SCREEN_WIDTH 160  // Example low resolution
-#define SCREEN_HEIGHT 120 // Example low resolution
+#define SCREEN_WIDTH 160
+#define SCREEN_HEIGHT 120
 
 #define MOVE_SPEED 0.5f
 #define ROTATE_SPEED 1.5f
-#define FLY_SPEED_FACTOR 2.0f // How much faster flying is
-#define FOV_DEGREES 70.0f     // Field of View in degrees
-#define PROJECTION_SCALE (SCREEN_WIDTH / 2.0f) / tanf(FOV_DEGREES *(M_PI / 180.0f) / 2.0f)
-#define NEAR_PLANE 0.1f // Clipping plane
+#define FLY_SPEED_FACTOR 2.0f
+#define FOV_DEGREES 90.0f
+#define PROJECTION_SCALE 80
+#define NEAR_PLANE 0.1f
 
-#define ANGLE_MAX 360 // Degrees in a full circle
+#define ANGLE_MAX 360
 extern float g_cos_table[ANGLE_MAX];
 extern float g_sin_table[ANGLE_MAX];
 
@@ -49,6 +49,8 @@ typedef struct {
 	float look;	// Vertical look angle (pitch)
 	bool is_flying; // If player is in flying mode (no gravity)
 } Player;
+
+extern Player g_player;
 
 extern Wall g_walls[500]; // Should be extern
 extern int g_num_walls;

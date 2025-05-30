@@ -1,13 +1,6 @@
 #include "common.h"
 #include <math.h>
 
-Player g_player;
-int g_num_walls = 0;
-int g_num_sectors = 0;
-
-float g_sin_table[ANGLE_MAX];
-float g_cos_table[ANGLE_MAX];
-
 void init_math_tables(void)
 {
 	for (int i = 0; i < ANGLE_MAX; i++) {
@@ -17,8 +10,6 @@ void init_math_tables(void)
 	}
 }
 
-// Rotates a 2D point (x, y) around the origin (0,0) by a given angle in degrees.
-// This is used to transform world points into the player's local rotated coordinate system.
 Point2D rotate_point(Point2D p_world, float angle_degrees)
 {
 	Point2D rotated_p;
@@ -36,10 +27,6 @@ Point2D rotate_point(Point2D p_world, float angle_degrees)
 	return rotated_p;
 }
 
-// Clips a 2D line segment (p1_rot, p2_rot) that is in the player's rotated
-// coordinate system against the near plane (Y=0, or a small epsilon).
-// Points with Y <= NEAR_PLANE_Y are considered "behind" the player.
-// Returns 1 if the line is still visible after clipping, 0 if completely behind.
 int clip_line_behind_player(Point2D *p1_rot, Point2D *p2_rot)
 {
 	const float NEAR_PLANE_Y = 0.1f; // Small epsilon to avoid division by zero and artifacts
@@ -66,18 +53,12 @@ int clip_line_behind_player(Point2D *p1_rot, Point2D *p2_rot)
 	return 1; // Line is still visible after clipping (potentially modified)
 }
 
-// Projects a 3D point (relative to player, already rotated) to 2D screen coordinates.
-// p_rel_rotated: Point with (x, y, z) where y is depth, x is horizontal, z is vertical relative to player's view origin.
-// p_screen: Output 2D screen coordinates (x, y).
-// Returns 1 if point is projectable (not behind player), 0 otherwise.
 int project_point(Point3D p_rel_rotated, Point2D *p_screen)
 {
 	float depth_y =
 		p_rel_rotated
 			.y; // This is the 'depth' (distance forward) in the player's local space.
 
-	// If point is too close or behind the player, it cannot be projected correctly.
-	// This check is a final failsafe; proper line clipping (clip_line_behind_player) should handle this.
 	if (depth_y <= 0.1f)
 		return 0; // Use a small epsilon to avoid division by zero / artifacts
 

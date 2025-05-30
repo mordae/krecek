@@ -5,6 +5,7 @@ add_executable(
     math_utils.c
     player.c    
     volume.c
+    maps.c
 )
 
 target_include_directories(krecdoom PRIVATE include)
