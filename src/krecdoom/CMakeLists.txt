@@ -1,4 +1,5 @@
-add_executable(krecdoom
+add_executable(
+    krecdoom
     main.c
     graphics.c
     math_utils.c

@@ -2,8 +2,6 @@
 #include <math.h>
 
 Player g_player;
-Wall g_walls[100];    // Example: Allocate space for up to 100 walls
-Sector g_sectors[10]; // Example: Allocate space for up to 10 sectors
 int g_num_walls = 0;
 int g_num_sectors = 0;
 

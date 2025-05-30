@@ -18,6 +18,21 @@ void draw_sector(int sector_idx);
 void draw_wall(int wall_idx, float sector_floor_h, float sector_ceil_h, uint16_t floor_color,
 	       uint16_t ceil_color);
 void draw_vertical_line(int x, int y1, int y2, uint16_t color);
+Player g_player = { .x = 1.5f,
+		    .y = 1.5f,
+		    .z = 0.5f,
+		    .angle = 0.0f,
+		    .look = 0.0f,
+		    .is_flying = false };
+
+Wall g_walls[500];
+int g_num_walls = 0;
+
+Sector g_sectors[50];
+int g_num_sectors = 0;
+
+float g_cos_table[ANGLE_MAX];
+float g_sin_table[ANGLE_MAX];
 
 void game_start(void)
 {
