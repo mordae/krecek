@@ -18,7 +18,7 @@ if (TARGET SDL2::SDL2main)
   target_link_libraries(sdk PRIVATE SDL2::SDL2main)
 endif()
 
-target_link_libraries(sdk PRIVATE SDL2::SDL2 PkgConfig::SDL2_Pango PkgConfig::freetype2 ${PA_LIBRARIES} m)
+target_link_libraries(sdk PRIVATE SDL2::SDL2 ${PA_LIBRARIES} m)
 
 set_property(TARGET sdk PROPERTY C_STANDARD 23)
 target_compile_options(sdk PRIVATE -Wall -Wextra -Wnull-dereference)
@@ -28,7 +28,7 @@ if (TARGET SDL2::SDL2main)
   target_link_libraries(sdk PRIVATE SDL2::SDL2main)
 endif()
 
-target_link_libraries(sdk PRIVATE SDL2::SDL2 PkgConfig::SDL2_Pango PkgConfig::freetype2 m)
+target_link_libraries(sdk PRIVATE SDL2::SDL2 m)
 
 set_property(TARGET sdk PROPERTY C_STANDARD 23)
 target_compile_options(sdk PRIVATE -Wall -Wextra -Wnull-dereference)
