@@ -23,13 +23,35 @@
 	(RESETS_RESET_SYSINFO_BITS | RESETS_RESET_SYSCFG_BITS | RESETS_RESET_PLL_SYS_BITS | \
 	 RESETS_RESET_TIMER_BITS)
 
+void sdk_slave_resume()
+{
+	/* Output inverse of the crystal clock */
+	gpio_set_outover(CLK_OUT_PIN, GPIO_OVERRIDE_INVERT);
+	clock_gpio_init_int_frac(CLK_OUT_PIN, CLOCKS_CLK_GPOUT0_CTRL_AUXSRC_VALUE_XOSC_CLKSRC, 1,
+				 0);
+
+	sleep_us(100);
+
+	dap_init(DAP_SWDIO_PIN, DAP_SWCLK_PIN);
+	dap_reset();
+
+	dap_select_target(DAP_CORE0);
+	uint32_t idcode = dap_read_idcode();
+	dap_setup_mem((uint32_t *)&idcode);
+	dap_noop();
+
+	dap_set_delay_cycles(0);
+
+	puts("sdk: reusing slave as-is");
+}
+
 void sdk_slave_park()
 {
 	dap_init(DAP_SWDIO_PIN, DAP_SWCLK_PIN);
 
 	dap_reset();
 	dap_select_target(DAP_RESCUE);
-	unsigned idcode = dap_read_idcode();
+	uint32_t idcode = dap_read_idcode();
 
 	const unsigned CDBGPWRUPREQ = 1u << 28;
 	dap_set_reg(DAP_DP4, CDBGPWRUPREQ);
@@ -38,7 +60,7 @@ void sdk_slave_park()
 	dap_reset();
 	dap_select_target(DAP_CORE0);
 	idcode = dap_read_idcode();
-	dap_setup_mem((uint32_t *)&idcode);
+	dap_setup_mem(&idcode);
 	dap_noop();
 }
 

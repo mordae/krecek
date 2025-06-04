@@ -57,7 +57,7 @@ static bool games_handle(sdk_event_t event, int depth)
 		selected = (selected + NUM_GAMES - 1) % NUM_GAMES;
 		return true;
 
-	case SDK_PRESSED_START:
+	case SDK_PRESSED_A:
 		if (games[selected])
 			sdk_reboot_into_slot(selected);
 		return true;

@@ -42,6 +42,7 @@ void sdk_input_task(void);
 /* From slave.c */
 void sdk_slave_park(void);
 void sdk_slave_init(void);
+void sdk_slave_resume(void);
 
 /* From comms.c */
 void sdk_comms_init(void);
@@ -79,6 +80,9 @@ void __attribute__((__noreturn__, __format__(printf, 1, 2))) sdk_panic(const cha
 	exit(1);
 }
 
+#define BOOT_JUMP 0xb007
+#define BOOT_LAND 0x50f7
+
 void sdk_reboot_into_slot(unsigned slot)
 {
 	unsigned target = XIP_BASE + (0x80000 * (slot % 32) + 0x100);
@@ -101,11 +105,12 @@ void sdk_reboot_into_slot(unsigned slot)
 	}
 
 	if (pc < XIP_BASE || pc >= (XIP_BASE + 16 * 1024 * 1024)) {
-		puts("Refusing to reboot with reset handler.");
+		puts("Refusing to reboot with invalid reset handler.");
 		return;
 	}
 
-	watchdog_hw->scratch[0] = target;
+	watchdog_hw->scratch[0] = BOOT_JUMP;
+	watchdog_hw->scratch[1] = target;
 	watchdog_enable(1, true);
 
 	while (true)
@@ -114,15 +119,16 @@ void sdk_reboot_into_slot(unsigned slot)
 
 void __noreturn sdk_main(const struct sdk_config *conf)
 {
-	if (watchdog_hw->scratch[0]) {
+	if (BOOT_JUMP == watchdog_hw->scratch[0]) {
 		// If a destination firmware has been configured before reboot,
 		// we want to jump into that firmware. But clear the target,
 		// so that we don't jump repeatedly.
-		unsigned target = watchdog_hw->scratch[0];
-		watchdog_hw->scratch[0] = 0;
+		unsigned target = watchdog_hw->scratch[1];
+		watchdog_hw->scratch[0] = BOOT_LAND;
+		watchdog_hw->scratch[1] = 0;
 
-		// Our games / partitions are arranged into 1 MiB slots.
-		unsigned end = target | 0x000fffff; // 1 MiB
+		// Our games / partitions are arranged into 512 KiB slots.
+		unsigned end = target | 0x0007ffff; // 512 KiB
 		unsigned self = (unsigned)sdk_main;
 
 		// If we are to jump to ourselves, we are done.
@@ -170,15 +176,26 @@ target_reached:
 	gpio_init(CHG_ISET2_PIN);
 	gpio_set_pulls(CHG_ISET2_PIN, 0, 0);
 
-	uint32_t t0 = time_us_32();
+	uint32_t t1, t0 = time_us_32();
 
-	/* Park the slave chip. */
-	sdk_slave_park();
+	if (BOOT_LAND == watchdog_hw->scratch[0]) {
+		/*
+		 * Resume communication with slave.
+		 *
+		 * This way we don't turn outselves off by letting go of the
+		 * SLAVE_OFF_PIN and RP2040 pulling it down via boot default.
+		 */
+		sdk_slave_resume();
+		t1 = t0;
+	} else {
+		/* Park the slave chip. */
+		sdk_slave_park();
 
-	/* Initialize it, because that also latches our power. */
-	sdk_slave_init();
+		/* Initialize it, because that also latches our power. */
+		sdk_slave_init();
 
-	uint32_t t1 = time_us_32();
+		t1 = time_us_32();
+	}
 
 	/* Park ICs connected to this chip over SPI. */
 	gpio_init(TFT_CS_PIN);
@@ -227,7 +244,11 @@ target_reached:
 	puts("\n---- boot ----");
 	puts("sdk: Hello, welcome to Krecek!");
 
-	printf("sdk: slave programmed in %u μs\n", (unsigned)(t1 - t0));
+	if (t1 - t0) {
+		printf("sdk: slave programmed in %u μs\n", (unsigned)(t1 - t0));
+	} else {
+		printf("sdk: slave reused\n");
+	}
 
 	/*
 	 * Seed random number generator from ADC inputs, including
