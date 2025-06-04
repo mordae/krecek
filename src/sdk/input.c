@@ -115,7 +115,6 @@ void sdk_input_task(void)
 	static int temp_hist[16], temp_idx = 0, temp_avg = 0;
 	static int cc1_hist[16], cc1_idx = 0, cc1_avg = 0;
 	static int cc2_hist[16], cc2_idx = 0, cc2_avg = 0;
-	static int hps_hist[16], hps_idx = 0, hps_avg = 0;
 
 	uint32_t now = time_us_32();
 	uint32_t last_event = now - 1;
@@ -241,11 +240,7 @@ void sdk_input_task(void)
 		/* Read headphone sense. */
 		adc_select_input(HP_SENSE_PIN - 26);
 		int hps = adc_repeated_read(16);
-		hps_avg -= hps_hist[hps_idx];
-		hps_avg += hps;
-		hps_hist[hps_idx] = hps;
-		hps_idx = (hps_idx + 1) & 15;
-		float hps_mv = hps_avg * (3300.0f / (4095 * 256.0f));
+		float hps_mv = hps * (3300.0f / (4095 * 16.0f));
 
 		sdk_inputs.hps_mv = hps_mv;
 		sdk_inputs.hps = hps_mv < 1900.0f;
