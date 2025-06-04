@@ -1,11 +1,7 @@
 add_executable(
     krecdoom
     main.c
-    graphics.c
-    math_utils.c
-    player.c    
     volume.c
-    maps.c
 )
 
 target_include_directories(krecdoom PRIVATE include)
