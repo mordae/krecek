@@ -2,6 +2,7 @@ add_executable(
     krecdoom
     main.c
     volume.c
+    maps/map1.c
 )
 
 target_include_directories(krecdoom PRIVATE include)
