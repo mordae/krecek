@@ -16,10 +16,12 @@ void game_handle_audio(float dt, float volume)
 	}
 
 	if (sdk_inputs_delta.vol_sw > 0) {
-		if (volume < SDK_GAIN_MIN) {
-			volume = 0;
-		} else {
-			volume = SDK_GAIN_MIN - 1;
+		if (!sdk_inputs.start) {
+			if (volume < SDK_GAIN_MIN) {
+				volume = 0;
+			} else {
+				volume = SDK_GAIN_MIN - 1;
+			}
 		}
 	}
 
