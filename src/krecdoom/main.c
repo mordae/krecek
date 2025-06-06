@@ -1,3 +1,4 @@
+#include "help.h"
 #include "common.h"
 #include "volume.h"
 #include <pico/stdlib.h>
@@ -61,15 +62,21 @@ typedef struct {
 } MMap;
 static MMap mmap;
 
+static Enemy enemies[MAX_ENEMIES];
+
 float volume = 0.5f;
 
 bool isWall(int Tile_x, int Tile_y);
 void drawMenuMap();
 void shootBullet(float start_angle, float max_range_tiles, int visual_size, uint16_t visual_color);
+void drawEnemies();
+void handleEnemyAI(float dt);
+void handleShooting();
+void checkPlayerStatus();
 
 extern const TileType maps_map1[MAP_ROWS][MAP_COLS];
+extern const TileType maps_map2[MAP_ROWS][MAP_COLS];
 TileType (*currentMap)[MAP_COLS] = maps_map1;
-
 void renderGame()
 {
 	// Raycaster Engine LOL
@@ -154,6 +161,9 @@ void renderGame()
 		if (perpWallDist == 0.0f)
 			perpWallDist = 0.001f;
 
+		// Store the calculated wall distance in the Z-buffer ---
+		zBuffer[x] = perpWallDist;
+
 		// How tall slice
 		float wallHeight = (TILE_SIZE * PROJECTION_PLANE_DISTANCE / perpWallDist);
 
@@ -190,7 +200,6 @@ void renderGame()
 		}
 	}
 }
-
 void drawMinimap_Debug()
 {
 	//THE GREATEST IDEA
@@ -272,6 +281,31 @@ void drawMinimap_Debug()
 		for (int py = 0; py < PLAYER_DOT_SIZE; py++) {
 			for (int px = 0; px < PLAYER_DOT_SIZE; px++) {
 				tft_draw_pixel(mmap.p_x + px, mmap.p_y + py, COLOR_MINIMAP_PLAYER);
+			}
+		}
+	}
+	for (int i = 0; i < MAX_ENEMIES; i++) {
+		if (enemies[i].alive) {
+			// enemy relative to the minimap
+			float enemy_relative_x = enemies[i].x / TILE_SIZE - mmap.window_start_x;
+			float enemy_relative_y = enemies[i].y / TILE_SIZE - mmap.window_start_y;
+
+			// Convert relative position to pixel coordinates on the minimap
+			int enemy_p_x = mmap.start_x + (int)(enemy_relative_x * MINIMAP_TILE_SIZE -
+							     (PLAYER_DOT_SIZE / 2.0f));
+			int enemy_p_y = mmap.start_y + (int)(enemy_relative_y * MINIMAP_TILE_SIZE -
+							     (PLAYER_DOT_SIZE / 2.0f));
+
+			// Check if enemy dot is within the minimap visible bounds
+			if (enemy_p_x >= mmap.start_x &&
+			    enemy_p_x + PLAYER_DOT_SIZE <= mmap.start_x + MINIMAP_WIDTH &&
+			    enemy_p_y >= mmap.start_y &&
+			    enemy_p_y + PLAYER_DOT_SIZE <= mmap.start_y + MINIMAP_HEIGHT) {
+				for (int py = 0; py < PLAYER_DOT_SIZE; py++) {
+					for (int px = 0; px < PLAYER_DOT_SIZE; px++) {
+						tft_draw_pixel(enemy_p_x + px, enemy_p_y + py, RED);
+					}
+				}
 			}
 		}
 	}
@@ -443,7 +477,7 @@ void player_view_draw()
 	tft_draw_string(105, 105, DRAW_RED, "%-i", player.ammo);
 
 	// boundaries
-	if (player.gun > N_GUNS)
+	if (player.gun >= N_GUNS)
 		player.gun = 0;
 
 	switch (gun_select[player.gun]) {
@@ -477,6 +511,7 @@ void player_view_draw()
 		}
 	}
 }
+
 void shootBullet(float current_shoot_angle, float max_range_tiles, int visual_size,
 		 uint16_t visual_color)
 {
@@ -488,90 +523,142 @@ void shootBullet(float current_shoot_angle, float max_range_tiles, int visual_si
 
 	float max_dist = max_range_tiles * TILE_SIZE; // Max range in world units
 
-	for (float dist = 0; dist < max_dist; dist += TILE_SIZE / 4.0f) { // Step through the ray
+	int damage_to_deal = 0;
+	if (player.gun == PISTOL) {
+		damage_to_deal = PISTOL_DAMAGE;
+	} else if (player.gun == SHOTGUN) {
+		damage_to_deal = SHOTGUN_DAMAGE;
+	}
+
+	for (float dist = 0; dist < max_dist; dist += TILE_SIZE / 4.0f) {
+		// Update current ray position
+		rayX = player.x + rayDirX * dist;
+		rayY = player.y + rayDirY * dist;
+
+		// wall hit
 		int current_tile_x = (int)(rayX / TILE_SIZE);
 		int current_tile_y = (int)(rayY / TILE_SIZE);
 
 		if (isWall(current_tile_x, current_tile_y)) {
-			float perpWallDist = dist;
+			float perpWallDist = dist; // distance
 			if (perpWallDist == 0.0f)
-				perpWallDist = 0.001f;
+				perpWallDist = 0.001f; // /0
 
-			float wallHeight = (TILE_SIZE * PROJECTION_PLANE_DISTANCE / perpWallDist);
-			int drawStart = (int)((SCREEN_HEIGHT / 2.0f) - (wallHeight / 2.0f));
-			int drawEnd = (int)((SCREEN_HEIGHT / 2.0f) + (wallHeight / 2.0f));
-
-			// angle center view
+			// screen position for wall hit visualization
 			float relativeAngle = current_shoot_angle - player.angle;
-			// What the PI
+			// Normalize angle
 			if (relativeAngle > M_PI)
 				relativeAngle -= 2 * M_PI;
 			if (relativeAngle < -M_PI)
 				relativeAngle += 2 * M_PI;
 
-			// Calculate screen x
 			int screen_x = (int)(SCREEN_WIDTH / 2.0f +
 					     PROJECTION_PLANE_DISTANCE * tanf(relativeAngle));
+			float wallHeight = (TILE_SIZE * PROJECTION_PLANE_DISTANCE / perpWallDist);
+			int drawStart = (int)((SCREEN_HEIGHT / 2.0f) - (wallHeight / 2.0f));
+			int drawEnd = (int)((SCREEN_HEIGHT / 2.0f) + (wallHeight / 2.0f));
 
-			// boundaries
-			if (screen_x < 0)
-				screen_x = 0;
-			if (screen_x >= SCREEN_WIDTH)
-				screen_x = SCREEN_WIDTH - 1;
-
-			// Store hit
+			// Store
 			bullet.hit_visible = true;
 			bullet.hit_timer_start = time_us_64();
 			bullet.hit_screen_x = screen_x;
-			bullet.hit_screen_y = (drawStart + drawEnd) / 2; // center wall slice
+			bullet.hit_screen_y = (drawStart + drawEnd) / 2;
 			bullet.hit_size = visual_size;
 			bullet.hit_color = visual_color;
 
 			if (mode.debug)
-				printf("Bullet hit wall at tile (%d, %d), dist %.2f\n",
-				       current_tile_x, current_tile_y, dist / TILE_SIZE);
+				printf("Bullet hit wall (%d, %d), dist %.2f\n", current_tile_x,
+				       current_tile_y, dist / TILE_SIZE);
 
-			//  logic here for enemys
-			return; // Bullet hit stop
+			return;
 		}
 
-		// Move ray
-		rayX += rayDirX * (TILE_SIZE / 4.0f);
-		rayY += rayDirY * (TILE_SIZE / 4.0f);
+		// enemy hit
+		float enemy_collision_radius = TILE_SIZE * 0.4f;
+
+		for (int j = 0; j < MAX_ENEMIES; j++) {
+			if (enemies[j].alive) {
+				float enemy_dist_x = rayX - enemies[j].x;
+				float enemy_dist_y = rayY - enemies[j].y;
+				float dist_to_enemy_center = sqrtf(enemy_dist_x * enemy_dist_x +
+								   enemy_dist_y * enemy_dist_y);
+
+				if (dist_to_enemy_center < enemy_collision_radius) {
+					// Bullet hit
+					enemies[j].health -= damage_to_deal; // Apply damage
+					if (enemies[j].health <= 0) {
+						enemies[j].alive = false; // Enemy is dead
+						enemies[j].health =
+							0; // Ensure health doesn't go negative
+						player.score += 100; // Award score for kill
+					}
+
+					bullet.hit_visible = true;
+					bullet.hit_timer_start = time_us_64();
+
+					// position of the exact hit point
+					float hit_relX = rayX - player.x;
+					float hit_relY = rayY - player.y;
+					float hit_angle = atan2f(hit_relY, hit_relX);
+					float hit_angle_diff = hit_angle - player.angle;
+					// Normalize angle
+					if (hit_angle_diff > M_PI)
+						hit_angle_diff -= 2 * M_PI;
+					if (hit_angle_diff < -M_PI)
+						hit_angle_diff += 2 * M_PI;
+
+					float hit_dist_from_player = dist; // Use the ray distance
+					if (hit_dist_from_player == 0.0f)
+						hit_dist_from_player = 0.001f;
+
+					// Calculate screen X for the hit
+					bullet.hit_screen_x = (int)(SCREEN_WIDTH / 2.0f +
+								    PROJECTION_PLANE_DISTANCE *
+									    tanf(hit_angle_diff));
+
+					float hit_projected_height =
+						(TILE_SIZE * PROJECTION_PLANE_DISTANCE /
+						 hit_dist_from_player);
+					bullet.hit_screen_y = (int)((SCREEN_HEIGHT / 2.0f));
+					bullet.hit_size = visual_size;
+					bullet.hit_color = (enemies[j].alive) ? GREEN : RED;
+
+					if (mode.debug)
+						printf("Bullet hit %d at (%.2f, %.2f), health now %d\n",
+						       j, enemies[j].x, enemies[j].y,
+						       enemies[j].health);
+
+					return; // Bullet hit an enemy, stop
+				}
+			}
+		}
 	}
 }
-
 void handleShooting()
 {
 	if (sdk_inputs_delta.a == 1) {
 		if (player.ammo > 0) {
-			player.ammo--; // ammo
+			float shoot_angle = player.angle;
+			int visual_size = 10;		// Size of the hit marker
+			uint16_t visual_color = YELLOW; // Color of wall hit
 
-			switch (gun_select[player.gun]) {
-			case PISTOL:
-				// Pistol Single, accurate shot, long range
-				shootBullet(player.angle, PISTOL_RANGE_TILES, 2, YELLOW);
-				break;
-			case SHOTGUN: {
-				// Shotgun Multiple pellets, spread, short range, bigger visual
-				float spread_radians =
-					SHOTGUN_SPREAD_DEGREES * (float)M_PI / 180.0f;
-				for (int i = 0; i < SHOTGUN_PELLETS; i++) {
-					// random offset
-					float spread_offset =
-						((float)rand() / RAND_MAX * spread_radians) -
-						(spread_radians / 2.0f);
-					shootBullet(player.angle + spread_offset,
-						    SHOTGUN_RANGE_TILES, 5, RED);
-				}
-				break;
+			float current_gun_range = 0.0f;
+
+			if (player.gun == PISTOL) {
+				current_gun_range = PISTOL_MAX_RANGE_TILES;
+			} else if (player.gun == SHOTGUN) {
+				current_gun_range = SHOTGUN_MAX_RANGE_TILES;
+			} else {
+				current_gun_range = PISTOL_MAX_RANGE_TILES;
 			}
-			case BROKE:
-				printf("Gun is broken or no ammo!\n");
-				break;
-			}
+
+			shootBullet(shoot_angle, current_gun_range, visual_size, visual_color);
+			player.ammo--; // Decrease ammo after shooting
 		} else {
-			printf("Out of ammo!\n");
+			// "click" sound
+			if (mode.debug) {
+				printf("Out of ammo!\n");
+			}
 		}
 	}
 }
@@ -595,6 +682,20 @@ void game_start(void)
 
 	mode.debug = false;
 	mode.map = false;
+
+	enemies[0].x = TILE_SIZE * 14.0f;
+	enemies[0].y = TILE_SIZE * 14.0f;
+	enemies[0].health = 100;
+	enemies[0].alive = true;
+	enemies[0].state = ENEMY_IDLE;
+	enemies[0].last_attack_time = 0;
+
+	enemies[1].x = TILE_SIZE * 15.0f;
+	enemies[1].y = TILE_SIZE * 15.0f;
+	enemies[1].health = 100;
+	enemies[1].alive = true;
+	enemies[1].state = ENEMY_IDLE;
+	enemies[1].last_attack_time = 0;
 }
 
 void game_input(unsigned dt_usec)
@@ -606,6 +707,12 @@ void game_input(unsigned dt_usec)
 			mode.debug = false;
 		} else
 			mode.debug = true;
+	}
+	if (sdk_inputs_delta.x == 1 && sdk_inputs.start) {
+		if (currentMap == maps_map1) {
+			currentMap = maps_map2;
+		} else
+			currentMap = maps_map1;
 	}
 	if (sdk_inputs_delta.b == 1 && sdk_inputs.start) {
 		player.gun += 1;
@@ -621,27 +728,206 @@ void game_input(unsigned dt_usec)
 	} else if (sdk_inputs.joy_x < -500 || sdk_inputs.x) {
 		player.angle -= ROTATE_SPEED * dt;
 	}
-
+	if (player.gun > N_GUNS)
+		player.gun = 0;
 	handleShooting();
 
 	game_handle_audio(dt, volume);
 	handlePlayerMovement(dt);
+	handleEnemyAI(dt);
+	if (player.health == 0) {
+		game_start();
+	}
 }
+void handleEnemyAI(float dt)
+{
+	for (int i = 0; i < MAX_ENEMIES; i++) {
+		if (enemies[i].alive && player.alive) { // Enemy only acts if both are alive
+			float dx = player.x - enemies[i].x;
+			float dy = player.y - enemies[i].y;
+			float dist_to_player = sqrtf(dx * dx + dy * dy);
+
+			// Update enemy state based on vision range
+			if (dist_to_player < ENEMY_VISION_RANGE_TILES * TILE_SIZE) {
+				enemies[i].state = ENEMY_CHASING;
+			} else {
+				enemies[i].state = ENEMY_IDLE;
+			}
+
+			if (enemies[i].state == ENEMY_CHASING) {
+				// --- Enemy Movement (Chasing) ---
+				float angleToPlayer = atan2f(dy, dx); // Angle from enemy to player
+
+				float move_amount = ENEMY_MOVE_SPEED * dt;
+
+				float desired_dx = cosf(angleToPlayer) * move_amount;
+				float desired_dy = sinf(angleToPlayer) * move_amount;
+
+				float next_enemy_x = enemies[i].x + desired_dx;
+				float next_enemy_y = enemies[i].y + desired_dy;
+
+				// Simple collision handling for enemy movement
+				int current_enemy_tile_x = (int)(enemies[i].x / TILE_SIZE);
+				int current_enemy_tile_y = (int)(enemies[i].y / TILE_SIZE);
+
+				int next_tile_x_full_move = (int)(next_enemy_x / TILE_SIZE);
+				int next_tile_y_full_move = (int)(next_enemy_y / TILE_SIZE);
+
+				if (!isWall(next_tile_x_full_move, next_tile_y_full_move)) {
+					enemies[i].x = next_enemy_x;
+					enemies[i].y = next_enemy_y;
+				} else {
+					if (!isWall((int)(next_enemy_x / TILE_SIZE),
+						    current_enemy_tile_y)) {
+						enemies[i].x = next_enemy_x;
+					}
+					if (!isWall(current_enemy_tile_x,
+						    (int)(next_enemy_y / TILE_SIZE))) {
+						enemies[i].y = next_enemy_y;
+					}
+				}
+
+				// --- Enemy Attack Logic ---
+				uint32_t current_time = dt * 200000.0f;
+				if (dist_to_player < ENEMY_ATTACK_RANGE_TILES * TILE_SIZE &&
+				    (current_time - enemies[i].last_attack_time >
+				     ENEMY_ATTACK_COOLDOWN_MS)) {
+					// Line of Sight Check: Ray from enemy to player
+					float LOS_dx = player.x - enemies[i].x;
+					float LOS_dy = player.y - enemies[i].y;
+					float LOS_dist_to_player =
+						sqrtf(LOS_dx * LOS_dx + LOS_dy * LOS_dy);
+
+					// Normalize direction vector (avoid division by zero if player is on top of enemy)
+					float LOS_rayDirX = (LOS_dist_to_player == 0.0f) ?
+								    0 :
+								    LOS_dx / LOS_dist_to_player;
+					float LOS_rayDirY = (LOS_dist_to_player == 0.0f) ?
+								    0 :
+								    LOS_dy / LOS_dist_to_player;
+
+					bool line_of_sight_clear = true;
+					// Step along the ray from enemy towards player
+					// Start slightly away from enemy, end slightly before player to avoid self/player tile collisions
+					for (float step_dist = TILE_SIZE * 0.1f;
+					     step_dist < LOS_dist_to_player - TILE_SIZE * 0.1f;
+					     step_dist += TILE_SIZE * 0.5f) { // Step by half a tile
+						float check_x =
+							enemies[i].x + LOS_rayDirX * step_dist;
+						float check_y =
+							enemies[i].y + LOS_rayDirY * step_dist;
+
+						if (isWall((int)(check_x / TILE_SIZE),
+							   (int)(check_y / TILE_SIZE))) {
+							line_of_sight_clear = false;
+							break; // Wall in the way, no line of sight
+						}
+					}
+
+					if (line_of_sight_clear) {
+						// Player is in range and line of sight is clear, attack!
+						player.health -= ENEMY_DAMAGE;
+						enemies[i].last_attack_time =
+							current_time; // Reset cooldown
+
+						if (mode.debug) {
+							printf("Enemy attacked player! Player health: %d\n",
+							       player.health);
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 void debug(void)
 {
 	drawMinimap_Debug();
 	tft_draw_string(5, 0, WHITE, "X %-.2f Y %-.2f", player.x, player.y);
 	tft_draw_string(5, 10, WHITE, "Angle %-.2f", player.angle);
+	if (enemies[0].alive == true)
+		tft_draw_string(5, 75, WHITE, "Enemy State: %s",
+				enemies[0].state == ENEMY_IDLE ? "IDLE" : "CHASING");
 
 	tft_draw_string(5, 85, WHITE, "Score %-i", player.score);
 	tft_draw_string(5, 95, WHITE, "Health %i", player.health);
 	tft_draw_string(5, 105, WHITE, "Ammo %-i", player.ammo);
 }
+void drawEnemies()
+{
+	for (int i = 0; i < MAX_ENEMIES; i++) {
+		if (enemies[i].alive) {
+			// Calculate relative position of enemy to player
+			float relX = enemies[i].x - player.x;
+			float relY = enemies[i].y - player.y;
+
+			float distToEnemy = sqrtf(relX * relX + relY * relY);
+
+			if (relX * cosf(player.angle) + relY * sinf(player.angle) < 0.1f ||
+			    distToEnemy < 0.1f) {
+				continue;
+			}
+
+			// Calculate angle from player view to enemy
+			float angleToEnemy = atan2f(relY, relX);
+			float angleDiff = angleToEnemy - player.angle;
+
+			// Normalize angleDiff to be between -PI and PI
+			if (angleDiff > M_PI) {
+				angleDiff -= 2 * M_PI;
+			}
+			if (angleDiff < -M_PI) {
+				angleDiff += 2 * M_PI;
+			}
+
+			// Check if enemy is within FOV
+			if (fabsf(angleDiff) < FOV_RADIANS / 2.0f) {
+				// screen X position for the center of the enemy sprite
+				int screen_x = (int)(SCREEN_WIDTH / 2.0f +
+						     PROJECTION_PLANE_DISTANCE * tanf(angleDiff));
+
+				float projectedSize =
+					(TILE_SIZE * PROJECTION_PLANE_DISTANCE / distToEnemy);
+				int enemy_draw_size = (int)projectedSize;
+
+				// Clamp min and max
+				if (enemy_draw_size < 1)
+					enemy_draw_size = 1;
+				if (enemy_draw_size > SCREEN_HEIGHT * 2)
+					enemy_draw_size = SCREEN_HEIGHT * 2; //cap
+
+				// top-left corner
+				int draw_x_start = screen_x - enemy_draw_size / 2;
+				int draw_y_start =
+					(int)((SCREEN_HEIGHT / 2.0f) - (enemy_draw_size / 2.0f));
+
+				// Clamp bounds to screen
+				int x_loop_start = MAX(0, draw_x_start);
+				int x_loop_end = MIN(SCREEN_WIDTH, draw_x_start + enemy_draw_size);
+				int y_loop_start = MAX(0, draw_y_start);
+				int y_loop_end = MIN(SCREEN_HEIGHT, draw_y_start + enemy_draw_size);
+
+				// Draw the green square
+				for (int y_pixel = y_loop_start; y_pixel < y_loop_end; y_pixel++) {
+					for (int x_pixel = x_loop_start; x_pixel < x_loop_end;
+					     x_pixel++) {
+						if (distToEnemy < zBuffer[x_pixel]) {
+							tft_draw_pixel(x_pixel, y_pixel, GREEN);
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 void game_paint(unsigned dt_usec)
 {
 	(void)dt_usec;
 	tft_fill(0);
 	renderGame();
+	drawEnemies();
 	player_view_draw();
 	if (mode.debug) {
 		debug();

@@ -3,6 +3,7 @@ add_executable(
   ../../src/krecdoom/main.c
   ../../src/krecdoom/volume.c
   ../../src/krecdoom/maps/map1.c
+  ../../src/krecdoom/maps/map2.c
 
 )
 

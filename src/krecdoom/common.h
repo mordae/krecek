@@ -1,4 +1,5 @@
 #ifndef COMMON_H
+#include <stdint.h>
 #define COMMON_H
 #define SCREEN_WIDTH 160
 #define SCREEN_HEIGHT 120
@@ -24,13 +25,33 @@
 #define MENU_MAP_HEIGHT 80
 #define MENU_MAP_PADDING 20
 
+#define PISTOL_DAMAGE 25
+#define SHOTGUN_DAMAGE 40
 #define N_GUNS 3
-#define PISTOL_RANGE_TILES 15.0f
-#define SHOTGUN_RANGE_TILES 5.0f
+
+#define PISTOL_MAX_RANGE_TILES 15.0f
+#define SHOTGUN_MAX_RANGE_TILES 5.0f
 #define BULLET_VISUAL_DURATION_MS 100
 #define SHOTGUN_SPREAD_DEGREES 10.0f
 #define SHOTGUN_PELLETS 5
 
+static float zBuffer[SCREEN_WIDTH];
+
+#define ENEMY_ATTACK_RANGE_TILES 8.0f
+#define ENEMY_ATTACK_COOLDOWN_MS 1000
+#define ENEMY_DAMAGE 10
+#define ENEMY_VISION_RANGE_TILES 8.0f
+#define ENEMY_MOVE_SPEED 50.0f
+#define MAX_ENEMIES 2
+typedef enum { ENEMY_IDLE, ENEMY_CHASING } EnemyState;
+
+typedef struct {
+	float x, y;
+	int health;
+	bool alive;
+	uint32_t last_attack_time;
+	EnemyState state;
+} Enemy;
 #define multiply332(x, f) \
 	rgb_to_rgb332(rgb332_red((x)) * f, rgb332_green((x)) * f, rgb332_blue((x)) * f)
 
