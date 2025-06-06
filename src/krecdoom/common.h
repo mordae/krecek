@@ -6,7 +6,7 @@
 #define FOV_RADIANS (FOV_DEGREES * (float)M_PI / 180.0f)
 #define TILE_SIZE 64.0f
 #define PROJECTION_PLANE_DISTANCE ((SCREEN_WIDTH / 2.0f) / tanf(FOV_RADIANS / 2.0f))
-#define MOVE_SPEED 50.0f
+#define MOVE_SPEED 75.0f
 #define ROTATE_SPEED 3.0f
 
 #define MAP_ROWS 24
@@ -23,6 +23,8 @@
 #define MENU_MAP_WIDTH 80
 #define MENU_MAP_HEIGHT 80
 #define MENU_MAP_PADDING 20
+
+#define N_GUNS 3
 
 #define multiply332(x, f) \
 	rgb_to_rgb332(rgb332_red((x)) * f, rgb332_green((x)) * f, rgb332_blue((x)) * f)

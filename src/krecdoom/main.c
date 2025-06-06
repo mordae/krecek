@@ -8,10 +8,19 @@
 #include <tft.h>
 
 #include <overline.png.h>
+#include <pistol.png.h>
+#include <shotgun.png.h>
 
-//movement joystick + b and x
-//Debug_mode start+a
-//Map start+B
+// Movement joystick + b and x
+// Debug_mode start+a
+// Chenage Gun start+b
+// Map select
+typedef enum {
+	BROKE = 0,
+	PISTOL = 1,
+	SHOTGUN,
+} Gun;
+Gun gun_select[N_GUNS] = { 0, 1, 2 };
 
 typedef struct {
 	float x, y;
@@ -20,6 +29,7 @@ typedef struct {
 	int score;
 	int health;
 	int ammo;
+	int gun;
 	bool alive;
 } Player;
 static Player player;
@@ -45,7 +55,7 @@ static MMap mmap;
 float volume = 0.5f;
 
 bool isWall(int Tile_x, int Tile_y);
-void drawMenuMap(void);
+void drawMenuMap();
 extern const TileType maps_map1[MAP_ROWS][MAP_COLS];
 TileType (*currentMap)[MAP_COLS] = maps_map1;
 
@@ -167,12 +177,6 @@ void renderGame()
 		for (int y = drawEnd + 1; y < SCREEN_HEIGHT; y++) {
 			tft_draw_pixel(x, y, COLOR_FLOOR);
 		}
-	}
-	if (mode.debug == false) {
-		sdk_draw_tile(0, 0, &ts_overline_png, 1);
-		tft_draw_string(22, 105, DRAW_RED, "%-i", player.score);
-		tft_draw_string(70, 105, DRAW_RED, "%-i", player.health);
-		tft_draw_string(105, 105, DRAW_RED, "%-i", player.ammo);
 	}
 }
 
@@ -332,7 +336,7 @@ void drawMinimap_Debug()
 }
 
 // Map timeeeeeeeeeeee
-void drawMenuMap(void)
+void drawMenuMap()
 {
 	// center screen
 	int map_start_x = (SCREEN_WIDTH - MENU_MAP_WIDTH) / 2;
@@ -389,110 +393,57 @@ bool isWall(int Tile_x, int Tile_y)
 	return currentMap[Tile_y][Tile_x] == WALL;
 }
 
-// This made deepseek I want to rewrite it latter
 void handlePlayerMovement(float dt)
 {
-	float prevPlayerX = player.x;
-	float prevPlayerY = player.y;
-
-	float deltaMoveX = 0;
-	float deltaMoveY = 0;
+	float player_dx = 0;
+	float player_dy = 0;
 
 	if (sdk_inputs.joy_y > 500) {
-		deltaMoveX = -MOVE_SPEED * dt * cosf(player.angle);
-		deltaMoveY = -MOVE_SPEED * dt * sinf(player.angle);
+		player_dx -= cosf(player.angle) * MOVE_SPEED * dt;
+		player_dy -= sinf(player.angle) * MOVE_SPEED * dt;
 	} else if (sdk_inputs.joy_y < -500) {
-		deltaMoveX = +MOVE_SPEED * dt * cosf(player.angle);
-		deltaMoveY = +MOVE_SPEED * dt * sinf(player.angle);
+		player_dx += cosf(player.angle) * MOVE_SPEED * dt;
+		player_dy += sinf(player.angle) * MOVE_SPEED * dt;
 	}
 
-	float player_half_size =
-		TILE_SIZE * 0.4f; // I took a measurement for half of our player's collision box.
-	float penetration_limit =
-		TILE_SIZE *
-		COLLISION_PENETRATION_FRACTION; // I set a tiny limit for how much the player can "squish" into a wall.
+	float player_fx = player.x + player_dx;
+	float player_fy = player.y + player_dy;
 
-	// --- Now, let's handle movement and collisions on the X-axis ---
-	float newPlayerX_candidate =
-		player.x + deltaMoveX; // I imagined where the player *would* be on the X-axis.
-	bool collisionX = false;       // I assume no collision on X yet.
+	int player_tile_fx = player_fx / TILE_SIZE;
+	int player_tile_fy = player_fy / TILE_SIZE;
 
-	// I'm checking all four corners of the player's imaginary box at the *new X position* but *current Y position*.
-	if (isWall((int)((newPlayerX_candidate - player_half_size) / TILE_SIZE),
-		   (int)((player.y - player_half_size) / TILE_SIZE)) ||
-	    isWall((int)((newPlayerX_candidate + player_half_size) / TILE_SIZE),
-		   (int)((player.y - player_half_size) / TILE_SIZE)) ||
-	    isWall((int)((newPlayerX_candidate - player_half_size) / TILE_SIZE),
-		   (int)((player.y + player_half_size) / TILE_SIZE)) ||
-	    isWall((int)((newPlayerX_candidate + player_half_size) / TILE_SIZE),
-		   (int)((player.y + player_half_size) / TILE_SIZE))) {
-		collisionX = true; // Aha! We mmap.step_y something on the X-axis!
+	//Colision
+	if (isWall(player_tile_fx, player_tile_fy)) {
+		return;
 	}
 
-	if (collisionX) { // If we did mmap.step_y something on the X-axis...
-		// I found out which tile the player was almost in *before* the full movement.
-		int currentTileX = (int)(player.x / TILE_SIZE);
-		if (deltaMoveX > 0) { // If the player was trying to move right into a wall...
-			newPlayerX_candidate =
-				(float)currentTileX * TILE_SIZE + TILE_SIZE - player_half_size -
-				penetration_limit; // ...I moved them back just a little bit from the wall.
-		} else if (deltaMoveX < 0) { // If the player was trying to move left into a wall...
-			newPlayerX_candidate =
-				(float)(currentTileX + 1) * TILE_SIZE + player_half_size +
-				penetration_limit; // ...I moved them back just a little bit from the wall.
-		}
+	player.x = player_fx;
+	player.y = player_fy;
+}
+
+void player_view_draw()
+{
+	if (mode.debug) {
+		return;
 	}
-	player.x = newPlayerX_candidate; // I set the player's new X position, possibly adjusted.
+	sdk_draw_tile(0, 0, &ts_overline_png, 1);
+	tft_draw_string(22, 105, DRAW_RED, "%-i", player.score);
+	tft_draw_string(70, 105, DRAW_RED, "%-i", player.health);
+	tft_draw_string(105, 105, DRAW_RED, "%-i", player.ammo);
 
-	// --- Now, let's handle movement and collisions on the Y-axis ---
-	float newPlayerY_candidate =
-		player.y + deltaMoveY; // I imagined where the player *would* be on the Y-axis.
-	bool collisionY = false;       // I assume no collision on Y yet.
+	// boundaries
+	if (player.gun > N_GUNS)
+		player.gun = 0;
 
-	// I'm checking all four corners of the player's imaginary box at the *new Y position* but *already adjusted X position*.
-	if (isWall((int)((player.x - player_half_size) / TILE_SIZE),
-		   (int)((newPlayerY_candidate - player_half_size) / TILE_SIZE)) ||
-	    isWall((int)((player.x + player_half_size) / TILE_SIZE),
-		   (int)((newPlayerY_candidate - player_half_size) / TILE_SIZE)) ||
-	    isWall((int)((player.x - player_half_size) / TILE_SIZE),
-		   (int)((newPlayerY_candidate + player_half_size) / TILE_SIZE)) ||
-	    isWall((int)((player.x + player_half_size) / TILE_SIZE),
-		   (int)((newPlayerY_candidate + player_half_size) / TILE_SIZE))) {
-		collisionY = true; // Aha! We mmap.step_y something on the Y-axis!
-	}
-
-	if (collisionY) { // If we did mmap.step_y something on the Y-axis...
-		// I found out which tile the player was almost in *before* the full movement.
-		int currentTileY = (int)(player.y / TILE_SIZE);
-		if (deltaMoveY > 0) { // If the player was trying to move down into a wall...
-			newPlayerY_candidate =
-				(float)currentTileY * TILE_SIZE + TILE_SIZE - player_half_size -
-				penetration_limit; // ...I moved them back just a little bit from the wall.
-		} else if (deltaMoveY < 0) { // If the player was trying to move up into a wall...
-			newPlayerY_candidate =
-				(float)(currentTileY + 1) * TILE_SIZE + player_half_size +
-				penetration_limit; // ...I moved them back just a little bit from the wall.
-		}
-	}
-	player.y = newPlayerY_candidate; // I set the player's new Y position, possibly adjusted.
-
-	// --- This is a super important fallback, just in case (it shouldn't happen often!). ---
-	// I'm checking all four corners of the player's box one last time. If, by some strange chance,
-	// they are *still* inside a wall even after our careful adjustments...
-	int finalTileX_tl = (int)((player.x - player_half_size) / TILE_SIZE);
-	int finalTileY_tl = (int)((player.y - player_half_size) / TILE_SIZE);
-	int finalTileX_tr = (int)((player.x + player_half_size) / TILE_SIZE);
-	int finalTileY_tr = (int)((player.y - player_half_size) / TILE_SIZE);
-	int finalTileX_bl = (int)((player.x - player_half_size) / TILE_SIZE);
-	int finalTileY_bl = (int)((player.y + player_half_size) / TILE_SIZE);
-	int finalTileX_br = (int)((player.x + player_half_size) / TILE_SIZE);
-	int finalTileY_br = (int)((player.y + player_half_size) / TILE_SIZE);
-
-	if (isWall(finalTileX_tl, finalTileY_tl) || isWall(finalTileX_tr, finalTileY_tr) ||
-	    isWall(finalTileX_bl, finalTileY_bl) || isWall(finalTileX_br, finalTileY_br)) {
-		// ...then I'm immediately teleporting them back to their last known safe spot. Phew!
-		player.x = prevPlayerX;
-		player.y = prevPlayerY;
+	switch (gun_select[player.gun]) {
+	case PISTOL:
+		sdk_draw_tile(65, 65, &ts_pistol_png, 1);
+		break;
+	case SHOTGUN:
+		sdk_draw_tile(55, 49, &ts_shotgun_png, 1);
+		break;
+	case BROKE:
+		break;
 	}
 }
 
@@ -504,6 +455,7 @@ void game_start(void)
 	player.angle = (float)M_PI / 2.0f;
 	player.health = 100;
 	player.alive = true;
+	player.gun = 1;
 
 	mode.debug = false;
 	mode.map = false;
@@ -520,6 +472,9 @@ void game_input(unsigned dt_usec)
 			mode.debug = true;
 	}
 	if (sdk_inputs_delta.b == 1 && sdk_inputs.start) {
+		player.gun += 1;
+	}
+	if (sdk_inputs_delta.select == 1) {
 		if (mode.map) {
 			mode.map = false;
 		} else
@@ -548,13 +503,12 @@ void game_paint(unsigned dt_usec)
 	(void)dt_usec;
 	tft_fill(0);
 	renderGame();
-
+	player_view_draw();
 	if (mode.debug) {
 		debug();
 	}
-	if (mode.map) {
+	if (mode.map)
 		drawMenuMap();
-	}
 }
 
 int main()
