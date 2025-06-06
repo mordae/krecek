@@ -25,6 +25,11 @@
 #define MENU_MAP_PADDING 20
 
 #define N_GUNS 3
+#define PISTOL_RANGE_TILES 15.0f
+#define SHOTGUN_RANGE_TILES 5.0f
+#define BULLET_VISUAL_DURATION_MS 100
+#define SHOTGUN_SPREAD_DEGREES 10.0f
+#define SHOTGUN_PELLETS 5
 
 #define multiply332(x, f) \
 	rgb_to_rgb332(rgb332_red((x)) * f, rgb332_green((x)) * f, rgb332_blue((x)) * f)

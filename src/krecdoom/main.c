@@ -6,6 +6,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <tft.h>
+#include <stdlib.h>
 
 #include <overline.png.h>
 #include <pistol.png.h>
@@ -42,6 +43,14 @@ typedef struct {
 static Mode mode;
 
 typedef struct {
+	bool hit_visible;
+	uint32_t hit_timer_start;
+	int hit_screen_x, hit_screen_y;
+	int hit_size;
+	uint16_t hit_color;
+} Bullet;
+static Bullet bullet;
+typedef struct {
 	int tile_x, tile_y;
 	int start_x, start_y;
 	int window_start_x, window_start_y;
@@ -56,6 +65,8 @@ float volume = 0.5f;
 
 bool isWall(int Tile_x, int Tile_y);
 void drawMenuMap();
+void shootBullet(float start_angle, float max_range_tiles, int visual_size, uint16_t visual_color);
+
 extern const TileType maps_map1[MAP_ROWS][MAP_COLS];
 TileType (*currentMap)[MAP_COLS] = maps_map1;
 
@@ -437,7 +448,7 @@ void player_view_draw()
 
 	switch (gun_select[player.gun]) {
 	case PISTOL:
-		sdk_draw_tile(65, 65, &ts_pistol_png, 1);
+		sdk_draw_tile(75, 65, &ts_pistol_png, 1);
 		break;
 	case SHOTGUN:
 		sdk_draw_tile(55, 49, &ts_shotgun_png, 1);
@@ -445,8 +456,125 @@ void player_view_draw()
 	case BROKE:
 		break;
 	}
+	if (bullet.hit_visible) {
+		// time
+		uint32_t current_time = time_us_64();
+		if (current_time - bullet.hit_timer_start < BULLET_VISUAL_DURATION_MS * 1000) {
+			// Draw a square
+			for (int dy = -bullet.hit_size / 2; dy <= bullet.hit_size / 2; dy++) {
+				for (int dx = -bullet.hit_size / 2; dx <= bullet.hit_size / 2;
+				     dx++) {
+					int draw_x = bullet.hit_screen_x + dx;
+					int draw_y = bullet.hit_screen_y + dy;
+					if (draw_x >= 0 && draw_x < SCREEN_WIDTH && draw_y >= 0 &&
+					    draw_y < SCREEN_HEIGHT) {
+						tft_draw_pixel(draw_x, draw_y, bullet.hit_color);
+					}
+				}
+			}
+		} else {
+			bullet.hit_visible = false; // Reset if time is up
+		}
+	}
+}
+void shootBullet(float current_shoot_angle, float max_range_tiles, int visual_size,
+		 uint16_t visual_color)
+{
+	float rayDirX = cosf(current_shoot_angle);
+	float rayDirY = sinf(current_shoot_angle);
+
+	float rayX = player.x;
+	float rayY = player.y;
+
+	float max_dist = max_range_tiles * TILE_SIZE; // Max range in world units
+
+	for (float dist = 0; dist < max_dist; dist += TILE_SIZE / 4.0f) { // Step through the ray
+		int current_tile_x = (int)(rayX / TILE_SIZE);
+		int current_tile_y = (int)(rayY / TILE_SIZE);
+
+		if (isWall(current_tile_x, current_tile_y)) {
+			float perpWallDist = dist;
+			if (perpWallDist == 0.0f)
+				perpWallDist = 0.001f;
+
+			float wallHeight = (TILE_SIZE * PROJECTION_PLANE_DISTANCE / perpWallDist);
+			int drawStart = (int)((SCREEN_HEIGHT / 2.0f) - (wallHeight / 2.0f));
+			int drawEnd = (int)((SCREEN_HEIGHT / 2.0f) + (wallHeight / 2.0f));
+
+			// angle center view
+			float relativeAngle = current_shoot_angle - player.angle;
+			// What the PI
+			if (relativeAngle > M_PI)
+				relativeAngle -= 2 * M_PI;
+			if (relativeAngle < -M_PI)
+				relativeAngle += 2 * M_PI;
+
+			// Calculate screen x
+			int screen_x = (int)(SCREEN_WIDTH / 2.0f +
+					     PROJECTION_PLANE_DISTANCE * tanf(relativeAngle));
+
+			// boundaries
+			if (screen_x < 0)
+				screen_x = 0;
+			if (screen_x >= SCREEN_WIDTH)
+				screen_x = SCREEN_WIDTH - 1;
+
+			// Store hit
+			bullet.hit_visible = true;
+			bullet.hit_timer_start = time_us_64();
+			bullet.hit_screen_x = screen_x;
+			bullet.hit_screen_y = (drawStart + drawEnd) / 2; // center wall slice
+			bullet.hit_size = visual_size;
+			bullet.hit_color = visual_color;
+
+			if (mode.debug)
+				printf("Bullet hit wall at tile (%d, %d), dist %.2f\n",
+				       current_tile_x, current_tile_y, dist / TILE_SIZE);
+
+			//  logic here for enemys
+			return; // Bullet hit stop
+		}
+
+		// Move ray
+		rayX += rayDirX * (TILE_SIZE / 4.0f);
+		rayY += rayDirY * (TILE_SIZE / 4.0f);
+	}
 }
 
+void handleShooting()
+{
+	if (sdk_inputs_delta.a == 1) {
+		if (player.ammo > 0) {
+			player.ammo--; // ammo
+
+			switch (gun_select[player.gun]) {
+			case PISTOL:
+				// Pistol Single, accurate shot, long range
+				shootBullet(player.angle, PISTOL_RANGE_TILES, 2, YELLOW);
+				break;
+			case SHOTGUN: {
+				// Shotgun Multiple pellets, spread, short range, bigger visual
+				float spread_radians =
+					SHOTGUN_SPREAD_DEGREES * (float)M_PI / 180.0f;
+				for (int i = 0; i < SHOTGUN_PELLETS; i++) {
+					// random offset
+					float spread_offset =
+						((float)rand() / RAND_MAX * spread_radians) -
+						(spread_radians / 2.0f);
+					shootBullet(player.angle + spread_offset,
+						    SHOTGUN_RANGE_TILES, 5, RED);
+				}
+				break;
+			}
+			case BROKE:
+				printf("Gun is broken or no ammo!\n");
+				break;
+			}
+		} else {
+			printf("Out of ammo!\n");
+		}
+	}
+}
 void game_start(void)
 {
 	sdk_set_output_gain_db(volume);
@@ -454,8 +582,16 @@ void game_start(void)
 	player.y = TILE_SIZE * 1.5f;
 	player.angle = (float)M_PI / 2.0f;
 	player.health = 100;
+	player.ammo = 15;
 	player.alive = true;
 	player.gun = 1;
+
+	bullet.hit_visible = false;
+	bullet.hit_timer_start = 0;
+	bullet.hit_screen_x = 0;
+	bullet.hit_screen_y = 0;
+	bullet.hit_size = 0;
+	bullet.hit_color = 0;
 
 	mode.debug = false;
 	mode.map = false;
@@ -485,6 +621,9 @@ void game_input(unsigned dt_usec)
 	} else if (sdk_inputs.joy_x < -500 || sdk_inputs.x) {
 		player.angle -= ROTATE_SPEED * dt;
 	}
+
+	handleShooting();
+
 	game_handle_audio(dt, volume);
 	handlePlayerMovement(dt);
 }
