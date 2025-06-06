@@ -8,8 +8,10 @@
 #define PROJECTION_PLANE_DISTANCE ((SCREEN_WIDTH / 2.0f) / tanf(FOV_RADIANS / 2.0f))
 #define MOVE_SPEED 50.0f
 #define ROTATE_SPEED 3.0f
+
 #define MAP_ROWS 24
 #define MAP_COLS 24
+
 #define MINIMAP_WIDTH 32
 #define MINIMAP_HEIGHT 32
 #define MINIMAP_TILE_SIZE 4
@@ -18,9 +20,14 @@
 #define PLAYER_DOT_SIZE 3
 #define COLLISION_PENETRATION_FRACTION 0.1f
 
+#define MENU_MAP_WIDTH 80
+#define MENU_MAP_HEIGHT 80
+#define MENU_MAP_PADDING 20
+
 #define multiply332(x, f) \
 	rgb_to_rgb332(rgb332_red((x)) * f, rgb332_green((x)) * f, rgb332_blue((x)) * f)
 
+#define DRAW_RED rgb_to_rgb565(183, 0, 0)
 #define RED rgb_to_rgb565(194, 20, 20)
 #define YELLOW rgb_to_rgb565(255, 255, 0)
 #define GREEN rgb_to_rgb565(0, 255, 0)
