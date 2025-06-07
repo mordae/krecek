@@ -10,6 +10,7 @@
 
 #include <tileset.png.h>
 #include <player.png.h>
+#include <enemies/blob.png.h>
 
 #include <maps/map00.bin.h>
 #include <maps/map01.bin.h>

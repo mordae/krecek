@@ -61,8 +61,8 @@ static void level_paint(float dt, int depth)
 
 	if (tile->effect == TILE_EFFECT_TELEPORT) {
 		snprintf(text, sizeof text, "%i =%02x", tile->tile_id, tile->map);
-	} else if (tile->effect == TILE_EFFECT_DAMAGE) {
-		snprintf(text, sizeof text, "%i !%i", tile->tile_id, tile->damage);
+		//} else if (tile->effect == TILE_EFFECT_DAMAGE) {
+		//	snprintf(text, sizeof text, "%i !%i", tile->tile_id, tile->damage);
 	} else {
 		snprintf(text, sizeof text, "%i", tile->tile_id);
 	}
