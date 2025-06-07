@@ -65,6 +65,7 @@ static MMap mmap;
 static Enemy enemies[MAX_ENEMIES];
 
 float volume = 0.5f;
+float timer = 0;
 
 bool isWall(int Tile_x, int Tile_y);
 void drawMenuMap();
@@ -73,6 +74,11 @@ void drawEnemies();
 void handleEnemyAI(float dt);
 void handleShooting();
 void checkPlayerStatus();
+void Map_1_start_enemis(void);
+void Map_2_start_enemis(void);
+void Map_1_start_player();
+void Map_2_start_player();
+bool Can_shot(float dt);
 
 extern const TileType maps_map1[MAP_ROWS][MAP_COLS];
 extern const TileType maps_map2[MAP_ROWS][MAP_COLS];
@@ -665,24 +671,21 @@ void handleShooting()
 void game_start(void)
 {
 	sdk_set_output_gain_db(volume);
-	player.x = TILE_SIZE * 1.5f;
-	player.y = TILE_SIZE * 1.5f;
-	player.angle = (float)M_PI / 2.0f;
-	player.health = 100;
-	player.ammo = 15;
-	player.alive = true;
-	player.gun = 1;
-
-	bullet.hit_visible = false;
-	bullet.hit_timer_start = 0;
-	bullet.hit_screen_x = 0;
-	bullet.hit_screen_y = 0;
-	bullet.hit_size = 0;
-	bullet.hit_color = 0;
-
-	mode.debug = false;
-	mode.map = false;
-
+	void map_starter_caller();
+}
+void map_starter_caller()
+{
+	if (currentMap == maps_map1) {
+		Map_1_start_enemis();
+		Map_1_start_player();
+	}
+	if (currentMap == maps_map2) {
+		Map_2_start_enemis();
+		Map_2_start_player();
+	}
+}
+void Map_1_start_enemis(void)
+{
 	enemies[0].x = TILE_SIZE * 14.0f;
 	enemies[0].y = TILE_SIZE * 14.0f;
 	enemies[0].health = 100;
@@ -698,6 +701,54 @@ void game_start(void)
 	enemies[1].last_attack_time = 0;
 }
 
+void Map_2_start_enemis(void)
+{
+	enemies[0].x = TILE_SIZE * 10.0f;
+	enemies[0].y = TILE_SIZE * 10.0f;
+	enemies[0].health = 100;
+	enemies[0].alive = true;
+	enemies[0].state = ENEMY_IDLE;
+	enemies[0].last_attack_time = 0;
+}
+void Map_1_start_player(void)
+{
+	player.x = TILE_SIZE * 1.5f;
+	player.y = TILE_SIZE * 1.5f;
+	player.angle = (float)M_PI / 2.0f;
+	player.health = 100;
+	player.ammo = 15;
+	player.alive = true;
+	player.gun = 1;
+
+	bullet.hit_visible = false;
+	bullet.hit_timer_start = 0;
+	bullet.hit_screen_x = 0;
+	bullet.hit_screen_y = 0;
+	bullet.hit_size = 0;
+	bullet.hit_color = 0;
+
+	mode.map = false;
+}
+
+void Map_2_start_player(void)
+{
+	player.x = TILE_SIZE * 2.5f;
+	player.y = TILE_SIZE * 3.5f;
+	player.angle = (float)M_PI / 2.0f;
+	player.health = 100;
+	player.ammo = 15;
+	player.alive = true;
+	player.gun = 1;
+
+	bullet.hit_visible = false;
+	bullet.hit_timer_start = 0;
+	bullet.hit_screen_x = 0;
+	bullet.hit_screen_y = 0;
+	bullet.hit_size = 0;
+	bullet.hit_color = 0;
+
+	mode.map = false;
+}
 void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
@@ -711,8 +762,10 @@ void game_input(unsigned dt_usec)
 	if (sdk_inputs_delta.x == 1 && sdk_inputs.start) {
 		if (currentMap == maps_map1) {
 			currentMap = maps_map2;
+			map_starter_caller();
 		} else
 			currentMap = maps_map1;
+		map_starter_caller();
 	}
 	if (sdk_inputs_delta.b == 1 && sdk_inputs.start) {
 		player.gun += 1;
@@ -735,8 +788,8 @@ void game_input(unsigned dt_usec)
 	game_handle_audio(dt, volume);
 	handlePlayerMovement(dt);
 	handleEnemyAI(dt);
-	if (player.health == 0) {
-		game_start();
+	if (player.health <= 0) {
+		map_starter_caller();
 	}
 }
 void handleEnemyAI(float dt)
@@ -787,18 +840,17 @@ void handleEnemyAI(float dt)
 					}
 				}
 
-				// --- Enemy Attack Logic ---
-				uint32_t current_time = dt * 200000.0f;
+				uint32_t current_time = dt * 100000.0f;
 				if (dist_to_player < ENEMY_ATTACK_RANGE_TILES * TILE_SIZE &&
 				    (current_time - enemies[i].last_attack_time >
 				     ENEMY_ATTACK_COOLDOWN_MS)) {
-					// Line of Sight Check: Ray from enemy to player
+					// Ray from enemy to player
 					float LOS_dx = player.x - enemies[i].x;
 					float LOS_dy = player.y - enemies[i].y;
 					float LOS_dist_to_player =
 						sqrtf(LOS_dx * LOS_dx + LOS_dy * LOS_dy);
 
-					// Normalize direction vector (avoid division by zero if player is on top of enemy)
+					// avoid  / 0
 					float LOS_rayDirX = (LOS_dist_to_player == 0.0f) ?
 								    0 :
 								    LOS_dx / LOS_dist_to_player;
@@ -807,8 +859,6 @@ void handleEnemyAI(float dt)
 								    LOS_dy / LOS_dist_to_player;
 
 					bool line_of_sight_clear = true;
-					// Step along the ray from enemy towards player
-					// Start slightly away from enemy, end slightly before player to avoid self/player tile collisions
 					for (float step_dist = TILE_SIZE * 0.1f;
 					     step_dist < LOS_dist_to_player - TILE_SIZE * 0.1f;
 					     step_dist += TILE_SIZE * 0.5f) { // Step by half a tile
@@ -820,18 +870,19 @@ void handleEnemyAI(float dt)
 						if (isWall((int)(check_x / TILE_SIZE),
 							   (int)(check_y / TILE_SIZE))) {
 							line_of_sight_clear = false;
-							break; // Wall in the way, no line of sight
+							break; // Wall check
 						}
 					}
 
 					if (line_of_sight_clear) {
-						// Player is in range and line of sight is clear, attack!
-						player.health -= ENEMY_DAMAGE;
-						enemies[i].last_attack_time =
-							current_time; // Reset cooldown
+						Can_shot(dt);
+						if (Can_shot(dt)) {
+							player.health -= ENEMY_DAMAGE;
+							enemies[i].last_attack_time = current_time;
+						}
 
 						if (mode.debug) {
-							printf("Enemy attacked player! Player health: %d\n",
+							printf("Enemy attacked Player health: %d\n",
 							       player.health);
 						}
 					}
@@ -840,7 +891,15 @@ void handleEnemyAI(float dt)
 		}
 	}
 }
-
+bool Can_shot(float dt)
+{
+	timer += dt;
+	if (timer >= 0.7f) {
+		timer = 0;
+		return true;
+	} else
+		return false;
+}
 void debug(void)
 {
 	drawMinimap_Debug();
