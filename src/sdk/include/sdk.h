@@ -33,6 +33,9 @@ struct sdk_config {
 /* Current SDK configuration. */
 extern struct sdk_config sdk_config;
 
+/* Unique device ID. */
+extern uint64_t sdk_device_id;
+
 /*
  * Copy given configuration to sdk_config, initialize the hardware
  * and start the main loop with input, paint, audio and other tasks.

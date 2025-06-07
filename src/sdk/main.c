@@ -13,6 +13,7 @@
 #include <hardware/structs/bus_ctrl.h>
 #include <hardware/structs/xip_ctrl.h>
 #include <hardware/watchdog.h>
+#include <hardware/flash.h>
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -23,6 +24,7 @@
 #endif
 
 struct sdk_config sdk_config = {};
+uint64_t sdk_device_id;
 
 /* From audio.c */
 void sdk_audio_init(void);
@@ -160,6 +162,9 @@ target_reached:
 
 	/* Apply configuration. */
 	sdk_config = *conf;
+
+	/* Determine ID from our flash chip. */
+	flash_get_unique_id((uint8_t *)&sdk_device_id);
 
 	if (!sdk_config.backlight)
 		sdk_config.backlight = SDK_BACKLIGHT_STD;

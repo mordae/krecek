@@ -20,6 +20,8 @@
 
 struct sdk_config sdk_config = {};
 
+uint64_t sdk_device_id = 0;
+
 /* From audio.c */
 void sdk_audio_init(void);
 void sdk_audio_start(void);
@@ -67,6 +69,7 @@ void __noreturn sdk_main(const struct sdk_config *conf)
 	chdir(path);
 
 	sdk_config = *conf;
+	sdk_device_id = time_us_64();
 
 	if (!sdk_config.backlight)
 		sdk_config.backlight = SDK_BACKLIGHT_STD;
