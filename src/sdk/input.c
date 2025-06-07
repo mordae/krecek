@@ -155,7 +155,7 @@ void sdk_input_task(void)
 		float z1 = 1.0f - mailbin.touch[2] / (float)UINT16_MAX;
 		float z2 = mailbin.touch[3] / (float)UINT16_MAX;
 
-		float tp = 0.9f * z2 * (2.0f + 1.8f * tx + 0.7f * ty) / ty;
+		float tp = 0.9f * z2 * (2.0f + 1.8f * tx + 0.7f * ty) / (ty ? ty : 1.0f);
 		tp = powf(clamp(tp, 0, 1), 2);
 
 		tx = clamp(tx / 0.9f, 0, 1);
