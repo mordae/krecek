@@ -475,7 +475,7 @@ void handlePlayerMovement(float dt)
 	int player_tile_x = player.x / TILE_SIZE;
 	int player_tile_y = player.y / TILE_SIZE;
 
-	if (currentMap[player_tile_y][player_tile_x] == WALL) {
+	if (currentMap[player_tile_y][player_tile_x] == TELEPORT) {
 		if (currentMap == maps_map1) {
 			currentMap = maps_map2;
 			map_starter_caller();
@@ -682,8 +682,15 @@ void handleShooting()
 void game_start(void)
 {
 	sdk_set_output_gain_db(volume);
-	void map_starter_caller();
+	map_starter_caller();
+
 	player.health = 100;
+	player.x = TILE_SIZE * 1.5f;
+	player.y = TILE_SIZE * 1.5f;
+	player.angle = (float)M_PI / 2.0f;
+	player.ammo = 15;
+	player.alive = true;
+	player.gun = 1;
 }
 void map_starter_caller()
 {
@@ -698,8 +705,47 @@ void map_starter_caller()
 }
 void Map_1_start_enemis(void)
 {
-	enemies[0].x = TILE_SIZE * 14.0f;
-	enemies[0].y = TILE_SIZE * 14.0f;
+	enemies[0].x = TILE_SIZE * 6.0f;
+	enemies[0].y = TILE_SIZE * 6.0f;
+	enemies[0].alive = true;
+	enemies[0].state = ENEMY_IDLE;
+	enemies[0].last_attack_time = 0;
+
+	enemies[1].x = TILE_SIZE * 15.0f;
+	enemies[1].y = TILE_SIZE * 15.0f;
+	enemies[1].alive = true;
+	enemies[1].state = ENEMY_IDLE;
+	enemies[1].last_attack_time = 0;
+
+	enemies[2].x = TILE_SIZE * 18.0f;
+	enemies[2].y = TILE_SIZE * 3.0f;
+	enemies[2].alive = true;
+	enemies[2].state = ENEMY_IDLE;
+	enemies[2].last_attack_time = 0;
+
+	enemies[3].x = TILE_SIZE * 10.0f;
+	enemies[3].y = TILE_SIZE * 6.0f;
+	enemies[3].alive = true;
+	enemies[3].state = ENEMY_IDLE;
+	enemies[3].last_attack_time = 0;
+
+	enemies[4].x = TILE_SIZE * 15.0f;
+	enemies[4].y = TILE_SIZE * 18.0f;
+	enemies[4].alive = true;
+	enemies[4].state = ENEMY_IDLE;
+	enemies[4].last_attack_time = 0;
+
+	enemies[5].x = TILE_SIZE * 6.0f;
+	enemies[5].y = TILE_SIZE * 16.0f;
+	enemies[5].alive = true;
+	enemies[5].state = ENEMY_IDLE;
+	enemies[5].last_attack_time = 0;
+}
+
+void Map_2_start_enemis(void)
+{
+	enemies[0].x = TILE_SIZE * 10.0f;
+	enemies[0].y = TILE_SIZE * 10.0f;
 	enemies[0].alive = true;
 	enemies[0].state = ENEMY_IDLE;
 	enemies[0].last_attack_time = 0;
@@ -710,15 +756,6 @@ void Map_1_start_enemis(void)
 	enemies[1].state = ENEMY_IDLE;
 	enemies[1].last_attack_time = 0;
 }
-
-void Map_2_start_enemis(void)
-{
-	enemies[0].x = TILE_SIZE * 10.0f;
-	enemies[0].y = TILE_SIZE * 10.0f;
-	enemies[0].alive = true;
-	enemies[0].state = ENEMY_IDLE;
-	enemies[0].last_attack_time = 0;
-}
 void Map_1_start_player(void)
 {
 	player.x = TILE_SIZE * 1.5f;
@@ -726,7 +763,6 @@ void Map_1_start_player(void)
 	player.angle = (float)M_PI / 2.0f;
 	player.ammo = 15;
 	player.alive = true;
-	player.gun = 1;
 
 	bullet.hit_visible = false;
 	bullet.hit_timer_start = 0;
@@ -745,7 +781,6 @@ void Map_2_start_player(void)
 	player.angle = (float)M_PI / 2.0f;
 	player.ammo = 15;
 	player.alive = true;
-	player.gun = 1;
 
 	bullet.hit_visible = false;
 	bullet.hit_timer_start = 0;
