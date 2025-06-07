@@ -139,15 +139,12 @@ void game_input(unsigned dt_usec)
 	// -- oper button logika
 	if (sdk_inputs_delta.y > 0) {
 		if (pos.oper == 0) {
-			if (sdk_inputs_delta.a > 0) {
-				if (pos.x == 0) {
-					val.up *= 10;
-					val.up += 9;
-				} else if (pos.x == 1) {
-					val.down *= 10;
-					val.down += 9;
-				}
+			if (pos.x == 0) {
+				val.up *= 10;
+			} else if (pos.x == 1) {
+				val.down *= 10;
 			}
+
 		} else if (pos.oper == 1) {
 			if (pos.x == 0) {
 				val.up = 0;
