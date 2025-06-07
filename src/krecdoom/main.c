@@ -12,6 +12,10 @@
 #include <pistol.png.h>
 #include <shotgun.png.h>
 
+#include <cover.png.h>
+
+sdk_game_info("krecdoom", &image_cover_png);
+
 // Movement joystick + b and x
 // Debug_mode start+a
 // Chenage Gun start+b

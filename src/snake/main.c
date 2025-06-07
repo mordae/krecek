@@ -6,6 +6,10 @@
 #include <stdlib.h>
 #include <tft.h>
 
+#include <cover.png.h>
+
+sdk_game_info("snake", &image_cover_png);
+
 #define RED rgb_to_rgb565(255, 0, 0)
 #define YELLOW rgb_to_rgb565(255, 255, 0)
 #define GREEN rgb_to_rgb565(0, 255, 0)
