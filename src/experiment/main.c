@@ -13,7 +13,6 @@
 
 #include <maps/map00.bin.h>
 #include <maps/map01.bin.h>
-#include <maps/map02.bin.h>
 
 #include <cover.png.h>
 
@@ -23,11 +22,10 @@ sdk_game_info("experiment", &image_cover_png);
 
 #define TILE_SIZE 8
 
-#define NUM_MAPS 3
+#define NUM_MAPS 2
 static const void *maps[NUM_MAPS] = {
 	maps_map00_bin,
 	maps_map01_bin,
-	maps_map02_bin,
 };
 
 static const Tile (*map)[MAP_COLS] = (const void *)maps_map00_bin;
