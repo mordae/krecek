@@ -80,8 +80,8 @@ struct pacman {
 
 struct ghost_blue {
 	float gbdx, gbdy;
-	float fgbdx, fgbdy;
 	float speed;
+	int target_x, target_y;
 	sdk_sprite_t s;
 };
 
@@ -90,8 +90,6 @@ static struct pacman pacman;
 static struct ghost_blue ghost_blue;
 
 static void game_handel_enemy(float dt);
-
-static void blue_ghost_handel(float dt);
 void game_start(void)
 {
 	pacman.speed = 32;
@@ -117,6 +115,10 @@ static void new_round(void)
 	pacman.s.y = 6.5 * 8;
 	ghost_blue.s.x = 10.5 * 8;
 	ghost_blue.s.y = 6.5 * 8;
+	ghost_blue.gbdx = 0;
+	ghost_blue.gbdy = 0;
+	ghost_blue.target_x = 0;
+	ghost_blue.target_y = 0;
 }
 
 void game_reset(void)
@@ -263,85 +265,74 @@ void game_input(unsigned dt_usec)
 	}
 	game_handel_enemy(dt);
 }
-
 static void game_handel_enemy(float dt)
 {
-	blue_ghost_handel(dt);
-}
-static void blue_ghost_handel(float dt)
-{
-	float future_gbx = clamp(ghost_blue.s.x + ghost_blue.gbdx * dt * ghost_blue.speed, 8 * 0.5,
-				 TFT_RIGHT - 8 * 0.5);
-	float future_gby = clamp(ghost_blue.s.y + ghost_blue.gbdy * dt * ghost_blue.speed, 8 * 0.5,
-				 TFT_BOTTOM - 8 * 0.5);
+	int pacman_tile_x = pacman.s.x / 8;
+	int pacman_tile_y = pacman.s.y / 8;
+	int ghost_tile_x = ghost_blue.s.x / 8;
+	int ghost_tile_y = ghost_blue.s.y / 8;
+	int dx = pacman_tile_x - ghost_tile_x;
+	int dy = pacman_tile_y - ghost_tile_y;
+	int distance_sq = dx * dx + dy * dy;
 
-	if (pacman.s.x > ghost_blue.s.x) {
-		//if (!ghost_blue.gbdx) {
-		ghost_blue.gbdx = 1;
-		//ghost_blue.gbdy = 0;
-		//} else {
-		//	ghost_blue.fgbdy = 0;
-		//}
-	} else if (pacman.s.x < ghost_blue.s.x) {
-		//if (!ghost_blue.gbdx) {
-		ghost_blue.gbdx = -1;
-		//ghost_blue.gbdy = 0;
-		//} else {
-		//	ghost_blue.fgbdx = -1;
-		//}
+	if (distance_sq > 8 * 8) {
+		ghost_blue.target_x = pacman_tile_x;
+		ghost_blue.target_y = pacman_tile_y;
+	} else {
+		ghost_blue.target_x = 1;
+		ghost_blue.target_y = 13;
 	}
 
-	if (pacman.s.y > ghost_blue.s.y) {
-		//if (!ghost_blue.gbdx) {
-		ghost_blue.gbdy = 1;
-		//ghost_blue.gbdx = 0;
-		//} else {
-		//	ghost_blue.fgbdy = -1;
-		//}
-	} else if (pacman.s.y < ghost_blue.s.y) {
-		//if (!ghost_blue.gbdy) {
-		ghost_blue.gbdy = -1;
-		//ghost_blue.gbdx = 0;
-		//} else {
-		//	ghost_blue.fgbdy = -1;
-		//}
+	float center_offset_x = fmodf(ghost_blue.s.x, 8.0f) - 4.0f;
+	float center_offset_y = fmodf(ghost_blue.s.y, 8.0f) - 4.0f;
+
+	if (fabsf(center_offset_x) < ghost_blue.speed * dt &&
+	    fabsf(center_offset_y) < ghost_blue.speed * dt) {
+		ghost_blue.s.x -= center_offset_x;
+		ghost_blue.s.y -= center_offset_y;
+
+		int current_tile_x = ghost_blue.s.x / 8;
+		int current_tile_y = ghost_blue.s.y / 8;
+
+		float best_dist_sq = 1e9;
+		int best_dx = 0;
+		int best_dy = 0;
+
+		int directions[4][2] = { { 0, 1 }, { 0, -1 }, { 1, 0 }, { -1, 0 } };
+		for (int i = 0; i < 4; i++) {
+			int move_dx = directions[i][0];
+			int move_dy = directions[i][1];
+
+			if (move_dx == -ghost_blue.gbdx && move_dy == -ghost_blue.gbdy) {
+				continue;
+			}
+
+			if (map[current_tile_y + move_dy][current_tile_x + move_dx] > CHERRY) {
+				continue;
+			}
+
+			float target_pixel_x = ghost_blue.target_x * 8 + 4;
+			float target_pixel_y = ghost_blue.target_y * 8 + 4;
+
+			float dist_x = target_pixel_x - (ghost_blue.s.x + move_dx);
+			float dist_y = target_pixel_y - (ghost_blue.s.y + move_dy);
+			float dist_sq = dist_x * dist_x + dist_y * dist_y;
+
+			if (dist_sq < best_dist_sq) {
+				best_dist_sq = dist_sq;
+				best_dx = move_dx;
+				best_dy = move_dy;
+			}
+		}
+
+		if (best_dx != 0 || best_dy != 0) {
+			ghost_blue.gbdx = best_dx;
+			ghost_blue.gbdy = best_dy;
+		}
 	}
 
-	int future_tile_gbx = 0, future_tile_gby = 0;
-
-	if (ghost_blue.gbdx == 1) {
-		// Moving right
-		float ideal_gby = (roundf(future_gby / 8 - 0.5f)) * 8 + 0.5 * 8;
-		future_gby = future_gby * 0.8 + ideal_gby * 0.2;
-		future_tile_gbx = (future_gbx + 0.5 * PACMAN_SIZE) / 8;
-		future_tile_gby = future_gby / 8;
-	} else if (ghost_blue.gbdx == -1) {
-		// Moving left
-		float ideal_gby = (roundf(future_gby / 8 - 0.5f)) * 8 + 0.5 * 8;
-		future_gby = future_gby * 0.8 + ideal_gby * 0.2;
-		future_tile_gbx = (future_gbx - 0.5 * PACMAN_SIZE) / 8;
-		future_tile_gby = future_gby / 8;
-	}
-	if (ghost_blue.gbdy == 1) {
-		// Moving down
-		float ideal_gbx = (roundf(future_gbx / 8 - 0.5f)) * 8 + 0.5 * 8;
-		future_gbx = future_gbx * 0.8 + ideal_gbx * 0.2;
-		future_tile_gby = (future_gby + 0.5 * PACMAN_SIZE) / 8;
-		future_tile_gbx = future_gbx / 8;
-	} else if (ghost_blue.gbdy == -1) {
-		// Moving up
-		float ideal_gbx = (roundf(future_gbx / 8 - 0.5f)) * 8 + 0.5 * 8;
-		future_gbx = future_gbx * 0.8 + ideal_gbx * 0.2;
-		future_tile_gby = (future_gby - 0.5 * PACMAN_SIZE) / 8;
-		future_tile_gbx = future_gbx / 8;
-	}
-
-	int future_tile_gb = map[future_tile_gby][future_tile_gbx];
-
-	if (future_tile_gb <= CHERRY || future_tile_gb == INVISIBLE_WALL) {
-		ghost_blue.s.x = future_gbx;
-		ghost_blue.s.y = future_gby;
-	}
+	ghost_blue.s.x += ghost_blue.gbdx * dt * ghost_blue.speed;
+	ghost_blue.s.y += ghost_blue.gbdy * dt * ghost_blue.speed;
 }
 
 static void draw_tile(TileType type, int x, int y)
