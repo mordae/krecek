@@ -181,6 +181,9 @@ target_reached:
 	uint32_t t1, t0 = time_us_32();
 
 	if (BOOT_LAND == watchdog_hw->scratch[0]) {
+		/* Clear the flag so that we don't confuse picotool load. */
+		watchdog_hw->scratch[0] = 0;
+
 		/*
 		 * Resume communication with slave.
 		 *

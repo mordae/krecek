@@ -60,6 +60,15 @@ void game_inbox(sdk_message_t msg)
 
 static void tx_cursor(void)
 {
+	static uint32_t last_tx;
+
+	uint32_t now = time_us_32();
+
+	if (now - last_tx < 30000)
+		return;
+
+	last_tx = now;
+
 	uint8_t msg[] = { device_id_16 >> 8, device_id_16, lx, ly };
 	sdk_send_rf(SDK_RF_ALL, msg, sizeof(msg));
 }
