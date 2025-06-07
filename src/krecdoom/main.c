@@ -735,11 +735,17 @@ void Map_1_start_enemis(void)
 	enemies[4].state = ENEMY_IDLE;
 	enemies[4].last_attack_time = 0;
 
-	enemies[5].x = TILE_SIZE * 6.0f;
-	enemies[5].y = TILE_SIZE * 16.0f;
+	enemies[5].x = TILE_SIZE * 18.0f;
+	enemies[5].y = TILE_SIZE * 18.0f;
 	enemies[5].alive = true;
 	enemies[5].state = ENEMY_IDLE;
 	enemies[5].last_attack_time = 0;
+
+	enemies[6].x = TILE_SIZE * 6.0f;
+	enemies[6].y = TILE_SIZE * 16.0f;
+	enemies[6].alive = true;
+	enemies[6].state = ENEMY_IDLE;
+	enemies[6].last_attack_time = 0;
 }
 
 void Map_2_start_enemis(void)
@@ -805,11 +811,12 @@ void game_input(unsigned dt_usec)
 		if (currentMap == maps_map1) {
 			currentMap = maps_map2;
 			map_starter_caller();
-		} else
+		} else {
 			currentMap = maps_map1;
-		map_starter_caller();
+			map_starter_caller();
+		}
 	}
-	if (sdk_inputs_delta.b == 1 && sdk_inputs.start) {
+	if (sdk_inputs_delta.y == 1) {
 		player.gun += 1;
 	}
 	if (sdk_inputs_delta.select == 1) {
@@ -949,7 +956,7 @@ void debug(void)
 	tft_draw_string(5, 10, WHITE, "Angle %-.2f", player.angle);
 	if (enemies[0].alive == true)
 		tft_draw_string(5, 75, WHITE, "Enemy State: %s",
-				enemies[0].state == ENEMY_IDLE ? "IDLE" : "CHASING");
+				enemies[5].state == ENEMY_IDLE ? "IDLE" : "CHASING");
 
 	tft_draw_string(5, 85, WHITE, "Score %-i", player.score);
 	tft_draw_string(5, 95, WHITE, "Health %i", player.health);

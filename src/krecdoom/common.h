@@ -42,7 +42,7 @@ static float zBuffer[SCREEN_WIDTH];
 #define ENEMY_DAMAGE 10
 #define ENEMY_VISION_RANGE_TILES 8.0f
 #define ENEMY_MOVE_SPEED 50.0f
-#define MAX_ENEMIES 6
+#define MAX_ENEMIES 7
 typedef enum { ENEMY_IDLE, ENEMY_CHASING } EnemyState;
 
 typedef struct {
