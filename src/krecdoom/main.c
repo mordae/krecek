@@ -7,7 +7,6 @@
 #include <math.h>
 #include <stdint.h>
 #include <tft.h>
-#include <stdlib.h>
 
 #include <overline.png.h>
 #include <pistol.png.h>
@@ -79,10 +78,12 @@ void Map_2_start_enemis(void);
 void Map_1_start_player();
 void Map_2_start_player();
 bool Can_shot(float dt);
+void map_starter_caller();
 
 extern const TileType maps_map1[MAP_ROWS][MAP_COLS];
 extern const TileType maps_map2[MAP_ROWS][MAP_COLS];
-TileType (*currentMap)[MAP_COLS] = maps_map1;
+const TileType (*currentMap)[MAP_COLS] = maps_map1;
+
 void renderGame()
 {
 	// Raycaster Engine LOL
@@ -470,6 +471,19 @@ void handlePlayerMovement(float dt)
 
 	player.x = player_fx;
 	player.y = player_fy;
+
+	int player_tile_x = player.x / TILE_SIZE;
+	int player_tile_y = player.y / TILE_SIZE;
+
+	if (currentMap[player_tile_y][player_tile_x] == WALL) {
+		if (currentMap == maps_map1) {
+			currentMap = maps_map2;
+			map_starter_caller();
+		} else {
+			currentMap = maps_map1;
+			map_starter_caller();
+		}
+	}
 }
 
 void player_view_draw()
@@ -622,9 +636,6 @@ void shootBullet(float current_shoot_angle, float max_range_tiles, int visual_si
 								    PROJECTION_PLANE_DISTANCE *
 									    tanf(hit_angle_diff));
 
-					float hit_projected_height =
-						(TILE_SIZE * PROJECTION_PLANE_DISTANCE /
-						 hit_dist_from_player);
 					bullet.hit_screen_y = (int)((SCREEN_HEIGHT / 2.0f));
 					bullet.hit_size = visual_size;
 					bullet.hit_color = (enemies[j].alive) ? GREEN : RED;
@@ -672,6 +683,7 @@ void game_start(void)
 {
 	sdk_set_output_gain_db(volume);
 	void map_starter_caller();
+	player.health = 100;
 }
 void map_starter_caller()
 {
@@ -688,14 +700,12 @@ void Map_1_start_enemis(void)
 {
 	enemies[0].x = TILE_SIZE * 14.0f;
 	enemies[0].y = TILE_SIZE * 14.0f;
-	enemies[0].health = 100;
 	enemies[0].alive = true;
 	enemies[0].state = ENEMY_IDLE;
 	enemies[0].last_attack_time = 0;
 
 	enemies[1].x = TILE_SIZE * 15.0f;
 	enemies[1].y = TILE_SIZE * 15.0f;
-	enemies[1].health = 100;
 	enemies[1].alive = true;
 	enemies[1].state = ENEMY_IDLE;
 	enemies[1].last_attack_time = 0;
@@ -705,7 +715,6 @@ void Map_2_start_enemis(void)
 {
 	enemies[0].x = TILE_SIZE * 10.0f;
 	enemies[0].y = TILE_SIZE * 10.0f;
-	enemies[0].health = 100;
 	enemies[0].alive = true;
 	enemies[0].state = ENEMY_IDLE;
 	enemies[0].last_attack_time = 0;
@@ -715,7 +724,6 @@ void Map_1_start_player(void)
 	player.x = TILE_SIZE * 1.5f;
 	player.y = TILE_SIZE * 1.5f;
 	player.angle = (float)M_PI / 2.0f;
-	player.health = 100;
 	player.ammo = 15;
 	player.alive = true;
 	player.gun = 1;
@@ -735,7 +743,6 @@ void Map_2_start_player(void)
 	player.x = TILE_SIZE * 2.5f;
 	player.y = TILE_SIZE * 3.5f;
 	player.angle = (float)M_PI / 2.0f;
-	player.health = 100;
 	player.ammo = 15;
 	player.alive = true;
 	player.gun = 1;
