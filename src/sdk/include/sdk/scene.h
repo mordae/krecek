@@ -1,4 +1,5 @@
 #pragma once
+#include "sdk/game.h"
 #include <stdbool.h>
 
 typedef enum sdk_event {
@@ -64,6 +65,13 @@ typedef struct sdk_scene {
 	 */
 	bool (*handle)(sdk_event_t event, int depth);
 
+	/*
+	 * Handle multiplayer message.
+	 * Called from the top down.
+	 * First handler to return true stops the propagation.
+	 */
+	bool (*inbox)(sdk_message_t msg, int depth);
+
 	/* Scene was pushed to the stack. */
 	void (*pushed)(void);
 
@@ -100,6 +108,9 @@ void sdk_scene_paint(unsigned dt_usec);
 
 /* Deliver input events to the scene stack. */
 void sdk_scene_handle(void);
+
+/* Deliver multiplayer message to the scene stack. */
+void sdk_scene_inbox(sdk_message_t msg);
 
 /* Push scene to the top of the stack. */
 void sdk_scene_push(sdk_scene_t *scene);

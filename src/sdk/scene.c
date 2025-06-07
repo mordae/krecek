@@ -136,6 +136,25 @@ void sdk_scene_handle(void)
 	}
 }
 
+static bool scene_inbox_r(sdk_scene_t *scene, sdk_message_t msg, int depth)
+{
+	if (NULL == scene)
+		return false;
+
+	if (scene->inbox && scene->on_stack) {
+		if (scene->inbox(msg, depth))
+			return true;
+	}
+
+	return scene_inbox_r(scene->shadow, msg, depth + 1);
+}
+
+void sdk_scene_inbox(sdk_message_t msg)
+{
+	sdk_scene_t *root = prepare_shadow_stack();
+	scene_inbox_r(root, msg, 0);
+}
+
 void sdk_scene_push(sdk_scene_t *scene)
 {
 	if (NULL == scene)

@@ -267,6 +267,8 @@ target_reached:
 
 	/* Determine ID from our flash chip. */
 	flash_get_unique_id((uint8_t *)&sdk_device_id);
+	sdk_device_id = __builtin_bswap64(sdk_device_id);
+
 	printf("sdk: device_id=%llx\n", sdk_device_id);
 
 	task_init();
