@@ -10,26 +10,57 @@
 
 #define WHITE rgb_to_rgb565(255, 255, 255)
 
-static int lx, ly, rx, ry;
+struct cursor {
+	int id;
+	int x, y;
+};
+
+#define NUM_CURSORS 8
+struct cursor cursors[NUM_CURSORS];
+
+color_t colors[NUM_CURSORS] = {
+	rgb_to_rgb565(255, 0, 0),     rgb_to_rgb565(0, 0, 255),	    rgb_to_rgb565(255, 255, 0),
+	rgb_to_rgb565(255, 0, 255),   rgb_to_rgb565(0, 255, 255),   rgb_to_rgb565(127, 127, 127),
+	rgb_to_rgb565(127, 127, 255), rgb_to_rgb565(255, 127, 127),
+};
+
+static int lx, ly;
+static uint8_t device_id_16;
 
 static int channel = SDK_RF_CHANNEL;
+
+void game_reset(void)
+{
+	device_id_16 = (0x9e3779b97f4a7801 * sdk_device_id) >> 48;
+
+	for (int i = 0; i < NUM_CURSORS; i++)
+		cursors[i].id = -1;
+}
 
 void game_inbox(sdk_message_t msg)
 {
 	if (SDK_MSG_RF == msg.type) {
-		if (2 != msg.rf.length) {
+		if (4 != msg.rf.length) {
 			printf("game_inbox: invalid RF len=%i\n", msg.rf.length);
 			return;
 		}
 
-		rx = msg.rf.data[0];
-		ry = msg.rf.data[1];
+		uint16_t id = (msg.rf.data[0] << 8) | msg.rf.data[1];
+
+		for (int i = 0; i < NUM_CURSORS; i++) {
+			if (cursors[i].id < 0 || cursors[i].id == id) {
+				cursors[i].id = id;
+				cursors[i].x = msg.rf.data[2];
+				cursors[i].y = msg.rf.data[3];
+				break;
+			}
+		}
 	}
 }
 
 static void tx_cursor(void)
 {
-	uint8_t msg[] = { lx, ly };
+	uint8_t msg[] = { device_id_16 >> 8, device_id_16, lx, ly };
 	sdk_send_rf(SDK_RF_ALL, msg, sizeof(msg));
 }
 
@@ -63,7 +94,15 @@ void game_paint(unsigned dt_usec)
 
 	tft_draw_string(0, 0, rgb_to_rgb565(127, 0, 0), "%i", channel);
 
-	tft_draw_rect(rx - 1, ry - 1, rx + 1, ry + 1, rgb_to_rgb565(255, 0, 0));
+	for (int i = 0; i < NUM_CURSORS; i++) {
+		if (cursors[i].id < 0)
+			continue;
+
+		int rx = cursors[i].x;
+		int ry = cursors[i].y;
+		tft_draw_rect(rx - 1, ry - 1, rx + 1, ry + 1, colors[i]);
+	}
+
 	tft_draw_rect(lx - 1, ly - 1, lx + 1, ly + 1, rgb_to_rgb565(0, 255, 0));
 }
 

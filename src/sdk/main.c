@@ -163,9 +163,6 @@ target_reached:
 	/* Apply configuration. */
 	sdk_config = *conf;
 
-	/* Determine ID from our flash chip. */
-	flash_get_unique_id((uint8_t *)&sdk_device_id);
-
 	if (!sdk_config.backlight)
 		sdk_config.backlight = SDK_BACKLIGHT_STD;
 
@@ -264,6 +261,10 @@ target_reached:
 		adc_select_input(i % 5);
 		srand(adc_read() + rand());
 	}
+
+	/* Determine ID from our flash chip. */
+	flash_get_unique_id((uint8_t *)&sdk_device_id);
+	printf("sdk: device_id=%llx\n", sdk_device_id);
 
 	task_init();
 
