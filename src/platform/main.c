@@ -3,9 +3,11 @@
 #include <tft.h>
 #include <sdk.h>
 #include <math.h>
+#include <stdio.h>
 #include "common.h"
 
 #include <petr.png.h>
+#include <sonic.png.h>
 #include <kurecidzokej.png.h>
 #include <platforms.png.h>
 #include <menu.png.h>
@@ -81,6 +83,7 @@ typedef struct {
 
 static Jockey jockey;
 
+static bool sonic_mode;
 static float volume = SDK_GAIN_STD;
 static void enemy_jockey(float dt);
 static void game_menu(float dt);
@@ -115,6 +118,7 @@ void game_start(void)
 	sdk_set_output_gain_db(volume);
 	sdk_melody_play(music1);
 	sdk_melody_play(music2);
+	sonic_mode = false;
 }
 
 void game_reset(void)
@@ -442,6 +446,8 @@ static void game_menu(float dt)
 {
 	(void)dt;
 
+	int rx = sdk_inputs.tx * TFT_RIGHT;
+	int ry = sdk_inputs.ty * TFT_RIGHT;
 	if (mario_p.mode == 0) {
 		mario_p.fast = 0;
 		map = maps_map0;
@@ -449,6 +455,15 @@ static void game_menu(float dt)
 		menu.select += sdk_inputs_delta.vertical;
 		menu.select -= (sdk_inputs_delta.y > 0);
 		menu.select += (sdk_inputs_delta.a > 0);
+
+		if (sdk_inputs.tp >= 0.5f) {
+			if (rx >= 6 && rx <= 75 && ry >= 28 && ry <= 47)
+				goto start_game;
+			if (rx >= 6 && rx <= 75 && ry >= 50 && ry <= 69)
+				goto start_fast_game;
+			if (rx >= 6 && rx <= 75 && ry >= 72 && ry <= 91)
+				goto level_menu;
+		}
 
 		if (menu.select > 2) {
 			menu.select = 0;
@@ -458,18 +473,21 @@ static void game_menu(float dt)
 
 		if (sdk_inputs_delta.start > 0) {
 			if (menu.select == 0) {
+start_game:
 				mario_p.px = 1 * TILE_SIZE;
 				mario_p.py = 12 * TILE_SIZE;
 				map = maps_map1;
 				world_start();
 				return;
 			} else if (menu.select == 1) {
+start_fast_game:
 				mario_p.time = 0;
 				world_start();
 				mario_p.fast = 1;
 				map = maps_map1;
 				return;
 			} else if (menu.select == 2) {
+level_menu:
 				mario_p.mode = 3;
 				menu.levels = 0;
 				return;
@@ -480,15 +498,22 @@ static void game_menu(float dt)
 		menu.levels -= (sdk_inputs_delta.y > 0);
 		menu.levels += (sdk_inputs_delta.a > 0);
 
+		if (menu.levels > 3 && menu.levels < 8 && sdk_inputs.tp >= 0.5f) {
+			if (rx > 10 && rx < 69 && ry > 21 && ry < 89) {
+				sonic_mode = true;
+				world_start();
+				goto map1;
+			}
+		}
 		if (menu.levels > 7) {
 			menu.levels = 0;
 		} else if (menu.levels < 0) {
 			menu.levels = 7;
 		}
-
 		if (sdk_inputs_delta.start > 0) {
 			world_start();
 			if (menu.levels == 0) {
+map1:
 				map = maps_map1;
 			} else if (menu.levels == 1) {
 				map = maps_map2;
@@ -530,6 +555,7 @@ void game_paint(unsigned dt_usec)
 		} else {
 			sdk_draw_image(0, 0, &image_levels1to4_png);
 		}
+
 	} else if (mario_p.mode == 4) {
 		sdk_draw_tile(0, 0, &ts_death_png, 1);
 	} else {
@@ -553,14 +579,17 @@ void game_paint(unsigned dt_usec)
 
 		mario_p.s.x = mario_p.px;
 		mario_p.s.y = mario_p.py;
-
-		if (mario_p.vx > 0)
-			mario_p.s.tile = 0;
-		else if (mario_p.vx < 0)
-			mario_p.s.tile = 1;
-		if (!mario_p.alive)
-			mario_p.s.tile = 4;
-
+		if (sonic_mode) {
+		} else {
+			if (mario_p.vx > 0)
+				mario_p.s.tile = 0;
+			else if (mario_p.vx < 0)
+				mario_p.s.tile = 1;
+			if (!mario_p.alive)
+				mario_p.s.tile = 4;
+		}
+		if (sonic_mode)
+			mario_p.s.ts = &ts_sonic_png;
 		sdk_draw_sprite(&mario_p.s);
 
 		if (map == maps_map1 || map == maps_map1c) {
