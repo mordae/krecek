@@ -63,6 +63,8 @@ static void level_paint(float dt, int depth)
 		snprintf(text, sizeof text, "%i =%02x", tile->tile_id, tile->map);
 		//} else if (tile->effect == TILE_EFFECT_DAMAGE) {
 		//	snprintf(text, sizeof text, "%i !%i", tile->tile_id, tile->damage);
+	} else if (tile->effect == TILE_EFFECT_SPAWN) {
+		snprintf(text, sizeof text, "%i!S", tile->tile_id);
 	} else {
 		snprintf(text, sizeof text, "%i", tile->tile_id);
 	}
@@ -164,6 +166,10 @@ static bool level_handle(sdk_event_t event, int depth)
 
 	case SDK_PRESSED_AUX6:
 		tile->tile_id = saved_tile_id;
+		return true;
+
+	case SDK_PRESSED_AUX7:
+		tile->effect = TILE_EFFECT_SPAWN;
 		return true;
 
 	case SDK_PRESSED_SELECT:

@@ -4,6 +4,7 @@
 #include <sdk.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <tft.h>
 
 #include "tile.h"
@@ -31,6 +32,37 @@ static const void *maps[NUM_MAPS] = {
 
 static const Tile (*map)[MAP_COLS] = (const void *)maps_map00_bin;
 
+typedef enum EnemyTypeId {
+	ENEMY_BLOB = 0,
+	ENEMY_SLIME_BOSS,
+	NUM_ENEMY_TYPES,
+} EnemyTypeId;
+
+typedef struct EnemyType {
+	const sdk_tileset_t *ts;
+	int max_hp;
+} EnemyType;
+
+typedef struct Enemy {
+	const EnemyType *type;
+	sdk_sprite_t s;
+	int hp;
+} Enemy;
+
+static const EnemyType enemy_type[NUM_ENEMY_TYPES] = {
+	[ENEMY_BLOB] = {
+		.max_hp = 100,
+		.ts = &ts_enemies_blob_png,
+	},
+	[ENEMY_SLIME_BOSS] = {
+		.max_hp = 1000,
+		.ts = &ts_enemies_blob_png,
+	},
+};
+
+#define NUM_ENEMIES 16
+static Enemy enemy[NUM_ENEMIES];
+
 struct character {
 	sdk_sprite_t s;
 	float speed;
@@ -54,6 +86,46 @@ void game_start(void)
 	player.s.x = TFT_WIDTH / 2.0f;
 	player.s.y = TFT_HEIGHT / 2.0f;
 	player.speed = 50.0f;
+}
+
+static void change_map(int map_id, int px, int py)
+{
+	// Change map
+	map = maps[map_id];
+
+	// Move player to destination coordinates
+	player.s.x = (TILE_SIZE * px) + 3.5f;
+	player.s.y = (TILE_SIZE * py) + 3.5f;
+
+	// TODO: Spawn enemies
+	int spawned = 0;
+
+	memset(enemy, 0, sizeof(enemy));
+
+	for (int y = 0; y < MAP_ROWS; y++) {
+		for (int x = 0; x < MAP_COLS; x++) {
+			Tile tile = map[y][x];
+
+			if (TILE_EFFECT_SPAWN != tile.effect)
+				continue;
+
+			// TODO: Add argument to select different enemy type.
+			const EnemyType *type = &enemy_type[ENEMY_BLOB];
+			enemy[spawned].type = type;
+			enemy[spawned].hp = type->max_hp;
+			enemy[spawned].s.ts = type->ts;
+			enemy[spawned].s.x = x * TILE_SIZE + 3.5f;
+			enemy[spawned].s.y = y * TILE_SIZE + 3.5f;
+			enemy[spawned].s.ox = 3.5f;
+			enemy[spawned].s.oy = 3.5f;
+
+			spawned++;
+
+			// Don't spawn more than we have space for.
+			if (spawned >= NUM_ENEMIES)
+				break;
+		}
+	}
 }
 
 void game_input(unsigned dt_usec)
@@ -130,9 +202,7 @@ void game_input(unsigned dt_usec)
 		if (fresh_from_teleport) {
 			// Do nothing, we just teleported in.
 		} else if (tile.map < NUM_MAPS) {
-			map = maps[tile.map];
-			player.s.x = (TILE_SIZE * tile.px) + 3.5f;
-			player.s.y = (TILE_SIZE * tile.py) + 3.5f;
+			change_map(tile.map, tile.px, tile.py);
 			fresh_from_teleport = true;
 		} else {
 			printf("Cannot teleport to map%02x\n", tile.map);
@@ -151,6 +221,15 @@ void game_paint(unsigned __unused dt_usec)
 			sdk_draw_tile(x * TILE_SIZE, y * TILE_SIZE, &ts_tileset_png,
 				      map[y][x].tile_id);
 		}
+	}
+
+	for (int i = 0; i < NUM_ENEMIES; i++) {
+		if (!enemy[i].type)
+			continue;
+
+		enemy[i].s.tile = (time_us_32() >> 19) & 1;
+
+		sdk_draw_sprite(&enemy[i].s);
 	}
 
 	sdk_draw_sprite(&player.s);
