@@ -894,7 +894,7 @@ void handleEnemyAI(float dt)
 bool Can_shot(float dt)
 {
 	timer += dt;
-	if (timer >= 0.7f) {
+	if (timer >= 1.0f) {
 		timer = 0;
 		return true;
 	} else
@@ -1000,7 +1000,7 @@ int main()
 	struct sdk_config config = {
 		.wait_for_usb = true,
 		.show_fps = true,
-		.off_on_select = false,
+		.off_on_select = true,
 		.fps_color = WHITE,
 	};
 	sdk_main(&config);
