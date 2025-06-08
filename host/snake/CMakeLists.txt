@@ -3,7 +3,8 @@ add_executable(
   ../../src/snake/main.c
 )
 
-target_link_libraries(snake PRIVATE sdk m)
+generate_png_headers()
+target_link_libraries(snake PRIVATE sdk m ${PNG_HEADERS_TARGET})
 
 set_property(TARGET snake PROPERTY C_STANDARD 23)
 target_compile_options(snake PRIVATE -Wall -Wextra -Wnull-dereference)
