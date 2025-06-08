@@ -36,6 +36,10 @@ void sdk_input_init(void);
 void sdk_input_handle(const SDL_Event *event);
 void sdk_input_commit(uint32_t dt);
 
+/* From comms.c */
+void sdk_comms_init(void);
+void sdk_comms_poll(void);
+
 void __attribute__((__noreturn__, __format__(printf, 1, 2))) sdk_panic(const char *fmt, ...)
 {
 	va_list ap;
@@ -110,6 +114,7 @@ void __noreturn sdk_main(const struct sdk_config *conf)
 	sdk_input_init();
 	sdk_audio_init();
 	sdk_video_init();
+	sdk_comms_init();
 
 	game_start();
 	game_reset();
@@ -145,6 +150,9 @@ void __noreturn sdk_main(const struct sdk_config *conf)
 		// Enqueue audio samples.
 		sdk_audio_task();
 		sdk_audio_flush();
+
+		// Poll for new packets.
+		sdk_comms_poll();
 
 		// Clear to gray
 		SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
