@@ -74,7 +74,7 @@ void __noreturn sdk_main(const struct sdk_config *conf)
 	if (!sdk_config.backlight)
 		sdk_config.backlight = SDK_BACKLIGHT_STD;
 
-	if (SDL_Init(SDL_INIT_VIDEO))
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
 		sdl_error("SDL_Init");
 
 	SDL_Window *window = SDL_CreateWindow("Game", SDL_WINDOWPOS_CENTERED,

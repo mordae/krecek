@@ -1,90 +1,67 @@
+#include <SDL_audio.h>
 #include <sdk.h>
-#include <pulse/pulseaudio.h>
-#include <pulse/simple.h>
-#include <string.h>
 
-static pa_simple *pa;
+static SDL_AudioDeviceID device_id;
 
 #define BUFFER_SIZE 1024
 static int16_t buffer[BUFFER_SIZE][2];
 static int used = 0;
 
-/*
- * This is a private API, I shouldn't be declaring it here.
- *
- * But I just need to be able to tell how much to feed
- * pa_simple_write() without it blocking
- */
-struct pa_simple {
-	pa_threaded_mainloop *mainloop;
-	pa_context *context;
-	pa_stream *stream;
-	pa_stream_direction_t direction;
-};
-
 void sdk_audio_init(void)
 {
-	pa_sample_spec ss = {
-		.format = PA_SAMPLE_S16NE,
+	SDL_AudioSpec desired = {
 		.channels = 2,
-		.rate = SDK_AUDIO_RATE,
+		.format = AUDIO_S16SYS,
+		.freq = SDK_AUDIO_RATE,
+		.samples = BUFFER_SIZE / 2,
 	};
+	SDL_AudioSpec obtained = {};
 
-	pa = pa_simple_new(NULL, "Krecek", PA_STREAM_PLAYBACK, NULL, "Game", &ss, NULL, NULL, NULL);
+	device_id = SDL_OpenAudioDevice(NULL, false, &desired, &obtained, 0);
 
-	if (NULL == pa)
-		sdk_panic("pa_simple_new failed");
+	if (obtained.channels != desired.channels)
+		sdk_panic("SDL_OpenAudioDevice failed to get us 2 channels");
+
+	if (obtained.format != desired.format)
+		sdk_panic("SDL_OpenAudioDevice failed to get us S16SYS format");
+
+	if (obtained.freq != desired.freq)
+		sdk_panic("SDL_OpenAudioDevice failed to get us %u Hz", SDK_AUDIO_RATE);
+
+	if (obtained.samples < desired.samples)
+		sdk_panic("SDL_OpenAudioDevice failed to get us %u sample buffer", desired.samples);
 }
 
 void sdk_audio_start(void)
 {
+	SDL_PauseAudioDevice(device_id, false);
 }
 
 void sdk_audio_flush()
 {
-	int error = 0;
-
 	if (!used)
 		return;
 
-	// How much can we write?
-	int writable = pa_stream_writable_size(pa->stream) / 4;
-
-	if (writable < used)
-		return; // No can do.
-
-	// We can flush it now, good.
-	if (0 > pa_simple_write(pa, buffer, used * 4, &error))
-		sdk_panic("pa_simple_write failed, error=%i", error);
+	if (SDL_QueueAudio(device_id, buffer, used * 4))
+		sdk_panic("SDL_QueueAudio failed: %s", SDL_GetError());
 
 	used = 0;
 }
 
 void sdk_audio_task(void)
 {
-	int writable = pa_stream_writable_size(pa->stream) / 4;
-	if (writable)
-		game_audio(writable);
+	int pending = SDL_GetQueuedAudioSize(device_id);
+
+	if (pending > BUFFER_SIZE)
+		return;
+
+	game_audio(BUFFER_SIZE);
 }
 
 void sdk_write_sample(int16_t left, int16_t right)
 {
-	int error = 0;
-
-	if (used == BUFFER_SIZE) {
-		// Buffer is full, check if we can flush it.
-		int writable = pa_stream_writable_size(pa->stream) / 4;
-
-		if (writable < used)
-			return; // No can do.
-
-		// Yes, we can flush it. Let's do so.
-		if (0 > pa_simple_write(pa, buffer, BUFFER_SIZE * 4, &error))
-			sdk_panic("pa_simple_write failed, error=%i", error);
-
-		// We now have a nice, empty buffer.
-		used = 0;
-	}
+	if (BUFFER_SIZE == used)
+		sdk_audio_flush();
 
 	// Add the sample.
 	buffer[used][0] = left;

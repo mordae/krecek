@@ -7,8 +7,6 @@ find_package(PkgConfig REQUIRED)
 find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
 find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
 
-pkg_check_modules(PA REQUIRED libpulse-simple)
-
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   add_compile_options(-fsanitize=address)
   add_link_options(-fsanitize=address)
