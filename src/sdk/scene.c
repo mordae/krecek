@@ -155,6 +155,23 @@ void sdk_scene_inbox(sdk_message_t msg)
 	scene_inbox_r(root, msg, 0);
 }
 
+static bool scene_tick_r(sdk_scene_t *scene, int jiffies, int depth)
+{
+	if (NULL == scene)
+		return false;
+
+	if (scene->tick && scene->on_stack)
+		scene->tick(jiffies, depth);
+
+	return scene_tick_r(scene->shadow, jiffies, depth + 1);
+}
+
+void sdk_scene_tick(int jiffies)
+{
+	sdk_scene_t *root = prepare_shadow_stack();
+	scene_tick_r(root, jiffies, 0);
+}
+
 void sdk_scene_push(sdk_scene_t *scene)
 {
 	if (NULL == scene)

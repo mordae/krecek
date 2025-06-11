@@ -72,6 +72,16 @@ typedef struct sdk_scene {
 	 */
 	bool (*inbox)(sdk_message_t msg, int depth);
 
+	/*
+	 * Handle time passing.
+	 * Called from the top down.
+	 *
+	 * The amount of time that has passed is caller-specified.
+	 * We are not using float there since the calls can happen
+	 * quite often.
+	 */
+	void (*tick)(int jiffies, int depth);
+
 	/* Scene was pushed to the stack. */
 	void (*pushed)(void);
 
@@ -111,6 +121,9 @@ void sdk_scene_handle(void);
 
 /* Deliver multiplayer message to the scene stack. */
 void sdk_scene_inbox(sdk_message_t msg);
+
+/* Process time passing at all levels of the scene stack. */
+void sdk_scene_tick(int jiffies);
 
 /* Push scene to the top of the stack. */
 void sdk_scene_push(sdk_scene_t *scene);
