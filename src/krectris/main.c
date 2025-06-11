@@ -82,6 +82,9 @@ static int lines_cleared = 0;
 static int gravity_speed = 1000000; // how much time passes before the active piece falls
 static int time_after_falling = 0;
 
+static int score = 0;
+static int lines_to_score = 0;
+
 static int lock_time = 500000; // how much time you have on the ground before the piece locks
 static int lock_movement = 15; // how many times you can move on the ground before the piece locks
 static int lock_time_elapsed = 0;
@@ -386,6 +389,8 @@ static void lock_active_piece()
 		next_piece_in_bag = 6;
 	}
 
+	lines_to_score = 0;
+
 	for (int i = 0; i <= 3; i++) {
 		int row_to_remove = -1;
 		for (int row = BOARD_HEIGHT * 2 - 1; row >= 0; row--) {
@@ -396,6 +401,7 @@ static void lock_active_piece()
 		}
 		if (row_to_remove >= 0) {
 			lines_cleared++;
+			lines_to_score++;
 			if (lines_cleared % lines_per_level == 0) {
 				current_level = clampi(++current_level, 0, max_level);
 				gravity_speed = level_speeds[current_level];
@@ -412,6 +418,10 @@ static void lock_active_piece()
 			break;
 		}
 	}
+
+	if (lines_to_score) {
+        	score += lines_to_score * lines_to_score * (current_level + 1);
+	}
 }
 
 static const char testmusic[] = "/i:sine /bpm:100 <"
@@ -427,7 +437,7 @@ static sdk_melody_t *testmelody;
 
 void game_reset(void)
 {
-	testmelody = sdk_melody_play_get(testmusic);
+	// testmelody = sdk_melody_play_get(testmusic);
 	generate_future_bag();
 	for (int i = 0; i <= 6; i++) {
 		active_bag[i] = future_bag[i];
@@ -667,6 +677,8 @@ void game_paint(unsigned __unused dt_usec)
 			}
 		}
 	}
+
+	tft_draw_string(0, 0, WHITE, "%i", score);
 }
 
 int main()
