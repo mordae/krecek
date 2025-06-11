@@ -74,7 +74,7 @@ typedef struct sdk_scene {
 
 	/*
 	 * Handle time passing.
-	 * Called from the top down.
+	 * Called from the bottom up.
 	 *
 	 * The amount of time that has passed is caller-specified.
 	 * We are not using float there since the calls can happen
