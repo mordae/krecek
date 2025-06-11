@@ -1,3 +1,4 @@
+#include "sdk/image.h"
 #include "sdk/input.h"
 #include "sdk/util.h"
 #include "sys/types.h"
@@ -12,6 +13,7 @@
 #include <tft.h>
 
 #include <cover.png.h>
+#include <smileyrace-smiley-6x6.png.h>
 
 sdk_game_info("smileyrace", &image_cover_png);
 
@@ -240,8 +242,12 @@ void game_paint(unsigned __unused dt_usec)
 		}
 	}
 
+	if (CELL_SIZE == 6) {
+        	sdk_draw_tile(SCREEN_POS_X, SCREEN_POS_Y, &ts_smileyrace_smiley_6x6_png, 0);
+	} else {
 	tft_draw_rect(SCREEN_POS_X, SCREEN_POS_Y, SCREEN_POS_X + CELL_SIZE - 1,
 		      SCREEN_POS_Y + CELL_SIZE - 1, player.color);
+	}
 }
 
 int main()
