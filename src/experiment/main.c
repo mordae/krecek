@@ -64,11 +64,17 @@ static const EnemyType enemy_type[NUM_ENEMY_TYPES] = {
 #define NUM_ENEMIES 16
 static Enemy enemy[NUM_ENEMIES];
 
+#define SWING_START (1 << 17)
+#define SWING_SHIFT 16
+
+#define SHAKEN_START (1 << 18)
+
 typedef struct Character {
 	sdk_sprite_t s;
 	sdk_sprite_t swing;
 	int swing_phase;
 	float speed;
+	int shaken_phase;
 } Character;
 
 static Character player = {
@@ -105,7 +111,6 @@ static void change_map(int map_id, int px, int py)
 	player.s.x = (TILE_SIZE * px) + 3.5f;
 	player.s.y = (TILE_SIZE * py) + 3.5f;
 
-	// TODO: Spawn enemies
 	int spawned = 0;
 
 	memset(enemy, 0, sizeof(enemy));
@@ -142,8 +147,7 @@ static bool player_collides_with_an_enemy(void)
 		if (!enemy[i].type)
 			continue;
 
-		// TODO: use exact colissions
-		if (sdk_sprites_collide_bbox(&player.s, &enemy[i].s))
+		if (sdk_sprites_collide(&player.s, &enemy[i].s))
 			return true;
 	}
 
@@ -155,80 +159,95 @@ void game_input(unsigned dt_usec)
 	float dt = dt_usec / 1000000.0f;
 
 	if (sdk_inputs_delta.a > 0) {
-		player.swing_phase = 2;
+		player.swing_phase = SWING_START;
 	}
 
-	float move_x =
-		abs(sdk_inputs.joy_x) >= 512 ? player.speed * dt * sdk_inputs.joy_x / 2048.0f : 0;
-	float move_y =
-		abs(sdk_inputs.joy_y) >= 512 ? player.speed * dt * sdk_inputs.joy_y / 2048.0f : 0;
+	if (player.shaken_phase <= 0) {
+		float move_x = abs(sdk_inputs.joy_x) >= 512 ?
+				       player.speed * dt * sdk_inputs.joy_x / 2048.0f :
+				       0;
+		float move_y = abs(sdk_inputs.joy_y) >= 512 ?
+				       player.speed * dt * sdk_inputs.joy_y / 2048.0f :
+				       0;
 
-	// TODO: fix player/enemy colissions
-	if ((move_x || move_y) && !player_collides_with_an_enemy()) {
-		int pos_x = player.s.x / TILE_SIZE;
-		int pos_y = player.s.y / TILE_SIZE;
+		float old_x = player.s.x;
+		float old_y = player.s.y;
 
-		float next_x = player.s.x + move_x;
-		float next_y = player.s.y + move_y;
+		if ((move_x || move_y)) {
+			int pos_x = player.s.x / TILE_SIZE;
+			int pos_y = player.s.y / TILE_SIZE;
 
-		next_x = clamp(next_x, TILE_SIZE / 4.0f, TFT_RIGHT - TILE_SIZE / 4.0f);
-		next_y = clamp(next_y, TILE_SIZE / 4.0f, TFT_BOTTOM - TILE_SIZE / 4.0f);
-		int next_pos_x = next_x / TILE_SIZE;
-		int next_pos_y = next_y / TILE_SIZE;
+			float next_x = player.s.x + move_x;
+			float next_y = player.s.y + move_y;
 
-		if (pos_x != next_pos_x && move_x) {
-			if (move_x > 0) {
-				// going right, to the next tile
-				if (map[pos_y][next_pos_x].collides_left)
-					next_x = ceilf(player.s.x) - 1e-3;
-			} else {
-				// going left, to the next tile
-				if (map[pos_y][next_pos_x].collides_right)
-					next_x = floorf(player.s.x);
+			next_x = clamp(next_x, TILE_SIZE / 4.0f, TFT_RIGHT - TILE_SIZE / 4.0f);
+			next_y = clamp(next_y, TILE_SIZE / 4.0f, TFT_BOTTOM - TILE_SIZE / 4.0f);
+			int next_pos_x = next_x / TILE_SIZE;
+			int next_pos_y = next_y / TILE_SIZE;
+
+			if (pos_x != next_pos_x && move_x) {
+				if (move_x > 0) {
+					// going right, to the next tile
+					if (map[pos_y][next_pos_x].collides_left)
+						next_x = ceilf(player.s.x) - 1e-3;
+				} else {
+					// going left, to the next tile
+					if (map[pos_y][next_pos_x].collides_right)
+						next_x = floorf(player.s.x);
+				}
 			}
-		}
 
-		if (pos_y != next_pos_y && move_y) {
-			if (move_y > 0) {
-				// going down, to the next tile
-				if (map[next_pos_y][pos_x].collides_up)
-					next_y = ceilf(player.s.y) - 1e-3;
-			} else {
-				// going up, to the next tile
-				if (map[next_pos_y][pos_x].collides_down)
-					next_y = floorf(player.s.y);
+			if (pos_y != next_pos_y && move_y) {
+				if (move_y > 0) {
+					// going down, to the next tile
+					if (map[next_pos_y][pos_x].collides_up)
+						next_y = ceilf(player.s.y) - 1e-3;
+				} else {
+					// going up, to the next tile
+					if (map[next_pos_y][pos_x].collides_down)
+						next_y = floorf(player.s.y);
+				}
 			}
-		}
 
-		player.s.x = next_x;
-		player.s.y = next_y;
+			player.s.x = next_x;
+			player.s.y = next_y;
 
-		if (fabsf(move_x) > fabsf(move_y)) {
-			if (move_x > 0) {
-				player.s.tile = 6;
-				player.swing.angle = 1;
-				player.swing.ox = 4;
+			if (fabsf(move_x) > fabsf(move_y)) {
+				if (move_x > 0) {
+					player.s.tile = 6;
+					player.swing.angle = 1;
+					player.swing.ox = 4;
+					player.swing.oy = 12;
+				} else if (move_x < 0) {
+					player.s.tile = 4;
+					player.swing.angle = 3;
+					player.swing.ox = 10;
+					player.swing.oy = 10;
+				}
+			} else if (move_y > 0) {
+				player.s.tile = 2;
+				player.swing.angle = 2;
+				player.swing.ox = 7;
+				player.swing.oy = 8;
+			} else if (move_y < 0) {
+				player.s.tile = 0;
+				player.swing.angle = 0;
+				player.swing.ox = 9;
 				player.swing.oy = 12;
-			} else if (move_x < 0) {
-				player.s.tile = 4;
-				player.swing.angle = 3;
-				player.swing.ox = 10;
-				player.swing.oy = 10;
 			}
-		} else if (move_y > 0) {
-			player.s.tile = 2;
-			player.swing.angle = 2;
-			player.swing.ox = 7;
-			player.swing.oy = 8;
-		} else if (move_y < 0) {
-			player.s.tile = 0;
-			player.swing.angle = 0;
-			player.swing.ox = 9;
-			player.swing.oy = 12;
+
+			player.s.tile &= ~1;
+			player.s.tile |= (time_us_32() >> 16) & 1;
 		}
 
-		player.s.tile &= ~1;
-		player.s.tile |= (time_us_32() >> 16) & 1;
+		if (player_collides_with_an_enemy()) {
+			// Minor knock back effect.
+			player.s.x -= (player.s.x - old_x) * 5;
+			player.s.y -= (player.s.y - old_y) * 5;
+			player.shaken_phase = SHAKEN_START;
+		}
+	} else {
+		player.shaken_phase -= dt_usec;
 	}
 
 	int pos_x = player.s.x / TILE_SIZE;
@@ -292,20 +311,22 @@ void game_paint(unsigned __unused dt_usec)
 	}
 
 	if (player.swing_phase > 0) {
-		player.swing.tile = 2 - player.swing_phase;
-		player.swing_phase -= 1;
+		player.swing.tile = 1 - (player.swing_phase >> SWING_SHIFT);
 		player.swing.x = player.s.x;
 		player.swing.y = player.s.y;
 		sdk_draw_sprite(&player.swing);
 
-		for (int i = 0; i < NUM_ENEMIES; i++) {
-			if (!enemy[i].type)
-				continue;
+		if (SWING_START == player.swing_phase) {
+			for (int i = 0; i < NUM_ENEMIES; i++) {
+				if (!enemy[i].type)
+					continue;
 
-			// TODO: convert to exact per-pixel colissions
-			int px = sdk_sprites_collide_bbox(&player.swing, &enemy[i].s) * 10;
-			enemy[i].hp -= px;
+				int px = sdk_sprites_collide(&player.swing, &enemy[i].s);
+				enemy[i].hp -= px;
+			}
 		}
+
+		player.swing_phase -= dt_usec;
 	}
 
 	sdk_draw_sprite(&player.s);
