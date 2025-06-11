@@ -11,6 +11,7 @@
 
 #include <tileset.png.h>
 #include <player.png.h>
+#include <swing.png.h>
 #include <enemies/blob.png.h>
 
 #include <maps/map00.bin.h>
@@ -63,16 +64,23 @@ static const EnemyType enemy_type[NUM_ENEMY_TYPES] = {
 #define NUM_ENEMIES 16
 static Enemy enemy[NUM_ENEMIES];
 
-struct character {
+typedef struct Character {
 	sdk_sprite_t s;
+	sdk_sprite_t swing;
+	int swing_phase;
 	float speed;
-};
+} Character;
 
-static struct character player = {
+static Character player = {
 	.s = {
 		.ts = &ts_player_png,
 		.ox = 3.5f,
 		.oy = 6.5f,
+	},
+	.swing = {
+		.ts = &ts_swing_png,
+		.ox = 7.5f,
+		.oy = 7.5f,
 	},
 };
 
@@ -128,16 +136,35 @@ static void change_map(int map_id, int px, int py)
 	}
 }
 
+static bool player_collides_with_an_enemy(void)
+{
+	for (int i = 0; i < NUM_ENEMIES; i++) {
+		if (!enemy[i].type)
+			continue;
+
+		// TODO: use exact colissions
+		if (sdk_sprites_collide_bbox(&player.s, &enemy[i].s))
+			return true;
+	}
+
+	return false;
+}
+
 void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
+
+	if (sdk_inputs_delta.a > 0) {
+		player.swing_phase = 2;
+	}
 
 	float move_x =
 		abs(sdk_inputs.joy_x) >= 512 ? player.speed * dt * sdk_inputs.joy_x / 2048.0f : 0;
 	float move_y =
 		abs(sdk_inputs.joy_y) >= 512 ? player.speed * dt * sdk_inputs.joy_y / 2048.0f : 0;
 
-	if (move_x || move_y) {
+	// TODO: fix player/enemy colissions
+	if ((move_x || move_y) && !player_collides_with_an_enemy()) {
 		int pos_x = player.s.x / TILE_SIZE;
 		int pos_y = player.s.y / TILE_SIZE;
 
@@ -179,13 +206,25 @@ void game_input(unsigned dt_usec)
 		if (fabsf(move_x) > fabsf(move_y)) {
 			if (move_x > 0) {
 				player.s.tile = 6;
+				player.swing.angle = 1;
+				player.swing.ox = 4;
+				player.swing.oy = 12;
 			} else if (move_x < 0) {
 				player.s.tile = 4;
+				player.swing.angle = 3;
+				player.swing.ox = 10;
+				player.swing.oy = 10;
 			}
 		} else if (move_y > 0) {
 			player.s.tile = 2;
+			player.swing.angle = 2;
+			player.swing.ox = 7;
+			player.swing.oy = 8;
 		} else if (move_y < 0) {
 			player.s.tile = 0;
+			player.swing.angle = 0;
+			player.swing.ox = 9;
+			player.swing.oy = 12;
 		}
 
 		player.s.tile &= ~1;
@@ -227,9 +266,46 @@ void game_paint(unsigned __unused dt_usec)
 		if (!enemy[i].type)
 			continue;
 
+		if (enemy[i].hp <= 0) {
+			enemy[i].type = NULL;
+			continue;
+		}
+
 		enemy[i].s.tile = (time_us_32() >> 19) & 1;
 
 		sdk_draw_sprite(&enemy[i].s);
+
+		int perc_hp = 100 * enemy[i].hp / enemy[i].type->max_hp;
+		color_t color;
+
+		if (perc_hp >= 66)
+			color = rgb_to_rgb565(0, 255, 0);
+		else if (perc_hp >= 33)
+			color = rgb_to_rgb565(255, 255, 0);
+		else
+			color = rgb_to_rgb565(255, 0, 0);
+
+		int lx = enemy[i].s.x - 3;
+		int w = 7 * perc_hp / 100;
+
+		tft_draw_rect(lx, enemy[i].s.y + 5, lx + w, enemy[i].s.y + 5, color);
+	}
+
+	if (player.swing_phase > 0) {
+		player.swing.tile = 2 - player.swing_phase;
+		player.swing_phase -= 1;
+		player.swing.x = player.s.x;
+		player.swing.y = player.s.y;
+		sdk_draw_sprite(&player.swing);
+
+		for (int i = 0; i < NUM_ENEMIES; i++) {
+			if (!enemy[i].type)
+				continue;
+
+			// TODO: convert to exact per-pixel colissions
+			int px = sdk_sprites_collide_bbox(&player.swing, &enemy[i].s) * 10;
+			enemy[i].hp -= px;
+		}
 	}
 
 	sdk_draw_sprite(&player.s);
