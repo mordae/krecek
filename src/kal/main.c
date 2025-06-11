@@ -151,15 +151,15 @@ void game_input(unsigned dt_usec)
 			} else if (pos.x == 1) {
 				val.down = 0;
 			}
-		} else if (pos.oper == 2) {
-			val.out = val.up + val.down;
 		} else if (pos.oper == 3) {
-			val.out = val.up - val.down;
+			val.out = val.up + val.down;
 		} else if (pos.oper == 4) {
-			val.out = val.up * val.down;
+			val.out = val.up - val.down;
 		} else if (pos.oper == 5) {
-			val.out = val.up / val.down;
+			val.out = val.up * val.down;
 		} else if (pos.oper == 6) {
+			val.out = val.up / val.down;
+		} else if (pos.oper == 2) {
 			if (pos.x == 0) {
 				pos.x = 1;
 			} else if (pos.x == 1) {
