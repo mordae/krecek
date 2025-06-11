@@ -1,7 +1,5 @@
-#include <math.h>
 #include <pico/stdlib.h>
 #include <sdk.h>
-#include <stdio.h>
 #include <tft.h>
 
 #define BLUE rgb_to_rgb565(0, 0, 255)
@@ -21,12 +19,14 @@ void game_reset(void)
 
 void game_input(unsigned dt_usec)
 {
-	float dt = dt_usec / 1000000.0f;
+	(void)dt_usec;
 }
+
 void game_paint(unsigned dt_usec)
 {
 	(void)dt_usec;
 }
+
 int main()
 {
 	struct sdk_config config = {
