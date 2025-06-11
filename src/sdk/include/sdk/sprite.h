@@ -1,4 +1,5 @@
 #pragma once
+#include <math.h>
 #include <pico/stdlib.h>
 #include <sdk/image.h>
 
@@ -72,27 +73,27 @@ inline static color_t sdk_sprite_sample_world(const sdk_sprite_t *s, int x, int 
 	bool flip_y = s->flip_y ^ (b ^ a);
 	bool swap_xy = s->swap_xy ^ a;
 
-	int right = s->ts->width - 1;
-	int bottom = s->ts->height - 1;
+	int w = s->ts->width;
+	int h = s->ts->height;
 
-	int rx = (x - s->x) + s->ox;
-	int ry = (y - s->y) + s->oy;
+	int rx = x - floorf(s->x - s->ox);
+	int ry = y - floorf(s->y - s->oy);
 
-	int sx = flip_x ? right - rx : rx;
-	int sy = flip_y ? bottom - ry : ry;
+	int sx, sy;
 
 	if (swap_xy) {
-		int tmp = sx;
-		sx = sy;
-		sy = tmp;
+		sy = flip_y ? (h - 1) - rx : rx;
+		sx = flip_x ? (w - 1) - ry : ry;
+	} else {
+		sx = flip_x ? (w - 1) - rx : rx;
+		sy = flip_y ? (h - 1) - ry : ry;
 	}
 
-	if (sx < 0 || sy < 0 || sx > right || sy > bottom) {
+	if (sx < 0 || sy < 0 || sx >= w || sy >= h)
 		return TRANSPARENT;
-	}
 
 	const color_t *data = sdk_get_tile_data(s->ts, s->tile);
-	return data[(sy * s->ts->width) + sx];
+	return data[sy * w + sx];
 }
 
 inline static bool sdk_sprites_collide_bbox(const sdk_sprite_t *s1, const sdk_sprite_t *s2)
