@@ -1,7 +1,4 @@
-#include <sdk.h>
-
 #include <math.h>
-#include <stdio.h>
 #include <string.h>
 
 #include "common.h"
@@ -16,7 +13,7 @@
 #define ANGLE_DELTA (250.0f / 180.0f * M_PI)
 
 struct worm {
-	uint16_t device_id;
+	uint16_t id;
 	float x, y;
 	float angle;
 	float speed;
@@ -32,7 +29,7 @@ static int turn_left, turn_right;
 static struct worm worms[NUM_WORMS];
 static struct worm worms_init[NUM_WORMS] = {
 	{
-		.device_id = 0,
+		.id = 0,
 		.x = TFT_WIDTH / 2.0f - 5,
 		.y = TFT_HEIGHT / 2.0f - 5,
 		.angle = 225.0f / 180.0f * M_PI,
@@ -41,7 +38,7 @@ static struct worm worms_init[NUM_WORMS] = {
 		.alive = true,
 	},
 	{
-		.device_id = 0,
+		.id = 0,
 		.x = TFT_WIDTH / 2.0f + 5,
 		.y = TFT_HEIGHT / 2.0f + 5,
 		.angle = 45.0f / 180.0f * M_PI,
@@ -50,7 +47,7 @@ static struct worm worms_init[NUM_WORMS] = {
 		.alive = true,
 	},
 	{
-		.device_id = 0,
+		.id = 0,
 		.x = TFT_WIDTH / 2.0f + 5,
 		.y = TFT_HEIGHT / 2.0f - 5,
 		.angle = 315.0f / 180.0f * M_PI,
@@ -59,7 +56,7 @@ static struct worm worms_init[NUM_WORMS] = {
 		.alive = true,
 	},
 	{
-		.device_id = 0,
+		.id = 0,
 		.x = TFT_WIDTH / 2.0f - 5,
 		.y = TFT_HEIGHT / 2.0f + 5,
 		.angle = 135.0f / 180.0f * M_PI,
@@ -102,15 +99,25 @@ static bool round_handle(sdk_event_t event, int depth)
 	}
 }
 
+static void tx_coords(float x, float y)
+{
+	uint8_t msg[] = { MSG_COORDS, game_our_id >> 8, game_our_id, x, y };
+	sdk_send_rf(SDK_RF_ALL, msg, sizeof(msg));
+}
+
 static void round_paint(float dt, int depth)
 {
 	(void)depth;
 
-	if (turn_left && !turn_right)
-		worms[game_slot].angle -= ANGLE_DELTA * dt;
+	int our_worm = players[0].worm;
 
-	if (turn_right && !turn_left)
-		worms[game_slot].angle += ANGLE_DELTA * dt;
+	if (our_worm >= 0) {
+		if (turn_left && !turn_right)
+			worms[our_worm].angle -= ANGLE_DELTA * dt;
+
+		if (turn_right && !turn_left)
+			worms[our_worm].angle += ANGLE_DELTA * dt;
+	}
 
 	tft_fill(0);
 
@@ -140,7 +147,7 @@ static void round_paint(float dt, int depth)
 	int worms_alive = 0;
 
 	for (int i = 0; i < NUM_WORMS; i++) {
-		if (!worms[i].device_id)
+		if (!worms[i].id)
 			continue;
 
 		if (!worms[i].alive)
@@ -148,24 +155,31 @@ static void round_paint(float dt, int depth)
 
 		worms_alive += 1;
 
-		float hspd = worms[i].speed * cosf(worms[i].angle);
-		float vspd = worms[i].speed * sinf(worms[i].angle);
+		float hspd = 0, vspd = 0;
+
+		if (worms[i].id == game_our_id) {
+			hspd = worms[i].speed * cosf(worms[i].angle);
+			vspd = worms[i].speed * sinf(worms[i].angle);
+		}
 
 		float x = worms[i].x += hspd;
 		float y = worms[i].y += vspd;
 
+		if (worms[i].id == game_our_id)
+			tx_coords(worms[i].x, worms[i].y);
+
 		int nx[4] = {
-			clamp(x + 0.5f, 0, TFT_WIDTH - 1),
-			clamp(x + 0.5f, 0, TFT_WIDTH - 1),
-			clamp(x - 0.5f, 0, TFT_WIDTH - 1),
-			clamp(x - 0.5f, 0, TFT_WIDTH - 1),
+			clamp(x + 1, 0, TFT_WIDTH - 1),
+			clamp(x + 1, 0, TFT_WIDTH - 1),
+			clamp(x, 0, TFT_WIDTH - 1),
+			clamp(x, 0, TFT_WIDTH - 1),
 		};
 
 		int ny[4] = {
-			clamp(y + 0.5f, 0, TFT_HEIGHT - 1),
-			clamp(y - 0.5f, 0, TFT_HEIGHT - 1),
-			clamp(y + 0.5f, 0, TFT_HEIGHT - 1),
-			clamp(y - 0.5f, 0, TFT_HEIGHT - 1),
+			clamp(y + 1, 0, TFT_HEIGHT - 1),
+			clamp(y, 0, TFT_HEIGHT - 1),
+			clamp(y + 1, 0, TFT_HEIGHT - 1),
+			clamp(y, 0, TFT_HEIGHT - 1),
 		};
 
 		for (int j = 0; j < 4; j++) {
@@ -203,21 +217,15 @@ static void round_pushed(void)
 		for (int y = 0; y < TFT_HEIGHT; y++)
 			grid[y][x] = -1;
 
-	if (STATE_HOSTING == game_state) {
-		uint8_t msg[] = {
-			0xbe,	       players[0].id >> 8, players[0].id, players[1].id >> 8,
-			players[1].id, players[2].id >> 8, players[2].id, players[3].id >> 8,
-			players[3].id,
-		};
-		sdk_send_rf(SDK_RF_ALL, msg, sizeof(msg));
-	}
-
 	memcpy(worms, worms_init, sizeof worms);
 
 	for (int i = 0; i < NUM_PLAYERS; i++) {
-		worms[i].device_id = players[i].id;
-		worms[i].color = players[i].color;
-		printf("%i. %04hx %04hx\n", i, worms[i].device_id, worms[i].color);
+		if (!players[i].id || players[i].worm < 0)
+			continue;
+
+		int worm = players[i].worm;
+		worms[worm].id = players[i].id;
+		worms[worm].color = players[i].color;
 	}
 }
 

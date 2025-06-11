@@ -19,6 +19,7 @@ void game_input(unsigned dt_usec)
 {
 	(void)dt_usec;
 	sdk_scene_handle();
+	sdk_scene_tick(dt_usec);
 }
 
 void game_paint(unsigned dt_usec)
