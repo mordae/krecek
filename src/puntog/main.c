@@ -143,7 +143,7 @@ static void player_paint(float x, float y, int direction)
 		p.Lleg = 0;
 
 	if (p.Rleg > PLAYER_SPRITES - 1)
-		p.Lleg = 0;
+		p.Rleg = 0;
 
 	if (p.body > PLAYER_SPRITES - 1)
 		p.body = 0;
