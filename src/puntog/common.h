@@ -7,6 +7,7 @@
 #define MAP_COLS_2 7.5f
 
 #define PLAYER_SPRITES 4
+#define PLAYER_DIRECTION 4
 #define PLAYER_WIDTH 6
 #define PLAYER_HEIGHT 12
 

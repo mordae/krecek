@@ -178,20 +178,20 @@ static void player_paint(float x, float y, int direction)
 	// x and y its bottom center
 
 	// legs
-	sdk_draw_tile(x - 1, y - 1, &ts_lleg_2x2_png, p.Lleg * 4 + direction);
-	sdk_draw_tile(x + 1, y - 1, &ts_rleg_2x2_png, p.Rleg * 4 + direction);
+	sdk_draw_tile(x - 1, y - 1, &ts_lleg_2x2_png, p.Lleg * PLAYER_DIRECTION + direction);
+	sdk_draw_tile(x + 1, y - 1, &ts_rleg_2x2_png, p.Rleg * PLAYER_DIRECTION + direction);
 
 	// body
-	sdk_draw_tile(x - 1, y - 5, &ts_body_4x4_png, p.body * 4 + direction);
+	sdk_draw_tile(x - 1, y - 5, &ts_body_4x4_png, p.body * PLAYER_DIRECTION + direction);
 
 	// Head
-	sdk_draw_tile(x - 2, y - 11, &ts_head_6x6_png, p.head * 4 + direction);
+	sdk_draw_tile(x - 2, y - 11, &ts_head_6x6_png, p.head * PLAYER_DIRECTION + direction);
 
 	// right arm
-	sdk_draw_tile(x - 2, y - 5, &ts_rarm_1x3_png, p.Rarm * 4 + direction);
+	sdk_draw_tile(x - 2, y - 5, &ts_rarm_1x3_png, p.Rarm * PLAYER_DIRECTION + direction);
 
 	// left arm
-	sdk_draw_tile(x + 3, y - 5, &ts_larm_1x3_png, p.Larm * 4 + direction);
+	sdk_draw_tile(x + 3, y - 5, &ts_larm_1x3_png, p.Larm * PLAYER_DIRECTION + direction);
 
 	// pixel
 	//tft_draw_pixel(x, y, WHITE);
@@ -205,7 +205,7 @@ static void game_costume()
 
 	tft_draw_rect(100, 8 + menu.whut * 11, 104, 12 + menu.whut * 11, WHITE);
 
-	tft_draw_string(5, 5, WHITE, "Head      %i", p.head);
+	tft_draw_string(5, 05, WHITE, "Head      %i", p.head);
 
 	tft_draw_string(5, 16, WHITE, "Body      %i", p.body);
 
