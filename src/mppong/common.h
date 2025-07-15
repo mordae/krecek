@@ -2,6 +2,7 @@
 #define COMMON_H
 
 #include <sdk.h>
+#include <tft.h>
 #include <stdint.h>  // For uint16_t, uint32_t, int16_t
 #include <stdbool.h> // For bool type
 
