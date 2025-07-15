@@ -7,13 +7,8 @@
 
 #include "common.h" // Include common definitions
 
-// --- External Scene Declaration ---
-// Declares the 'scene_round' which will contain the actual game logic.
-// This allows 'root.c' to transition to the game scene.
 extern sdk_scene_t scene_round;
 
-// --- Global Variable Definitions ---
-// These variables are declared as 'extern' in common.h and defined here.
 GameState game_state;
 int game_state_timer;
 uint16_t game_our_id;
@@ -23,35 +18,26 @@ int channel_scan_index;		       // Index for channel scanning (0 for 66, 1 for 6
 uint16_t scanned_channel_occupancy[3]; // Stores ID if channel is occupied, or 0 if clean.
 int selected_channel_index; // Index of the channel currently selected in the Antenna Menu
 
-// Global definition for the menu music melody
 sdk_melody_t *menu_melody = NULL;
 
-// Music string for the menu (Wii Shop Channel inspired) - FIXED: Removed '.' from notes
-static const char menu_music_str[] = "/i:sine /bpm:90 { "
-				     "C4 G3 C4 G3 " // Simple arpeggio
-				     "D4 A3 D4 A3 "
-				     "E4 B3 E4 B3 "
-				     "F4 C4 F4 C4 "
-				     "G4 D4 G4 D4 "
-				     "F4 C4 F4 C4 "
-				     "E4 B3 E4 B3 "
-				     "D4 A3 D4 A3 "
-				     "}";
+static const char menu_music_str[] =
+	"/i:square /bpm:60 /pl"
+	"{"
+	"F _ F _ F _ E _ D _ C _ D _ E _ F _ G _ A _ G _ F _ E _ D _ C _"
+	"F _ F _ F _ E _ D _ C _ D _ E _ F _ G _ A _ G _ F _ E _ D _ C _"
+	"A _ G _ F _ E _ D _ C _ D _ E _ F _ G _ A _ G _ F _ E _ D _ C _"
+	"G _ F _ E _ D _ C _ B _ C _ D _ E _ F _ G _ F _ E _ D _ C _ B _"
+	"}";
 
-// Array of channels to scan
 static const int channels_to_scan[] = { SDK_RF_CHANNEL_66, SDK_RF_CHANNEL_67, SDK_RF_CHANNEL_68 };
 #define NUM_SCAN_CHANNELS (sizeof(channels_to_scan) / sizeof(channels_to_scan[0]))
 
-// Flag to indicate if a game was found on the current channel during client scan
 static bool client_game_found_on_channel = false;
-// Flag to indicate if the current channel is busy (for host scan)
 static bool host_channel_is_busy_during_scan = false; // Renamed for clarity in scan phase
 
-// For joystick debouncing in menus
 static uint32_t last_joystick_menu_move_time = 0;
 #define JOYSTICK_MENU_DEBOUNCE_US 200000 // 0.2 seconds debounce for menu navigation
 
-// --- Function Prototypes for static functions ---
 static color_t id_to_color(uint16_t id);
 static void tx_ready(void);
 static void tx_game_start(void);
