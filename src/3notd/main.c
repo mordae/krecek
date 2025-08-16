@@ -36,6 +36,9 @@ typedef struct {
 	int ws, we;
 	int z1, z2;
 	int d;
+	uint16_t c1, c2;
+	int surf[TFT_WIDTH];
+	int surface;
 } sectors;
 typedef struct {
 	int x1, x2;
@@ -48,11 +51,11 @@ static sectors S[30];
 static player P;
 static math M;
 static int loadSectors[] = {
-	//wall start,end,z1 H,z12 H
-	0,  4,	0, 40, //sector 1
-	4,  8,	0, 40, //sector 2
-	8,  12, 0, 40, //sector 3
-	12, 16, 0, 40, //sector 4
+	//wall start,end,z1 H,z2 H,c bottom,ctop
+	0,  4,	0, 40, rgb_to_rgb565(255, 255, 0), rgb_to_rgb565(160, 160, 0), //sector 1
+	4,  8,	0, 40, rgb_to_rgb565(255, 247, 0), rgb_to_rgb565(128, 124, 0), //sector 2
+	8,  12, 0, 40, rgb_to_rgb565(255, 223, 0), rgb_to_rgb565(128, 112, 0), //sector 3
+	12, 16, 0, 40, rgb_to_rgb565(204, 153, 0), rgb_to_rgb565(102, 77, 0),  //sector 4
 };
 static int loadWalls[] = {
 	//x1,y1, x2,y2, color
@@ -90,7 +93,9 @@ void game_start(void)
 		S[s].we = loadSectors[v1 + 1];
 		S[s].z1 = loadSectors[v1 + 2];
 		S[s].z2 = loadSectors[v1 + 3] - loadSectors[v1 + 2];
-		v1 += 4;
+		S[s].c1 = loadSectors[v1 + 4];
+		S[s].c2 = loadSectors[v1 + 5];
+		v1 += 6;
 		for (w = S[s].ws; w < S[s].we; w++) {
 			W[w].x1 = loadWalls[v2 + 0];
 			W[w].y1 = loadWalls[v2 + 1];
@@ -187,7 +192,7 @@ void clipBehindPlayer(int *x1, int *y1, int *z1, int x2, int y2, int z2) //clip 
 	*z1 = *z1 + s * (z2 - (*z1));
 }
 
-static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, uint16_t c)
+static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, uint16_t c, int s)
 {
 	int x, y;
 	//Hold diffrent
@@ -229,10 +234,28 @@ static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, uint16_t c)
 		if (y2 > TFT_HEIGHT - 1) {
 			y2 = TFT_HEIGHT - 0;
 		}
-
+		//surface
+		if (S[s].surface == 1) {
+			S[s].surf[x] = y1;
+			continue;
+		} //save bottom points
+		if (S[s].surface == 2) {
+			S[s].surf[x] = y2;
+			continue;
+		} //save top    points
+		if (S[s].surface == -1) {
+			for (y = S[s].surf[x]; y < y1; y++) {
+				tft_draw_pixel(x, y, S[s].c1);
+			};
+		} //bottom
+		if (S[s].surface == -2) {
+			for (y = y2; y < S[s].surf[x]; y++) {
+				tft_draw_pixel(x, y, S[s].c2);
+			};
+		} //top
 		for (y = y1; y < y2; y++) {
 			tft_draw_pixel(x, y, c);
-		}
+		} //normal wall
 	}
 }
 static int dist(int x1, int y1, int x2, int y2)
@@ -258,6 +281,13 @@ static void draw_3d(void)
 	//draw sectors
 	for (s = 0; s < numSect; s++) {
 		S[s].d = 0;
+		if (P.z < S[s].z1) {
+			S[s].surface = 1;
+		} else if (P.z > S[s].z2) {
+			S[s].surface = 2;
+		} else {
+			S[s].surface = 0;
+		}
 		for (loop = 0; loop < 2; loop++) {
 			for (w = S[s].ws; w < S[s].we; w++) {
 				//offset
@@ -318,12 +348,13 @@ static void draw_3d(void)
 				wx[3] = wx[3] * 150 / wy[3] + TFT_WIDTH2;
 				wy[3] = wz[3] * 150 / wy[3] + TFT_HEIGHT2;
 
-				drawWall(wx[0], wx[1], wy[0], wy[1], wy[2], wy[3], W[w].c);
+				drawWall(wx[0], wx[1], wy[0], wy[1], wy[2], wy[3], W[w].c, s);
 			}
 			int numWallsInSector = S[s].we - S[s].ws;
 			if (numWallsInSector > 0) {
 				S[s].d /= numWallsInSector;
 			}
+			S[s].surface *= -1;
 		}
 	}
 }
