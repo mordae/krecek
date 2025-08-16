@@ -56,17 +56,17 @@ static int loadSectors[] = {
 };
 static int loadWalls[] = {
 	//x1,y1, x2,y2, color
-	0,  0,	32, 0,	YELLOW, 32, 0,	32, 32, YELLOW,
-	32, 32, 0,  32, YELLOW, 0,  32, 0,  0,	YELLOW,
+	0,  0,	32, 0,	rgb_to_rgb565(160, 160, 0), 32, 0,  32, 32, rgb_to_rgb565(160, 160, 0),
+	32, 32, 0,  32, rgb_to_rgb565(160, 160, 0), 0,	32, 0,	0,  rgb_to_rgb565(160, 160, 0),
 
-	64, 0,	96, 0,	BLUE,	96, 0,	96, 32, BLUE,
-	96, 32, 64, 32, BLUE,	64, 32, 64, 0,	BLUE,
+	64, 0,	96, 0,	rgb_to_rgb565(255, 247, 0), 96, 0,  96, 32, rgb_to_rgb565(255, 247, 0),
+	96, 32, 64, 32, rgb_to_rgb565(255, 247, 0), 64, 32, 64, 0,  rgb_to_rgb565(255, 247, 0),
 
-	64, 64, 96, 64, BLUE,	96, 64, 96, 96, BLUE,
-	96, 96, 64, 96, BLUE,	64, 96, 64, 64, BLUE,
+	64, 64, 96, 64, rgb_to_rgb565(255, 223, 0), 96, 64, 96, 96, rgb_to_rgb565(255, 223, 0),
+	96, 96, 64, 96, rgb_to_rgb565(255, 223, 0), 64, 96, 64, 64, rgb_to_rgb565(255, 223, 0),
 
-	0,  64, 32, 64, YELLOW, 32, 64, 32, 96, YELLOW,
-	32, 96, 0,  96, YELLOW, 0,  96, 0,  64, YELLOW,
+	0,  64, 32, 64, rgb_to_rgb565(204, 153, 0), 32, 64, 32, 96, rgb_to_rgb565(204, 153, 0),
+	32, 96, 0,  96, rgb_to_rgb565(204, 153, 0), 0,	96, 0,	64, rgb_to_rgb565(204, 153, 0),
 };
 void game_start(void)
 {
@@ -244,6 +244,17 @@ static void draw_3d(void)
 {
 	int s, w, loop, wx[4], wy[4], wz[4];
 	float CS = M.cos[P.a], SN = M.sin[P.a];
+	//oreder sectors
+	for (s = 0; s < numSect - 1; s++) {
+		for (w = 0; w < numSect - s - 1; w++) {
+			if (S[w].d < S[w + 1].d) {
+				sectors st = S[w];
+				S[w] = S[w + 1];
+				S[w + 1] = st;
+			}
+		}
+	}
+
 	//draw sectors
 	for (s = 0; s < numSect; s++) {
 		S[s].d = 0;
