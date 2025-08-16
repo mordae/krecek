@@ -56,17 +56,17 @@ static int loadSectors[] = {
 };
 static int loadWalls[] = {
 	//x1,y1, x2,y2, color
-	0,  0,	32, 0,	rgb_to_rgb565(160, 160, 0), 32, 0,  32, 32, rgb_to_rgb565(160, 160, 0),
-	32, 32, 0,  32, rgb_to_rgb565(160, 160, 0), 0,	32, 0,	0,  rgb_to_rgb565(160, 160, 0),
+	0,  0,	32, 0,	rgb_to_rgb565(255, 255, 0), 32, 0,  32, 32, rgb_to_rgb565(160, 160, 0),
+	32, 32, 0,  32, rgb_to_rgb565(255, 255, 0), 0,	32, 0,	0,  rgb_to_rgb565(160, 160, 0),
 
-	64, 0,	96, 0,	rgb_to_rgb565(255, 247, 0), 96, 0,  96, 32, rgb_to_rgb565(255, 247, 0),
-	96, 32, 64, 32, rgb_to_rgb565(255, 247, 0), 64, 32, 64, 0,  rgb_to_rgb565(255, 247, 0),
+	64, 0,	96, 0,	rgb_to_rgb565(255, 247, 0), 96, 0,  96, 32, rgb_to_rgb565(128, 124, 0),
+	96, 32, 64, 32, rgb_to_rgb565(255, 247, 0), 64, 32, 64, 0,  rgb_to_rgb565(128, 124, 0),
 
-	64, 64, 96, 64, rgb_to_rgb565(255, 223, 0), 96, 64, 96, 96, rgb_to_rgb565(255, 223, 0),
-	96, 96, 64, 96, rgb_to_rgb565(255, 223, 0), 64, 96, 64, 64, rgb_to_rgb565(255, 223, 0),
+	64, 64, 96, 64, rgb_to_rgb565(255, 223, 0), 96, 64, 96, 96, rgb_to_rgb565(128, 112, 0),
+	96, 96, 64, 96, rgb_to_rgb565(255, 223, 0), 64, 96, 64, 64, rgb_to_rgb565(128, 112, 0),
 
-	0,  64, 32, 64, rgb_to_rgb565(204, 153, 0), 32, 64, 32, 96, rgb_to_rgb565(204, 153, 0),
-	32, 96, 0,  96, rgb_to_rgb565(204, 153, 0), 0,	96, 0,	64, rgb_to_rgb565(204, 153, 0),
+	0,  64, 32, 64, rgb_to_rgb565(204, 153, 0), 32, 64, 32, 96, rgb_to_rgb565(102, 77, 0),
+	32, 96, 0,  96, rgb_to_rgb565(204, 153, 0), 0,	96, 0,	64, rgb_to_rgb565(102, 77, 0),
 };
 void game_start(void)
 {
@@ -258,68 +258,72 @@ static void draw_3d(void)
 	//draw sectors
 	for (s = 0; s < numSect; s++) {
 		S[s].d = 0;
+		for (loop = 0; loop < 2; loop++) {
+			for (w = S[s].ws; w < S[s].we; w++) {
+				//offset
+				int x1 = W[w].x1 - P.x, y1 = W[w].y1 - P.y;
+				int x2 = W[w].x2 - P.x, y2 = W[w].y2 - P.y;
 
-		for (w = S[s].ws; w < S[s].we; w++) {
-			//offset
-			int x1 = W[w].x1 - P.x, y1 = W[w].y1 - P.y;
-			int x2 = W[w].x2 - P.x, y2 = W[w].y2 - P.y;
-			//troll
-			int swp = x1;
-			x1 = x2;
-			x2 = swp;
-			swp = y1;
-			y1 = y2;
-			y2 = swp;
+				//swap
+				if (loop == 0) {
+					int swp = x1;
+					x1 = x2;
+					x2 = swp;
+					swp = y1;
+					y1 = y2;
+					y2 = swp;
+				}
 
-			wx[0] = x1 * CS - y1 * SN;
-			wx[1] = x2 * CS - y2 * SN;
-			wx[2] = wx[0];
-			wx[3] = wx[1];
+				wx[0] = x1 * CS - y1 * SN;
+				wx[1] = x2 * CS - y2 * SN;
+				wx[2] = wx[0];
+				wx[3] = wx[1];
 
-			wy[0] = y1 * CS + x1 * SN;
-			wy[1] = y2 * CS + x2 * SN;
-			wy[2] = wy[0];
-			wy[3] = wy[1];
-			S[s].d += dist(0, 0, (wx[0] + wx[1]) / 2, (wy[0] + wy[1]) / 2);
+				wy[0] = y1 * CS + x1 * SN;
+				wy[1] = y2 * CS + x2 * SN;
+				wy[2] = wy[0];
+				wy[3] = wy[1];
+				S[s].d += dist(0, 0, (wx[0] + wx[1]) / 2, (wy[0] + wy[1]) / 2);
 
-			wz[0] = S[s].z1 - P.z + ((P.l * wy[0]) / 32.0);
-			wz[1] = S[s].z1 - P.z + ((P.l * wy[1]) / 32.0);
-			wz[2] = wz[0] + S[s].z2;
-			wz[3] = wz[1] + S[s].z2;
+				wz[0] = S[s].z1 - P.z + ((P.l * wy[0]) / 32.0);
+				wz[1] = S[s].z1 - P.z + ((P.l * wy[1]) / 32.0);
+				wz[2] = wz[0] + S[s].z2;
+				wz[3] = wz[1] + S[s].z2;
 
-			if (wy[0] < 1 && wy[1] < 1) {
-				continue;
+				if (wy[0] < 1 && wy[1] < 1) {
+					continue;
+				}
+
+				if (wy[0] < 1) {
+					clipBehindPlayer(&wx[0], &wy[0], &wz[0], wx[1], wy[1],
+							 wz[1]); //bottom line
+					clipBehindPlayer(&wx[2], &wy[2], &wz[2], wx[3], wy[3],
+							 wz[3]); //top line
+				}
+
+				if (wy[1] < 1) {
+					clipBehindPlayer(&wx[1], &wy[1], &wz[1], wx[0], wy[0],
+							 wz[0]); //bottom line
+					clipBehindPlayer(&wx[3], &wy[3], &wz[3], wx[2], wy[2],
+							 wz[2]); //top line
+				}
+
+				wx[0] = wx[0] * 150 / wy[0] + TFT_WIDTH2;
+				wy[0] = wz[0] * 150 / wy[0] + TFT_HEIGHT2;
+				wx[1] = wx[1] * 150 / wy[1] + TFT_WIDTH2;
+				wy[1] = wz[1] * 150 / wy[1] + TFT_HEIGHT2;
+
+				wx[2] = wx[2] * 150 / wy[2] + TFT_WIDTH2;
+				wy[2] = wz[2] * 150 / wy[2] + TFT_HEIGHT2;
+				wx[3] = wx[3] * 150 / wy[3] + TFT_WIDTH2;
+				wy[3] = wz[3] * 150 / wy[3] + TFT_HEIGHT2;
+
+				drawWall(wx[0], wx[1], wy[0], wy[1], wy[2], wy[3], W[w].c);
 			}
-
-			if (wy[0] < 1) {
-				clipBehindPlayer(&wx[0], &wy[0], &wz[0], wx[1], wy[1],
-						 wz[1]); //bottom line
-				clipBehindPlayer(&wx[2], &wy[2], &wz[2], wx[3], wy[3],
-						 wz[3]); //top line
+			int numWallsInSector = S[s].we - S[s].ws;
+			if (numWallsInSector > 0) {
+				S[s].d /= numWallsInSector;
 			}
-
-			if (wy[1] < 1) {
-				clipBehindPlayer(&wx[1], &wy[1], &wz[1], wx[0], wy[0],
-						 wz[0]); //bottom line
-				clipBehindPlayer(&wx[3], &wy[3], &wz[3], wx[2], wy[2],
-						 wz[2]); //top line
-			}
-
-			wx[0] = wx[0] * 200 / wy[0] + TFT_WIDTH2;
-			wy[0] = wz[0] * 200 / wy[0] + TFT_HEIGHT2;
-			wx[1] = wx[1] * 200 / wy[1] + TFT_WIDTH2;
-			wy[1] = wz[1] * 200 / wy[1] + TFT_HEIGHT2;
-
-			wx[2] = wx[2] * 200 / wy[2] + TFT_WIDTH2;
-			wy[2] = wz[2] * 200 / wy[2] + TFT_HEIGHT2;
-			wx[3] = wx[3] * 200 / wy[3] + TFT_WIDTH2;
-			wy[3] = wz[3] * 200 / wy[3] + TFT_HEIGHT2;
-
-			drawWall(wx[0], wx[1], wy[0], wy[1], wy[2], wy[3], W[w].c);
-		}
-		int numWallsInSector = S[s].we - S[s].ws;
-		if (numWallsInSector > 0) {
-			S[s].d /= numWallsInSector;
 		}
 	}
 }
