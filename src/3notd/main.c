@@ -258,9 +258,18 @@ static void draw_3d(void)
 	//draw sectors
 	for (s = 0; s < numSect; s++) {
 		S[s].d = 0;
+
 		for (w = S[s].ws; w < S[s].we; w++) {
+			//offset
 			int x1 = W[w].x1 - P.x, y1 = W[w].y1 - P.y;
 			int x2 = W[w].x2 - P.x, y2 = W[w].y2 - P.y;
+			//troll
+			int swp = x1;
+			x1 = x2;
+			x2 = swp;
+			swp = y1;
+			y1 = y2;
+			y2 = swp;
 
 			wx[0] = x1 * CS - y1 * SN;
 			wx[1] = x2 * CS - y2 * SN;
