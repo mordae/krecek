@@ -223,7 +223,7 @@ static void clipBehindPlayer(int *x1, int *y1, int *z1, int x2, int y2, int z2) 
 	*z1 = *z1 + s * (z2 - (*z1));
 }
 
-static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, uint16_t c, int s)
+static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int w, int frontBack)
 {
 	int x, y;
 	//Hold diffrent
@@ -235,17 +235,17 @@ static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, uint16_t c,
 	}
 	int xs = x1;
 	//CLIP X
-	if (x1 < 1) {
+	if (x1 < 0) {
 		x1 = 0;
 	}
-	if (x2 < 1) {
+	if (x2 < 0) {
 		x2 = 0;
 	}
-	if (x1 > TFT_WIDTH - 1) {
-		x1 = TFT_WIDTH - 0;
+	if (x1 > TFT_WIDTH) {
+		x1 = TFT_WIDTH;
 	}
-	if (x2 > TFT_WIDTH - 1) {
-		x2 = TFT_WIDTH - 0;
+	if (x2 > TFT_WIDTH) {
+		x2 = TFT_WIDTH;
 	}
 
 	for (x = x1; x < x2; x++) {
@@ -253,40 +253,41 @@ static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, uint16_t c,
 		int y2 = dyt * (x - xs + 0.5) / dx + t1;
 
 		//CLIP Y
-		if (y1 < 1) {
+		if (y1 < 0) {
 			y1 = 0;
 		}
-		if (y2 < 1) {
+		if (y2 < 0) {
 			y2 = 0;
 		}
-		if (y1 > TFT_HEIGHT - 1) {
-			y1 = TFT_HEIGHT - 0;
+		if (y1 > TFT_HEIGHT) {
+			y1 = TFT_HEIGHT;
 		}
-		if (y2 > TFT_HEIGHT - 1) {
-			y2 = TFT_HEIGHT - 0;
+		if (y2 > TFT_HEIGHT) {
+			y2 = TFT_HEIGHT;
 		}
-		//surface
-		if (S[s].surface == 1) {
-			S[s].surf[x] = y1;
-			continue;
-		} //save bottom points
-		if (S[s].surface == 2) {
-			S[s].surf[x] = y2;
-			continue;
-		} //save top    points
-		if (S[s].surface == -1) {
-			for (y = S[s].surf[x]; y < y1; y++) {
-				drawpixel(x, y, S[s].c1);
-			};
-		} //bottom
-		if (S[s].surface == -2) {
-			for (y = y2; y < S[s].surf[x]; y++) {
-				drawpixel(x, y, S[s].c2);
-			};
-		} //top
-		for (y = y1; y < y2; y++) {
-			drawpixel(x, y, c);
-		} //normal wall
+		//draw front wall
+		if (frontBack == 0) {
+			if (S[s].surface == 1) {
+				S[s].surf[x] = y1;
+			}
+			if (S[s].surface == 2) {
+				S[s].surf[x] = y2;
+			}
+			for (y = y1; y < y2; y++) {
+				drawpixel(x, y, 0);
+			} //normal wall
+		}
+		if (frontBack == 1) {
+			if (S[s].surface == 1) {
+				y2 = S[s].surf[x];
+			}
+			if (S[s].surface == 2) {
+				y1 = S[s].surf[x];
+			}
+			for (y = y1; y < y2; y++) {
+				drawpixel(x, y, 2);
+			} //normal wall
+		}
 	}
 }
 static int dist(int x1, int y1, int x2, int y2)
@@ -296,7 +297,7 @@ static int dist(int x1, int y1, int x2, int y2)
 }
 static void draw_3d(void)
 {
-	int s, w, loop, wx[4], wy[4], wz[4];
+	int x, s, w, frontBack, cycles, wx[4], wy[4], wz[4];
 	float CS = M.cos[P.a], SN = M.sin[P.a];
 	//oreder sectors
 	for (s = 0; s < numSect - 1; s++) {
@@ -314,19 +315,28 @@ static void draw_3d(void)
 		S[s].d = 0;
 		if (P.z < S[s].z1) {
 			S[s].surface = 1;
+			cycles = 2;
+			for (x = 0; x < TFT_WIDTH; x++) {
+				S[s].surf[x] = TFT_HEIGHT;
+			}
 		} else if (P.z > S[s].z2) {
 			S[s].surface = 2;
+			cycles = 2;
+			for (x = 0; x < TFT_WIDTH; x++) {
+				S[s].surf[x] = 0;
+			}
 		} else {
 			S[s].surface = 0;
+			cycles = 1;
 		}
-		for (loop = 0; loop < 2; loop++) {
+		for (frontBack = 0; frontBack < cycles; frontBack++) {
 			for (w = S[s].ws; w < S[s].we; w++) {
 				//offset
 				int x1 = W[w].x1 - P.x, y1 = W[w].y1 - P.y;
 				int x2 = W[w].x2 - P.x, y2 = W[w].y2 - P.y;
 
 				//swap
-				if (loop == 0) {
+				if (frontBack == 1) {
 					int swp = x1;
 					x1 = x2;
 					x2 = swp;
@@ -348,8 +358,8 @@ static void draw_3d(void)
 
 				wz[0] = S[s].z1 - P.z + ((P.l * wy[0]) / 32.0);
 				wz[1] = S[s].z1 - P.z + ((P.l * wy[1]) / 32.0);
-				wz[2] = wz[0] + S[s].z2;
-				wz[3] = wz[1] + S[s].z2;
+				wz[2] = S[s].z2 - P.z + ((P.l * wy[0]) / 32.0);
+				wz[3] = S[s].z2 - P.z + ((P.l * wy[1]) / 32.0);
 
 				if (wy[0] < 1 && wy[1] < 1) {
 					continue;
@@ -369,23 +379,19 @@ static void draw_3d(void)
 							 wz[2]); //top line
 				}
 
-				wx[0] = wx[0] * 150 / wy[0] + TFT_WIDTH2;
-				wy[0] = wz[0] * 150 / wy[0] + TFT_HEIGHT2;
-				wx[1] = wx[1] * 150 / wy[1] + TFT_WIDTH2;
-				wy[1] = wz[1] * 150 / wy[1] + TFT_HEIGHT2;
+				wx[0] = wx[0] * 200 / wy[0] + TFT_WIDTH2;
+				wy[0] = wz[0] * 200 / wy[0] + TFT_HEIGHT2;
+				wx[1] = wx[1] * 200 / wy[1] + TFT_WIDTH2;
+				wy[1] = wz[1] * 200 / wy[1] + TFT_HEIGHT2;
 
-				wx[2] = wx[2] * 150 / wy[2] + TFT_WIDTH2;
-				wy[2] = wz[2] * 150 / wy[2] + TFT_HEIGHT2;
-				wx[3] = wx[3] * 150 / wy[3] + TFT_WIDTH2;
-				wy[3] = wz[3] * 150 / wy[3] + TFT_HEIGHT2;
+				wx[2] = wx[2] * 200 / wy[2] + TFT_WIDTH2;
+				wy[2] = wz[2] * 200 / wy[2] + TFT_HEIGHT2;
+				wx[3] = wx[3] * 200 / wy[3] + TFT_WIDTH2;
+				wy[3] = wz[3] * 200 / wy[3] + TFT_HEIGHT2;
 
-				drawWall(wx[0], wx[1], wy[0], wy[1], wy[2], wy[3], W[w].c, s);
+				drawWall(wx[0], wx[1], wy[0], wy[1], wy[2], wy[3], s, w, frontBack);
 			}
 			int numWallsInSector = S[s].we - S[s].ws;
-			if (numWallsInSector > 0) {
-				S[s].d /= numWallsInSector;
-			}
-			S[s].surface *= -1;
 		}
 	}
 }
