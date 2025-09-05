@@ -3,6 +3,8 @@
 #include <tft.h>
 #include <stdio.h>
 
+#include "pixel.h"
+
 //    TODO    //
 //    3D      //
 //    texutes //
@@ -18,8 +20,31 @@
 #define TFT_WIDTH2 TFT_WIDTH / 2
 #define TFT_HEIGHT2 TFT_HEIGHT / 2
 
-#define numSect 4
-#define numWall 16
+#include "assets/T_00.h"
+#include "assets/T_01.h"
+#include "assets/T_02.h"
+#include "assets/T_03.h"
+#include "assets/T_04.h"
+#include "assets/T_05.h"
+#include "assets/T_06.h"
+#include "assets/T_07.h"
+#include "assets/T_08.h"
+#include "assets/T_09.h"
+#include "assets/T_10.h"
+#include "assets/T_11.h"
+#include "assets/T_12.h"
+#include "assets/T_13.h"
+#include "assets/T_14.h"
+#include "assets/T_15.h"
+#include "assets/T_16.h"
+#include "assets/T_17.h"
+#include "assets/T_18.h"
+#include "assets/T_19.h"
+int numText = 19; //number of assets
+int numSect = 0;  //number of sectors
+int numWall = 0;  //number of walls
+
+//------------------------------------------------------------------------------
 
 typedef struct {
 	float cos[360];
@@ -31,46 +56,70 @@ typedef struct {
 	int a;
 	int l;
 } player;
-
 typedef struct {
-	int ws, we;
-	int z1, z2;
-	int d;
-	uint16_t c1, c2;
-	int surf[TFT_WIDTH];
-	int surface;
-} sectors;
-typedef struct {
-	int x1, x2;
-	int y1, y2;
-	uint16_t c;
+	int x1, y1; //bottom line point 1
+	int x2, y2; //bottom line point 2
+	int c;
+	int wt, u, v; //wall texture and u/v tile
+	int shade;    //shade of the wall
 } walls;
 
-static walls W[30];
-static sectors S[30];
+typedef struct {
+	int ws, we; //wall number start and end
+	int z1, z2; //height of bottom and top
+	int d;
+	int c1, c2;
+	int st, ss;	     //surface texture, surface scale
+	int surf[TFT_WIDTH]; //to hold points for surfaces
+	int surface;
+} sectors;
+
+typedef struct {
+	int w, h;		   //texture width/height
+	const unsigned char *name; //texture name
+} TexureMaps;
+TexureMaps Textures[64];
+static walls W[256];
+static sectors S[128];
 static player P;
 static math M;
-static int loadSectors[] = {
-	//wall start,end,z1 H,z2 H,c bottom,ctop
-	0,  4,	0, 40, rgb_to_rgb565(255, 255, 0), rgb_to_rgb565(160, 160, 0), //sector 1
-	4,  8,	0, 40, rgb_to_rgb565(255, 247, 0), rgb_to_rgb565(128, 124, 0), //sector 2
-	8,  12, 0, 40, rgb_to_rgb565(255, 223, 0), rgb_to_rgb565(128, 112, 0), //sector 3
-	12, 16, 0, 40, rgb_to_rgb565(204, 153, 0), rgb_to_rgb565(102, 77, 0),  //sector 4
-};
-static int loadWalls[] = {
-	//x1,y1, x2,y2, color
-	0,  0,	32, 0,	rgb_to_rgb565(255, 255, 0), 32, 0,  32, 32, rgb_to_rgb565(160, 160, 0),
-	32, 32, 0,  32, rgb_to_rgb565(255, 255, 0), 0,	32, 0,	0,  rgb_to_rgb565(160, 160, 0),
 
-	64, 0,	96, 0,	rgb_to_rgb565(255, 247, 0), 96, 0,  96, 32, rgb_to_rgb565(128, 124, 0),
-	96, 32, 64, 32, rgb_to_rgb565(255, 247, 0), 64, 32, 64, 0,  rgb_to_rgb565(128, 124, 0),
+void load()
+{
+	FILE *fp = fopen("level.h", "r");
+	if (fp == NULL) {
+		printf("Error opening level.h");
+		return;
+	}
+	int s, w;
 
-	64, 64, 96, 64, rgb_to_rgb565(255, 223, 0), 96, 64, 96, 96, rgb_to_rgb565(128, 112, 0),
-	96, 96, 64, 96, rgb_to_rgb565(255, 223, 0), 64, 96, 64, 64, rgb_to_rgb565(128, 112, 0),
+	fscanf(fp, "%i", &numSect);   //number of sectors
+	for (s = 0; s < numSect; s++) //load all sectors
+	{
+		fscanf(fp, "%i", &S[s].ws);
+		fscanf(fp, "%i", &S[s].we);
+		fscanf(fp, "%i", &S[s].z1);
+		fscanf(fp, "%i", &S[s].z2);
+		fscanf(fp, "%i", &S[s].st);
+		fscanf(fp, "%i", &S[s].ss);
+	}
+	fscanf(fp, "%i", &numWall);   //number of walls
+	for (s = 0; s < numWall; s++) //load all walls
+	{
+		fscanf(fp, "%i", &W[s].x1);
+		fscanf(fp, "%i", &W[s].y1);
+		fscanf(fp, "%i", &W[s].x2);
+		fscanf(fp, "%i", &W[s].y2);
+		fscanf(fp, "%i", &W[s].wt);
+		fscanf(fp, "%i", &W[s].u);
+		fscanf(fp, "%i", &W[s].v);
+		fscanf(fp, "%i", &W[s].shade);
+	}
+	fscanf(fp, "%i %i %i %i %i", &P.x, &P.y, &P.z, &P.a,
+	       &P.l); //player position, angle, look direction
+	fclose(fp);
+}
 
-	0,  64, 32, 64, rgb_to_rgb565(204, 153, 0), 32, 64, 32, 96, rgb_to_rgb565(102, 77, 0),
-	32, 96, 0,  96, rgb_to_rgb565(204, 153, 0), 0,	96, 0,	64, rgb_to_rgb565(102, 77, 0),
-};
 void game_start(void)
 {
 	// store in degress
@@ -86,25 +135,7 @@ void game_start(void)
 	P.z = 20;
 	P.a = 0;
 	P.l = 0;
-	//load sectors
-	int s, w, v1 = 0, v2 = 0;
-	for (s = 0; s < numSect; s++) {
-		S[s].ws = loadSectors[v1 + 0];
-		S[s].we = loadSectors[v1 + 1];
-		S[s].z1 = loadSectors[v1 + 2];
-		S[s].z2 = loadSectors[v1 + 3] - loadSectors[v1 + 2];
-		S[s].c1 = loadSectors[v1 + 4];
-		S[s].c2 = loadSectors[v1 + 5];
-		v1 += 6;
-		for (w = S[s].ws; w < S[s].we; w++) {
-			W[w].x1 = loadWalls[v2 + 0];
-			W[w].y1 = loadWalls[v2 + 1];
-			W[w].x2 = loadWalls[v2 + 2];
-			W[w].y2 = loadWalls[v2 + 3];
-			W[w].c = loadWalls[v2 + 4];
-			v2 += 5;
-		}
-	}
+	load();
 }
 
 void game_reset(void)
@@ -175,7 +206,7 @@ void game_input(unsigned dt_usec)
 	}
 }
 
-void clipBehindPlayer(int *x1, int *y1, int *z1, int x2, int y2, int z2) //clip line
+static void clipBehindPlayer(int *x1, int *y1, int *z1, int x2, int y2, int z2) //clip line
 {
 	float da = *y1; //distance plane -> point a
 	float db = y2;	//distance plane -> point b
@@ -245,16 +276,16 @@ static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, uint16_t c,
 		} //save top    points
 		if (S[s].surface == -1) {
 			for (y = S[s].surf[x]; y < y1; y++) {
-				tft_draw_pixel(x, y, S[s].c1);
+				drawpixel(x, y, S[s].c1);
 			};
 		} //bottom
 		if (S[s].surface == -2) {
 			for (y = y2; y < S[s].surf[x]; y++) {
-				tft_draw_pixel(x, y, S[s].c2);
+				drawpixel(x, y, S[s].c2);
 			};
 		} //top
 		for (y = y1; y < y2; y++) {
-			tft_draw_pixel(x, y, c);
+			drawpixel(x, y, c);
 		} //normal wall
 	}
 }
