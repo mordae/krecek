@@ -253,24 +253,23 @@ static void floors()
 	int xo = TFT_WIDTH2;
 	int yo = TFT_HEIGHT2;
 	float lookUpDown = -P.l * 4;
-	//if (lookUpDown > TFT_HEIGHT) {
-	//	lookUpDown = TFT_HEIGHT;
-	//}
-	//printf("Looking %f\n" , lookUpDown);
+	if (lookUpDown > TFT_HEIGHT) {
+		lookUpDown = TFT_HEIGHT;
+	}
+	if (lookUpDown < -TFT_HEIGHT) {
+		lookUpDown = -TFT_HEIGHT;
+	}
 	float moveUpDown = P.z / 16.f;
 	if (moveUpDown == 0) {
 		moveUpDown = 0.001;
 	}
 
-	int ys = yo, ye = -lookUpDown;
-
+	int ys = yo;
+	int ye = -lookUpDown;
 	if (moveUpDown < 0) {
 		ys = -lookUpDown;
-		ye = yo + lookUpDown;
+		ye = -yo + lookUpDown;
 	}
-
-	//for (y = -lookUpDown; y < yo; y++)
-
 	for (y = ye; y < ys; y++) {
 		for (x = -xo; x < xo; x++) {
 			float z = y + lookUpDown;
