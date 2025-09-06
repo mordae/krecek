@@ -14,8 +14,8 @@
 // includes DUKE NUKE 3D Grafics
 //
 //--------------------------------------
-#define LOOKING_POWER 80
-#define WALKING_POWER 140
+#define LOOKING_POWER 80.f
+#define WALKING_POWER 140.f
 #define FOV 200
 
 #define BLUE rgb_to_rgb565(0, 0, 255)
@@ -151,9 +151,9 @@ void game_start(void)
 	}
 
 	//starter player
-	P.x = 70;
-	P.y = -110;
-	P.z = 20;
+	P.x = 0;
+	P.y = -10;
+	P.z = 10;
 	P.a = 0;
 	P.l = 0;
 	textures_load();
@@ -174,14 +174,14 @@ void game_input(unsigned dt_usec)
 
 	// Looking left right
 	if (sdk_inputs.joy_x > 500 && sdk_inputs.start && sdk_inputs.select == 0) {
-		printf("looking left\n");
+		printf("looking right\n");
 		P.a += LOOKING_POWER * dt;
 		if (P.a > 359) {
 			P.a -= 360;
 		}
 	}
 	if (sdk_inputs.joy_x < -500 && sdk_inputs.start && sdk_inputs.select == 0) {
-		printf("looking right\n");
+		printf("looking left\n");
 		P.a -= LOOKING_POWER * dt;
 		if (P.a < 0) {
 			P.a += 360;
@@ -202,17 +202,15 @@ void game_input(unsigned dt_usec)
 
 	//strafe left, right
 	if (sdk_inputs.joy_x > 500 && sdk_inputs.start == 0 && sdk_inputs.select == 0) {
-		printf("strafe left\n");
+		printf("strafe right\n");
 		P.x += dy;
 		P.y -= dx;
 	}
 	if (sdk_inputs.joy_x < -500 && sdk_inputs.start == 0 && sdk_inputs.select == 0) {
-		printf("strafe right\n");
+		printf("strafe left\n");
 		P.x -= dy;
 		P.y += dx;
 	}
-	if (sdk_inputs_delta.select == 1)
-		load();
 
 	//move up,down
 	if (sdk_inputs.joy_y < -500 && sdk_inputs.select && sdk_inputs.start == 0) {
@@ -226,54 +224,11 @@ void game_input(unsigned dt_usec)
 	//look up,down
 	if (sdk_inputs.joy_y < -500 && sdk_inputs.start && sdk_inputs.select == 0) {
 		printf("looking up\n");
-		P.l -= LOOKING_POWER * dt;
+		P.l += LOOKING_POWER * dt;
 	}
 	if (sdk_inputs.joy_y > 500 && sdk_inputs.start && sdk_inputs.select == 0) {
 		printf("looking down\n");
-		P.l += LOOKING_POWER * dt;
-	}
-}
-static void floors()
-{
-	int x, y;
-	int xo = TFT_WIDTH2;
-	int yo = TFT_HEIGHT2;
-	float LookUpDown = P.l * 2;
-
-	// Calculate aspect ratio correction
-	float aspectRatio = (float)TFT_WIDTH / (float)TFT_HEIGHT;
-
-	//printf("LookUpDown %f\n", LookUpDown);
-	for (y = -yo; y < -LookUpDown; y++) {
-		for (x = -xo; x < xo; x++) {
-			float z = y + LookUpDown;
-			if (z == 0) {
-				z = 0.0001;
-			}
-
-			// World floor with aspect ratio correction
-			float fx = x / z;
-			float fy = (FOV / z) * aspectRatio; // Apply aspect ratio correction
-
-			// Rotated texture coordinates
-			float rx = fx * M.sin[P.a] - fy * M.cos[P.a];
-			float ry = fx * M.cos[P.a] + fy * M.sin[P.a];
-
-			// Remove negative values by taking absolute value and adjusting
-			if (rx < 0) {
-				rx = -rx;
-			}
-			if (ry < 0) {
-				ry = -ry;
-			}
-
-			// Use modulo to create checkerboard pattern
-			if (((int)(rx * 10) % 20) < 10 ^ ((int)(ry * 10) % 20) < 10) {
-				drawpixel(x + xo, (TFT_HEIGHT - 1) - (y + yo), 255, 0, 0);
-			} else {
-				drawpixel(x + xo, (TFT_HEIGHT - 1) - (y + yo), 0, 255, 0);
-			}
-		}
+		P.l -= LOOKING_POWER * dt;
 	}
 }
 static void clipBehindPlayer(int *x1, int *y1, int *z1, int x2, int y2, int z2) //clip line
@@ -292,7 +247,60 @@ static void clipBehindPlayer(int *x1, int *y1, int *z1, int x2, int y2, int z2) 
 	} //prevent divide by zero
 	*z1 = *z1 + s * (z2 - (*z1));
 }
+static void floors()
+{
+	int x, y;
+	int xo = TFT_WIDTH2;
+	int yo = TFT_HEIGHT2;
+	float lookUpDown = -P.l * 4;
+	//if (lookUpDown > TFT_HEIGHT) {
+	//	lookUpDown = TFT_HEIGHT;
+	//}
+	//printf("Looking %f\n" , lookUpDown);
+	float moveUpDown = P.z / 16.f;
+	if (moveUpDown == 0) {
+		moveUpDown = 0.001;
+	}
 
+	int ys = yo, ye = -lookUpDown;
+
+	if (moveUpDown < 0) {
+		ys = -lookUpDown;
+		ye = yo + lookUpDown;
+	}
+
+	//for (y = -lookUpDown; y < yo; y++)
+
+	for (y = ye; y < ys; y++) {
+		for (x = -xo; x < xo; x++) {
+			float z = y + lookUpDown;
+			if (z == 0) {
+				z = 0.0001;
+			}
+			float fx = x / z * moveUpDown;
+			float fy = FOV / z * moveUpDown;
+
+			float ry = fx * M.sin[P.a] - fy * M.cos[P.a] + (-P.y / 30.0);
+			float rx = fx * M.cos[P.a] + fy * M.sin[P.a] + (P.x / 30.0);
+
+			if (rx < 0) {
+				rx = -rx + 1;
+			}
+			if (ry < 0) {
+				ry = -ry + 1;
+			}
+
+			if (rx < 0 || ry < 0 || rx > 5 || ry > 5) {
+				continue;
+			}
+			if ((int)rx % 2 == (int)ry % 2) {
+				drawpixel(x + xo, y + yo, 255, 0, 0);
+			} else {
+				drawpixel(x + xo, y + yo, 0, 255, 0);
+			}
+		}
+	}
+}
 static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int w, int frontBack)
 {
 	// wall texture
