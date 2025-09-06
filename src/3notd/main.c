@@ -16,6 +16,7 @@
 //--------------------------------------
 #define LOOKING_POWER 80
 #define WALKING_POWER 140
+#define FOV 200
 
 #define BLUE rgb_to_rgb565(0, 0, 255)
 #define YELLOW rgb_to_rgb565(160, 160, 0)
@@ -172,14 +173,14 @@ void game_input(unsigned dt_usec)
 	int dy = (M.cos[P.a] * WALKING_POWER) * dt;
 
 	// Looking left right
-	if (sdk_inputs.joy_x > 500 && sdk_inputs.start == 0) {
+	if (sdk_inputs.joy_x > 500 && sdk_inputs.start && sdk_inputs.select == 0) {
 		printf("looking left\n");
 		P.a += LOOKING_POWER * dt;
 		if (P.a > 359) {
 			P.a -= 360;
 		}
 	}
-	if (sdk_inputs.joy_x < -500 && sdk_inputs.start == 0) {
+	if (sdk_inputs.joy_x < -500 && sdk_inputs.start && sdk_inputs.select == 0) {
 		printf("looking right\n");
 		P.a -= LOOKING_POWER * dt;
 		if (P.a < 0) {
@@ -188,29 +189,24 @@ void game_input(unsigned dt_usec)
 	}
 	//moving
 
-	if (sdk_inputs.y && sdk_inputs.start == 0) {
+	if (sdk_inputs.joy_y < -500 && sdk_inputs.start == 0 && sdk_inputs.select == 0) {
 		printf("moving forward\n");
 		P.x += dx;
 		P.y += dy;
 	}
-	if (sdk_inputs.joy_y < -500 && sdk_inputs.start == 0) {
-		printf("moving forward\n");
-		P.x += dx;
-		P.y += dy;
-	}
-	if (sdk_inputs.joy_y > 500 && sdk_inputs.start == 0) {
+	if (sdk_inputs.joy_y > 500 && sdk_inputs.start == 0 && sdk_inputs.select == 0) {
 		printf("moving back\n");
 		P.x -= dx;
 		P.y -= dy;
 	}
 
 	//strafe left, right
-	if (sdk_inputs.joy_x > 500 && sdk_inputs.start) {
+	if (sdk_inputs.joy_x > 500 && sdk_inputs.start == 0 && sdk_inputs.select == 0) {
 		printf("strafe left\n");
 		P.x += dy;
 		P.y -= dx;
 	}
-	if (sdk_inputs.joy_x < -500 && sdk_inputs.start) {
+	if (sdk_inputs.joy_x < -500 && sdk_inputs.start == 0 && sdk_inputs.select == 0) {
 		printf("strafe right\n");
 		P.x -= dy;
 		P.y += dx;
@@ -219,13 +215,65 @@ void game_input(unsigned dt_usec)
 		load();
 
 	//move up,down
-	if (sdk_inputs.joy_y < -500 && sdk_inputs.start) {
+	if (sdk_inputs.joy_y < -500 && sdk_inputs.select && sdk_inputs.start == 0) {
 		printf("move up\n");
 		P.z -= LOOKING_POWER * dt;
 	}
-	if (sdk_inputs.joy_y > 500 && sdk_inputs.start) {
+	if (sdk_inputs.joy_y > 500 && sdk_inputs.select && sdk_inputs.start == 0) {
 		printf("move down\n");
 		P.z += LOOKING_POWER * dt;
+	}
+	//look up,down
+	if (sdk_inputs.joy_y < -500 && sdk_inputs.start && sdk_inputs.select == 0) {
+		printf("looking up\n");
+		P.l -= LOOKING_POWER * dt;
+	}
+	if (sdk_inputs.joy_y > 500 && sdk_inputs.start && sdk_inputs.select == 0) {
+		printf("looking down\n");
+		P.l += LOOKING_POWER * dt;
+	}
+}
+static void floors()
+{
+	int x, y;
+	int xo = TFT_WIDTH2;
+	int yo = TFT_HEIGHT2;
+	float LookUpDown = P.l * 2;
+
+	// Calculate aspect ratio correction
+	float aspectRatio = (float)TFT_WIDTH / (float)TFT_HEIGHT;
+
+	//printf("LookUpDown %f\n", LookUpDown);
+	for (y = -yo; y < -LookUpDown; y++) {
+		for (x = -xo; x < xo; x++) {
+			float z = y + LookUpDown;
+			if (z == 0) {
+				z = 0.0001;
+			}
+
+			// World floor with aspect ratio correction
+			float fx = x / z;
+			float fy = (FOV / z) * aspectRatio; // Apply aspect ratio correction
+
+			// Rotated texture coordinates
+			float rx = fx * M.sin[P.a] - fy * M.cos[P.a];
+			float ry = fx * M.cos[P.a] + fy * M.sin[P.a];
+
+			// Remove negative values by taking absolute value and adjusting
+			if (rx < 0) {
+				rx = -rx;
+			}
+			if (ry < 0) {
+				ry = -ry;
+			}
+
+			// Use modulo to create checkerboard pattern
+			if (((int)(rx * 10) % 20) < 10 ^ ((int)(ry * 10) % 20) < 10) {
+				drawpixel(x + xo, (TFT_HEIGHT - 1) - (y + yo), 255, 0, 0);
+			} else {
+				drawpixel(x + xo, (TFT_HEIGHT - 1) - (y + yo), 0, 255, 0);
+			}
+		}
 	}
 }
 static void clipBehindPlayer(int *x1, int *y1, int *z1, int x2, int y2, int z2) //clip line
@@ -432,15 +480,15 @@ static void draw_3d(void)
 							 wz[2]); //top line
 				}
 
-				wx[0] = wx[0] * 200 / wy[0] + TFT_WIDTH2;
-				wy[0] = wz[0] * 200 / wy[0] + TFT_HEIGHT2;
-				wx[1] = wx[1] * 200 / wy[1] + TFT_WIDTH2;
-				wy[1] = wz[1] * 200 / wy[1] + TFT_HEIGHT2;
+				wx[0] = wx[0] * FOV / wy[0] + TFT_WIDTH2;
+				wy[0] = wz[0] * FOV / wy[0] + TFT_HEIGHT2;
+				wx[1] = wx[1] * FOV / wy[1] + TFT_WIDTH2;
+				wy[1] = wz[1] * FOV / wy[1] + TFT_HEIGHT2;
 
-				wx[2] = wx[2] * 200 / wy[2] + TFT_WIDTH2;
-				wy[2] = wz[2] * 200 / wy[2] + TFT_HEIGHT2;
-				wx[3] = wx[3] * 200 / wy[3] + TFT_WIDTH2;
-				wy[3] = wz[3] * 200 / wy[3] + TFT_HEIGHT2;
+				wx[2] = wx[2] * FOV / wy[2] + TFT_WIDTH2;
+				wy[2] = wz[2] * FOV / wy[2] + TFT_HEIGHT2;
+				wx[3] = wx[3] * FOV / wy[3] + TFT_WIDTH2;
+				wy[3] = wz[3] * FOV / wy[3] + TFT_HEIGHT2;
 
 				drawWall(wx[0], wx[1], wy[0], wy[1], wy[2], wy[3], s, w, frontBack);
 			}
@@ -452,8 +500,8 @@ void game_paint(unsigned dt_usec)
 {
 	(void)dt_usec;
 	tft_fill(0);
-	draw_3d();
-
+	//draw_3d();
+	floors();
 	//testTextures(4);
 }
 static void textures_load()
