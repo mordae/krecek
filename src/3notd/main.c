@@ -6,10 +6,14 @@
 #include "pixel.h"
 
 //    TODO    //
-//    3D      //
-//    texutes //
+//    Menu    //
 //    editor  //
 
+//--------------------------------------
+//             3NOTD
+// includes DUKE NUKE 3D Grafics
+//
+//--------------------------------------
 #define LOOKING_POWER 80
 #define WALKING_POWER 140
 
@@ -83,12 +87,13 @@ static walls W[256];
 static sectors S[128];
 static player P;
 static math M;
+static void textures_load();
 
-void load()
+static void load()
 {
 	FILE *fp = fopen("level.h", "r");
 	if (fp == NULL) {
-		printf("Error opening level.h");
+		printf("OH NOO AN ERROR level.h");
 		return;
 	}
 	int s, w;
@@ -119,6 +124,21 @@ void load()
 	       &P.l); //player position, angle, look direction
 	fclose(fp);
 }
+// unsed
+static void testTextures(int t)
+{
+	int x, y;
+	t = 0;
+	for (y = 0; y < Textures[t].h; y++) {
+		for (x = 0; x < Textures[t].w; x++) {
+			int pixel = y * 3 * Textures[t].w + x * 3;
+			int r = Textures[t].name[pixel + 0];
+			int g = Textures[t].name[pixel + 1];
+			int b = Textures[t].name[pixel + 2];
+			drawpixel(x, y, r, g, b);
+		}
+	}
+}
 
 void game_start(void)
 {
@@ -135,6 +155,7 @@ void game_start(void)
 	P.z = 20;
 	P.a = 0;
 	P.l = 0;
+	textures_load();
 	load();
 }
 
@@ -172,12 +193,12 @@ void game_input(unsigned dt_usec)
 		P.x += dx;
 		P.y += dy;
 	}
-	if (sdk_inputs.joy_y < -500 && sdk_inputs.start) {
+	if (sdk_inputs.joy_y < -500 && sdk_inputs.start == 0) {
 		printf("moving forward\n");
 		P.x += dx;
 		P.y += dy;
 	}
-	if (sdk_inputs.joy_y > 500 && sdk_inputs.start) {
+	if (sdk_inputs.joy_y > 500 && sdk_inputs.start == 0) {
 		printf("moving back\n");
 		P.x -= dx;
 		P.y -= dy;
@@ -194,18 +215,19 @@ void game_input(unsigned dt_usec)
 		P.x -= dy;
 		P.y += dx;
 	}
+	if (sdk_inputs_delta.select == 1)
+		load();
 
 	//move up,down
-	if (sdk_inputs.joy_y < -500 && sdk_inputs.start == 0) {
+	if (sdk_inputs.joy_y < -500 && sdk_inputs.start) {
 		printf("move up\n");
 		P.z -= LOOKING_POWER * dt;
 	}
-	if (sdk_inputs.joy_y > 500 && sdk_inputs.start == 0) {
+	if (sdk_inputs.joy_y > 500 && sdk_inputs.start) {
 		printf("move down\n");
 		P.z += LOOKING_POWER * dt;
 	}
 }
-
 static void clipBehindPlayer(int *x1, int *y1, int *z1, int x2, int y2, int z2) //clip line
 {
 	float da = *y1; //distance plane -> point a
@@ -225,6 +247,11 @@ static void clipBehindPlayer(int *x1, int *y1, int *z1, int x2, int y2, int z2) 
 
 static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int w, int frontBack)
 {
+	// wall texture
+	int wt = W[w].wt;
+
+	float ht = 0, ht_step = (float)Textures[wt].w * W[w].u / (float)(x2 - x1);
+
 	int x, y;
 	//Hold diffrent
 	int dyb = b2 - b1;
@@ -236,6 +263,7 @@ static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int 
 	int xs = x1;
 	//CLIP X
 	if (x1 < 0) {
+		ht -= ht_step * x1;
 		x1 = 0;
 	}
 	if (x2 < 0) {
@@ -248,12 +276,19 @@ static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int 
 		x2 = TFT_WIDTH;
 	}
 
+	//draw x ver. line
 	for (x = x1; x < x2; x++) {
 		int y1 = dyb * (x - xs + 0.5) / dx + b1;
 		int y2 = dyt * (x - xs + 0.5) / dx + t1;
+		if ((y2 - y1) == 0) {
+			continue; // Skip
+		}
 
-		//CLIP Y
+		float vt = 0, vt_step = (float)Textures[wt].h * W[w].v / (float)(y2 - y1);
+		int clipped_y = 0;
 		if (y1 < 0) {
+			clipped_y = 0 - y1;
+			vt += clipped_y * vt_step;
 			y1 = 0;
 		}
 		if (y2 < 0) {
@@ -273,9 +308,27 @@ static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int 
 			if (S[s].surface == 2) {
 				S[s].surf[x] = y2;
 			}
+
 			for (y = y1; y < y2; y++) {
-				drawpixel(x, y, 0);
-			} //normal wall
+				int tex_x = (int)ht % Textures[wt].w;
+				int tex_y = (int)vt % Textures[wt].h;
+				int pixel = tex_y * 3 * Textures[wt].w + tex_x * 3;
+				int r = Textures[wt].name[pixel + 0] - (W[w].shade / 4);
+				if (r < 0) {
+					r = 0;
+				}
+				int g = Textures[wt].name[pixel + 1] - (W[w].shade / 4);
+				if (g < 0) {
+					g = 0;
+				}
+				int b = Textures[wt].name[pixel + 2] - (W[w].shade / 4);
+				if (b < 0) {
+					b = 0;
+				}
+				drawpixel(x, y, r, g, b);
+				vt += vt_step;
+			}
+			ht += ht_step;
 		}
 		if (frontBack == 1) {
 			if (S[s].surface == 1) {
@@ -285,7 +338,7 @@ static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int 
 				y1 = S[s].surf[x];
 			}
 			for (y = y1; y < y2; y++) {
-				drawpixel(x, y, 2);
+				drawpixel(x, y, 255, 0, 0);
 			} //normal wall
 		}
 	}
@@ -400,8 +453,72 @@ void game_paint(unsigned dt_usec)
 	(void)dt_usec;
 	tft_fill(0);
 	draw_3d();
-}
 
+	//testTextures(4);
+}
+static void textures_load()
+{
+	Textures[0].name = T_00;
+	Textures[0].h = T_00_HEIGHT;
+	Textures[0].w = T_00_WIDTH;
+	Textures[1].name = T_01;
+	Textures[1].h = T_01_HEIGHT;
+	Textures[1].w = T_01_WIDTH;
+	Textures[2].name = T_02;
+	Textures[2].h = T_02_HEIGHT;
+	Textures[2].w = T_02_WIDTH;
+	Textures[3].name = T_03;
+	Textures[3].h = T_03_HEIGHT;
+	Textures[3].w = T_03_WIDTH;
+	Textures[4].name = T_04;
+	Textures[4].h = T_04_HEIGHT;
+	Textures[4].w = T_04_WIDTH;
+	Textures[5].name = T_05;
+	Textures[5].h = T_05_HEIGHT;
+	Textures[5].w = T_05_WIDTH;
+	Textures[6].name = T_06;
+	Textures[6].h = T_06_HEIGHT;
+	Textures[6].w = T_06_WIDTH;
+	Textures[7].name = T_07;
+	Textures[7].h = T_07_HEIGHT;
+	Textures[7].w = T_07_WIDTH;
+	Textures[8].name = T_08;
+	Textures[8].h = T_08_HEIGHT;
+	Textures[8].w = T_08_WIDTH;
+	Textures[9].name = T_09;
+	Textures[9].h = T_09_HEIGHT;
+	Textures[9].w = T_09_WIDTH;
+	Textures[10].name = T_10;
+	Textures[10].h = T_10_HEIGHT;
+	Textures[10].w = T_10_WIDTH;
+	Textures[11].name = T_11;
+	Textures[11].h = T_11_HEIGHT;
+	Textures[11].w = T_11_WIDTH;
+	Textures[12].name = T_12;
+	Textures[12].h = T_12_HEIGHT;
+	Textures[12].w = T_12_WIDTH;
+	Textures[13].name = T_13;
+	Textures[13].h = T_13_HEIGHT;
+	Textures[13].w = T_13_WIDTH;
+	Textures[14].name = T_14;
+	Textures[14].h = T_14_HEIGHT;
+	Textures[14].w = T_14_WIDTH;
+	Textures[15].name = T_15;
+	Textures[15].h = T_15_HEIGHT;
+	Textures[15].w = T_15_WIDTH;
+	Textures[16].name = T_16;
+	Textures[16].h = T_16_HEIGHT;
+	Textures[16].w = T_16_WIDTH;
+	Textures[17].name = T_17;
+	Textures[17].h = T_17_HEIGHT;
+	Textures[17].w = T_17_WIDTH;
+	Textures[18].name = T_18;
+	Textures[18].h = T_18_HEIGHT;
+	Textures[18].w = T_18_WIDTH;
+	Textures[19].name = T_19;
+	Textures[19].h = T_19_HEIGHT;
+	Textures[19].w = T_19_WIDTH;
+}
 int main()
 {
 	struct sdk_config config = {
