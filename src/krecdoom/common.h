@@ -1,6 +1,6 @@
 #ifndef COMMON_H
-#include <stdint.h>
 #define COMMON_H
+#include <stdint.h>
 #define SCREEN_WIDTH 160
 #define SCREEN_HEIGHT 120
 #define FOV_DEGREES 60.0f
@@ -13,18 +13,6 @@
 #define MAP_ROWS 24
 #define MAP_COLS 24
 
-#define MINIMAP_WIDTH 32
-#define MINIMAP_HEIGHT 32
-#define MINIMAP_TILE_SIZE 4
-#define MINIMAP_VIEW_TILES 8
-#define MINIMAP_PADDING 2
-#define PLAYER_DOT_SIZE 3
-#define COLLISION_PENETRATION_FRACTION 0.1f
-
-#define MENU_MAP_WIDTH 80
-#define MENU_MAP_HEIGHT 80
-#define MENU_MAP_PADDING 20
-
 #define PISTOL_DAMAGE 25
 #define SHOTGUN_DAMAGE 40
 #define N_GUNS 3
@@ -35,31 +23,10 @@
 #define SHOTGUN_SPREAD_DEGREES 10.0f
 #define SHOTGUN_PELLETS 5
 
-static float zBuffer[SCREEN_WIDTH];
-
-#define multiply332(x, f) \
-	rgb_to_rgb332(rgb332_red((x)) * f, rgb332_green((x)) * f, rgb332_blue((x)) * f)
-
 #define DRAW_RED rgb_to_rgb565(183, 0, 0)
-#define RED rgb_to_rgb565(194, 20, 20)
-#define YELLOW rgb_to_rgb565(255, 255, 0)
-#define GREEN rgb_to_rgb565(0, 255, 0)
-#define BLUE rgb_to_rgb565(23, 62, 224)
-#define GRAY rgb_to_rgb565(127, 127, 127)
 #define WHITE rgb_to_rgb565(255, 255, 255)
-#define BLACK rgb_to_rgb565(0, 0, 0)
+#define YELLOW rgb_to_rgb565(255, 255, 0)
 
-#define FIXED_POINT_BITS 16
-#define FIXED_POINT_ONE (1 << FIXED_POINT_BITS)
-
-#define COLOR_MINIMAP_EMPTY BLACK
-#define COLOR_MINIMAP_LINE GREEN
-#define COLOR_CEILING BLUE
-#define COLOR_FLOOR RED
-#define COLOR_WALL_DARK rgb_to_rgb565(0x69, 0x69, 0x69)
-#define COLOR_WALL_BRIGHT rgb_to_rgb565(0xA9, 0xA9, 0xA9)
-#define COLOR_MINIMAP_WALL WHITE
-#define COLOR_MINIMAP_PLAYER YELLOW
 typedef enum {
 	EMPTY = 0,
 	WALL_COMMON = 1,

@@ -99,11 +99,9 @@ float volume = 0.5f;
 float timer = 0;
 
 static bool isWall(int Tile_x, int Tile_y);
-static void drawMenuMap();
 static void shootBullet(float start_angle, float max_range_tiles, int visual_size,
 			uint16_t visual_color);
 static void handleShooting();
-static void checkPlayerStatus();
 static void Map_1_start_player();
 static void Map_2_start_player();
 static bool Can_shot(float dt);
@@ -269,163 +267,6 @@ void renderGame()
 		}
 	}
 }
-void drawMinimap_Debug()
-{
-	//THE GREATEST IDEA
-
-	// right corner
-	mmap.start_x = SCREEN_WIDTH - MINIMAP_WIDTH - MINIMAP_PADDING;
-	mmap.start_y = SCREEN_HEIGHT - MINIMAP_HEIGHT - MINIMAP_PADDING;
-
-	// tile
-	mmap.tile_x = (int)(player.x / TILE_SIZE);
-	mmap.tile_y = (int)(player.y / TILE_SIZE);
-
-	// top-left corner going show on the minimap.
-	mmap.window_start_x = mmap.tile_x - (MINIMAP_VIEW_TILES / 2);
-	mmap.window_start_y = mmap.tile_y - (MINIMAP_VIEW_TILES / 2);
-
-	// I'm making sure the minimap window doesn't go off the left or top edge of our map
-	if (mmap.window_start_x < 0)
-		mmap.window_start_x = 0;
-	if (mmap.window_start_y < 0)
-		mmap.window_start_y = 0;
-
-	// I'm making sure the minimap window doesn't go off the right or bottoom edge of our map
-	if (mmap.window_start_x + MINIMAP_VIEW_TILES > MAP_COLS) {
-		mmap.window_start_x = MAP_COLS - MINIMAP_VIEW_TILES;
-		if (mmap.window_start_x < 0)
-			mmap.window_start_x = 0;
-	}
-	if (mmap.window_start_y + MINIMAP_VIEW_TILES > MAP_ROWS) {
-		mmap.window_start_y = MAP_ROWS - MINIMAP_VIEW_TILES;
-		if (mmap.window_start_y < 0)
-			mmap.window_start_y = 0;
-	}
-
-	// drawing all the visible map tiles
-	for (int y_minimap_idx = 0; y_minimap_idx < MINIMAP_VIEW_TILES; y_minimap_idx++) {
-		for (int x_minimap_idx = 0; x_minimap_idx < MINIMAP_VIEW_TILES; x_minimap_idx++) {
-			// map coordinates
-			int map_tile_x = mmap.window_start_x + x_minimap_idx;
-			int map_tile_y = mmap.window_start_y + y_minimap_idx;
-
-			// empty space or not?
-			if (isWall(map_tile_x, map_tile_y)) {
-				mode.tilecolor = COLOR_MINIMAP_WALL; // wall white
-			} else {
-				mode.tilecolor = COLOR_MINIMAP_EMPTY; // empty black
-			}
-
-			// drawing minimap
-			for (int py = 0; py < MINIMAP_TILE_SIZE; py++) {
-				for (int px = 0; px < MINIMAP_TILE_SIZE; px++) {
-					tft_draw_pixel(
-						mmap.start_x + x_minimap_idx * MINIMAP_TILE_SIZE +
-							px,
-						mmap.start_y + y_minimap_idx * MINIMAP_TILE_SIZE +
-							py,
-						mode.tilecolor);
-				}
-			}
-		}
-	}
-
-	// player on the minimap.
-	// converting player into tiny minimap pixels
-	player.relative_x = player.x / TILE_SIZE - mmap.window_start_x;
-	player.relative_y = player.y / TILE_SIZE - mmap.window_start_y;
-
-	mmap.p_x = mmap.start_x +
-		   (int)(player.relative_x * MINIMAP_TILE_SIZE - (PLAYER_DOT_SIZE / 2.0f));
-	mmap.p_y = mmap.start_y +
-		   (int)(player.relative_y * MINIMAP_TILE_SIZE - (PLAYER_DOT_SIZE / 2.0f));
-
-	// yellow square
-	// making sure the player is in
-	if (mmap.p_x >= mmap.start_x &&
-	    mmap.p_x + PLAYER_DOT_SIZE <= mmap.start_x + MINIMAP_WIDTH &&
-	    mmap.p_y >= mmap.start_y &&
-	    mmap.p_y + PLAYER_DOT_SIZE <= mmap.start_y + MINIMAP_HEIGHT) {
-		for (int py = 0; py < PLAYER_DOT_SIZE; py++) {
-			for (int px = 0; px < PLAYER_DOT_SIZE; px++) {
-				tft_draw_pixel(mmap.p_x + px, mmap.p_y + py, COLOR_MINIMAP_PLAYER);
-			}
-		}
-	}
-
-	// field of view
-	mmap.p_center_x = mmap.p_x + (PLAYER_DOT_SIZE / 2.0f);
-	mmap.p_center_y = mmap.p_y + (PLAYER_DOT_SIZE / 2.0f);
-
-	float step_size = 1.0f;
-
-	//  leftmost view ray.
-	float current_ray_x = mmap.p_center_x;
-	float current_ray_y = mmap.p_center_y;
-	float left_ray_angle = player.angle - (FOV_RADIANS / 2.0f); // angle.
-	float ray_dir_x = cosf(left_ray_angle);
-	float ray_dir_y = sinf(left_ray_angle);
-
-	// view ray until wall
-	while (true) {
-		int map_pixel_x = (int)current_ray_x;
-		int map_pixel_y = (int)current_ray_y;
-
-		// boundaries
-		if (map_pixel_x < mmap.start_x || map_pixel_x >= mmap.start_x + MINIMAP_WIDTH ||
-		    map_pixel_y < mmap.start_y || map_pixel_y >= mmap.start_y + MINIMAP_HEIGHT) {
-			break;
-		}
-
-		// convert world map
-		int tile_x_world =
-			mmap.window_start_x + (map_pixel_x - mmap.start_x) / MINIMAP_TILE_SIZE;
-		int tile_y_world =
-			mmap.window_start_y + (map_pixel_y - mmap.start_y) / MINIMAP_TILE_SIZE;
-
-		if (isWall(tile_x_world, tile_y_world)) {
-			break; // Yes, a wall
-		}
-		tft_draw_pixel(map_pixel_x, map_pixel_y, COLOR_MINIMAP_LINE);
-		current_ray_x += ray_dir_x * step_size;
-		current_ray_y += ray_dir_y * step_size;
-	}
-
-	// right
-	current_ray_x = mmap.p_center_x;
-	current_ray_y = mmap.p_center_y;
-	float right_ray_angle = player.angle + (FOV_RADIANS / 2.0f);
-	ray_dir_x = cosf(right_ray_angle);
-	ray_dir_y = sinf(right_ray_angle);
-
-	while (true) {
-		int map_pixel_x = (int)current_ray_x;
-		int map_pixel_y = (int)current_ray_y;
-
-		if (map_pixel_x < mmap.start_x || map_pixel_x >= mmap.start_x + MINIMAP_WIDTH ||
-		    map_pixel_y < mmap.start_y || map_pixel_y >= mmap.start_y + MINIMAP_HEIGHT) {
-			break;
-		}
-
-		int tile_x_world =
-			mmap.window_start_x + (map_pixel_x - mmap.start_x) / MINIMAP_TILE_SIZE;
-		int tile_y_world =
-			mmap.window_start_y + (map_pixel_y - mmap.start_y) / MINIMAP_TILE_SIZE;
-
-		if (isWall(tile_x_world, tile_y_world)) {
-			break;
-		}
-
-		tft_draw_pixel(map_pixel_x, map_pixel_y, COLOR_MINIMAP_LINE);
-
-		current_ray_x += ray_dir_x * step_size;
-		current_ray_y += ray_dir_y * step_size;
-	}
-}
-
-// Map timeeeeeeeeeeee
-
 bool isWall(int Tile_x, int Tile_y)
 {
 	// boundaries
@@ -721,7 +562,6 @@ bool Can_shot(float dt)
 }
 void debug(void)
 {
-	drawMinimap_Debug();
 	tft_draw_string(5, 0, WHITE, "X %-.2f Y %-.2f", player.x, player.y);
 	tft_draw_string(5, 10, WHITE, "Angle %-.2f", player.angle);
 	tft_draw_string(5, 85, WHITE, "Score %-i", player.score);
