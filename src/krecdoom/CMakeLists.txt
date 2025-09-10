@@ -1,7 +1,7 @@
 add_executable(
     krecdoom
     main.c
-    volume.c
+    extras/volume.c
     maps/map1.c
     maps/map2.c
 )
