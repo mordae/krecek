@@ -215,7 +215,6 @@ void renderGame()
 			float rayDist = perpWallDist / cosf(rayAngle - player.angle);
 			wallX = player.x + rayDist * rayDirX;
 		}
-		// FIX 3: Correctly normalize wallX to a 0.0-1.0 fraction of the tile size.
 		wallX /= TILE_SIZE;
 		wallX -= floorf(wallX);
 
