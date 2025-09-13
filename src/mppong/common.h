@@ -69,8 +69,14 @@ typedef enum {
 #define CLIENT_PADDLE_STATE_TX_INTERVAL_US \
 	220000 // Client (P2) sends its paddle state every 0.22 seconds
 
-// New: Channel scanning constants
-#define CHANNEL_SCAN_TIMEOUT_US 1000000 // 1 second to listen on a channel before moving on
+// common.h - Add these definitions
+#define CHANNEL_SCAN_TIMEOUT_US 500000 // Reduced from 5s to 1s
+#define GAME_MUSIC_VOLUME 30
+
+// Add these message types for sound effects
+#define MSG_SOUND_PADDLE_HIT 0x0A
+#define MSG_SOUND_WALL_HIT 0x0B
+#define MSG_SOUND_SCORE 0x0C
 
 // Specific RF Channels for game
 #define SDK_RF_CHANNEL_66 66
