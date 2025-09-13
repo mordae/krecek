@@ -7,11 +7,25 @@
 #include <larm-1x3.png.h>
 #include <sdk.h>
 #include <stdio.h>
+#include <string.h>
 #include <tiles-16x16.png.h>
+//*
+//-----TODO-----
+//
+//   Menu
+//   Spell
+//   Book of speels
+//   Maps
+//
+//*
 
 extern TileType maps_tuturial[MAP_ROWS][MAP_COLS];
 
 TileType (*map)[MAP_COLS] = maps_tuturial;
+
+typedef struct Save {
+	int head, body, Larm, Rarm, Lleg, Rleg;
+} Save;
 
 typedef struct {
 	float x, y;
@@ -19,22 +33,69 @@ typedef struct {
 	int tile_x, tile_y;
 	float speed;
 	int head, body, Larm, Rarm, Lleg, Rleg;
+	char name[16];
+	int ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8, ch9, ch10, ch11, ch12, ch13, ch14, ch15;
 	int direction, d2;
 } Player;
 
 typedef struct {
+	int num1, num2, num3, num4, num5, num6, num7, num8, num9, num0;
+	int ch;
+} key;
+typedef struct {
 	bool costume;
 	int whut;
+	int P_start_x;
+	int P_start_y;
+	bool start;
+	bool init;
 } Menu;
 
 static Menu menu;
 static Player p;
+static key k;
 
 static void game_costume();
+static void game_read_costume();
+static void game_save_costume();
+static void game_start_menu();
+static void world_start();
 static void tiles();
 static void player_paint(float x, float y, int direction);
 
+static void game_read_costume()
+{
+	Save save;
+	sdk_save_read(0, &save, sizeof(save));
+
+	p.head = save.head;
+	p.body = save.body;
+	p.Larm = save.Larm;
+	p.Rarm = save.Rarm;
+	p.Lleg = save.Lleg;
+	p.Rleg = save.Rleg;
+}
+
+static void game_save_costume()
+{
+	Save save = {
+		.head = p.head,
+		.body = p.body,
+		.Larm = p.Larm,
+		.Rarm = p.Rarm,
+		.Lleg = p.Lleg,
+		.Rleg = p.Rleg,
+	};
+
+	sdk_save_write(0, &save, sizeof(save));
+}
+
 void game_start(void)
+{
+	k.ch = 0;
+	menu.start = true;
+}
+static void world_start(void)
 {
 	p.x = 20;
 	p.y = 15;
@@ -47,11 +108,35 @@ void game_start(void)
 	p.Rarm = 0;
 	p.Lleg = 0;
 	p.Lleg = 0;
+	game_read_costume();
 }
 
 void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
+	if (menu.start) {
+		if (sdk_inputs_delta.a == 1) {
+			menu.P_start_y += 1;
+		}
+		if (sdk_inputs_delta.b == 1) {
+			menu.P_start_x += 1;
+		}
+		if (sdk_inputs_delta.x == 1) {
+			menu.P_start_x -= 1;
+		}
+		if (sdk_inputs_delta.y == 1) {
+			menu.P_start_y -= 1;
+		}
+		if (sdk_inputs_delta.aux[1]) {
+		}
+
+		if (sdk_inputs_delta.vol_sw) {
+			world_start();
+			menu.costume = true;
+			menu.start = false;
+		}
+		return;
+	}
 
 	if (sdk_inputs_delta.start == 1 && menu.costume == false) {
 		menu.costume = true;
@@ -117,8 +202,13 @@ void game_paint(unsigned dt_usec)
 {
 	(void)dt_usec;
 	tft_fill(0);
+	if (menu.start) {
+		game_start_menu();
+		return;
+	}
 	if (menu.costume) {
 		game_costume();
+		game_save_costume();
 		return;
 	}
 	tft_set_origin(p.x - TFT_WIDTH / 2.0 + PLAYER_WIDTH / 2.0,
@@ -136,6 +226,51 @@ static void tiles()
 					      map[y][x] - 1);
 		}
 	}
+}
+static void draw_rect_ins(int x1, int y1, int x2, int y2, color_t color)
+{
+	tft_draw_rect(x1, y1, x2, y1, color);
+	tft_draw_rect(x1, y2, x2, y2, color);
+	tft_draw_rect(x1, y1, x1, y2, color);
+	tft_draw_rect(x2, y1, x2, y2, color);
+}
+
+static void game_start_menu()
+{
+	if (menu.P_start_x > 3 || menu.P_start_x < 0) {
+		menu.P_start_x = 0;
+	}
+
+	if (menu.P_start_y > 2 || menu.P_start_y < 0) {
+		menu.P_start_y = 0;
+	}
+	if (menu.P_start_x == 0 && menu.P_start_y == 0) {
+		menu.P_start_x = 1;
+	}
+	if (menu.P_start_x == 0 && menu.P_start_y == 2) {
+		menu.P_start_x = 1;
+	}
+
+	draw_rect_ins(menu.P_start_x * 40 - 2, menu.P_start_y * 30 + 10, menu.P_start_x * 40 + 7,
+		      menu.P_start_y * 30 + 23, WHITE);
+
+	char name[] = { p.ch1, p.ch2,  p.ch3,  p.ch4,  p.ch5,  p.ch6,  p.ch7,  p.ch8,
+			p.ch9, p.ch10, p.ch11, p.ch12, p.ch13, p.ch14, p.ch15, 0 };
+	strcpy(p.name, name);
+
+	tft_draw_string(70, 100, WHITE, "%s\n", p.name);
+
+	tft_draw_string(10, 100, WHITE, "-Start-");
+	tft_draw_string(40, 10, WHITE, "1");
+	tft_draw_string(80, 10, WHITE, "2");
+	tft_draw_string(120, 10, WHITE, "3");
+	tft_draw_string(40, 40, WHITE, "4");
+	tft_draw_string(80, 40, WHITE, "5");
+	tft_draw_string(120, 40, WHITE, "6");
+	tft_draw_string(40, 70, WHITE, "7");
+	tft_draw_string(80, 70, WHITE, "8");
+	tft_draw_string(120, 70, WHITE, "9");
+	tft_draw_string(0, 40, WHITE, "0");
 }
 static void player_paint(float x, float y, int direction)
 {
@@ -204,7 +339,6 @@ static void game_costume()
 	// 120 , 8, 124 , 12
 
 	tft_draw_rect(100, 8 + menu.whut * 11, 104, 12 + menu.whut * 11, WHITE);
-
 	tft_draw_string(5, 05, WHITE, "Head      %i", p.head);
 
 	tft_draw_string(5, 16, WHITE, "Body      %i", p.body);
