@@ -1,6 +1,7 @@
 //#include "extras/help.h"
 #include "common.h"
 #include "extras/volume.h"
+#include "sdk/input.h"
 #include <pico/stdlib.h>
 #include <sdk.h>
 #include <stdio.h>
@@ -59,6 +60,7 @@ typedef struct {
 	int ammo;
 	int gun;
 	bool alive;
+	bool strafing;
 } Player;
 static Player player;
 
@@ -280,12 +282,20 @@ void handlePlayerMovement(float dt)
 	float player_dx = 0;
 	float player_dy = 0;
 
-	if (sdk_inputs.joy_y > 500) {
-		player_dx -= cosf(player.angle) * MOVE_SPEED * dt;
-		player_dy -= sinf(player.angle) * MOVE_SPEED * dt;
-	} else if (sdk_inputs.joy_y < -500) {
-		player_dx += cosf(player.angle) * MOVE_SPEED * dt;
-		player_dy += sinf(player.angle) * MOVE_SPEED * dt;
+//	if (sdk_inputs.joy_y > 500) {
+//		player_dx -= cosf(player.angle) * MOVE_SPEED * dt;
+//		player_dy -= sinf(player.angle) * MOVE_SPEED * dt;
+//	} else if (sdk_inputs.joy_y < -500) {
+//		player_dx += cosf(player.angle) * MOVE_SPEED * dt;
+//		player_dy += sinf(player.angle) * MOVE_SPEED * dt;
+//	}
+
+	player_dx = cosf(player.angle) * MOVE_SPEED * dt * (-1 * (float)sdk_inputs.joy_y / 2048);
+	player_dy = sinf(player.angle) * MOVE_SPEED * dt * (-1 * (float)sdk_inputs.joy_y / 2048);
+
+	if (player.strafing) {
+		player_dx += cosf(player.angle + M_PI / 2) * MOVE_SPEED * dt * ((float)sdk_inputs.joy_x / 2048);
+		player_dy += sinf(player.angle + M_PI / 2) * MOVE_SPEED * dt * ((float)sdk_inputs.joy_x / 2048);
 	}
 
 	float player_fx = player.x + player_dx;
@@ -514,6 +524,7 @@ void Map_2_start_player(void)
 void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
+	player.strafing = sdk_inputs.x ? true : false;
 
 	if (sdk_inputs_delta.a == 1 && sdk_inputs.start) {
 		if (mode.debug) {
@@ -535,10 +546,8 @@ void game_input(unsigned dt_usec)
 	}
 	if (sdk_inputs_delta.select == 1) {
 	}
-	if (sdk_inputs.joy_x > 500 || sdk_inputs.b) {
-		player.angle += ROTATE_SPEED * dt;
-	} else if (sdk_inputs.joy_x < -500 || sdk_inputs.x) {
-		player.angle -= ROTATE_SPEED * dt;
+	if (!player.strafing) {
+		player.angle += ROTATE_SPEED * dt * ((float)sdk_inputs.joy_x / 2048);
 	}
 	if (player.gun > N_GUNS)
 		player.gun = 0;
