@@ -99,6 +99,12 @@ static int active_bag[7] = { 0, 1, 2, 3, 4, 5, 6 };
 static int future_bag[7] = { 0, 1, 2, 3, 4, 5, 6 };
 static int next_piece_in_bag = 6;
 
+static int board_position_offset_x = 0; // what amount to shift the board by
+static int board_position_offset_y = 0;
+static int board_moveback_strength = 3000; // how long does the board take to spring back to it's original position
+static int board_offset_time_x = 0; // how long has the board been offset in a specific axis
+static int board_offset_time_y = 0;
+
 static uint8_t piece_rotation[112] = {
 	0b1100, // z
 	0b0110, 0b0000, 0b0000, 0b0010, 0b0110, 0b0100, 0b0000, 0b0000,
@@ -213,6 +219,9 @@ static void move_active_piece(int move_x, int move_y)
 				   active_piece_shape, active_piece_orientation) == true) {
 		active_piece_x += move_x;
 		active_piece_y += move_y;
+	} else {
+		board_position_offset_x = move_x;
+		board_offset_time_x = 1;
 	}
 }
 
@@ -361,6 +370,9 @@ static bool is_on_ground()
 
 static void lock_active_piece()
 {
+	board_position_offset_y = 1;
+	board_offset_time_y = 1;
+
 	detirmine_ghost_position();
 	active_piece_y = ghost_piece_y;
 	for (int y = 0; y <= 3; y++) {
@@ -456,6 +468,23 @@ void game_start(void)
 
 void game_input(unsigned dt_usec)
 {
+	if (board_offset_time_x > 0) {
+		if (board_offset_time_x >= board_moveback_strength) {
+			board_offset_time_x = 0;
+			board_position_offset_x = 0;
+		} else {
+			board_offset_time_x += dt_usec;
+		}
+	}
+	if (board_offset_time_y > 0) {
+		if (board_offset_time_y >= board_moveback_strength) {
+			board_offset_time_y = 0;
+			board_position_offset_y = 0;
+		} else {
+			board_offset_time_y += dt_usec;
+		}
+	}
+
 	if (is_on_ground()) {
 		lock_time_elapsed += dt_usec;
 		if (lock_time_elapsed > lock_time) {
@@ -591,22 +620,25 @@ void game_paint(unsigned __unused dt_usec)
 		}
 	}
 
-	tft_draw_rect(BOARD_OFFSET_X - 1, BOARD_OFFSET_Y - 1 + (BOARD_HEIGHT * SPACE_SIZE),
-		      BOARD_OFFSET_X + (BOARD_WIDTH * SPACE_SIZE),
-		      BOARD_OFFSET_Y - 1 + (BOARD_HEIGHT * SPACE_SIZE), 175);
-	tft_draw_rect(BOARD_OFFSET_X - 1, BOARD_OFFSET_Y - 1 + (BOARD_HEIGHT * SPACE_SIZE),
-		      BOARD_OFFSET_X - 1,
-		      BOARD_OFFSET_Y + (BOARD_HEIGHT * SPACE_SIZE) + (BOARD_HEIGHT * SPACE_SIZE),
+	tft_draw_rect(BOARD_OFFSET_X - 1 + board_position_offset_x, 
+		      BOARD_OFFSET_Y - 1 + (BOARD_HEIGHT * SPACE_SIZE) + board_position_offset_y,
+		      BOARD_OFFSET_X + (BOARD_WIDTH * SPACE_SIZE) + board_position_offset_x,
+		      BOARD_OFFSET_Y - 1 + (BOARD_HEIGHT * SPACE_SIZE) + board_position_offset_y, 
 		      175);
-	tft_draw_rect(BOARD_OFFSET_X - 1,
-		      BOARD_OFFSET_Y + (BOARD_HEIGHT * SPACE_SIZE) + (BOARD_HEIGHT * SPACE_SIZE),
-		      BOARD_OFFSET_X + (BOARD_WIDTH * SPACE_SIZE),
-		      BOARD_OFFSET_Y + (BOARD_HEIGHT * SPACE_SIZE) + (BOARD_HEIGHT * SPACE_SIZE),
+	tft_draw_rect(BOARD_OFFSET_X - 1 + board_position_offset_x, 
+		      BOARD_OFFSET_Y - 1 + (BOARD_HEIGHT * SPACE_SIZE) + board_position_offset_y,
+		      BOARD_OFFSET_X - 1 + board_position_offset_x,
+		      BOARD_OFFSET_Y + (BOARD_HEIGHT * SPACE_SIZE) + (BOARD_HEIGHT * SPACE_SIZE) + board_position_offset_y, 
+		      175);
+	tft_draw_rect(BOARD_OFFSET_X - 1 + board_position_offset_x,
+		      BOARD_OFFSET_Y + (BOARD_HEIGHT * SPACE_SIZE) + (BOARD_HEIGHT * SPACE_SIZE) + board_position_offset_y,
+		      BOARD_OFFSET_X + (BOARD_WIDTH * SPACE_SIZE) + board_position_offset_x,
+		      BOARD_OFFSET_Y + (BOARD_HEIGHT * SPACE_SIZE) + (BOARD_HEIGHT * SPACE_SIZE) + board_position_offset_y,
 		      223);
-	tft_draw_rect(BOARD_OFFSET_X + (BOARD_WIDTH * SPACE_SIZE),
-		      BOARD_OFFSET_Y - 1 + (BOARD_HEIGHT * SPACE_SIZE),
-		      BOARD_OFFSET_X + (BOARD_WIDTH * SPACE_SIZE),
-		      BOARD_OFFSET_Y + (BOARD_HEIGHT * SPACE_SIZE) + (BOARD_HEIGHT * SPACE_SIZE),
+	tft_draw_rect(BOARD_OFFSET_X + (BOARD_WIDTH * SPACE_SIZE) + board_position_offset_x,
+		      BOARD_OFFSET_Y - 1 + (BOARD_HEIGHT * SPACE_SIZE) + board_position_offset_y,
+		      BOARD_OFFSET_X + (BOARD_WIDTH * SPACE_SIZE) + board_position_offset_x,
+		      BOARD_OFFSET_Y + (BOARD_HEIGHT * SPACE_SIZE) + (BOARD_HEIGHT * SPACE_SIZE) + board_position_offset_y,
 		      223);
 
 	detirmine_ghost_position();
