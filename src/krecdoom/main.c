@@ -112,6 +112,20 @@ static void textures_load();
 extern const TileType maps_map1[MAP_ROWS][MAP_COLS];
 extern const TileType maps_map2[MAP_ROWS][MAP_COLS];
 const TileType (*currentMap)[MAP_COLS] = maps_map1;
+#define FIXED_SHIFT 16
+#define FIXED_SCALE (1 << FIXED_SHIFT)
+typedef int32_t fixed_t;
+
+#define float_to_fixed(x) ((fixed_t)((x) * FIXED_SCALE))
+#define fixed_to_float(x) ((x) / (float)FIXED_SCALE)
+#define fixed_mul(a, b) ((fixed_t)(((int64_t)(a) * (b)) >> FIXED_SHIFT))
+#define fixed_div(a, b) ((fixed_t)(((int64_t)(a) << FIXED_SHIFT) / (b)))
+
+// Precomputed fixed-point values for shading
+static fixed_t fixed_tile_size;
+static fixed_t fixed_max_dist;
+static fixed_t fixed_min_shade;
+static fixed_t fixed_side_shade;
 
 void renderGame()
 {
@@ -119,6 +133,14 @@ void renderGame()
 	// MY 2.5D world
 
 	float rayAngle;
+
+	// Precompute fixed-point values if not already done
+	if (fixed_tile_size == 0) {
+		fixed_tile_size = float_to_fixed(TILE_SIZE);
+		fixed_max_dist = float_to_fixed(15.0f * TILE_SIZE);
+		fixed_min_shade = float_to_fixed(0.3f);
+		fixed_side_shade = float_to_fixed(0.8f);
+	}
 
 	// going each vertical line
 	for (int x = 0; x < SCREEN_WIDTH; x++) {
@@ -234,6 +256,25 @@ void renderGame()
 		float step = 1.0f * texHeight / wallHeight;
 		float texPos = (drawStart - SCREEN_HEIGHT / 2.0f + wallHeight / 2.0f) * step;
 
+		// Convert perpWallDist to fixed-point for shading
+		fixed_t perpWallDist_fixed = float_to_fixed(perpWallDist);
+
+		// Calculate shading using fixed-point arithmetic
+		fixed_t shade = FIXED_SCALE - fixed_div(perpWallDist_fixed, fixed_max_dist);
+
+		// Clamp minimum shade
+		if (shade < fixed_min_shade) {
+			shade = fixed_min_shade;
+		}
+
+		// Darken y-side walls
+		if (mmap.side == 1) {
+			shade = fixed_mul(shade, fixed_side_shade);
+		}
+
+		// Convert shade to 8.8 fixed point for faster multiplication
+		int shade_int = (shade >> 8) & 0xFFFF;
+
 		// Draw the textured vertical slice
 		for (int y = drawStart; y <= drawEnd; y++) {
 			// Calculate texture Y coordinate
@@ -251,23 +292,25 @@ void renderGame()
 			int g = Textures[wallType].name[pixelIndex + 1];
 			int b = Textures[wallType].name[pixelIndex + 2];
 
-			// Apply distance shading
-			float shade = 1.0f - (perpWallDist /
-					      (15.0f * TILE_SIZE)); // Scale shading by TILE_SIZE
-			if (shade < 0.3f)
-				shade = 0.3f;
-			if (mmap.side == 1)
-				shade *= 0.8f; // Darken y-side walls
+			// Apply distance shading using fixed-point arithmetic
+			r = (r * shade_int) >> 8;
+			g = (g * shade_int) >> 8;
+			b = (b * shade_int) >> 8;
 
-			r = (int)(r * shade);
-			g = (int)(g * shade);
-			b = (int)(b * shade);
+			// Clamp values to prevent overflow
+			if (r > 255)
+				r = 255;
+			if (g > 255)
+				g = 255;
+			if (b > 255)
+				b = 255;
 
 			// Draw the pixel
 			tft_draw_pixel(x, y, rgb_to_rgb565(r, g, b));
 		}
 	}
 }
+
 bool isWall(int Tile_x, int Tile_y)
 {
 	// boundaries
@@ -282,20 +325,22 @@ void handlePlayerMovement(float dt)
 	float player_dx = 0;
 	float player_dy = 0;
 
-//	if (sdk_inputs.joy_y > 500) {
-//		player_dx -= cosf(player.angle) * MOVE_SPEED * dt;
-//		player_dy -= sinf(player.angle) * MOVE_SPEED * dt;
-//	} else if (sdk_inputs.joy_y < -500) {
-//		player_dx += cosf(player.angle) * MOVE_SPEED * dt;
-//		player_dy += sinf(player.angle) * MOVE_SPEED * dt;
-//	}
+	//	if (sdk_inputs.joy_y > 500) {
+	//		player_dx -= cosf(player.angle) * MOVE_SPEED * dt;
+	//		player_dy -= sinf(player.angle) * MOVE_SPEED * dt;
+	//	} else if (sdk_inputs.joy_y < -500) {
+	//		player_dx += cosf(player.angle) * MOVE_SPEED * dt;
+	//		player_dy += sinf(player.angle) * MOVE_SPEED * dt;
+	//	}
 
 	player_dx = cosf(player.angle) * MOVE_SPEED * dt * (-1 * (float)sdk_inputs.joy_y / 2048);
 	player_dy = sinf(player.angle) * MOVE_SPEED * dt * (-1 * (float)sdk_inputs.joy_y / 2048);
 
 	if (player.strafing) {
-		player_dx += cosf(player.angle + M_PI / 2) * MOVE_SPEED * dt * ((float)sdk_inputs.joy_x / 2048);
-		player_dy += sinf(player.angle + M_PI / 2) * MOVE_SPEED * dt * ((float)sdk_inputs.joy_x / 2048);
+		player_dx += cosf(player.angle + M_PI / 2) * MOVE_SPEED * dt *
+			     ((float)sdk_inputs.joy_x / 2048);
+		player_dy += sinf(player.angle + M_PI / 2) * MOVE_SPEED * dt *
+			     ((float)sdk_inputs.joy_x / 2048);
 	}
 
 	float player_fx = player.x + player_dx;
