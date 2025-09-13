@@ -15,6 +15,11 @@ typedef struct sdk_game_info {
 	}
 
 /*
+ * Slot we are running from.
+ */
+extern int current_slot;
+
+/*
  * Reboot the console into firmware in given slot.
  * We have 32 slots numbered from 0 to 31.
  * Each has 512 KiB of flash space.

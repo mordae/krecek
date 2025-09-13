@@ -4,7 +4,7 @@
 #include <text.png.h>
 #include <select.png.h>
 
-#define NUM_GAMES 32
+#define NUM_GAMES 31
 const sdk_game_info_t *games[NUM_GAMES];
 static int selected = 0;
 

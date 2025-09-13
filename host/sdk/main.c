@@ -22,6 +22,8 @@ struct sdk_config sdk_config = {};
 
 uint64_t sdk_device_id = 0;
 
+int current_slot = 0;
+
 /* From audio.c */
 void sdk_audio_init(void);
 void sdk_audio_start(void);

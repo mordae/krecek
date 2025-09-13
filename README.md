@@ -37,7 +37,7 @@ Every game gets 512 KiB.
 | 28 |             | 0x10e00000 |
 | 29 |             | 0x10e80000 |
 | 39 |             | 0x10f00000 |
-| 31 |             | 0x10f80000 |
+| 31 | -- saves -- | 0x10f80000 |
 
 ## Development on Krecek
 

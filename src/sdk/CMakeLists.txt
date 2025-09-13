@@ -1,6 +1,7 @@
 add_library(
   krecek
   main.c
+  save.c
   audio.c
   melody.c
   melody-lexer.c

@@ -6,6 +6,7 @@
 #include <sdk/image.h>
 #include <sdk/formats.h>
 #include <sdk/game.h>
+#include <sdk/save.h>
 #include <sdk/input.h>
 #include <sdk/panic.h>
 #include <sdk/sprite.h>

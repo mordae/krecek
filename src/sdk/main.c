@@ -1,3 +1,4 @@
+#include <pico/flash.h>
 #include <sdk.h>
 #include <sdk/remote.h>
 
@@ -25,6 +26,8 @@
 
 struct sdk_config sdk_config = {};
 uint64_t sdk_device_id;
+
+int current_slot = 0;
 
 /* From audio.c */
 void sdk_audio_init(void);
@@ -119,13 +122,21 @@ void sdk_reboot_into_slot(unsigned slot)
 		tight_loop_contents();
 }
 
+static void core1_main(void)
+{
+	flash_safe_execute_core_init();
+	task_run_loop();
+}
+
 void __noreturn sdk_main(const struct sdk_config *conf)
 {
+	unsigned target = 0;
+
 	if (BOOT_JUMP == watchdog_hw->scratch[0]) {
 		// If a destination firmware has been configured before reboot,
 		// we want to jump into that firmware. But clear the target,
 		// so that we don't jump repeatedly.
-		unsigned target = watchdog_hw->scratch[1];
+		target = watchdog_hw->scratch[1];
 		watchdog_hw->scratch[0] = BOOT_LAND;
 		watchdog_hw->scratch[1] = 0;
 
@@ -159,6 +170,12 @@ void __noreturn sdk_main(const struct sdk_config *conf)
 	}
 
 target_reached:
+
+	/*
+	 * Let the SDK know what slot have we booted from so that we can
+	 * e.g. locate save games.
+	 */
+	current_slot = (target >> 14) & 31;
 
 	/* Apply configuration. */
 	sdk_config = *conf;
@@ -294,7 +311,7 @@ target_reached:
 	sdk_audio_start();
 	puts("sdk: audio started");
 
-	multicore_launch_core1(task_run_loop);
+	multicore_launch_core1(core1_main);
 	puts("sdk: core1 launched");
 
 	task_run_loop();

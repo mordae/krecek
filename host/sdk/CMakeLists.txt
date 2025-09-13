@@ -1,6 +1,7 @@
 add_library(
   sdk
   main.c
+  save.c
   input.c
   audio.c
   video.c
