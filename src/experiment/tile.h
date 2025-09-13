@@ -22,14 +22,21 @@ typedef struct __packed Tile {
 	uint8_t tile_id;
 
 	union __packed {
+		// TILE_EFFECT_TELEPORT
 		struct __packed {
 			uint16_t map : 7; // => MAX_MAPS
 			uint16_t px : 5;
 			uint16_t py : 4;
 		};
+		// TILE_EFFECT_DAMAGE
 		struct __packed {
-			uint8_t _unused : 8;
+			uint8_t _unused1 : 8;
 			uint8_t damage : 8;
+		};
+		// TILE_EFFECT_SPAWN
+		struct __packed {
+			uint8_t _unused2 : 8;
+			uint8_t enemy_id : 8;
 		};
 	};
 

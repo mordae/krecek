@@ -8,11 +8,13 @@
 #include <tft.h>
 
 #include "tile.h"
+#include "enemy.h"
 
 #include <tileset.png.h>
 #include <player.png.h>
 #include <swing.png.h>
 #include <enemies/blob.png.h>
+#include <enemies/slime_boss.png.h>
 
 #include <maps/map00.bin.h>
 #include <maps/map01.bin.h>
@@ -26,18 +28,15 @@ sdk_game_info("experiment", &image_cover_png);
 #define TILE_SIZE 8
 
 #define NUM_MAPS 2
+
+#define RED rgb_to_rgb565(255, 0, 0)
+
 static const void *maps[NUM_MAPS] = {
 	maps_map00_bin,
 	maps_map01_bin,
 };
 
 static const Tile (*map)[MAP_COLS] = (const void *)maps_map00_bin;
-
-typedef enum EnemyTypeId {
-	ENEMY_BLOB = 0,
-	ENEMY_SLIME_BOSS,
-	NUM_ENEMY_TYPES,
-} EnemyTypeId;
 
 typedef struct EnemyType {
 	const sdk_tileset_t *ts;
@@ -57,7 +56,7 @@ static const EnemyType enemy_type[NUM_ENEMY_TYPES] = {
 	},
 	[ENEMY_SLIME_BOSS] = {
 		.max_hp = 1000,
-		.ts = &ts_enemies_blob_png,
+		.ts = &ts_enemies_slime_boss_png,
 	},
 };
 
@@ -75,6 +74,7 @@ typedef struct Character {
 	int swing_phase;
 	float speed;
 	int shaken_phase;
+	int lives;
 } Character;
 
 static Character player = {
@@ -88,17 +88,21 @@ static Character player = {
 		.ox = 7.5f,
 		.oy = 7.5f,
 	},
+	.lives = 3,
 };
 
 void game_reset(void)
 {
+	player.lives = 3;
+
+	map = maps[0];
+	player.s.x = TFT_WIDTH / 2.0f;
+	player.s.y = TFT_HEIGHT / 2.0f;
 }
 
 void game_start(void)
 {
 	player.s.tile = 0;
-	player.s.x = TFT_WIDTH / 2.0f;
-	player.s.y = TFT_HEIGHT / 2.0f;
 	player.speed = 50.0f;
 }
 
@@ -122,8 +126,7 @@ static void change_map(int map_id, int px, int py)
 			if (TILE_EFFECT_SPAWN != tile.effect)
 				continue;
 
-			// TODO: Add argument to select different enemy type.
-			const EnemyType *type = &enemy_type[ENEMY_BLOB];
+			const EnemyType *type = &enemy_type[tile.enemy_id];
 			enemy[spawned].type = type;
 			enemy[spawned].hp = type->max_hp;
 			enemy[spawned].s.ts = type->ts;
@@ -245,6 +248,16 @@ void game_input(unsigned dt_usec)
 			player.s.x -= (player.s.x - old_x) * 5;
 			player.s.y -= (player.s.y - old_y) * 5;
 			player.shaken_phase = SHAKEN_START;
+			--player.lives;
+			if (player.lives <= 0) {
+				for (int i = 0; i < NUM_ENEMIES; i++) {
+					if (!enemy[i].type)
+						continue;
+					enemy[i].type = NULL;
+				}
+
+				game_reset();
+			}
 		}
 	} else {
 		player.shaken_phase -= dt_usec;
@@ -279,6 +292,10 @@ void game_paint(unsigned __unused dt_usec)
 			sdk_draw_tile(x * TILE_SIZE, y * TILE_SIZE, &ts_tileset_png,
 				      map[y][x].tile_id);
 		}
+	}
+
+	for (int i = 0; i < player.lives; i++) {
+		tft_draw_rect(4 + 16 * i, 3, 8 + 16 * i, 7, RED);
 	}
 
 	for (int i = 0; i < NUM_ENEMIES; i++) {

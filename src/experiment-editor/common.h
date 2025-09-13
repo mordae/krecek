@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <limits.h>
 #include "../../src/experiment/tile.h"
+#include "../../src/experiment/enemy.h"
 
 /* Available scenes. */
 extern sdk_scene_t scene_root;
