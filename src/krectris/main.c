@@ -105,6 +105,11 @@ static int board_moveback_strength = 3000; // how long does the board take to sp
 static int board_offset_time_x = 0; // how long has the board been offset in a specific axis
 static int board_offset_time_y = 0;
 
+static int star_pos_x[8];
+static int star_pos_y[8];
+static float star_pos_z[8];
+static float star_speed = 0.0008;
+
 static uint8_t piece_rotation[112] = {
 	0b1100, // z
 	0b0110, 0b0000, 0b0000, 0b0010, 0b0110, 0b0100, 0b0000, 0b0000,
@@ -436,6 +441,11 @@ static void lock_active_piece()
 	}
 }
 
+static void set_new_star_position(int index) {
+	star_pos_x[index] = rand() % 160;
+	star_pos_y[index] = rand() % 120;
+}
+
 static const char testmusic[] = "/i:sine /bpm:100 <"
 				"acdd# def#a"
 				"{"
@@ -460,6 +470,11 @@ void game_reset(void)
 
 	active_piece_x = piece_spawn_x[active_piece_shape];
 	active_piece_y = piece_spawn_y[active_piece_shape];
+
+	for (int i = 0; i < 8; i++) {
+		star_pos_z[i] = (rand() % 1947) + 100;
+		set_new_star_position(i);
+	}
 }
 
 void game_start(void)
@@ -468,6 +483,14 @@ void game_start(void)
 
 void game_input(unsigned dt_usec)
 {
+	for (int i = 0; i < 8; i++) {
+		star_pos_z[i] += star_speed * dt_usec;
+		if (star_pos_z[i] > 2047) {
+			star_pos_z[i] = 100;
+			set_new_star_position(i);
+		}
+	}
+	
 	if (board_offset_time_x > 0) {
 		if (board_offset_time_x >= board_moveback_strength) {
 			board_offset_time_x = 0;
@@ -613,6 +636,12 @@ void game_input(unsigned dt_usec)
 void game_paint(unsigned __unused dt_usec)
 {
 	tft_fill(0);
+
+	for (int i = 0; i < 8; i++) {
+		int x = (star_pos_x[i] - 80) * (star_pos_z[i] / 2048) * (star_pos_z[i] / 2048) + 80;
+		int y = (star_pos_y[i] - 60) * (star_pos_z[i] / 2048) * (star_pos_z[i] / 2048) + 60;
+		tft_draw_pixel(x, y, DARKGRAY);
+	}
 
 	for (int y = 0; y <= BOARD_HEIGHT * 2 - 1; y++) {
 		for (int x = 0; x <= BOARD_WIDTH - 1; x++) {
