@@ -8,30 +8,30 @@
 #include <cover.png.h>
 sdk_game_info("kal", &image_cover_png);
 
-/* Struktura pro objekty typu "tile" (kruhy) */
 struct tile_object {
 	int x;
 	int y;
 };
 
-/* Instance pro oba naše "kruhy" */
 static struct tile_object tile1;
 static struct tile_object tile2;
 
-/* Parametry kruhové dráhy */
-#define POLOMER_DRAHY 25.0f
-#define RYCHLOST_UHLU 0.05f
+#define POLOMER_DRAHY 20.0f
+#define RYCHLOST_UHLU 0.04f
 
-/* Aktuální úhel v radiánech */
 static float aktualni_uhel = 0.0f;
 
-/* Stav, který určuje, který tile obíhá kolem kterého */
-/* TRUE: tile2 obíhá kolem tile1 (výchozí) */
-/* FALSE: tile1 obíhá kolem tile2 */
 static bool tile2_orbits_tile1 = true;
+
+static const char music1[] = "/i:square /bpm:60 /pl "
+			     "{ "
+			     "c _ d _ e _ fgab"
+			     "}";
 
 void game_reset(void)
 {
+	sdk_melody_play(music1);
+
 	/* Počáteční pozice tile1 (pevný střed) */
 	tile1.x = TFT_WIDTH / 2;
 	tile1.y = TFT_HEIGHT / 2;
@@ -56,7 +56,7 @@ void game_input(unsigned dt_usec)
 		/* Přepneme stav obíhání */
 		tile2_orbits_tile1 = !tile2_orbits_tile1;
 		/* Resetujeme úhel, aby pohyb po přepnutí začal plynule */
-		aktualni_uhel = 0.0f;
+		//aktualni_uhel = 0.0f;
 	}
 }
 
@@ -84,7 +84,7 @@ void game_paint(unsigned __unused dt_usec)
 
 	/* Vykreslení obou tile */
 	sdk_draw_tile(tile1.x, tile1.y, &ts_balls_png, 0);
-	sdk_draw_tile(tile2.x, tile2.y, &ts_balls_png, 0);
+	sdk_draw_tile(tile2.x, tile2.y, &ts_balls_png, 1);
 }
 
 int main()
