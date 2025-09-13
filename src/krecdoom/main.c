@@ -332,15 +332,20 @@ void handlePlayerMovement(float dt)
 	//		player_dx += cosf(player.angle) * MOVE_SPEED * dt;
 	//		player_dy += sinf(player.angle) * MOVE_SPEED * dt;
 	//	}
+	if (sdk_inputs.joy_y > 500 || sdk_inputs.joy_y < -500) {
+		player_dx = cosf(player.angle) * MOVE_SPEED * dt *
+			    (-1 * (float)sdk_inputs.joy_y / 2048);
+		player_dy = sinf(player.angle) * MOVE_SPEED * dt *
+			    (-1 * (float)sdk_inputs.joy_y / 2048);
+	}
 
-	player_dx = cosf(player.angle) * MOVE_SPEED * dt * (-1 * (float)sdk_inputs.joy_y / 2048);
-	player_dy = sinf(player.angle) * MOVE_SPEED * dt * (-1 * (float)sdk_inputs.joy_y / 2048);
-
-	if (player.strafing) {
-		player_dx += cosf(player.angle + M_PI / 2) * MOVE_SPEED * dt *
-			     ((float)sdk_inputs.joy_x / 2048);
-		player_dy += sinf(player.angle + M_PI / 2) * MOVE_SPEED * dt *
-			     ((float)sdk_inputs.joy_x / 2048);
+	if (sdk_inputs.joy_x > 500 || sdk_inputs.joy_x < -500) {
+		if (player.strafing) {
+			player_dx += cosf(player.angle + M_PI / 2) * MOVE_SPEED * dt *
+				     ((float)sdk_inputs.joy_x / 2048);
+			player_dy += sinf(player.angle + M_PI / 2) * MOVE_SPEED * dt *
+				     ((float)sdk_inputs.joy_x / 2048);
+		}
 	}
 
 	float player_fx = player.x + player_dx;
@@ -591,8 +596,11 @@ void game_input(unsigned dt_usec)
 	}
 	if (sdk_inputs_delta.select == 1) {
 	}
-	if (!player.strafing) {
-		player.angle += ROTATE_SPEED * dt * ((float)sdk_inputs.joy_x / 2048);
+
+	if (sdk_inputs.joy_x > 500 || sdk_inputs.joy_x < -500) {
+		if (!player.strafing) {
+			player.angle += ROTATE_SPEED * dt * ((float)sdk_inputs.joy_x / 2048);
+		}
 	}
 	if (player.gun > N_GUNS)
 		player.gun = 0;
