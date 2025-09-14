@@ -29,7 +29,8 @@
 
 typedef enum {
 	EMPTY = 0,
-	WALL_COMMON = 1,
+	COBLE = 1,
+	BUNKER,
 	TELEPORT,
 } TileType;
 

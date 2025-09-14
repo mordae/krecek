@@ -10,46 +10,30 @@
 #include <stdint.h>
 #include <tft.h>
 #include <stdlib.h>
+// TODO
+// MENU
+// ENEMIES
+// EDITOR/RANDOM GENERATE
+// GRAFICS better
 
 #include <overline.png.h>
 #include <pistol.png.h>
 #include <shotgun.png.h>
 
-//#include "textures/T_00.h"
-//#include "textures/T_01.h"
-//#include "textures/T_02.h"
-//#include "textures/T_03.h"
-//#include "textures/T_04.h"
-//#include "textures/T_05.h"
-//#include "textures/T_06.h"
-//#include "textures/T_07.h"
-//#include "textures/T_08.h"
-#include "textures/T_09.h"
-//#include "textures/T_10.h"
-//#include "textures/T_11.h"
-//#include "textures/T_12.h"
-//#include "textures/T_13.h"
-//#include "textures/T_14.h"
-//#include "textures/T_15.h"
-//#include "textures/T_16.h"
-//#include "textures/T_17.h"
-//#include "textures/T_18.h"
-//#include "textures/T_19.h"
+#include "textures/T_00.h"
+#include "textures/T_01.h"
 
 #include <cover.png.h>
 
 sdk_game_info("krecdoom", &image_cover_png);
 
-// Movement joystick + b and x
-// Debug_mode start+a
-// Chenage Gun start+b
-// Map select
+typedef enum { GAME_MENU, GAME_PLAYING } GameState;
+
 typedef enum {
 	BROKE = 0,
 	PISTOL = 1,
 	SHOTGUN,
 } Gun;
-Gun gun_select[N_GUNS] = { 0, 1, 2 };
 
 typedef struct {
 	float x, y;
@@ -61,17 +45,14 @@ typedef struct {
 	int gun;
 	bool alive;
 	bool strafing;
+	char *name;
 } Player;
-static Player player;
-
 typedef struct {
 	bool debug;
 	bool map;
 	bool low;
 	uint16_t tilecolor;
 } Mode;
-static Mode mode;
-
 typedef struct {
 	bool hit_visible;
 	uint32_t hit_timer_start;
@@ -79,7 +60,6 @@ typedef struct {
 	int hit_size;
 	uint16_t hit_color;
 } Bullet;
-static Bullet bullet;
 typedef struct {
 	int tile_x, tile_y;
 	int start_x, start_y;
@@ -89,13 +69,17 @@ typedef struct {
 	int p_x, p_y;
 	float p_center_x, p_center_y;
 } MMap;
-static MMap mmap;
-
 typedef struct {
 	int w, h;		   //texture width/height
 	const unsigned char *name; //texture name
 } TexureMaps;
+Gun gun_select[N_GUNS] = { 0, 1, 2 };
+static Player player;
+static Mode mode;
+static Bullet bullet;
+static MMap mmap;
 static TexureMaps Textures[64];
+static GameState game_state = GAME_MENU;
 
 float volume = 0.5f;
 float timer = 0;
@@ -127,7 +111,7 @@ static fixed_t fixed_max_dist;
 static fixed_t fixed_min_shade;
 static fixed_t fixed_side_shade;
 
-void renderGame()
+static void renderGame()
 {
 	// Raycaster Engine LOL
 	// MY 2.5D world
@@ -229,8 +213,6 @@ void renderGame()
 		if (wallType <= 0)
 			wallType = 0;
 
-		wallType = 0;
-
 		float wallX;
 		if (mmap.side == 0) {
 			float rayDist = perpWallDist / cosf(rayAngle - player.angle);
@@ -311,27 +293,27 @@ void renderGame()
 	}
 }
 
-bool isWall(int Tile_x, int Tile_y)
+static bool isWall(int Tile_x, int Tile_y)
 {
-	// boundaries
+	// boundarie
 	if (Tile_x < 0 || Tile_x >= MAP_COLS || Tile_y < 0 || Tile_y >= MAP_ROWS) {
 		return true;
 	}
-	return currentMap[Tile_y][Tile_x] == WALL_COMMON;
+	TileType tile = currentMap[Tile_y][Tile_x];
+	switch (tile) {
+	case COBLE:
+	case BUNKER:
+		return true;
+	case TELEPORT:
+	case EMPTY:
+		return false;
+	}
 }
 
-void handlePlayerMovement(float dt)
+static void handlePlayerMovement(float dt)
 {
 	float player_dx = 0;
 	float player_dy = 0;
-
-	//	if (sdk_inputs.joy_y > 500) {
-	//		player_dx -= cosf(player.angle) * MOVE_SPEED * dt;
-	//		player_dy -= sinf(player.angle) * MOVE_SPEED * dt;
-	//	} else if (sdk_inputs.joy_y < -500) {
-	//		player_dx += cosf(player.angle) * MOVE_SPEED * dt;
-	//		player_dy += sinf(player.angle) * MOVE_SPEED * dt;
-	//	}
 	if (sdk_inputs.joy_y > 500 || sdk_inputs.joy_y < -500) {
 		player_dx = cosf(player.angle) * MOVE_SPEED * dt *
 			    (-1 * (float)sdk_inputs.joy_y / 2048);
@@ -347,6 +329,39 @@ void handlePlayerMovement(float dt)
 				     ((float)sdk_inputs.joy_x / 2048);
 		}
 	}
+
+	player.strafing = sdk_inputs.x ? true : false;
+
+	if (sdk_inputs_delta.a == 1 && sdk_inputs.start) {
+		if (mode.debug) {
+			mode.debug = false;
+		} else
+			mode.debug = true;
+	}
+	if (sdk_inputs_delta.x == 1 && sdk_inputs.start) {
+		if (currentMap == maps_map1) {
+			currentMap = maps_map2;
+			map_starter_caller();
+		} else {
+			currentMap = maps_map1;
+			map_starter_caller();
+		}
+	}
+	if (sdk_inputs_delta.y == 1) {
+		player.gun += 1;
+	}
+	if (sdk_inputs_delta.select == 1) {
+		game_state = GAME_MENU;
+	}
+
+	if (sdk_inputs.joy_x > 500 || sdk_inputs.joy_x < -500) {
+		if (!player.strafing) {
+			player.angle += ROTATE_SPEED * dt * ((float)sdk_inputs.joy_x / 2048);
+		}
+	}
+	if (player.gun > N_GUNS)
+		player.gun = 0;
+	handleShooting();
 
 	float player_fx = player.x + player_dx;
 	float player_fy = player.y + player_dy;
@@ -376,7 +391,7 @@ void handlePlayerMovement(float dt)
 	}
 }
 
-void player_view_draw()
+static void player_view_draw()
 {
 	if (mode.debug) {
 		return;
@@ -422,8 +437,8 @@ void player_view_draw()
 	}
 }
 
-void shootBullet(float current_shoot_angle, float max_range_tiles, int visual_size,
-		 uint16_t visual_color)
+static void shootBullet(float current_shoot_angle, float max_range_tiles, int visual_size,
+			uint16_t visual_color)
 {
 	float rayDirX = cosf(current_shoot_angle);
 	float rayDirY = sinf(current_shoot_angle);
@@ -484,7 +499,7 @@ void shootBullet(float current_shoot_angle, float max_range_tiles, int visual_si
 		}
 	}
 }
-void handleShooting()
+static void handleShooting()
 {
 	if (sdk_inputs_delta.a == 1) {
 		if (player.ammo > 0) {
@@ -526,7 +541,7 @@ void game_start(void)
 	player.alive = true;
 	player.gun = 1;
 }
-void map_starter_caller()
+static void map_starter_caller()
 {
 	if (currentMap == maps_map1) {
 		Map_1_start_player();
@@ -536,7 +551,7 @@ void map_starter_caller()
 	}
 }
 
-void Map_1_start_player(void)
+static void Map_1_start_player(void)
 {
 	player.x = TILE_SIZE * 1.5f;
 	player.y = TILE_SIZE * 1.5f;
@@ -554,7 +569,7 @@ void Map_1_start_player(void)
 	mode.map = false;
 }
 
-void Map_2_start_player(void)
+static void Map_2_start_player(void)
 {
 	player.x = TILE_SIZE * 2.5f;
 	player.y = TILE_SIZE * 3.5f;
@@ -571,57 +586,29 @@ void Map_2_start_player(void)
 
 	mode.map = false;
 }
+static void menu_inputs()
+{
+	if (sdk_inputs_delta.start == 1) {
+		game_state = GAME_PLAYING;
+	}
+}
 void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
-	player.strafing = sdk_inputs.x ? true : false;
-
-	if (sdk_inputs_delta.a == 1 && sdk_inputs.start) {
-		if (mode.debug) {
-			mode.debug = false;
-		} else
-			mode.debug = true;
-	}
-	if (sdk_inputs_delta.x == 1 && sdk_inputs.start) {
-		if (currentMap == maps_map1) {
-			currentMap = maps_map2;
-			map_starter_caller();
-		} else {
-			currentMap = maps_map1;
+	switch (game_state) {
+	case GAME_MENU:
+		menu_inputs();
+		break;
+	case GAME_PLAYING:
+		handlePlayerMovement(dt);
+		if (player.health <= 0) {
 			map_starter_caller();
 		}
+		break;
 	}
-	if (sdk_inputs_delta.y == 1) {
-		player.gun += 1;
-	}
-	if (sdk_inputs_delta.select == 1) {
-	}
-
-	if (sdk_inputs.joy_x > 500 || sdk_inputs.joy_x < -500) {
-		if (!player.strafing) {
-			player.angle += ROTATE_SPEED * dt * ((float)sdk_inputs.joy_x / 2048);
-		}
-	}
-	if (player.gun > N_GUNS)
-		player.gun = 0;
-	handleShooting();
-
 	game_handle_audio(dt, volume);
-	handlePlayerMovement(dt);
-	if (player.health <= 0) {
-		map_starter_caller();
-	}
 }
-bool Can_shot(float dt)
-{
-	timer += dt;
-	if (timer >= 1.0f) {
-		timer = 0;
-		return true;
-	} else
-		return false;
-}
-void debug(void)
+static void debug(void)
 {
 	tft_draw_string(5, 0, WHITE, "X %-.2f Y %-.2f", player.x, player.y);
 	tft_draw_string(5, 10, WHITE, "Angle %-.2f", player.angle);
@@ -629,25 +616,36 @@ void debug(void)
 	tft_draw_string(5, 95, WHITE, "Health %i", player.health);
 	tft_draw_string(5, 105, WHITE, "Ammo %-i", player.ammo);
 }
-
+static void render_menu()
+{
+}
 void game_paint(unsigned dt_usec)
 {
 	(void)dt_usec;
 	tft_fill(0);
+	switch (game_state) {
+	case GAME_MENU:
+		render_menu();
+		break;
 
-	renderGame();
-
-	player_view_draw();
-	if (mode.debug) {
-		debug();
+	case GAME_PLAYING:
+		renderGame();
+		if (mode.debug) {
+			debug();
+		}
+		player_view_draw();
+		break;
 	}
 }
 
 static void textures_load()
 {
-	Textures[0].name = T_09;
-	Textures[0].h = T_09_HEIGHT;
-	Textures[0].w = T_09_WIDTH;
+	Textures[0].name = T_00;
+	Textures[0].h = T_00_HEIGHT;
+	Textures[0].w = T_00_WIDTH;
+	Textures[1].name = T_01;
+	Textures[1].h = T_01_HEIGHT;
+	Textures[1].w = T_01_WIDTH;
 }
 int main()
 {
