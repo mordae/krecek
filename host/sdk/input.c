@@ -17,6 +17,10 @@ static int joy_right = 0;
 
 static uint32_t select_held_since = 0;
 
+static int mouse_down = 0;
+static int mouse_x = 0;
+static int mouse_y = 0;
+
 static void on_keydown(SDL_Scancode code)
 {
 	switch (code) {
@@ -234,6 +238,25 @@ void sdk_input_handle(const SDL_Event *event)
 	if (event->type == SDL_KEYUP) {
 		on_keyup(event->key.keysym.scancode);
 	}
+
+	if (event->type == SDL_MOUSEMOTION) {
+		mouse_x = event->motion.x;
+		mouse_y = event->motion.y;
+	}
+
+	if (event->type == SDL_MOUSEBUTTONDOWN) {
+		if (event->button.button == SDL_BUTTON_LEFT) {
+			mouse_down = 1;
+			mouse_x = event->button.x;
+			mouse_y = event->button.y;
+		}
+	}
+
+	if (event->type == SDL_MOUSEBUTTONUP) {
+		if (event->button.button == SDL_BUTTON_LEFT) {
+			mouse_down = 0;
+		}
+	}
 }
 
 void sdk_input_commit(uint32_t dt)
@@ -255,11 +278,28 @@ void sdk_input_commit(uint32_t dt)
 	sdk_inputs.jx = joy_right - joy_left;
 	sdk_inputs.jy = joy_down - joy_up;
 
+	sdk_inputs.tx = (float)mouse_x / 160.0f;
+	sdk_inputs.ty = (float)mouse_y / 120.0f;
+	sdk_inputs.tp = mouse_down ? 1 : 0;
+
+	if (sdk_inputs.tx < 0.0f)
+		sdk_inputs.tx = 0.0f;
+	if (sdk_inputs.tx > 1.0f)
+		sdk_inputs.tx = 1.0f;
+	if (sdk_inputs.ty < 0.0f)
+		sdk_inputs.ty = 0.0f;
+	if (sdk_inputs.ty > 1.0f)
+		sdk_inputs.ty = 1.0f;
+
 	sdk_inputs_delta.joy_x = roundf(sdk_inputs.joy_x * fdt);
 	sdk_inputs_delta.joy_y = roundf(sdk_inputs.joy_y * fdt);
 
 	sdk_inputs_delta.jx = roundf(sdk_inputs.jx * fdt);
 	sdk_inputs_delta.jy = roundf(sdk_inputs.jy * fdt);
+
+	sdk_inputs_delta.tx = sdk_inputs.tx - prev_inputs.tx;
+	sdk_inputs_delta.ty = sdk_inputs.ty - prev_inputs.ty;
+	sdk_inputs_delta.tp = sdk_inputs.tp - prev_inputs.tp;
 
 	if (abs(sdk_inputs.joy_x) >= 512) {
 		if (!sdk_inputs.horizontal ||
