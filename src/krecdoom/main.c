@@ -10,6 +10,8 @@
 #include <stdint.h>
 #include <tft.h>
 #include <stdlib.h>
+#include "maps.h"
+
 // TODO
 // MENU
 // ENEMIES
@@ -22,10 +24,44 @@
 
 #include "textures/T_00.h"
 #include "textures/T_01.h"
+#include "textures/T_02.h"
+#include "textures/T_03.h"
+#include "textures/T_04.h"
+#include "textures/T_05.h"
+#include "textures/T_06.h"
+#include "textures/T_07.h"
+#include "textures/T_08.h"
+#include "textures/T_09.h"
+#include "textures/T_10.h"
+#include "textures/T_11.h"
+#include "textures/T_12.h"
+#include "textures/T_13.h"
+#include "textures/T_14.h"
+#include "textures/T_15.h"
+#include "textures/T_16.h"
+#include "textures/T_17.h"
+#include "textures/T_18.h"
+#include "textures/T_19.h"
 
 #include <cover.png.h>
 
 sdk_game_info("krecdoom", &image_cover_png);
+const char *texture_names[] = {
+	T_00, T_01, T_02, T_03, T_04, T_05, T_06, T_07, T_08, T_09,
+	T_10, T_11, T_12, T_13, T_14, T_15, T_16, T_17, T_18,
+};
+
+const int texture_heights[] = {
+	T_00_HEIGHT, T_01_HEIGHT, T_02_HEIGHT, T_03_HEIGHT, T_04_HEIGHT, T_05_HEIGHT, T_06_HEIGHT,
+	T_07_HEIGHT, T_08_HEIGHT, T_09_HEIGHT, T_10_HEIGHT, T_11_HEIGHT, T_12_HEIGHT, T_13_HEIGHT,
+	T_14_HEIGHT, T_15_HEIGHT, T_16_HEIGHT, T_17_HEIGHT, T_18_HEIGHT,
+};
+
+const int texture_widths[] = {
+	T_00_WIDTH, T_01_WIDTH, T_02_WIDTH, T_03_WIDTH, T_04_WIDTH, T_05_WIDTH, T_06_WIDTH,
+	T_07_WIDTH, T_08_WIDTH, T_09_WIDTH, T_10_WIDTH, T_11_WIDTH, T_12_WIDTH, T_13_WIDTH,
+	T_14_WIDTH, T_15_WIDTH, T_16_WIDTH, T_17_WIDTH, T_18_WIDTH,
+};
 
 typedef enum { GAME_MENU, GAME_PLAYING } GameState;
 
@@ -52,6 +88,7 @@ typedef struct {
 	bool map;
 	bool low;
 	uint16_t tilecolor;
+	float is_seen;
 } Mode;
 typedef struct {
 	bool hit_visible;
@@ -302,8 +339,26 @@ static bool isWall(int Tile_x, int Tile_y)
 	TileType tile = currentMap[Tile_y][Tile_x];
 	switch (tile) {
 	case COBLE:
+	case BRICKS:
+	case STONE:
+	case MAGMA:
+	case WATER:
+	case STONE_HOLE:
+	case CHEKERD:
+	case MOSS_STONE:
+	case WOOD_WALL:
+	case PRISMARYN:
+	case CHOLOTATE:
+	case PATTERN_IN_BROWN:
+	case SAND_WITH_MOSS:
+	case IRON:
 	case BUNKER:
 		return true;
+	case UN1:
+	case UN2:
+	case UN3:
+	case UN4:
+	case UN5:
 	case TELEPORT:
 	case EMPTY:
 		return false;
@@ -616,16 +671,25 @@ static void debug(void)
 	tft_draw_string(5, 95, WHITE, "Health %i", player.health);
 	tft_draw_string(5, 105, WHITE, "Ammo %-i", player.ammo);
 }
-static void render_menu()
+static void render_menu(float dt)
 {
+	tft_draw_rect(48, 18, 115, 32, WHITE);
+	tft_draw_string(50, 20, 0, "KRECDOOM");
+	mode.is_seen += dt;
+	if (mode.is_seen < 0.5) {
+		tft_draw_string(60, 50, RED, "START");
+	} else if (mode.is_seen > 1.0) {
+		mode.is_seen = 0;
+	}
 }
 void game_paint(unsigned dt_usec)
 {
-	(void)dt_usec;
+	float dt = dt_usec / 1000000.0f;
+
 	tft_fill(0);
 	switch (game_state) {
 	case GAME_MENU:
-		render_menu();
+		render_menu(dt);
 		break;
 
 	case GAME_PLAYING:
@@ -640,12 +704,11 @@ void game_paint(unsigned dt_usec)
 
 static void textures_load()
 {
-	Textures[0].name = T_00;
-	Textures[0].h = T_00_HEIGHT;
-	Textures[0].w = T_00_WIDTH;
-	Textures[1].name = T_01;
-	Textures[1].h = T_01_HEIGHT;
-	Textures[1].w = T_01_WIDTH;
+	for (int i = 0; i < 19; i++) {
+		Textures[i].name = texture_names[i];
+		Textures[i].h = texture_heights[i];
+		Textures[i].w = texture_widths[i];
+	}
 }
 int main()
 {

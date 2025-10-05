@@ -1,0 +1,30 @@
+#pragma once
+#define MAP_COLS 30
+#define MAP_ROWS 30
+
+#define ENUM_TYPES 21
+
+typedef enum {
+	EMPTY = 0,
+	COBLE = 1,
+	BUNKER,
+	BRICKS,
+	UN1,
+	STONE,
+	MAGMA,
+	WATER,
+	STONE_HOLE,
+	CHEKERD,
+	UN2,
+	UN3,
+	UN4,
+	MOSS_STONE,
+	WOOD_WALL,
+	PRISMARYN,
+	CHOLOTATE,
+	UN5,
+	PATTERN_IN_BROWN,
+	SAND_WITH_MOSS,
+	IRON,
+	TELEPORT = 21
+} TileType;

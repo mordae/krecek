@@ -10,9 +10,6 @@
 #define MOVE_SPEED 225.0f
 #define ROTATE_SPEED 3.0f
 
-#define MAP_ROWS 24
-#define MAP_COLS 24
-
 #define PISTOL_DAMAGE 25
 #define SHOTGUN_DAMAGE 40
 #define N_GUNS 3
@@ -24,14 +21,8 @@
 #define SHOTGUN_PELLETS 5
 
 #define DRAW_RED rgb_to_rgb565(183, 0, 0)
+#define RED rgb_to_rgb565(183, 0, 0)
 #define WHITE rgb_to_rgb565(255, 255, 255)
 #define YELLOW rgb_to_rgb565(255, 255, 0)
-
-typedef enum {
-	EMPTY = 0,
-	COBLE = 1,
-	BUNKER,
-	TELEPORT,
-} TileType;
 
 #endif
