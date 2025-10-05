@@ -415,7 +415,7 @@ void game_input(unsigned dt_usec)
 			save.timer += dt;
 			return;
 		} else {
-			saveMap("edited_file.path", "edited_file.name", map);
+			saveMap(edited_file.file_path, edited_file.name, map);
 			editor_state = EDITOR_MENU;
 		}
 		break;
@@ -467,6 +467,9 @@ void game_paint(unsigned dt_usec)
 		tft_draw_string(40, 70, WHITE, "Info");
 		tft_draw_string(40, 85, WHITE, "Reset Map");
 		sdk_draw_sprite(&S.a);
+		draw_small_string(150, 112, "5");
+		draw_small_string(144, 112, "v");
+		tft_draw_pixel(149, 117, WHITE);
 		break;
 
 	case EDITOR_FILE_SELECT:
@@ -482,6 +485,9 @@ void game_paint(unsigned dt_usec)
 		tft_draw_string(5, 32, WHITE, "Use Aux7 to return");
 		tft_draw_string(5, 65, WHITE, "Select for");
 		tft_draw_string(5, 76, WHITE, "Cheat sheet");
+		draw_small_string(150, 112, "5");
+		draw_small_string(144, 112, "v");
+		tft_draw_pixel(149, 117, WHITE);
 
 		break;
 
