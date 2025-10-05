@@ -5,11 +5,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//*     USE MAUSE
+//*     USE MAUSE in everthing *
+//*  MAP_EDITOR
 //*
+//*   STATUS 0
+//*     right click to look at texture
+//*   STATUS 1
+//*     use right click to tile +1
+//*   STATUS 2
+//*     use right click to set the tile from memory
+//*     use start/enter to set the memory tile
+//*   STATUS 3
+//*     set tile to 0
+//*   Use select to use cheet sheet
 //*
-//*
-//*
+//*   To edit what map and where use it edit struct edited_file
 #include <arrow.png.h>
 #include <font-5x5.png.h>
 #include <ui_editor-40x120.png.h>
