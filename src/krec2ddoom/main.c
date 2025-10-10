@@ -153,7 +153,7 @@ static TexureMaps Textures[64];
 
 extern const TileType maps_map1[MAP_ROWS][MAP_COLS];
 extern const TileType maps_map2[MAP_ROWS][MAP_COLS];
-const TileType (*load_map)[MAP_COLS] = maps_map1;
+const TileType (*load_map)[MAP_COLS] = maps_map2;
 
 static TileType map[MAP_ROWS][MAP_COLS];
 
@@ -253,8 +253,8 @@ void game_start(void)
 {
 	textures_load();
 	editor_read_save();
-	edited_file.name = "maps_map1";
-	edited_file.file_path = "../krecdoom/maps/map1.c";
+	edited_file.name = "maps_map2";
+	edited_file.file_path = "../krecdoom/maps/map2.c";
 
 	tm.yes = 0;
 
