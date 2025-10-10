@@ -2,7 +2,7 @@
 #define MAP_COLS 30
 #define MAP_ROWS 30
 
-#define ENUM_TYPES 21
+#define ENUM_TYPES 22
 
 typedef enum {
 	EMPTY = 0,
@@ -26,5 +26,6 @@ typedef enum {
 	PATTERN_IN_BROWN,
 	SAND_WITH_MOSS,
 	IRON,
-	TELEPORT = 21
+	TELEPORT = 21,
+	PLAYER_SPAWN
 } TileType;

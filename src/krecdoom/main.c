@@ -124,9 +124,8 @@ float timer = 0;
 static bool isWall(int Tile_x, int Tile_y);
 static void shootBullet(float start_angle, float max_range_tiles, int visual_size,
 			uint16_t visual_color);
+static void Map_starter(const TileType map[MAP_ROWS][MAP_COLS]);
 static void handleShooting();
-static void Map_1_start_player();
-static void Map_2_start_player();
 static bool Can_shot(float dt);
 static void map_starter_caller();
 static void textures_load();
@@ -354,6 +353,7 @@ static bool isWall(int Tile_x, int Tile_y)
 	case IRON:
 	case BUNKER:
 		return true;
+	case PLAYER_SPAWN:
 	case UN1:
 	case UN2:
 	case UN3:
@@ -437,10 +437,8 @@ static void handlePlayerMovement(float dt)
 
 	if (currentMap[player_tile_y][player_tile_x] == TELEPORT) {
 		if (currentMap == maps_map1) {
-			currentMap = maps_map2;
 			map_starter_caller();
 		} else {
-			currentMap = maps_map1;
 			map_starter_caller();
 		}
 	}
@@ -585,12 +583,11 @@ static void handleShooting()
 void game_start(void)
 {
 	sdk_set_output_gain_db(volume);
-	map_starter_caller();
+	currentMap = maps_map1;
+	Map_starter(maps_map1);
 	textures_load();
 
 	player.health = 100;
-	player.x = TILE_SIZE * 1.5f;
-	player.y = TILE_SIZE * 1.5f;
 	player.angle = (float)M_PI / 2.0f;
 	player.ammo = 15;
 	player.alive = true;
@@ -598,18 +595,19 @@ void game_start(void)
 }
 static void map_starter_caller()
 {
-	if (currentMap == maps_map1) {
-		Map_1_start_player();
-	}
 	if (currentMap == maps_map2) {
-		Map_2_start_player();
+		currentMap = maps_map1;
+		Map_starter(maps_map1);
+		return;
+	}
+	if (currentMap == maps_map1) {
+		Map_starter(maps_map2);
+		currentMap = maps_map2;
 	}
 }
 
-static void Map_1_start_player(void)
+static void Map_starter(const TileType map[MAP_ROWS][MAP_COLS])
 {
-	player.x = TILE_SIZE * 1.5f;
-	player.y = TILE_SIZE * 1.5f;
 	player.angle = (float)M_PI / 2.0f;
 	player.ammo = 15;
 	player.alive = true;
@@ -622,25 +620,20 @@ static void Map_1_start_player(void)
 	bullet.hit_color = 0;
 
 	mode.map = false;
+	for (int x = 0; x < MAP_ROWS; x++) {
+		for (int y = 0; y < MAP_COLS; y++) {
+			if (map[y][x] == PLAYER_SPAWN) {
+				printf("y %i\n", y);
+				printf("x %i\n", x);
+				player.x = x * TILE_SIZE;
+				player.y = y * TILE_SIZE;
+				printf("spawned player\n");
+				return;
+			}
+		}
+	}
 }
 
-static void Map_2_start_player(void)
-{
-	player.x = TILE_SIZE * 2.5f;
-	player.y = TILE_SIZE * 3.5f;
-	player.angle = (float)M_PI / 2.0f;
-	player.ammo = 15;
-	player.alive = true;
-
-	bullet.hit_visible = false;
-	bullet.hit_timer_start = 0;
-	bullet.hit_screen_x = 0;
-	bullet.hit_screen_y = 0;
-	bullet.hit_size = 0;
-	bullet.hit_color = 0;
-
-	mode.map = false;
-}
 static void menu_inputs()
 {
 	if (sdk_inputs_delta.start == 1) {
