@@ -114,11 +114,13 @@ typedef struct {
 
 typedef struct {
 	float timer;
+	TileType map[MAP_ROWS][MAP_COLS];
 } Saves;
 
 typedef struct {
 	bool tiles;
 	int tile_sel;
+	bool tile_show;
 } Menu;
 
 typedef struct {
@@ -153,7 +155,7 @@ static TexureMaps Textures[64];
 
 extern const TileType maps_map1[MAP_ROWS][MAP_COLS];
 extern const TileType maps_map2[MAP_ROWS][MAP_COLS];
-const TileType (*load_map)[MAP_COLS] = maps_map2;
+const TileType (*load_map)[MAP_COLS] = maps_map1;
 
 static TileType map[MAP_ROWS][MAP_COLS];
 
@@ -167,6 +169,7 @@ static void editor_read_save()
 {
 	Saves saves;
 	sdk_save_read(0, &saves, sizeof(saves));
+	memcpy(map, saves.map, sizeof(map));
 	if (isnan(saves.timer)) {
 		saves.timer = 0;
 		save.total_time = 0;
@@ -178,6 +181,11 @@ static void editor_read_save()
 static void editor_auto_save()
 {
 	Saves saves = { .timer = save.total_time };
+
+	memcpy(saves.map, map, sizeof(saves.map));
+
+	printf("save\n");
+
 	sdk_save_write(0, &saves, sizeof(saves));
 }
 static void saveMap(const char *filepath, const char *mapName, TileType map[MAP_ROWS][MAP_COLS])
@@ -253,8 +261,10 @@ void game_start(void)
 {
 	textures_load();
 	editor_read_save();
-	edited_file.name = "maps_map2";
-	edited_file.file_path = "../krecdoom/maps/map2.c";
+	edited_file.name = "maps_map1";
+	edited_file.file_path = "../krecdoom/maps/map1.c";
+
+	M.tile_show = true;
 
 	tm.yes = 0;
 
@@ -347,15 +357,43 @@ void game_input(unsigned dt_usec)
 		if (sdk_inputs.aux[7]) {
 			editor_state = EDITOR_MENU;
 		}
+		if (sdk_inputs_delta.vol_up == 1) {
+			M.tile_sel += 1;
+		}
+		if (sdk_inputs_delta.vol_down == 1) {
+			M.tile_sel -= 1;
+		}
+		if (sdk_inputs_delta.vol_sw == 1) {
+			if (M.tile_show) {
+				M.tile_show = false;
+			} else {
+				M.tile_show = true;
+			}
+		}
+
 		if (mx >= 40) {
 			mx -= 40;
 			for (int y = 0; y < MAP_COLS; y++) {
 				if (round(my / TILE_SIZE == y)) {
 					for (int x = 0; x < MAP_COLS; x++) {
-						if (round(mx / TILE_SIZE) == x) {
+						if (mx / TILE_SIZE == x) {
 							switch (editor_status) {
 							case FIRST:
 								if (sdk_inputs_delta.tp == 1) {
+									map[x][y] += 1;
+									if (map[x][y] >
+									    ENUM_TYPES) {
+										map[x][y] = 0;
+									}
+								}
+								if (sdk_inputs_delta.b == 1) {
+									map[x][y] -= 1;
+									if (map[x][y] <= 0) {
+										map[x][y] =
+											ENUM_TYPES;
+									}
+								}
+								if (sdk_inputs_delta.a == 1) {
 									map[x][y] += 1;
 									if (map[x][y] >
 									    ENUM_TYPES) {
@@ -399,7 +437,6 @@ void game_input(unsigned dt_usec)
 			save.timer = 0;
 		}
 		break;
-
 	case EDITOR_TILE:
 		if (sdk_inputs.aux[7]) {
 			editor_state = EDITOR_MENU;
@@ -572,6 +609,9 @@ static void ui_editor()
 	if (M.tiles) {
 		tile_ui(50, 20);
 	}
+	if (M.tile_show) {
+		draw_small_string(2, 40, "%i sel", M.tile_sel);
+	}
 	sdk_draw_sprite(&S.ui);
 	if (tm.yes == 1) {
 		textures_show();
@@ -594,6 +634,9 @@ static void ui_editor()
 		break;
 	}
 	draw_small_string(1, 2, "%i", num_status);
+	if (M.tile_show) {
+		draw_small_string(2, 93, "%i sel", M.tile_sel);
+	}
 }
 static void textures_show()
 {
@@ -646,6 +689,10 @@ static void textures_show()
 	case TELEPORT:
 		draw_small_string(2, 22, "teleport");
 		break;
+	case PLAYER_SPAWN:
+		draw_small_string(2, 22, "p spawn");
+		break;
+
 	case UN1:
 	case UN2:
 	case UN3:
@@ -759,6 +806,9 @@ static void draw_tile(int x0, int y0, int x1, int y1, int tx, int ty)
 	case IRON:
 		sdk_draw_tile(x0, y0, &ts_t_19_4x4_png, 0);
 		break;
+	case PLAYER_SPAWN:
+		tft_draw_rect(x0, y0, x1, y1, GREEN);
+		break;
 	case UN1:
 	case UN2:
 	case UN3:
@@ -772,14 +822,8 @@ static void tiles()
 {
 	for (int y = 0; y < MAP_ROWS; y++) {
 		for (int x = 0; x < MAP_COLS; x++) {
-			if (x == 1 && y == 1) {
-				tft_draw_rect(x * TILE_SIZE + 40, y * TILE_SIZE,
-					      x * TILE_SIZE + 3 + 40, y * TILE_SIZE + 3, GREEN);
-			} else {
-				draw_tile(x * TILE_SIZE + 40, y * TILE_SIZE,
-					  x * TILE_SIZE + TILE_SIZE + 39,
-					  y * TILE_SIZE + TILE_SIZE - 1, x, y);
-			}
+			draw_tile(x * TILE_SIZE + 40, y * TILE_SIZE, x * TILE_SIZE + TILE_SIZE + 39,
+				  y * TILE_SIZE + TILE_SIZE - 1, x, y);
 		}
 	}
 }
