@@ -25,6 +25,7 @@ TileType (*map)[MAP_COLS] = maps_tuturial;
 
 typedef struct Save {
 	int head, body, Larm, Rarm, Lleg, Rleg;
+	char name[16];
 } Save;
 
 typedef struct {
@@ -56,17 +57,19 @@ static Player p;
 static key k;
 
 static void game_costume();
-static void game_read_costume();
-static void game_save_costume();
+static void game_read_player();
+static void game_save_player();
 static void game_start_menu();
 static void world_start();
 static void tiles();
 static void player_paint(float x, float y, int direction);
 
-static void game_read_costume()
+static void game_read_player()
 {
 	Save save;
 	sdk_save_read(0, &save, sizeof(save));
+
+	memcpy(p.name, save.name, sizeof(p.name));
 
 	p.head = save.head;
 	p.body = save.body;
@@ -76,7 +79,7 @@ static void game_read_costume()
 	p.Rleg = save.Rleg;
 }
 
-static void game_save_costume()
+static void game_save_player()
 {
 	Save save = {
 		.head = p.head,
@@ -87,13 +90,16 @@ static void game_save_costume()
 		.Rleg = p.Rleg,
 	};
 
+	memcpy(save.name, p.name, sizeof(save.name));
+
 	sdk_save_write(0, &save, sizeof(save));
 }
 
 void game_start(void)
 {
-	k.ch = 0;
+	k.ch = 1;
 	menu.start = true;
+	game_read_player();
 }
 static void world_start(void)
 {
@@ -108,34 +114,135 @@ static void world_start(void)
 	p.Rarm = 0;
 	p.Lleg = 0;
 	p.Lleg = 0;
-	game_read_costume();
 }
+static void zero_num()
+{
+	k.num0 = 0;
+	k.num1 = 0;
+	k.num2 = 0;
+	k.num3 = 0;
+	k.num4 = 0;
+	k.num5 = 0;
+	k.num6 = 0;
+	k.num7 = 0;
+	k.num8 = 0;
+	k.num9 = 0;
+}
+static void game_start_inputs()
+{
+	if (sdk_inputs_delta.a == 1) {
+		menu.P_start_y += 1;
+		zero_num();
+	}
+	if (sdk_inputs_delta.b == 1) {
+		menu.P_start_x += 1;
+		zero_num();
+	}
+	if (sdk_inputs_delta.x == 1) {
+		menu.P_start_x -= 1;
+		zero_num();
+	}
+	if (sdk_inputs_delta.y == 1) {
+		menu.P_start_y -= 1;
+		zero_num();
+	}
 
+	if (menu.P_start_x > 3 || menu.P_start_x < 0) {
+		menu.P_start_x = 0;
+	}
+
+	if (menu.P_start_y > 2 || menu.P_start_y < 0) {
+		menu.P_start_y = 0;
+	}
+	if (menu.P_start_x == 0 && menu.P_start_y == 0) {
+		menu.P_start_x = 1;
+	}
+	if (menu.P_start_x == 0 && menu.P_start_y == 2) {
+		menu.P_start_x = 1;
+	}
+	if (sdk_inputs_delta.start == 1) {
+		if (menu.P_start_x == 1 && menu.P_start_y == 0) {
+			k.num1 += 1;
+			if (k.num1 > 1)
+				k.num1 = 0;
+		}
+		if (menu.P_start_x == 2 && menu.P_start_y == 0) {
+			k.num2 += 1;
+			if (k.num2 > 3)
+				k.num2 = 0;
+		}
+		if (menu.P_start_x == 3 && menu.P_start_y == 0) {
+			k.num3 += 1;
+			if (k.num3 > 3)
+				k.num3 = 0;
+		}
+		if (menu.P_start_x == 0 && menu.P_start_y == 1) {
+			k.num0 += 1;
+			if (k.num0 > 1)
+				k.num0 = 0;
+		}
+		if (menu.P_start_x == 1 && menu.P_start_y == 1) {
+			k.num4 += 1;
+			if (k.num4 > 3)
+				k.num4 = 0;
+		}
+		if (menu.P_start_x == 2 && menu.P_start_y == 1) {
+			k.num5 += 1;
+			if (k.num5 > 3)
+				k.num5 = 0;
+		}
+		if (menu.P_start_x == 3 && menu.P_start_y == 1) {
+			k.num6 += 1;
+			if (k.num6 > 3)
+				k.num6 = 0;
+		}
+		if (menu.P_start_x == 1 && menu.P_start_y == 2) {
+			k.num7 += 1;
+			if (k.num7 > 3)
+				k.num7 = 0;
+		}
+		if (menu.P_start_x == 2 && menu.P_start_y == 2) {
+			k.num8 += 1;
+			if (k.num8 > 3)
+				k.num8 = 0;
+		}
+		if (menu.P_start_x == 3 && menu.P_start_y == 2) {
+			k.num9 += 1;
+			if (k.num9 > 3)
+				k.num9 = 0;
+		}
+	}
+	if (sdk_inputs_delta.select == 1) {
+		world_start();
+		menu.costume = true;
+		menu.start = false;
+	}
+
+	if (sdk_inputs_delta.vol_up == 1) {
+		k.ch += 1;
+		zero_num();
+	}
+	if (sdk_inputs_delta.vol_sw == 1) {
+		k.ch += 1;
+		zero_num();
+	}
+	if (sdk_inputs_delta.vol_down == 1) {
+		k.ch -= 1;
+		zero_num();
+	}
+	if (k.ch > 15) {
+		k.ch = 1;
+	}
+	if (k.ch < 1) {
+		k.ch = 15;
+	}
+	return;
+}
 void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
 	if (menu.start) {
-		if (sdk_inputs_delta.a == 1) {
-			menu.P_start_y += 1;
-		}
-		if (sdk_inputs_delta.b == 1) {
-			menu.P_start_x += 1;
-		}
-		if (sdk_inputs_delta.x == 1) {
-			menu.P_start_x -= 1;
-		}
-		if (sdk_inputs_delta.y == 1) {
-			menu.P_start_y -= 1;
-		}
-		if (sdk_inputs_delta.aux[1]) {
-		}
-
-		if (sdk_inputs_delta.vol_sw) {
-			world_start();
-			menu.costume = true;
-			menu.start = false;
-		}
-		return;
+		game_start_inputs();
 	}
 
 	if (sdk_inputs_delta.start == 1 && menu.costume == false) {
@@ -208,7 +315,7 @@ void game_paint(unsigned dt_usec)
 	}
 	if (menu.costume) {
 		game_costume();
-		game_save_costume();
+		game_save_player();
 		return;
 	}
 	tft_set_origin(p.x - TFT_WIDTH / 2.0 + PLAYER_WIDTH / 2.0,
@@ -237,18 +344,142 @@ static void draw_rect_ins(int x1, int y1, int x2, int y2, color_t color)
 
 static void game_start_menu()
 {
-	if (menu.P_start_x > 3 || menu.P_start_x < 0) {
-		menu.P_start_x = 0;
-	}
+	int current_word = 0;
 
-	if (menu.P_start_y > 2 || menu.P_start_y < 0) {
-		menu.P_start_y = 0;
+	if (k.num2 > 0) {
+		if (k.num2 == 1) {
+			current_word = 65;
+		}
+		if (k.num2 == 2) {
+			current_word = 66;
+		}
+		if (k.num2 == 3) {
+			current_word = 67;
+		}
 	}
-	if (menu.P_start_x == 0 && menu.P_start_y == 0) {
-		menu.P_start_x = 1;
+	if (k.num3 > 0) {
+		if (k.num3 == 1) {
+			current_word = 68;
+		}
+		if (k.num3 == 2) {
+			current_word = 69;
+		}
+		if (k.num3 == 3) {
+			current_word = 70;
+		}
 	}
-	if (menu.P_start_x == 0 && menu.P_start_y == 2) {
-		menu.P_start_x = 1;
+	if (k.num4 > 0) {
+		if (k.num4 == 1) {
+			current_word = 71;
+		}
+		if (k.num4 == 2) {
+			current_word = 72;
+		}
+		if (k.num4 == 3) {
+			current_word = 73;
+		}
+	}
+	if (k.num5 > 0) {
+		if (k.num5 == 1) {
+			current_word = 74;
+		}
+		if (k.num5 == 2) {
+			current_word = 75;
+		}
+		if (k.num5 == 3) {
+			current_word = 76;
+		}
+	}
+	if (k.num6 > 0) {
+		if (k.num6 == 1) {
+			current_word = 77;
+		}
+		if (k.num6 == 2) {
+			current_word = 78;
+		}
+		if (k.num6 == 3) {
+			current_word = 79;
+		}
+	}
+	if (k.num7 > 0) {
+		if (k.num7 == 1) {
+			current_word = 81;
+		}
+		if (k.num7 == 2) {
+			current_word = 82;
+		}
+		if (k.num7 == 3) {
+			current_word = 83;
+		}
+	}
+	if (k.num8 > 0) {
+		if (k.num8 == 1) {
+			current_word = 84;
+		}
+		if (k.num8 == 2) {
+			current_word = 85;
+		}
+		if (k.num8 == 3) {
+			current_word = 86;
+		}
+	}
+	if (k.num9 > 0) {
+		if (k.num9 == 1) {
+			current_word = 87;
+		}
+		if (k.num9 == 2) {
+			current_word = 88;
+		}
+		if (k.num9 == 3) {
+			current_word = 89;
+		}
+	}
+	switch (k.ch) {
+	case 1:
+		p.ch1 = current_word;
+		break;
+	case 2:
+		p.ch2 = current_word;
+		break;
+	case 3:
+		p.ch3 = current_word;
+		break;
+	case 4:
+		p.ch4 = current_word;
+		break;
+	case 5:
+		p.ch5 = current_word;
+		break;
+	case 6:
+		p.ch6 = current_word;
+		break;
+	case 7:
+		p.ch7 = current_word;
+		break;
+	case 8:
+		p.ch8 = current_word;
+		break;
+	case 9:
+		p.ch9 = current_word;
+		break;
+	case 10:
+		p.ch10 = current_word;
+		break;
+	case 11:
+		p.ch11 = current_word;
+		break;
+	case 12:
+		p.ch12 = current_word;
+		break;
+	case 13:
+		p.ch13 = current_word;
+		break;
+	case 14:
+		p.ch14 = current_word;
+		break;
+	case 15:
+		p.ch15 = current_word;
+		break;
 	}
 
 	draw_rect_ins(menu.P_start_x * 40 - 2, menu.P_start_y * 30 + 10, menu.P_start_x * 40 + 7,
