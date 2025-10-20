@@ -4,6 +4,7 @@ add_executable(
     extras/volume.c
     maps/map1.c
     maps/map2.c
+    maps/map3.c
 )
 
 target_include_directories(krecdoom PRIVATE include)

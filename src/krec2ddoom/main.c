@@ -20,6 +20,14 @@
 //*   Use select to use cheet sheet
 //*
 //*   To edit what map and where use it edit struct edited_file
+//*
+//*----------------------TODO--------------------------
+//*   RENAME
+//*   NAMING
+//*   make the convert py skript into C function
+//*
+//*
+//*
 #include <arrow.png.h>
 #include <font-5x5.png.h>
 #include <ui_editor-40x120.png.h>
@@ -66,6 +74,7 @@
 #include "textures/textures/T_19.h"
 
 #include "../krecdoom/maps.h"
+#include "files.h"
 
 #define TILE_SIZE 4
 
@@ -103,7 +112,10 @@ typedef enum {
 	EDITOR_FILE_SELECT,
 	EDITOR_SAVE,
 	EDITOR_RESET,
-	EDITOR_INFO
+	EDITOR_INFO,
+	EDITOR_FILE,
+	EDITOR_NEW,
+	EDITOR_DELETE
 } EDITOR_STATE;
 typedef enum { FIRST, SECOND, THIRD, NONE } EDITOR_STATUS;
 
@@ -112,6 +124,9 @@ typedef struct {
 	sdk_sprite_t ui;
 } sprites;
 
+typedef struct {
+	int y;
+} Camera;
 typedef struct {
 	float timer;
 	TileType map[MAP_ROWS][MAP_COLS];
@@ -124,8 +139,14 @@ typedef struct {
 } Menu;
 
 typedef struct {
+	float y;
+} Files;
+
+typedef struct {
 	char *name;
 	char *file_path;
+	float timer;
+	bool chosen;
 } Edited_File;
 
 typedef struct {
@@ -134,15 +155,19 @@ typedef struct {
 	float auto_timer;
 	float timer;
 } Save;
+
 typedef struct {
 	bool yes;
 	int x, y;
 } TM;
+
 typedef struct {
-	int w, h;		   //texture width/height
-	const unsigned char *name; //texture name
+	int w, h;
+	const unsigned char *name;
 } TexureMaps;
 
+static Camera C;
+static Files file;
 static Edited_File edited_file;
 static sprites S;
 static TM tm;
@@ -153,10 +178,7 @@ static EDITOR_STATUS editor_status = NONE;
 
 static TexureMaps Textures[64];
 
-extern const TileType maps_map1[MAP_ROWS][MAP_COLS];
-extern const TileType maps_map2[MAP_ROWS][MAP_COLS];
-const TileType (*load_map)[MAP_COLS] = maps_map1;
-
+const TileType (*load_map)[MAP_COLS];
 static TileType map[MAP_ROWS][MAP_COLS];
 
 static void tile_ui(int x, int y);
@@ -164,12 +186,12 @@ static void tiles();
 static void ui_editor();
 static void ui_input_editor(int mx, int my);
 static void draw_small_string(int x, int y, const char *format, ...);
+static void IS_FILE_DRAW(int file, int c, bool is_delete_mode);
 
 static void editor_read_save()
 {
 	Saves saves;
 	sdk_save_read(0, &saves, sizeof(saves));
-	memcpy(map, saves.map, sizeof(map));
 	if (isnan(saves.timer)) {
 		saves.timer = 0;
 		save.total_time = 0;
@@ -178,6 +200,23 @@ static void editor_read_save()
 	}
 }
 
+static void editor_auto_read()
+{
+	Saves saves;
+	sdk_save_read(0, &saves, sizeof(saves));
+	for (int r = 0; r < MAP_ROWS; r++) {
+		for (int co = 0; co < MAP_COLS; co++) {
+			map[r][co] = saves.map[r][co];
+		}
+	}
+	printf("Read");
+	if (isnan(saves.timer)) {
+		saves.timer = 0;
+		save.total_time = 0;
+	} else {
+		save.total_time = saves.timer;
+	}
+}
 static void editor_auto_save()
 {
 	Saves saves = { .timer = save.total_time };
@@ -262,7 +301,7 @@ void game_start(void)
 	textures_load();
 	editor_read_save();
 	edited_file.name = "maps_map1";
-	edited_file.file_path = "../krecdoom/maps/map1.c";
+	edited_file.file_path = "map1";
 
 	M.tile_show = true;
 
@@ -289,7 +328,7 @@ void game_input(unsigned dt_usec)
 	save.total_time += dt;
 	save.auto_timer += dt;
 
-	if (save.auto_timer > 5) {
+	if (save.auto_timer > 15) {
 		save.auto_timer = 0;
 		editor_auto_save();
 	}
@@ -297,9 +336,60 @@ void game_input(unsigned dt_usec)
 	int mx = (int)round(sdk_inputs.tx * TFT_WIDTH);
 	int my = (int)round(sdk_inputs.ty * TFT_HEIGHT);
 	switch (editor_state) {
+	case EDITOR_NEW:
+		if (sdk_inputs.aux[7]) {
+			editor_state = EDITOR_MENU;
+		}
+		break;
+	case EDITOR_DELETE:
+		edited_file.timer += dt;
+		if (edited_file.timer > 2) {
+			if (sdk_inputs.aux[7]) {
+				editor_state = EDITOR_MENU;
+			}
+			if (C.y < 0) {
+				C.y = 0;
+			}
+			C.y += sdk_inputs_delta.vertical * 40;
+			C.y -= (sdk_inputs_delta.y > 0) * 40;
+			C.y += (sdk_inputs_delta.a > 0) * 40;
+		}
+		break;
+	case EDITOR_FILE:
+		if (my >= 22 && my <= 54) {
+			S.a.x = 35;
+			S.a.y = 42;
+			if (sdk_inputs.tp > 0.5 || sdk_inputs_delta.start == 1) {
+				editor_state = EDITOR_NEW;
+			}
+		}
+		if (my >= 55 && my <= 69) {
+			S.a.x = 35;
+			S.a.y = 57;
+			if (sdk_inputs.tp > 0.5 || sdk_inputs_delta.start == 1) {
+				editor_state = EDITOR_DELETE;
+			}
+		}
+		if (my >= 70 && my <= 84) {
+			S.a.x = 35;
+			S.a.y = 72;
+			if (sdk_inputs.tp > 0.5 || sdk_inputs_delta.start == 1) {
+			}
+		}
+		if (sdk_inputs.aux[7]) {
+			editor_state = EDITOR_MENU;
+		}
+		break;
 	case EDITOR_RESET:
+		edited_file.timer += dt;
 		save.del += dt;
-		if (save.del > 3) {
+		if (C.y < 0) {
+			C.y = 0;
+		}
+		C.y += sdk_inputs_delta.vertical * 40;
+		C.y -= (sdk_inputs_delta.y > 0) * 40;
+		C.y += (sdk_inputs_delta.a > 0) * 40;
+		if (save.del > 3 && edited_file.chosen) {
 			for (int row = 0; row < MAP_ROWS; row++) {
 				for (int col = 0; col < MAP_COLS; col++) {
 					map[row][col] = 0;
@@ -314,6 +404,7 @@ void game_input(unsigned dt_usec)
 			S.a.y = 42;
 			if (sdk_inputs.tp > 0.5 || sdk_inputs_delta.start == 1) {
 				editor_state = EDITOR_FILE_SELECT;
+				C.y = 0;
 			}
 		}
 		if (my >= 55 && my <= 69) {
@@ -330,26 +421,39 @@ void game_input(unsigned dt_usec)
 				editor_state = EDITOR_INFO;
 			}
 		}
-		if (my >= 84 && my <= 100) {
+		if (my >= 84 && my <= 99) {
 			S.a.x = 35;
 			S.a.y = 87;
 			if (sdk_inputs.tp > 0.5 || sdk_inputs_delta.start == 1) {
 				editor_state = EDITOR_RESET;
 				save.del = 0;
+				edited_file.chosen = false;
+				edited_file.timer = 0;
+				C.y = 0;
+			}
+		}
+		if (my >= 100 && my <= 114) {
+			S.a.x = 35;
+			S.a.y = 102;
+			if (sdk_inputs.tp > 0.5 || sdk_inputs_delta.start == 1) {
+				editor_state = EDITOR_FILE;
 			}
 		}
 		break;
 
 	case EDITOR_FILE_SELECT:
+		edited_file.timer += dt;
 		if (sdk_inputs.aux[7]) {
 			editor_state = EDITOR_MENU;
 		}
-		for (int r = 0; r < MAP_ROWS; r++) {
-			for (int c = 0; c < MAP_COLS; c++) {
-				map[r][c] = load_map[r][c];
-			}
+		if (C.y < 0) {
+			C.y = 0;
 		}
-		editor_state = EDITOR_MAP;
+		C.y += sdk_inputs_delta.vertical * 40;
+		C.y -= (sdk_inputs_delta.y > 0) * 40;
+		C.y += (sdk_inputs_delta.a > 0) * 40;
+
+		//editor_state = EDITOR_MAP;
 		break;
 
 	case EDITOR_MAP:
@@ -448,17 +552,21 @@ void game_input(unsigned dt_usec)
 		}
 		break;
 	case EDITOR_SAVE:
-		if (save.timer < 3) {
+		if (save.timer < 3 && edited_file.chosen) {
 			save.timer += dt;
 			return;
 		} else {
-			saveMap(edited_file.file_path, edited_file.name, map);
-			editor_state = EDITOR_MENU;
+			char full_path[256];
+			snprintf(full_path, sizeof(full_path), "../krecdoom/maps/%s.c",
+				 edited_file.file_path);
+			editor_auto_save();
+			saveMap(full_path, edited_file.name, map);
+			editor_state = EDITOR_MAP;
 		}
 		break;
 	}
 }
-void draw_loading_bar(float level)
+static void draw_loading_bar(float level)
 {
 	if (level < 0)
 		level = 0;
@@ -490,12 +598,501 @@ void draw_loading_bar(float level)
 	}
 }
 
+static void update_krecdoom_cmakelists(int total_maps)
+{
+	FILE *target_cmake = fopen("../krecdoom/CMakeLists.txt", "w");
+	if (target_cmake) {
+		fprintf(target_cmake, "add_executable(\n");
+		fprintf(target_cmake, "    krecdoom\n");
+		fprintf(target_cmake, "    main.c\n");
+		fprintf(target_cmake, "    extras/volume.c\n");
+		for (int i = 1; i <= total_maps; i++) {
+			fprintf(target_cmake, "    maps/map%d.c\n", i);
+		}
+		fprintf(target_cmake, ")\n\n");
+		fprintf(target_cmake, "target_include_directories(krecdoom PRIVATE include)\n");
+		fprintf(target_cmake, "generate_png_headers()\n");
+		fprintf(target_cmake,
+			"target_link_libraries(krecdoom krecek ${PNG_HEADERS_TARGET})\n");
+		fprintf(target_cmake, "pico_add_extra_outputs(krecdoom)\n");
+		fprintf(target_cmake, "krecek_set_target_options(krecdoom)\n\n");
+
+		fprintf(target_cmake, "if (ENABLE_OFFSETS)\n");
+		fprintf(target_cmake,
+			"  pico_set_linker_script(krecdoom ${CMAKE_CURRENT_LIST_DIR}/memmap.ld)\n");
+		fprintf(target_cmake, "endif()\n\n");
+
+		fprintf(target_cmake, "#pico_set_binary_type(krecdoom no_flash)\n");
+		fprintf(target_cmake, "#pico_set_binary_type(krecdoom copy_to_ram)\n");
+
+		fclose(target_cmake);
+		printf("Updated ../krecdoom/CMakeLists.txt\n");
+	} else {
+		printf("Failed to open ../krecdoom/CMakeLists.txt for writing\n");
+	}
+}
+static void update_host_krecdoom_cmakelists(int total_maps)
+{
+	const char *paths[] = { "host/krecdoom/CMakeLists.txt",
+				"../../host/krecdoom/CMakeLists.txt",
+				"../host/krecdoom/CMakeLists.txt", NULL };
+
+	FILE *host_cmake = NULL;
+	for (int i = 0; paths[i] != NULL; i++) {
+		host_cmake = fopen(paths[i], "w");
+		if (host_cmake) {
+			printf("Writing to: %s\n", paths[i]);
+			break;
+		}
+	}
+
+	if (!host_cmake) {
+		printf("ERROR: Could not open any host krecdoom CMakeLists.txt for writing\n");
+		printf("Tried paths:\n");
+		for (int i = 0; paths[i] != NULL; i++) {
+			printf("  %s\n", paths[i]);
+		}
+		return;
+	}
+
+	// Write the actual CMakeLists content
+	fprintf(host_cmake, "add_executable(\n");
+	fprintf(host_cmake, "  krecdoom\n");
+	fprintf(host_cmake, "  ../../src/krecdoom/main.c\n");
+	fprintf(host_cmake, "  ../../src/krecdoom/extras/volume.c\n");
+	for (int i = 1; i <= total_maps; i++) {
+		fprintf(host_cmake, "  ../../src/krecdoom/maps/map%d.c\n", i);
+	}
+	fprintf(host_cmake, ")\n\n");
+
+	fprintf(host_cmake, "generate_png_headers()\n");
+	fprintf(host_cmake,
+		"target_link_libraries(krecdoom PRIVATE sdk m ${PNG_HEADERS_TARGET})\n\n");
+
+	fprintf(host_cmake, "set_property(TARGET krecdoom PROPERTY C_STANDARD 23)\n");
+	fprintf(host_cmake,
+		"target_compile_options(krecdoom PRIVATE -Wall -Wextra -Wnull-dereference)\n");
+	fprintf(host_cmake, "target_include_directories(krecdoom PRIVATE include)\n\n");
+
+	fprintf(host_cmake, "install(TARGETS krecdoom DESTINATION bin)\n");
+
+	fclose(host_cmake);
+	printf("Updated host krecdoom CMakeLists.txt\n");
+}
+static void update_krecdoom_include_maps(int total_maps)
+{
+	FILE *file = fopen("../krecdoom/include_maps.h", "w");
+	if (!file) {
+		printf("Failed to create ../krecdoom/include_maps.h\n");
+		return;
+	}
+	fprintf(file, "#pragma once  \n");
+	fprintf(file, "#include \"maps.h\"  \n");
+	fprintf(file, "  \n");
+	for (int i = 1; i <= total_maps; i++) {
+		fprintf(file, "extern const TileType maps_map%d[MAP_ROWS][MAP_COLS];\n", i);
+	}
+	fprintf(file,
+		"                                                                                                         \n");
+	fprintf(file,
+		"#define FILE_NUM %d                                                                                       \n",
+		total_maps);
+	fprintf(file,
+		"                                                                                                         \n");
+	fprintf(file,
+		"static const TileType (*FILES[FILE_NUM])[MAP_COLS] = {                                                   \n");
+	for (int i = 1; i <= total_maps; i++) {
+		if (i == total_maps) {
+			fprintf(file, "        maps_map%d\n", i);
+		} else {
+			fprintf(file, "        maps_map%d,\n", i);
+		}
+	}
+	fprintf(file, "};\n");
+	fclose(file);
+	printf("Updated ../krecdoom/include_maps.h\n");
+}
+
+static void update_files_header(int total_maps)
+{
+	FILE *file = fopen("files.h", "w");
+	if (!file) {
+		perror("Failed to create files.h");
+		return;
+	}
+
+	fprintf(file, "#pragma once\n");
+	fprintf(file, "#include \"../krecdoom/maps.h\"\n\n");
+
+	fprintf(file, "extern const TileType maps_map1[MAP_ROWS][MAP_COLS];\n");
+	for (int i = 2; i <= total_maps; i++) {
+		fprintf(file, "extern const TileType maps_map%d[MAP_ROWS][MAP_COLS];\n", i);
+	}
+	fprintf(file, "extern const TileType auto_safe[MAP_ROWS][MAP_COLS];\n\n");
+
+	fprintf(file, "#define FILE_NUM %d\n\n", total_maps + 1); // +1 for auto_safe
+
+	fprintf(file, "static const TileType (*FILES[FILE_NUM])[MAP_COLS] = { auto_safe");
+	for (int i = 1; i <= total_maps; i++) {
+		fprintf(file, ", maps_map%d", i);
+	}
+	fprintf(file, " };\n\n");
+
+	fprintf(file, "static const char *FILES_NAME[FILE_NUM] = { \"auto_safe\"");
+	for (int i = 1; i <= total_maps; i++) {
+		fprintf(file, ", \"maps_map%d\"", i);
+	}
+	fprintf(file, " };\n\n");
+
+	fprintf(file, "static const char *FILES_PATH[FILE_NUM] = { \"safe\"");
+	for (int i = 1; i <= total_maps; i++) {
+		fprintf(file, ", \"map%d\"", i);
+	}
+	fprintf(file, " };\n");
+
+	fclose(file);
+}
+static void update_cmake_lists(int total_maps)
+{
+	FILE *target_cmake = fopen("CMakeLists.txt", "w");
+	if (target_cmake) {
+		fprintf(target_cmake, "add_executable(\n");
+		fprintf(target_cmake, "  krec2ddoom\n");
+		fprintf(target_cmake, "  main.c\n");
+		fprintf(target_cmake, "  auto/safe.c\n");
+		for (int i = 1; i <= total_maps; i++) {
+			fprintf(target_cmake, "  ../krecdoom/maps/map%d.c\n", i);
+		}
+		fprintf(target_cmake, ")\n");
+		fprintf(target_cmake, "target_include_directories(krec2ddoom PRIVATE include)\n");
+		fprintf(target_cmake, "generate_png_headers()\n");
+		fprintf(target_cmake,
+			"target_link_libraries(krec2ddoom krecek ${PNG_HEADERS_TARGET})\n");
+		fprintf(target_cmake, "pico_add_extra_outputs(krec2ddoom)\n");
+		fprintf(target_cmake, "krecek_set_target_options(krec2ddoom)\n");
+		fclose(target_cmake);
+		printf("Updated krec2ddoom CMakeLists.txt\n");
+	}
+	FILE *host_cmake = fopen("host/krec2ddoom/CMakeLists.txt", "w");
+	if (!host_cmake) {
+		host_cmake = fopen("../../host/krec2ddoom/CMakeLists.txt", "w");
+	}
+	if (host_cmake) {
+		fprintf(host_cmake, "add_executable(\n");
+		fprintf(host_cmake, "  krec2ddoom\n");
+		fprintf(host_cmake, "  ../../src/krec2ddoom/main.c\n");
+		fprintf(host_cmake, "  ../../src/krec2ddoom/auto/safe.c\n");
+		for (int i = 1; i <= total_maps; i++) {
+			fprintf(host_cmake, "  ../../src/krecdoom/maps/map%d.c\n", i);
+		}
+		fprintf(host_cmake, ")\n\n");
+		fprintf(host_cmake, "generate_png_headers()\n");
+		fprintf(host_cmake,
+			"target_link_libraries(krec2ddoom PRIVATE sdk m ${PNG_HEADERS_TARGET})\n\n");
+		fprintf(host_cmake, "set_property(TARGET krec2ddoom PROPERTY C_STANDARD 23)\n");
+		fprintf(host_cmake,
+			"target_compile_options(krec2ddoom PRIVATE -Wall -Wextra -Wnull-dereference)\n");
+		fprintf(host_cmake, "target_include_directories(krec2ddoom PRIVATE include)\n\n");
+		fprintf(host_cmake, "install(TARGETS krec2ddoom DESTINATION bin)\n");
+
+		fclose(host_cmake);
+		printf("Updated host/krec2ddoom/CMakeLists.txt\n");
+	} else {
+		printf("Failed to open host krec2ddoom CMakeLists.txt for writing\n");
+	}
+}
+static void create_and_setup_new_map(void)
+{
+	int new_map_number = FILE_NUM;
+	int total_maps = new_map_number;
+
+	char filename[256];
+	char mapname[256];
+	char filepath[256];
+
+	snprintf(filename, sizeof(filename), "../krecdoom/maps/map%d.c", new_map_number);
+	snprintf(mapname, sizeof(mapname), "maps_map%d", new_map_number);
+	snprintf(filepath, sizeof(filepath), "map%d", new_map_number);
+
+	TileType new_map[MAP_ROWS][MAP_COLS] = { 0 };
+	saveMap(filename, mapname, new_map);
+
+	edited_file.name = mapname;
+	edited_file.file_path = filepath;
+	edited_file.chosen = true;
+
+	update_files_header(total_maps);
+	update_cmake_lists(total_maps);
+	update_host_krecdoom_cmakelists(total_maps);
+	update_krecdoom_cmakelists(total_maps);
+	update_host_krecdoom_cmakelists(total_maps);
+	update_krecdoom_include_maps(total_maps);
+
+	printf("New map %d created! Name: %s, Path: %s\n", new_map_number, edited_file.name,
+	       edited_file.file_path);
+
+	for (int r = 0; r < MAP_ROWS; r++) {
+		for (int co = 0; co < MAP_COLS; co++) {
+			map[r][co] = 0;
+		}
+	}
+}
+
+static void delete_selected_map(int map_index)
+{
+	if (map_index < 0 || map_index >= FILE_NUM) {
+		printf("Invalid map index for deletion\n");
+		return;
+	}
+	if (map_index == 0) {
+		printf("Cannot delete auto_safe map\n");
+		return;
+	}
+
+	char *map_name = FILES_NAME[map_index];
+	char *map_path = FILES_PATH[map_index];
+	printf("Deleting map: %s (%s)\n", map_name, map_path);
+
+	// Delete the map file
+	char filename[256];
+	snprintf(filename, sizeof(filename), "../krecdoom/maps/%s.c", map_path);
+	if (remove(filename) == 0) {
+		printf("Successfully deleted %s\n", filename);
+	} else {
+		printf("Failed to delete %s\n", filename);
+		return;
+	}
+
+	// If we're currently editing the deleted map, switch to auto_safe
+	if (strcmp(edited_file.name, map_name) == 0) {
+		edited_file.name = "auto_safe";
+		edited_file.file_path = "safe";
+		edited_file.chosen = true;
+		editor_auto_read();
+	}
+
+	// Calculate new total maps (current FILE_NUM - 1)
+	int new_total_maps = FILE_NUM - 2;
+
+	// IMPORTANT: Renumber the remaining map files to avoid gaps
+	// This is the key fix - we need to renumber maps after the deleted one
+	for (int i = map_index + 1; i <= new_total_maps + 1; i++) {
+		char old_filename[256];
+		char new_filename[256];
+		char old_mapname[256];
+		char new_mapname[256];
+
+		snprintf(old_filename, sizeof(old_filename), "../krecdoom/maps/map%d.c", i);
+		snprintf(new_filename, sizeof(new_filename), "../krecdoom/maps/map%d.c", i - 1);
+		snprintf(old_mapname, sizeof(old_mapname), "maps_map%d", i);
+		snprintf(new_mapname, sizeof(new_mapname), "maps_map%d", i - 1);
+
+		// Rename the file
+		if (rename(old_filename, new_filename) == 0) {
+			printf("Renamed %s to %s\n", old_filename, new_filename);
+
+			// Update the map variable name inside the file
+			FILE *file = fopen(new_filename, "r+");
+			if (file) {
+				char content[4096];
+				size_t bytes_read = fread(content, 1, sizeof(content) - 1, file);
+				content[bytes_read] = '\0';
+
+				// Replace the old map name with new map name
+				char *pos = strstr(content, old_mapname);
+				if (pos) {
+					memmove(pos + strlen(new_mapname),
+						pos + strlen(old_mapname),
+						strlen(pos + strlen(old_mapname)) + 1);
+					memcpy(pos, new_mapname, strlen(new_mapname));
+
+					// Write back
+					fseek(file, 0, SEEK_SET);
+					fwrite(content, 1, strlen(content), file);
+				}
+				fclose(file);
+			}
+		}
+	}
+
+	// Update ALL project files
+	update_files_header(new_total_maps);
+	update_cmake_lists(new_total_maps);
+	update_krecdoom_cmakelists(new_total_maps);
+	update_host_krecdoom_cmakelists(new_total_maps);
+	update_krecdoom_include_maps(new_total_maps);
+
+	printf("Map deleted and project updated! New total maps: %d\n", new_total_maps);
+	printf("Please run 'cmake --build build' to rebuild\n");
+}
+
+static void draw_border_rect(int x1, int y1, int x2, int y2, int border_with, color_t color)
+{
+	tft_draw_rect(x1, y1, x2 - border_with, y1 + border_with, color);
+
+	tft_draw_rect(x1, y2, x1 + border_with, y1 + border_with, color);
+
+	tft_draw_rect(x2, y1, x2 - border_with, y2 - border_with, color);
+
+	tft_draw_rect(x2, y2, x1 + border_with, y2 - border_with, color);
+}
+static void IS_FILE_DRAW(int file, int c, bool is_delete_mode)
+{
+	int my = (int)ceil(sdk_inputs.ty * TFT_HEIGHT / 40);
+	int ma_y = (int)round(sdk_inputs.ty * TFT_HEIGHT);
+
+	if (c != 0) {
+		c = c / 40;
+	}
+	int y_idk = (c + file) * 40;
+	int y = (file * 40) - (c / 40);
+	my = my + c - 1;
+
+	color_t border_color = is_delete_mode ? RED : WHITE;
+	draw_border_rect(0, y, 160, 40 + y, 2, border_color);
+
+	static float last_input_time = 0;
+	float current_time = save.total_time;
+
+	if (current_time - last_input_time < 0.5f) {
+		tft_draw_string(50, y + 14, border_color, "%s", FILES_NAME[file]);
+		return;
+	}
+	if (edited_file.timer < 0.7) {
+		return;
+	}
+
+	if (ma_y >= y && ma_y <= y + 40) {
+		if (sdk_inputs_delta.tp == 1 && my < FILE_NUM) {
+			last_input_time = current_time; // Reset cooldown
+			if (is_delete_mode) {
+				if (file == 0) {
+					tft_draw_string(50, y + 14, RED, "%s (CAN'T DELETE)",
+							FILES_NAME[file]);
+				} else {
+					delete_selected_map(my);
+					editor_state = EDITOR_MENU;
+				}
+			} else {
+				edited_file.name = FILES_NAME[my];
+				edited_file.file_path = FILES_PATH[my];
+				load_map = FILES[my];
+				if (FILES[my] == 0) {
+					editor_auto_read();
+				} else {
+					for (int r = 0; r < MAP_ROWS; r++) {
+						for (int co = 0; co < MAP_COLS; co++) {
+							map[r][co] = load_map[r][co];
+						}
+					}
+				}
+				edited_file.chosen = true;
+				editor_state = EDITOR_MAP;
+			}
+		}
+		if (!is_delete_mode || (is_delete_mode && file != 0)) {
+			tft_draw_rect(20, y_idk + 16, 28, y_idk + 24, border_color);
+		}
+	}
+
+	color_t text_color = (is_delete_mode && file == 0) ? GRAY : border_color;
+	tft_draw_string(50, y + 14, text_color, "%s", FILES_NAME[file]);
+	if (is_delete_mode && file != 0) {
+		draw_small_string(140, y + 14, "DEL");
+	}
+}
+static void FILE_DRAW(int file, int c)
+{
+	int my = (int)ceil(sdk_inputs.ty * TFT_HEIGHT / 40);
+	int ma_y = (int)round(sdk_inputs.ty * TFT_HEIGHT);
+
+	if (c != 0) {
+		c = c / 40;
+	}
+	int y_idk = (c + file) * 40;
+
+	int y = (file * 40) - (c / 40);
+	my = my + c - 1;
+
+	draw_border_rect(0, y, 160, 40 + y, 2, WHITE);
+
+	if (edited_file.timer < 2) {
+		return;
+	}
+	if (ma_y >= y && ma_y <= y + 40) {
+		if (sdk_inputs_delta.tp == 1 && my < FILE_NUM) {
+			edited_file.name = FILES_NAME[my];
+			edited_file.file_path = FILES_PATH[my];
+			load_map = FILES[my];
+			if (FILES[my] == 0) {
+				editor_auto_read();
+			} else {
+				for (int r = 0; r < MAP_ROWS; r++) {
+					for (int co = 0; co < MAP_COLS; co++) {
+						map[r][co] = load_map[r][co];
+					}
+				}
+			}
+			edited_file.chosen = true;
+			editor_state = EDITOR_MAP;
+		}
+		tft_draw_rect(20, y_idk + 16, 28, y_idk + 24, WHITE);
+	}
+
+	tft_draw_string(50, y + 14, WHITE, "%s", FILES_NAME[file]);
+}
 void game_paint(unsigned dt_usec)
 {
 	(void)dt_usec;
 
+	tft_set_origin(0, 0);
 	tft_fill(0);
 	switch (editor_state) {
+	case EDITOR_NEW:
+		if (sdk_inputs_delta.start == 1) {
+			create_and_setup_new_map();
+			editor_state = EDITOR_SAVE;
+			save.timer = 0;
+			for (int r = 0; r < MAP_ROWS; r++) {
+				for (int co = 0; co < MAP_COLS; co++) {
+					map[r][co] = 0;
+				}
+			}
+		}
+		tft_draw_string(40, 30, WHITE, "Press Start");
+		tft_draw_string(40, 50, WHITE, "After creating");
+		tft_draw_string(40, 62, WHITE, "a File");
+		tft_draw_string(40, 74, WHITE, "Cmake it");
+
+		break;
+	case EDITOR_DELETE:
+		if (edited_file.timer < 2) {
+			tft_draw_string(30, 10, RED, "delete maps");
+			tft_draw_string(10, 22, RED, "click map to del");
+			tft_draw_string(10, 34, RED, "auto_safe ");
+			tft_draw_string(10, 46, RED, "cant be del");
+		} else {
+			tft_set_origin(0, C.y);
+			for (int file = 0; file < FILE_NUM; file++) {
+				IS_FILE_DRAW(file, C.y, true); // true = delete mode
+			}
+		}
+		draw_small_string(151, 112, "7");
+		draw_small_string(143, 112, "0");
+		draw_small_string(137, 112, "v");
+		tft_draw_pixel(149, 116, WHITE);
+		break;
+	case EDITOR_FILE:
+		tft_draw_string(40, 10, WHITE, "FILE");
+		tft_draw_string(40, 40, WHITE, "New File");
+		tft_draw_string(40, 55, WHITE, "Delete File");
+		tft_draw_string(40, 70, WHITE, "");
+		sdk_draw_sprite(&S.a);
+		draw_small_string(151, 112, "7");
+		draw_small_string(143, 112, "0");
+		draw_small_string(137, 112, "v");
+		tft_draw_pixel(149, 116, WHITE);
+		break;
 	case EDITOR_MENU:
 		tft_draw_string(40, 10, WHITE, "Krecdoom");
 		tft_draw_string(60, 22, WHITE, "editor");
@@ -503,16 +1100,30 @@ void game_paint(unsigned dt_usec)
 		tft_draw_string(40, 55, WHITE, "Tile editor");
 		tft_draw_string(40, 70, WHITE, "Info");
 		tft_draw_string(40, 85, WHITE, "Reset Map");
+		tft_draw_string(40, 100, WHITE, "File-Editor");
 		sdk_draw_sprite(&S.a);
-		draw_small_string(151, 112, "5");
+		draw_small_string(151, 112, "7");
 		draw_small_string(143, 112, "0");
 		draw_small_string(137, 112, "v");
 		tft_draw_pixel(149, 116, WHITE);
 		break;
 
 	case EDITOR_FILE_SELECT:
+		tft_set_origin(0, C.y - 0);
+		for (int file = 0; file < FILE_NUM; file++) {
+			FILE_DRAW(file, C.y);
+		}
+		//draw_border_rect(10, 10, 50, 50, 2, WHITE);
 		break;
 	case EDITOR_RESET:
+		tft_set_origin(0, C.y - 0);
+		if (edited_file.chosen == false) {
+			for (int file = 0; file < FILE_NUM; file++) {
+				FILE_DRAW(file, C.y);
+			}
+			return;
+		}
+		tft_fill(0);
 		draw_loading_bar(save.del);
 		break;
 	case EDITOR_INFO:
@@ -523,7 +1134,7 @@ void game_paint(unsigned dt_usec)
 		tft_draw_string(5, 32, WHITE, "Use Aux7 to return");
 		tft_draw_string(5, 65, WHITE, "Select for");
 		tft_draw_string(5, 76, WHITE, "Cheat sheet");
-		draw_small_string(151, 112, "5");
+		draw_small_string(151, 112, "7");
 		draw_small_string(143, 112, "0");
 		draw_small_string(137, 112, "v");
 		tft_draw_pixel(149, 116, WHITE);

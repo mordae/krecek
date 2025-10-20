@@ -12,11 +12,12 @@
 #include <stdlib.h>
 #include "maps.h"
 
-// TODO
-// MENU
-// ENEMIES
-// EDITOR/RANDOM GENERATE
-// GRAFICS better
+//*----------------------TODO--------------------------
+//*   MENU
+//*   ENEMIES
+//*   EDITOR + RANDOM GENERATE
+//*   GRAFICS better
+//*
 
 #include <overline.png.h>
 #include <pistol.png.h>
@@ -42,6 +43,8 @@
 #include "textures/T_17.h"
 #include "textures/T_18.h"
 #include "textures/T_19.h"
+
+#include "include_maps.h"
 
 #include <cover.png.h>
 
@@ -596,13 +599,19 @@ void game_start(void)
 static void map_starter_caller()
 {
 	if (currentMap == maps_map2) {
-		currentMap = maps_map1;
-		Map_starter(maps_map1);
+		currentMap = maps_map3;
+		Map_starter(maps_map3);
 		return;
 	}
 	if (currentMap == maps_map1) {
 		Map_starter(maps_map2);
 		currentMap = maps_map2;
+		return;
+	}
+	if (currentMap == maps_map3) {
+		currentMap = maps_map1;
+		Map_starter(maps_map1);
+		return;
 	}
 }
 
