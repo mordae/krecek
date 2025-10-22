@@ -53,3 +53,5 @@ add_subdirectory(arnost)
 add_subdirectory(dancekrecekandhamster)
 add_subdirectory(puntog)
 add_subdirectory(3notd)
+add_subdirectory(super_platform_bros)
+
