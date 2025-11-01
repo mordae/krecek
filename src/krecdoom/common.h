@@ -1,6 +1,5 @@
 #ifndef COMMON_H
 #define COMMON_H
-#include <stdint.h>
 #define SCREEN_WIDTH 160
 #define SCREEN_HEIGHT 120
 #define FOV_DEGREES 60.0f
@@ -10,15 +9,29 @@
 #define MOVE_SPEED 225.0f
 #define ROTATE_SPEED 3.0f
 
-#define PISTOL_DAMAGE 25
-#define SHOTGUN_DAMAGE 40
+// Increased weapon damage
+#define PISTOL_DAMAGE 35
+#define CHAINSAW_DAMAGE 10
+#define SHOTGUN_DAMAGE 60 // Increased to kill ENEMY1 in one hit
 #define N_GUNS 3
 
 #define PISTOL_MAX_RANGE_TILES 15.0f
 #define SHOTGUN_MAX_RANGE_TILES 5.0f
+#define CHAINSAW_MAX_RANGE_TILES 1.5f
 #define BULLET_VISUAL_DURATION_MS 100
-#define SHOTGUN_SPREAD_DEGREES 10.0f
 #define SHOTGUN_PELLETS 5
+
+#define SHOTGUN_SPREAD_DEGREES 25.0f
+
+// Adjusted enemy stats for easier killing
+#define MAX_ENEMIES 16
+#define ENEMY_SPEED 50.0f
+#define ENEMY_DAMAGE 10
+#define ENEMY_ATTACK_RANGE 1.5f * TILE_SIZE
+#define ENEMY_DETECTION_RANGE 5.0f * TILE_SIZE
+#define ENEMY_ATTACK_COOLDOWN 1.0f
+#define ENEMY_HEALTH 60 // ENEMY1 health (killed by 1 shotgun hit of 60 damage)
+// ENEMY2 will have ENEMY_HEALTH * 2 = 120 health (killed by 2 shotgun hits)
 
 // Pickup values
 #define HEALTH_PACK_HEAL 25
@@ -39,4 +52,17 @@
 // Muzzle flash
 #define MUZZLE_FLASH_DURATION_MS 50
 
+#define FIXED_SHIFT 16
+#define FIXED_SCALE (1 << FIXED_SHIFT)
+
+#define float_to_fixed(x) ((fixed_t)((x) * FIXED_SCALE))
+#define fixed_to_float(x) ((x) / (float)FIXED_SCALE)
+#define fixed_mul(a, b) ((fixed_t)(((int64_t)(a) * (b)) >> FIXED_SHIFT))
+#define fixed_div(a, b) ((fixed_t)(((int64_t)(a) << FIXED_SHIFT) / (b)))
+
+float volume = 0.5f;
+float timer = 0;
+float footstep_timer = 0;
+
+#include <stdint.h>
 #endif

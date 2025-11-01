@@ -1,10 +1,10 @@
 #include <pico/stdlib.h>
 #include <sdk.h>
-#include <tft.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <tft.h>
 //*     USE MAUSE in everthing *
 //*  MAP_EDITOR
 //*
@@ -28,9 +28,6 @@
 //*
 //*
 //*
-#include <arrow.png.h>
-#include <font-5x5.png.h>
-#include <ui_editor-40x120.png.h>
 #include <T_00-4x4.png.h>
 #include <T_01-4x4.png.h>
 #include <T_02-4x4.png.h>
@@ -51,6 +48,9 @@
 #include <T_17-4x4.png.h>
 #include <T_18-4x4.png.h>
 #include <T_19-4x4.png.h>
+#include <arrow.png.h>
+#include <font-5x5.png.h>
+#include <ui_editor-40x120.png.h>
 
 #include "textures/textures/T_00.h"
 #include "textures/textures/T_01.h"
@@ -453,7 +453,7 @@ void game_input(unsigned dt_usec)
 		C.y -= (sdk_inputs_delta.y > 0) * 40;
 		C.y += (sdk_inputs_delta.a > 0) * 40;
 
-		//editor_state = EDITOR_MAP;
+		// editor_state = EDITOR_MAP;
 		break;
 
 	case EDITOR_MAP:
@@ -618,8 +618,8 @@ static void update_krecdoom_cmakelists(int total_maps)
 		fprintf(target_cmake, "krecek_set_target_options(krecdoom)\n\n");
 
 		fprintf(target_cmake, "if (ENABLE_OFFSETS)\n");
-		fprintf(target_cmake,
-			"  pico_set_linker_script(krecdoom ${CMAKE_CURRENT_LIST_DIR}/memmap.ld)\n");
+		fprintf(target_cmake, "  pico_set_linker_script(krecdoom "
+				      "${CMAKE_CURRENT_LIST_DIR}/memmap.ld)\n");
 		fprintf(target_cmake, "endif()\n\n");
 
 		fprintf(target_cmake, "#pico_set_binary_type(krecdoom no_flash)\n");
@@ -659,19 +659,19 @@ static void update_host_krecdoom_cmakelists(int total_maps)
 	fprintf(host_cmake, "add_executable(\n");
 	fprintf(host_cmake, "  krecdoom\n");
 	fprintf(host_cmake, "  ../../src/krecdoom/main.c\n");
-	fprintf(host_cmake, "  ../../src/krecdoom/extras/volume.c\n");
+	fprintf(host_cmake, "  ../../src/krecdoom/extras/textures.c\n");
 	for (int i = 1; i <= total_maps; i++) {
 		fprintf(host_cmake, "  ../../src/krecdoom/maps/map%d.c\n", i);
 	}
 	fprintf(host_cmake, ")\n\n");
 
 	fprintf(host_cmake, "generate_png_headers()\n");
-	fprintf(host_cmake,
-		"target_link_libraries(krecdoom PRIVATE sdk m ${PNG_HEADERS_TARGET})\n\n");
+	fprintf(host_cmake, "target_link_libraries(krecdoom PRIVATE sdk m "
+			    "${PNG_HEADERS_TARGET})\n\n");
 
 	fprintf(host_cmake, "set_property(TARGET krecdoom PROPERTY C_STANDARD 23)\n");
-	fprintf(host_cmake,
-		"target_compile_options(krecdoom PRIVATE -Wall -Wextra -Wnull-dereference)\n");
+	fprintf(host_cmake, "target_compile_options(krecdoom PRIVATE -Wall -Wextra "
+			    "-Wnull-dereference)\n");
 	fprintf(host_cmake, "target_include_directories(krecdoom PRIVATE include)\n\n");
 
 	fprintf(host_cmake, "install(TARGETS krecdoom DESTINATION bin)\n");
@@ -692,15 +692,16 @@ static void update_krecdoom_include_maps(int total_maps)
 	for (int i = 1; i <= total_maps; i++) {
 		fprintf(file, "extern const TileType maps_map%d[MAP_ROWS][MAP_COLS];\n", i);
 	}
+	fprintf(file, "                                                              "
+		      "                                           \n");
 	fprintf(file,
-		"                                                                                                         \n");
-	fprintf(file,
-		"#define FILE_NUM %d                                                                                       \n",
+		"#define FILE_NUM %d                                                 "
+		"                                      \n",
 		total_maps);
-	fprintf(file,
-		"                                                                                                         \n");
-	fprintf(file,
-		"static const TileType (*FILES[FILE_NUM])[MAP_COLS] = {                                                   \n");
+	fprintf(file, "                                                              "
+		      "                                           \n");
+	fprintf(file, "static const TileType (*FILES[FILE_NUM])[MAP_COLS] = {        "
+		      "                                           \n");
 	for (int i = 1; i <= total_maps; i++) {
 		if (i == total_maps) {
 			fprintf(file, "        maps_map%d\n", i);
@@ -787,11 +788,11 @@ static void update_cmake_lists(int total_maps)
 		}
 		fprintf(host_cmake, ")\n\n");
 		fprintf(host_cmake, "generate_png_headers()\n");
-		fprintf(host_cmake,
-			"target_link_libraries(krec2ddoom PRIVATE sdk m ${PNG_HEADERS_TARGET})\n\n");
+		fprintf(host_cmake, "target_link_libraries(krec2ddoom PRIVATE sdk m "
+				    "${PNG_HEADERS_TARGET})\n\n");
 		fprintf(host_cmake, "set_property(TARGET krec2ddoom PROPERTY C_STANDARD 23)\n");
-		fprintf(host_cmake,
-			"target_compile_options(krec2ddoom PRIVATE -Wall -Wextra -Wnull-dereference)\n");
+		fprintf(host_cmake, "target_compile_options(krec2ddoom PRIVATE -Wall "
+				    "-Wextra -Wnull-dereference)\n");
 		fprintf(host_cmake, "target_include_directories(krec2ddoom PRIVATE include)\n\n");
 		fprintf(host_cmake, "install(TARGETS krec2ddoom DESTINATION bin)\n");
 
@@ -1113,7 +1114,7 @@ void game_paint(unsigned dt_usec)
 		for (int file = 0; file < FILE_NUM; file++) {
 			FILE_DRAW(file, C.y);
 		}
-		//draw_border_rect(10, 10, 50, 50, 2, WHITE);
+		// draw_border_rect(10, 10, 50, 50, 2, WHITE);
 		break;
 	case EDITOR_RESET:
 		tft_set_origin(0, C.y - 0);
@@ -1304,17 +1305,20 @@ static void textures_show()
 		draw_small_string(2, 22, "p spawn");
 		break;
 	case HEALTH_PACK:
-		draw_small_string(2, 22, "H pack");
+		draw_small_string(2, 22, "h pack");
 		break;
 	case AMMO_BOX:
-		draw_small_string(2, 22, "Ammo pack");
+		draw_small_string(2, 22, "ammo pack");
 		break;
 	case SHOTGUN_PICKUP:
 		draw_small_string(2, 22, "shot pack");
 		break;
-
-	case UN4:
-	case UN5:
+	case ENEMY1:
+		draw_small_string(2, 22, "enemy 1");
+		break;
+	case ENEMY2:
+		draw_small_string(2, 22, "enemy 2");
+		break;
 	case EMPTY:
 		break;
 	}
@@ -1435,8 +1439,12 @@ static void draw_tile(int x0, int y0, int x1, int y1, int tx, int ty)
 	case SHOTGUN_PICKUP:
 		tft_draw_rect(x0, y0, x1, y1, BLUE);
 		break;
-	case UN4:
-	case UN5:
+	case ENEMY1:
+		tft_draw_rect(x0, y0, x1, y1, BLUE);
+		break;
+	case ENEMY2:
+		tft_draw_rect(x0, y0, x1, y1, BLUE);
+		break;
 	case EMPTY:
 		break;
 	}
