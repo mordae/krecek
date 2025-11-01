@@ -39,6 +39,8 @@
 #define MAX_HEALTH 100
 #define MAX_AMMO 50
 
+#define MAX_PICKUPS 64
+
 // Colors
 #define DRAW_RED rgb_to_rgb565(183, 0, 0)
 #define RED rgb_to_rgb565(183, 0, 0)

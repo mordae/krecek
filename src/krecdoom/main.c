@@ -16,6 +16,19 @@ static fixed_t fixed_side_shade;
 
 sdk_game_info("krecdoom", &image_cover_png);
 
+typedef enum {
+	TEX_HEALTH_PICKUP = 22, // TTO_00
+	TEX_AMMO_PICKUP = 23,	// TTO_01
+	TEX_SHOTGUN_PICKUP = 24 // TTO_02
+} PickupTexture;
+
+typedef struct {
+	float x, y;
+	int type; // HEALTH_PACK, AMMO_BOX, or SHOTGUN_PICKUP
+	bool collected;
+	bool active;
+} Pickup;
+
 typedef enum { GAME_MENU, GAME_PLAYING, GAME_DEAD } GameState;
 
 typedef enum {
@@ -127,7 +140,8 @@ static TexureMaps Textures[64];
 static GameState game_state = GAME_MENU;
 static bool collected_pickups[MAP_ROWS][MAP_COLS];
 static float zBuffer[SCREEN_WIDTH]; // For depth testing
-
+static Pickup pickups[MAX_PICKUPS];
+static int active_pickup_count = 0;
 static bool isWall(int Tile_x, int Tile_y);
 static bool isPickup(int Tile_x, int Tile_y);
 static void shootBullet(float start_angle, float max_range_tiles, int visual_size,
@@ -140,6 +154,8 @@ static void textures_load();
 static void handlePickup(int tile_x, int tile_y);
 extern void game_handle_audio(float dt, float volume);
 const TileType (*currentMap)[MAP_COLS] = maps_map1;
+
+static void renderPickups();
 
 // Enemy functions
 static void initEnemies();
@@ -329,6 +345,8 @@ static void renderGame()
 	// Draw enemies
 	renderEnemies();
 
+	renderPickups();
+
 	// Draw crosshair
 	int cx = SCREEN_WIDTH / 2;
 	int cy = SCREEN_HEIGHT / 2;
@@ -392,8 +410,18 @@ static bool isPickup(int Tile_x, int Tile_y)
 static void handlePickup(int tile_x, int tile_y)
 {
 	TileType tile = currentMap[tile_y][tile_x];
-
 	collected_pickups[tile_y][tile_x] = true;
+
+	// Deactivate the pickup in the array
+	for (int i = 0; i < active_pickup_count; i++) {
+		int pickup_tile_x = (int)(pickups[i].x / TILE_SIZE);
+		int pickup_tile_y = (int)(pickups[i].y / TILE_SIZE);
+		if (pickup_tile_x == tile_x && pickup_tile_y == tile_y) {
+			pickups[i].collected = true;
+			pickups[i].active = false;
+			break;
+		}
+	}
 
 	if (tile == HEALTH_PACK) {
 		if (player.health < MAX_HEALTH) {
@@ -1312,6 +1340,154 @@ static void renderEnemies()
 	}
 }
 
+static void renderPickups()
+{
+	// Define transparent color (magenta: RGB 255, 60, 255)
+	const int TRANS_R = 255;
+	const int TRANS_G = 60;
+	const int TRANS_B = 255;
+
+	for (int i = 0; i < active_pickup_count; i++) {
+		if (!pickups[i].active || pickups[i].collected)
+			continue;
+
+		// Calculate relative position to player
+		float relX = pickups[i].x - player.x;
+		float relY = pickups[i].y - player.y;
+
+		float distToPickup = sqrtf(relX * relX + relY * relY);
+
+		// Skip if behind player or too close
+		if (relX * cosf(player.angle) + relY * sinf(player.angle) < 0.1f ||
+		    distToPickup < 0.1f) {
+			continue;
+		}
+
+		// Calculate angle from player view to pickup
+		float angleToPickup = atan2f(relY, relX);
+		float angleDiff = angleToPickup - player.angle;
+
+		// Normalize angleDiff
+		if (angleDiff > M_PI)
+			angleDiff -= 2 * M_PI;
+		if (angleDiff < -M_PI)
+			angleDiff += 2 * M_PI;
+
+		// Check if pickup is within FOV
+		if (fabsf(angleDiff) < FOV_RADIANS / 2.0f) {
+			// Screen X position for the center of the pickup sprite
+			int screen_x = (int)(SCREEN_WIDTH / 2.0f +
+					     PROJECTION_PLANE_DISTANCE * tanf(angleDiff));
+
+			float projectedSize =
+				(TILE_SIZE * 0.5f * PROJECTION_PLANE_DISTANCE / distToPickup);
+			int pickup_draw_size = (int)projectedSize;
+
+			// Clamp size
+			if (pickup_draw_size < 8)
+				pickup_draw_size = 8;
+			if (pickup_draw_size > SCREEN_HEIGHT)
+				pickup_draw_size = SCREEN_HEIGHT;
+
+			// Top-left corner
+			int draw_x_start = screen_x - pickup_draw_size / 2;
+			int draw_y_start =
+				(int)((SCREEN_HEIGHT / 2.0f) - (pickup_draw_size / 2.0f));
+
+			// Clamp bounds to screen
+			int x_loop_start = (draw_x_start < 0) ? 0 : draw_x_start;
+			int x_loop_end = (draw_x_start + pickup_draw_size > SCREEN_WIDTH) ?
+						 SCREEN_WIDTH :
+						 draw_x_start + pickup_draw_size;
+			int y_loop_start = (draw_y_start < 0) ? 0 : draw_y_start;
+			int y_loop_end = (draw_y_start + pickup_draw_size > SCREEN_HEIGHT) ?
+						 SCREEN_HEIGHT :
+						 draw_y_start + pickup_draw_size;
+
+			// Choose texture based on pickup type
+			int texIndex;
+			switch (pickups[i].type) {
+			case HEALTH_PACK:
+				texIndex = TEX_HEALTH_PICKUP; // TTO_00
+				break;
+			case AMMO_BOX:
+				texIndex = TEX_AMMO_PICKUP; // TTO_01
+				break;
+			case SHOTGUN_PICKUP:
+				texIndex = TEX_SHOTGUN_PICKUP; // TTO_02
+				break;
+			default:
+				continue;
+			}
+
+			int texWidth = Textures[texIndex].w;
+			int texHeight = Textures[texIndex].h;
+
+			// Calculate shading based on distance
+			fixed_t perpPickupDist_fixed = float_to_fixed(distToPickup);
+			fixed_t shade =
+				FIXED_SCALE - fixed_div(perpPickupDist_fixed, fixed_max_dist);
+			if (shade < fixed_min_shade)
+				shade = fixed_min_shade;
+			int shade_int = (shade >> 8) & 0xFFFF;
+
+			// Draw the pickup texture with depth testing and transparency
+			for (int y_pixel = y_loop_start; y_pixel < y_loop_end; y_pixel++) {
+				for (int x_pixel = x_loop_start; x_pixel < x_loop_end; x_pixel++) {
+					// Only draw if pickup is closer than wall at this x position
+					if (distToPickup < zBuffer[x_pixel]) {
+						// Calculate texture coordinates
+						float texX = (float)(x_pixel - draw_x_start) /
+							     pickup_draw_size;
+						float texY = (float)(y_pixel - draw_y_start) /
+							     pickup_draw_size;
+
+						int tex_x = (int)(texX * texWidth);
+						int tex_y = (int)(texY * texHeight);
+
+						// Ensure texture coordinates are within bounds
+						if (tex_x < 0)
+							tex_x = 0;
+						if (tex_x >= texWidth)
+							tex_x = texWidth - 1;
+						if (tex_y < 0)
+							tex_y = 0;
+						if (tex_y >= texHeight)
+							tex_y = texHeight - 1;
+
+						// Get pixel from texture
+						int pixelIndex = tex_y * 3 * texWidth + tex_x * 3;
+
+						int r = Textures[texIndex].name[pixelIndex + 0];
+						int g = Textures[texIndex].name[pixelIndex + 1];
+						int b = Textures[texIndex].name[pixelIndex + 2];
+
+						// Check for transparency (magenta: 255, 60, 255)
+						if (r == TRANS_R && g == TRANS_G && b == TRANS_B) {
+							continue; // Skip transparent pixels
+						}
+
+						// Apply distance shading
+						r = (r * shade_int) >> 8;
+						g = (g * shade_int) >> 8;
+						b = (b * shade_int) >> 8;
+
+						if (r > 255)
+							r = 255;
+						if (g > 255)
+							g = 255;
+						if (b > 255)
+							b = 255;
+
+						tft_draw_pixel(x_pixel, y_pixel,
+							       rgb_to_rgb565(r, g, b));
+					}
+				}
+			}
+		}
+	}
+}
+
 static void real_game_start(void)
 {
 	currentMap = maps_map1;
@@ -1426,6 +1602,36 @@ static void Map_starter(const TileType map[MAP_ROWS][MAP_COLS])
 
 	if (mode.debug) {
 		printf("Total enemies spawned: %d\n", active_enemy_count);
+	}
+	active_pickup_count = 0;
+	for (int i = 0; i < MAX_PICKUPS; i++) {
+		pickups[i].active = false;
+		pickups[i].collected = false;
+	}
+
+	// Find and spawn pickups from the map
+	for (int y = 0; y < MAP_ROWS; y++) {
+		for (int x = 0; x < MAP_COLS; x++) {
+			TileType tile = map[y][x];
+			if (tile == HEALTH_PACK || tile == AMMO_BOX || tile == SHOTGUN_PICKUP) {
+				if (active_pickup_count < MAX_PICKUPS) {
+					pickups[active_pickup_count].x =
+						x * TILE_SIZE + TILE_SIZE / 2;
+					pickups[active_pickup_count].y =
+						y * TILE_SIZE + TILE_SIZE / 2;
+					pickups[active_pickup_count].type = tile;
+					pickups[active_pickup_count].collected =
+						collected_pickups[y][x];
+					pickups[active_pickup_count].active =
+						!collected_pickups[y][x];
+					active_pickup_count++;
+				}
+			}
+		}
+	}
+
+	if (mode.debug) {
+		printf("Total pickups spawned: %d\n", active_pickup_count);
 	}
 }
 
@@ -1556,6 +1762,18 @@ static void textures_load()
 	Textures[TEX_ENEMY2].name = TTE_01; // ENEMY2 texture
 	Textures[TEX_ENEMY2].w = TTE_01_WIDTH;
 	Textures[TEX_ENEMY2].h = TTE_01_HEIGHT;
+
+	Textures[TEX_HEALTH_PICKUP].name = TTO_00; // Health pickup
+	Textures[TEX_HEALTH_PICKUP].w = TTO_00_WIDTH;
+	Textures[TEX_HEALTH_PICKUP].h = TTO_00_HEIGHT;
+
+	Textures[TEX_AMMO_PICKUP].name = TTO_01; // Ammo pickup
+	Textures[TEX_AMMO_PICKUP].w = TTO_01_WIDTH;
+	Textures[TEX_AMMO_PICKUP].h = TTO_01_HEIGHT;
+
+	Textures[TEX_SHOTGUN_PICKUP].name = TTO_02; // Shotgun pickup
+	Textures[TEX_SHOTGUN_PICKUP].w = TTO_02_WIDTH;
+	Textures[TEX_SHOTGUN_PICKUP].h = TTO_02_HEIGHT;
 }
 
 int main()
