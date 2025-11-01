@@ -11,12 +11,9 @@
 #include <tft.h>
 #include <stdlib.h>
 #include "maps.h"
-
-//*----------------------TODO--------------------------
-//*   MENU
-//*   ENEMIES
-//*   EDITOR + RANDOM GENERATE
-//*   GRAFICS better
+//*
+//*   TODO: ENEMIES
+//*   TODO: RANDOM GENERATE
 //*
 
 #include <overline.png.h>
@@ -84,8 +81,11 @@ typedef struct {
 	int gun;
 	bool alive;
 	bool strafing;
+	bool shotgun_unlocked;
+	bool has_moved;
 	char *name;
 } Player;
+
 typedef struct {
 	bool debug;
 	bool map;
@@ -93,6 +93,7 @@ typedef struct {
 	uint16_t tilecolor;
 	float is_seen;
 } Mode;
+
 typedef struct {
 	bool hit_visible;
 	uint32_t hit_timer_start;
@@ -100,6 +101,12 @@ typedef struct {
 	int hit_size;
 	uint16_t hit_color;
 } Bullet;
+
+typedef struct {
+	bool visible;
+	uint32_t timer_start;
+} MuzzleFlash;
+
 typedef struct {
 	int tile_x, tile_y;
 	int start_x, start_y;
@@ -109,22 +116,29 @@ typedef struct {
 	int p_x, p_y;
 	float p_center_x, p_center_y;
 } MMap;
+
 typedef struct {
-	int w, h;		   //texture width/height
-	const unsigned char *name; //texture name
+	int w, h;
+	const unsigned char *name;
 } TexureMaps;
+
 Gun gun_select[N_GUNS] = { 0, 1, 2 };
 static Player player;
 static Mode mode;
 static Bullet bullet;
+static MuzzleFlash muzzle_flash;
 static MMap mmap;
 static TexureMaps Textures[64];
 static GameState game_state = GAME_MENU;
 
+static bool collected_pickups[MAP_ROWS][MAP_COLS];
+
 float volume = 0.5f;
 float timer = 0;
+float footstep_timer = 0;
 
 static bool isWall(int Tile_x, int Tile_y);
+static bool isPickup(int Tile_x, int Tile_y);
 static void shootBullet(float start_angle, float max_range_tiles, int visual_size,
 			uint16_t visual_color);
 static void Map_starter(const TileType map[MAP_ROWS][MAP_COLS]);
@@ -132,9 +146,12 @@ static void handleShooting();
 static bool Can_shot(float dt);
 static void map_starter_caller();
 static void textures_load();
+static void handlePickup(int tile_x, int tile_y);
+
 extern const TileType maps_map1[MAP_ROWS][MAP_COLS];
 extern const TileType maps_map2[MAP_ROWS][MAP_COLS];
 const TileType (*currentMap)[MAP_COLS] = maps_map1;
+
 #define FIXED_SHIFT 16
 #define FIXED_SCALE (1 << FIXED_SHIFT)
 typedef int32_t fixed_t;
@@ -144,7 +161,6 @@ typedef int32_t fixed_t;
 #define fixed_mul(a, b) ((fixed_t)(((int64_t)(a) * (b)) >> FIXED_SHIFT))
 #define fixed_div(a, b) ((fixed_t)(((int64_t)(a) << FIXED_SHIFT) / (b)))
 
-// Precomputed fixed-point values for shading
 static fixed_t fixed_tile_size;
 static fixed_t fixed_max_dist;
 static fixed_t fixed_min_shade;
@@ -152,8 +168,17 @@ static fixed_t fixed_side_shade;
 
 static void renderGame()
 {
-	// Raycaster Engine LOL
-	// MY 2.5D world
+	// Draw floor and ceiling
+	for (int y = 0; y < SCREEN_HEIGHT / 2; y++) {
+		for (int x = 0; x < SCREEN_WIDTH; x++) {
+			tft_draw_pixel(x, y, GRAY); // Ceiling
+		}
+	}
+	for (int y = SCREEN_HEIGHT / 2; y < SCREEN_HEIGHT; y++) {
+		for (int x = 0; x < SCREEN_WIDTH; x++) {
+			tft_draw_pixel(x, y, GRAY); // Floor
+		}
+	}
 
 	float rayAngle;
 
@@ -167,58 +192,49 @@ static void renderGame()
 
 	// going each vertical line
 	for (int x = 0; x < SCREEN_WIDTH; x++) {
-		//cool Math I dont understand to calculate angle
 		rayAngle = (player.angle - FOV_RADIANS / 2.0f) + (x * (FOV_RADIANS / SCREEN_WIDTH));
 
-		// player standing in
 		int Tile_x = (int)(player.x / TILE_SIZE);
 		int Tile_y = (int)(player.y / TILE_SIZE);
 
-		// ray's direction  X and Y
 		float rayDirX = cosf(rayAngle);
 		float rayDirY = sinf(rayAngle);
 
-		// calculate how far
 		float deltaDistX = (rayDirX == 0.0f) ? 1e30f : fabsf(1.0f / rayDirX) * TILE_SIZE;
 		float deltaDistY = (rayDirY == 0.0f) ? 1e30f : fabsf(1.0f / rayDirY) * TILE_SIZE;
 
-		// Where I am walking
-		float sideDistX; // next vertical line
-		float sideDistY; // next horizontal line
+		float sideDistX;
+		float sideDistY;
 
-		mmap.hit = 0; // No wall hit yet
+		mmap.hit = 0;
 
-		// how to step and where my initial vertical mmap.side is.
-		if (rayDirX < 0.0f) {	  // pointing left
-			mmap.step_x = -1; // step left
+		if (rayDirX < 0.0f) {
+			mmap.step_x = -1;
 			sideDistX = (player.x - Tile_x * TILE_SIZE) * deltaDistX / TILE_SIZE;
-		} else { // right
+		} else {
 			mmap.step_x = 1;
 			sideDistX = ((Tile_x + 1) * TILE_SIZE - player.x) * deltaDistX / TILE_SIZE;
 		}
 
-		// for Y the same
-		if (rayDirY < 0.0f) {	  // pointing up
-			mmap.step_y = -1; // step up.
+		if (rayDirY < 0.0f) {
+			mmap.step_y = -1;
 			sideDistY = (player.y - Tile_y * TILE_SIZE) * deltaDistY / TILE_SIZE;
-		} else { // down
+		} else {
 			mmap.step_y = 1;
 			sideDistY = ((Tile_y + 1) * TILE_SIZE - player.y) * deltaDistY / TILE_SIZE;
 		}
 
-		// loop the ray is searching for wall
 		while (mmap.hit == 0) {
-			if (sideDistX < sideDistY) {	 // next X-mmap.side is closer
-				sideDistX += deltaDistX; // jump to that X-mmap.side.
-				Tile_x += mmap.step_x;	 // next X tile.
+			if (sideDistX < sideDistY) {
+				sideDistX += deltaDistX;
+				Tile_x += mmap.step_x;
 				mmap.side = 0;
-			} else { // If the next Y-mmap.side is closer..
+			} else {
 				sideDistY += deltaDistY;
 				Tile_y += mmap.step_y;
 				mmap.side = 1;
 			}
 
-			// finally mmap.step_y a wall or gone GG
 			if (isWall(Tile_x, Tile_y)) {
 				mmap.hit = 1;
 			}
@@ -232,7 +248,6 @@ static void renderGame()
 		}
 		perpWallDist *= cosf(rayAngle - player.angle);
 
-		// dont / 0
 		if (perpWallDist < 0.001f)
 			perpWallDist = 0.001f;
 
@@ -241,13 +256,11 @@ static void renderGame()
 		int drawStart = (int)((SCREEN_HEIGHT / 2.0f) - (wallHeight / 2.0f));
 		int drawEnd = (int)((SCREEN_HEIGHT / 2.0f) + (wallHeight / 2.0f));
 
-		// drawing stays inside the screen
 		if (drawStart < 0)
 			drawStart = 0;
 		if (drawEnd >= SCREEN_HEIGHT)
 			drawEnd = SCREEN_HEIGHT - 1;
 
-		// Get wall type from map
 		int wallType = currentMap[Tile_y][Tile_x] - 1;
 		if (wallType <= 0)
 			wallType = 0;
@@ -263,62 +276,45 @@ static void renderGame()
 		wallX /= TILE_SIZE;
 		wallX -= floorf(wallX);
 
-		// Get texture dimensions
 		int texWidth = Textures[wallType].w;
 		int texHeight = Textures[wallType].h;
 
-		// Calculate texture X coordinate
 		int texX = (int)(wallX * (float)texWidth);
 		if ((mmap.side == 0 && rayDirX > 0) || (mmap.side == 1 && rayDirY < 0)) {
 			texX = texWidth - texX - 1;
 		}
 
-		// Calculate texture stepping
 		float step = 1.0f * texHeight / wallHeight;
 		float texPos = (drawStart - SCREEN_HEIGHT / 2.0f + wallHeight / 2.0f) * step;
 
-		// Convert perpWallDist to fixed-point for shading
 		fixed_t perpWallDist_fixed = float_to_fixed(perpWallDist);
 
-		// Calculate shading using fixed-point arithmetic
 		fixed_t shade = FIXED_SCALE - fixed_div(perpWallDist_fixed, fixed_max_dist);
 
-		// Clamp minimum shade
 		if (shade < fixed_min_shade) {
 			shade = fixed_min_shade;
 		}
 
-		// Darken y-side walls
 		if (mmap.side == 1) {
 			shade = fixed_mul(shade, fixed_side_shade);
 		}
 
-		// Convert shade to 8.8 fixed point for faster multiplication
 		int shade_int = (shade >> 8) & 0xFFFF;
 
-		// Draw the textured vertical slice
 		for (int y = drawStart; y <= drawEnd; y++) {
-			// Calculate texture Y coordinate
-			int texY =
-				(int)texPos &
-				(texHeight -
-				 1); // Use bitwise AND for faster wrapping if texture height is a power of 2
+			int texY = (int)texPos & (texHeight - 1);
 			texPos += step;
 
-			// Get the pixel index in the texture data (RGB format, 3 bytes per pixel)
 			int pixelIndex = texY * 3 * texWidth + texX * 3;
 
-			// Extract RGB components
 			int r = Textures[wallType].name[pixelIndex + 0];
 			int g = Textures[wallType].name[pixelIndex + 1];
 			int b = Textures[wallType].name[pixelIndex + 2];
 
-			// Apply distance shading using fixed-point arithmetic
 			r = (r * shade_int) >> 8;
 			g = (g * shade_int) >> 8;
 			b = (b * shade_int) >> 8;
 
-			// Clamp values to prevent overflow
 			if (r > 255)
 				r = 255;
 			if (g > 255)
@@ -326,15 +322,22 @@ static void renderGame()
 			if (b > 255)
 				b = 255;
 
-			// Draw the pixel
 			tft_draw_pixel(x, y, rgb_to_rgb565(r, g, b));
 		}
 	}
+
+	// Draw crosshair
+	int cx = SCREEN_WIDTH / 2;
+	int cy = SCREEN_HEIGHT / 2;
+	tft_draw_pixel(cx, cy, WHITE);
+	tft_draw_pixel(cx - 1, cy, WHITE);
+	tft_draw_pixel(cx + 1, cy, WHITE);
+	tft_draw_pixel(cx, cy - 1, WHITE);
+	tft_draw_pixel(cx, cy + 1, WHITE);
 }
 
 static bool isWall(int Tile_x, int Tile_y)
 {
-	// boundarie
 	if (Tile_x < 0 || Tile_x >= MAP_COLS || Tile_y < 0 || Tile_y >= MAP_ROWS) {
 		return true;
 	}
@@ -357,14 +360,67 @@ static bool isWall(int Tile_x, int Tile_y)
 	case BUNKER:
 		return true;
 	case PLAYER_SPAWN:
-	case UN1:
-	case UN2:
-	case UN3:
+	case HEALTH_PACK:
+	case AMMO_BOX:
+	case SHOTGUN_PICKUP:
 	case UN4:
 	case UN5:
 	case TELEPORT:
 	case EMPTY:
 		return false;
+	}
+	return false;
+}
+
+static bool isPickup(int Tile_x, int Tile_y)
+{
+	if (Tile_x < 0 || Tile_x >= MAP_COLS || Tile_y < 0 || Tile_y >= MAP_ROWS) {
+		return false;
+	}
+	// Check if already collected
+	if (collected_pickups[Tile_y][Tile_x]) {
+		return false;
+	}
+	TileType tile = currentMap[Tile_y][Tile_x];
+	return (tile == HEALTH_PACK || tile == AMMO_BOX || tile == SHOTGUN_PICKUP);
+}
+
+static void handlePickup(int tile_x, int tile_y)
+{
+	TileType tile = currentMap[tile_y][tile_x];
+
+	collected_pickups[tile_y][tile_x] = true;
+
+	if (tile == HEALTH_PACK) {
+		if (player.health < MAX_HEALTH) {
+			player.health += HEALTH_PACK_HEAL;
+			if (player.health > MAX_HEALTH) {
+				player.health = MAX_HEALTH;
+			}
+			sdk_melody_play("/i:sine e g");
+			if (mode.debug) {
+				printf("Picked up health pack! Health: %d\n", player.health);
+			}
+		}
+	} else if (tile == AMMO_BOX) {
+		if (player.ammo < MAX_AMMO) {
+			player.ammo += AMMO_BOX_AMOUNT;
+			if (player.ammo > MAX_AMMO) {
+				player.ammo = MAX_AMMO;
+			}
+			sdk_melody_play("/i:square d");
+			if (mode.debug) {
+				printf("Picked up ammo! Ammo: %d\n", player.ammo);
+			}
+		}
+	} else if (tile == SHOTGUN_PICKUP) {
+		if (!player.shotgun_unlocked) {
+			player.shotgun_unlocked = true;
+			sdk_melody_play("/i:square c e g C");
+			if (mode.debug) {
+				printf("Shotgun unlocked!\n");
+			}
+		}
 	}
 }
 
@@ -372,11 +428,14 @@ static void handlePlayerMovement(float dt)
 {
 	float player_dx = 0;
 	float player_dy = 0;
+	player.has_moved = false;
+
 	if (sdk_inputs.joy_y > 500 || sdk_inputs.joy_y < -500) {
 		player_dx = cosf(player.angle) * MOVE_SPEED * dt *
 			    (-1 * (float)sdk_inputs.joy_y / 2048);
 		player_dy = sinf(player.angle) * MOVE_SPEED * dt *
 			    (-1 * (float)sdk_inputs.joy_y / 2048);
+		player.has_moved = true;
 	}
 
 	if (sdk_inputs.joy_x > 500 || sdk_inputs.joy_x < -500) {
@@ -385,6 +444,16 @@ static void handlePlayerMovement(float dt)
 				     ((float)sdk_inputs.joy_x / 2048);
 			player_dy += sinf(player.angle + M_PI / 2) * MOVE_SPEED * dt *
 				     ((float)sdk_inputs.joy_x / 2048);
+			player.has_moved = true;
+		}
+	}
+
+	// Footstep sounds
+	if (player.has_moved) {
+		footstep_timer += dt;
+		if (footstep_timer > 0.4f) {
+			sdk_melody_play("/i:noise (p) c");
+			footstep_timer = 0;
 		}
 	}
 
@@ -406,7 +475,15 @@ static void handlePlayerMovement(float dt)
 		}
 	}
 	if (sdk_inputs_delta.y == 1) {
+		// Cycle through available guns
 		player.gun += 1;
+		if (player.gun >= N_GUNS) {
+			player.gun = 1; // Skip broken gun
+		}
+		// Skip shotgun if not unlocked
+		if (player.gun == SHOTGUN && !player.shotgun_unlocked) {
+			player.gun = PISTOL;
+		}
 	}
 	if (sdk_inputs_delta.select == 1) {
 		game_state = GAME_MENU;
@@ -417,8 +494,7 @@ static void handlePlayerMovement(float dt)
 			player.angle += ROTATE_SPEED * dt * ((float)sdk_inputs.joy_x / 2048);
 		}
 	}
-	if (player.gun > N_GUNS)
-		player.gun = 0;
+
 	handleShooting();
 
 	float player_fx = player.x + player_dx;
@@ -427,9 +503,14 @@ static void handlePlayerMovement(float dt)
 	int player_tile_fx = player_fx / TILE_SIZE;
 	int player_tile_fy = player_fy / TILE_SIZE;
 
-	//Colision
+	// Collision with walls
 	if (isWall(player_tile_fx, player_tile_fy)) {
 		return;
+	}
+
+	// Check for pickups
+	if (isPickup(player_tile_fx, player_tile_fy)) {
+		handlePickup(player_tile_fx, player_tile_fy);
 	}
 
 	player.x = player_fx;
@@ -438,11 +519,22 @@ static void handlePlayerMovement(float dt)
 	int player_tile_x = player.x / TILE_SIZE;
 	int player_tile_y = player.y / TILE_SIZE;
 
+	// Teleport
 	if (currentMap[player_tile_y][player_tile_x] == TELEPORT) {
 		if (currentMap == maps_map1) {
 			map_starter_caller();
 		} else {
 			map_starter_caller();
+		}
+	}
+
+	// Low ammo warning
+	if (player.ammo <= 3 && player.ammo > 0) {
+		static float warning_timer = 0;
+		warning_timer += dt;
+		if (warning_timer > 2.0f) {
+			sdk_melody_play("/i:square (p) a");
+			warning_timer = 0;
 		}
 	}
 }
@@ -457,25 +549,36 @@ static void player_view_draw()
 	tft_draw_string(70, 105, DRAW_RED, "%-i", player.health);
 	tft_draw_string(105, 105, DRAW_RED, "%-i", player.ammo);
 
-	// boundaries
-	if (player.gun >= N_GUNS)
-		player.gun = 0;
-
-	switch (gun_select[player.gun]) {
+	switch (player.gun) {
 	case PISTOL:
 		sdk_draw_tile(75, 65, &ts_pistol_png, 1);
 		break;
 	case SHOTGUN:
-		sdk_draw_tile(55, 49, &ts_shotgun_png, 1);
+		if (player.shotgun_unlocked) {
+			sdk_draw_tile(55, 49, &ts_shotgun_png, 1);
+		}
 		break;
 	case BROKE:
 		break;
 	}
+
+	if (muzzle_flash.visible) {
+		uint32_t current_time = time_us_64();
+		if (current_time - muzzle_flash.timer_start < MUZZLE_FLASH_DURATION_MS * 1000) {
+			for (int i = 0; i < 10; i++) {
+				int fx = 80 + (rand() % 20) - 10;
+				int fy = 50 + (rand() % 20) - 10;
+				tft_draw_pixel(fx, fy, YELLOW);
+			}
+		} else {
+			muzzle_flash.visible = false;
+		}
+	}
+
+	// Bullet hit marker
 	if (bullet.hit_visible) {
-		// time
 		uint32_t current_time = time_us_64();
 		if (current_time - bullet.hit_timer_start < BULLET_VISUAL_DURATION_MS * 1000) {
-			// Draw a square
 			for (int dy = -bullet.hit_size / 2; dy <= bullet.hit_size / 2; dy++) {
 				for (int dx = -bullet.hit_size / 2; dx <= bullet.hit_size / 2;
 				     dx++) {
@@ -488,7 +591,7 @@ static void player_view_draw()
 				}
 			}
 		} else {
-			bullet.hit_visible = false; // Reset if time is up
+			bullet.hit_visible = false;
 		}
 	}
 }
@@ -502,7 +605,7 @@ static void shootBullet(float current_shoot_angle, float max_range_tiles, int vi
 	float rayX = player.x;
 	float rayY = player.y;
 
-	float max_dist = max_range_tiles * TILE_SIZE; // Max range in world units
+	float max_dist = max_range_tiles * TILE_SIZE;
 
 	int damage_to_deal = 0;
 	if (player.gun == PISTOL) {
@@ -512,22 +615,18 @@ static void shootBullet(float current_shoot_angle, float max_range_tiles, int vi
 	}
 
 	for (float dist = 0; dist < max_dist; dist += TILE_SIZE / 4.0f) {
-		// Update current ray position
 		rayX = player.x + rayDirX * dist;
 		rayY = player.y + rayDirY * dist;
 
-		// wall hit
 		int current_tile_x = (int)(rayX / TILE_SIZE);
 		int current_tile_y = (int)(rayY / TILE_SIZE);
 
 		if (isWall(current_tile_x, current_tile_y)) {
-			float perpWallDist = dist; // distance
+			float perpWallDist = dist;
 			if (perpWallDist == 0.0f)
-				perpWallDist = 0.001f; // /0
+				perpWallDist = 0.001f;
 
-			// screen position for wall hit visualization
 			float relativeAngle = current_shoot_angle - player.angle;
-			// Normalize angle
 			if (relativeAngle > M_PI)
 				relativeAngle -= 2 * M_PI;
 			if (relativeAngle < -M_PI)
@@ -539,7 +638,6 @@ static void shootBullet(float current_shoot_angle, float max_range_tiles, int vi
 			int drawStart = (int)((SCREEN_HEIGHT / 2.0f) - (wallHeight / 2.0f));
 			int drawEnd = (int)((SCREEN_HEIGHT / 2.0f) + (wallHeight / 2.0f));
 
-			// Store
 			bullet.hit_visible = true;
 			bullet.hit_timer_start = time_us_64();
 			bullet.hit_screen_x = screen_x;
@@ -555,34 +653,46 @@ static void shootBullet(float current_shoot_angle, float max_range_tiles, int vi
 		}
 	}
 }
+
 static void handleShooting()
 {
 	if (sdk_inputs_delta.a == 1) {
+		if (player.gun == SHOTGUN && !player.shotgun_unlocked) {
+			sdk_melody_play("/i:noise (p) c");
+			return;
+		}
+
 		if (player.ammo > 0) {
 			float shoot_angle = player.angle;
-			int visual_size = 10;		// Size of the hit marker
-			uint16_t visual_color = YELLOW; // Color of wall hit
+			int visual_size = 10;
+			uint16_t visual_color = YELLOW;
 
 			float current_gun_range = 0.0f;
 
 			if (player.gun == PISTOL) {
 				current_gun_range = PISTOL_MAX_RANGE_TILES;
+				sdk_melody_play("/i:square (ff) e_");
 			} else if (player.gun == SHOTGUN) {
 				current_gun_range = SHOTGUN_MAX_RANGE_TILES;
+				sdk_melody_play("/i:noise (fff) < c_");
 			} else {
 				current_gun_range = PISTOL_MAX_RANGE_TILES;
 			}
 
+			muzzle_flash.visible = true;
+			muzzle_flash.timer_start = time_us_64();
+
 			shootBullet(shoot_angle, current_gun_range, visual_size, visual_color);
-			player.ammo--; // Decrease ammo after shooting
+			player.ammo--;
 		} else {
-			// "click" sound
+			sdk_melody_play("/i:noise (p) c");
 			if (mode.debug) {
 				printf("Out of ammo!\n");
 			}
 		}
 	}
 }
+
 void game_start(void)
 {
 	sdk_set_output_gain_db(volume);
@@ -594,8 +704,14 @@ void game_start(void)
 	player.angle = (float)M_PI / 2.0f;
 	player.ammo = 15;
 	player.alive = true;
-	player.gun = 1;
+	player.gun = PISTOL;
+	player.shotgun_unlocked = false;
+	player.has_moved = false;
+
+	muzzle_flash.visible = false;
+	muzzle_flash.timer_start = 0;
 }
+
 static void map_starter_caller()
 {
 	if (currentMap == maps_map2) {
@@ -628,6 +744,16 @@ static void Map_starter(const TileType map[MAP_ROWS][MAP_COLS])
 	bullet.hit_size = 0;
 	bullet.hit_color = 0;
 
+	muzzle_flash.visible = false;
+	muzzle_flash.timer_start = 0;
+
+	// Clear collected pickups when starting/changing map
+	for (int y = 0; y < MAP_ROWS; y++) {
+		for (int x = 0; x < MAP_COLS; x++) {
+			collected_pickups[y][x] = false;
+		}
+	}
+
 	mode.map = false;
 	for (int x = 0; x < MAP_ROWS; x++) {
 		for (int y = 0; y < MAP_COLS; y++) {
@@ -649,6 +775,7 @@ static void menu_inputs()
 		game_state = GAME_PLAYING;
 	}
 }
+
 void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
@@ -665,14 +792,17 @@ void game_input(unsigned dt_usec)
 	}
 	game_handle_audio(dt, volume);
 }
+
 static void debug(void)
 {
 	tft_draw_string(5, 0, WHITE, "X %-.2f Y %-.2f", player.x, player.y);
 	tft_draw_string(5, 10, WHITE, "Angle %-.2f", player.angle);
+	tft_draw_string(5, 20, WHITE, "Gun: %i SG: %i", player.gun, player.shotgun_unlocked);
 	tft_draw_string(5, 85, WHITE, "Score %-i", player.score);
 	tft_draw_string(5, 95, WHITE, "Health %i", player.health);
 	tft_draw_string(5, 105, WHITE, "Ammo %-i", player.ammo);
 }
+
 static void render_menu(float dt)
 {
 	tft_draw_rect(48, 18, 115, 32, WHITE);
@@ -684,6 +814,7 @@ static void render_menu(float dt)
 		mode.is_seen = 0;
 	}
 }
+
 void game_paint(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
@@ -712,6 +843,7 @@ static void textures_load()
 		Textures[i].w = texture_widths[i];
 	}
 }
+
 int main()
 {
 	struct sdk_config config = {

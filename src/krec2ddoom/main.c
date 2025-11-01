@@ -1303,10 +1303,16 @@ static void textures_show()
 	case PLAYER_SPAWN:
 		draw_small_string(2, 22, "p spawn");
 		break;
+	case HEALTH_PACK:
+		draw_small_string(2, 22, "H pack");
+		break;
+	case AMMO_BOX:
+		draw_small_string(2, 22, "Ammo pack");
+		break;
+	case SHOTGUN_PICKUP:
+		draw_small_string(2, 22, "shot pack");
+		break;
 
-	case UN1:
-	case UN2:
-	case UN3:
 	case UN4:
 	case UN5:
 	case EMPTY:
@@ -1420,9 +1426,15 @@ static void draw_tile(int x0, int y0, int x1, int y1, int tx, int ty)
 	case PLAYER_SPAWN:
 		tft_draw_rect(x0, y0, x1, y1, GREEN);
 		break;
-	case UN1:
-	case UN2:
-	case UN3:
+	case HEALTH_PACK:
+		tft_draw_rect(x0, y0, x1, y1, BLUE);
+		break;
+	case AMMO_BOX:
+		tft_draw_rect(x0, y0, x1, y1, BLUE);
+		break;
+	case SHOTGUN_PICKUP:
+		tft_draw_rect(x0, y0, x1, y1, BLUE);
+		break;
 	case UN4:
 	case UN5:
 	case EMPTY:

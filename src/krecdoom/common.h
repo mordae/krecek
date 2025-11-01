@@ -20,9 +20,23 @@
 #define SHOTGUN_SPREAD_DEGREES 10.0f
 #define SHOTGUN_PELLETS 5
 
+// Pickup values
+#define HEALTH_PACK_HEAL 25
+#define AMMO_BOX_AMOUNT 10
+#define MAX_HEALTH 100
+#define MAX_AMMO 50
+
+// Colors
 #define DRAW_RED rgb_to_rgb565(183, 0, 0)
 #define RED rgb_to_rgb565(183, 0, 0)
 #define WHITE rgb_to_rgb565(255, 255, 255)
 #define YELLOW rgb_to_rgb565(255, 255, 0)
+#define GRAY rgb_to_rgb565(60, 60, 60)
+#define GREEN rgb_to_rgb565(0, 255, 0)
+#define ORANGE rgb_to_rgb565(255, 165, 0)
+#define CYAN rgb_to_rgb565(0, 255, 255)
+
+// Muzzle flash
+#define MUZZLE_FLASH_DURATION_MS 50
 
 #endif

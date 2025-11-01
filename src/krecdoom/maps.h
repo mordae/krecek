@@ -9,14 +9,14 @@ typedef enum {
 	COBLE = 1,
 	BUNKER,
 	BRICKS,
-	UN1,
+	HEALTH_PACK, // UN1
 	STONE,
 	MAGMA,
 	WATER,
 	STONE_HOLE,
 	CHEKERD,
-	UN2,
-	UN3,
+	AMMO_BOX,	// (was UN2)
+	SHOTGUN_PICKUP, // (was UN3)
 	UN4,
 	MOSS_STONE,
 	WOOD_WALL,
