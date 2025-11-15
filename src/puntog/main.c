@@ -8,19 +8,33 @@
 #include <sdk.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 #include <tiles-16x16.png.h>
-//*
-//-----TODO-----
-//
-//   Menu
-//   Spell
-//   Book of speels
-//   Maps
-//
-//*
+#include <font-5x5.png.h>
+
+// Multiplayer structures and variables
+struct cursor {
+	int id;
+	int x, y;
+	char name[16];
+	int head, body, Larm, Rarm, Lleg, Rleg;
+	int direction;
+};
+
+#define NUM_CURSORS 8
+struct cursor cursors[NUM_CURSORS];
+
+color_t colors[NUM_CURSORS] = {
+	rgb_to_rgb565(255, 0, 0),     rgb_to_rgb565(0, 0, 255),	    rgb_to_rgb565(255, 255, 0),
+	rgb_to_rgb565(255, 0, 255),   rgb_to_rgb565(0, 255, 255),   rgb_to_rgb565(127, 127, 127),
+	rgb_to_rgb565(127, 127, 255), rgb_to_rgb565(255, 127, 127),
+};
+
+static int lx, ly;
+static uint8_t device_id_16;
+static int channel = SDK_RF_CHANNEL;
 
 extern TileType maps_tuturial[MAP_ROWS][MAP_COLS];
-
 TileType (*map)[MAP_COLS] = maps_tuturial;
 
 typedef struct Save {
@@ -43,6 +57,7 @@ typedef struct {
 	int num1, num2, num3, num4, num5, num6, num7, num8, num9, num0;
 	int ch;
 } key;
+
 typedef struct {
 	bool costume;
 	int whut;
@@ -62,7 +77,65 @@ static void game_save_player();
 static void game_start_menu();
 static void world_start();
 static void tiles();
-static void player_paint(float x, float y, int direction);
+static void player_paint(float x, float y, int direction, int head, int body, int Larm, int Rarm,
+			 int Lleg, int Rleg);
+static void draw_small_string(int x, int y, const char *format, ...);
+
+// Multiplayer functions
+void game_reset(void)
+{
+	device_id_16 = (0x9e3779b97f4a7801 * sdk_device_id) >> 48;
+
+	for (int i = 0; i < NUM_CURSORS; i++)
+		cursors[i].id = -1;
+}
+
+void game_inbox(sdk_message_t msg)
+{
+	if (SDK_MSG_RF == msg.type) {
+		if (10 != msg.rf.length) {
+			printf("game_inbox: invalid RF len=%i\n", msg.rf.length);
+			return;
+		}
+
+		uint16_t id = (msg.rf.data[0] << 8) | msg.rf.data[1];
+
+		for (int i = 0; i < NUM_CURSORS; i++) {
+			if (cursors[i].id < 0 || cursors[i].id == id) {
+				cursors[i].id = id;
+				cursors[i].x = msg.rf.data[2];
+				cursors[i].y = msg.rf.data[3];
+				cursors[i].direction = msg.rf.data[4];
+				cursors[i].head = msg.rf.data[5];
+				cursors[i].body = msg.rf.data[6];
+				cursors[i].Larm = msg.rf.data[7];
+				cursors[i].Rarm = msg.rf.data[8];
+				cursors[i].Lleg = msg.rf.data[9];
+
+				// Create a simple name based on device ID
+				snprintf(cursors[i].name, sizeof(cursors[i].name), "P%d", id);
+				break;
+			}
+		}
+	}
+}
+
+static void tx_cursor(void)
+{
+	static uint32_t last_tx;
+	uint32_t now = time_us_32();
+
+	if (now - last_tx < 50000) // Send every 50ms
+		return;
+
+	last_tx = now;
+
+	// Send: device_id(2), x(1), y(1), direction(1), head(1), body(1), Larm(1), Rarm(1), Lleg(1)
+	uint8_t msg[] = { device_id_16 >> 8,	device_id_16,	 (uint8_t)p.x,	  (uint8_t)p.y,
+			  (uint8_t)p.direction, (uint8_t)p.head, (uint8_t)p.body, (uint8_t)p.Larm,
+			  (uint8_t)p.Rarm,	(uint8_t)p.Lleg };
+	sdk_send_rf(SDK_RF_ALL, msg, sizeof(msg));
+}
 
 static void game_read_player()
 {
@@ -100,7 +173,9 @@ void game_start(void)
 	k.ch = 1;
 	menu.start = true;
 	game_read_player();
+	game_reset(); // Initialize multiplayer
 }
+
 static void world_start(void)
 {
 	p.x = 20;
@@ -113,8 +188,9 @@ static void world_start(void)
 	p.Larm = 0;
 	p.Rarm = 0;
 	p.Lleg = 0;
-	p.Lleg = 0;
+	p.Rleg = 0;
 }
+
 static void zero_num()
 {
 	k.num0 = 0;
@@ -128,6 +204,7 @@ static void zero_num()
 	k.num8 = 0;
 	k.num9 = 0;
 }
+
 static void game_start_inputs()
 {
 	if (sdk_inputs_delta.a == 1) {
@@ -238,17 +315,32 @@ static void game_start_inputs()
 	}
 	return;
 }
+
 void game_input(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
+
+	// Channel switching (from multiplayer example)
+	if (sdk_inputs_delta.vertical < 0) {
+		channel = clamp(channel + 1, SDK_RF_CHANNEL_MIN, SDK_RF_CHANNEL_MAX);
+		sdk_set_rf_channel(channel);
+	}
+
+	if (sdk_inputs_delta.vertical > 0) {
+		channel = clamp(channel - 1, SDK_RF_CHANNEL_MIN, SDK_RF_CHANNEL_MAX);
+		sdk_set_rf_channel(channel);
+	}
+
 	if (menu.start) {
 		game_start_inputs();
+		return;
 	}
 
 	if (sdk_inputs_delta.start == 1 && menu.costume == false) {
 		menu.costume = true;
 		return;
 	}
+
 	if (menu.costume) {
 		if (sdk_inputs_delta.start == 1) {
 			menu.costume = false;
@@ -280,6 +372,7 @@ void game_input(unsigned dt_usec)
 		return;
 	}
 
+	// Movement input
 	if (sdk_inputs.joy_x > 500 || sdk_inputs.joy_x < -500) {
 		p.fx = p.speed * sdk_inputs.joy_x / 2048;
 		p.fy = 0;
@@ -303,25 +396,62 @@ void game_input(unsigned dt_usec)
 
 	p.x += p.fx * dt;
 	p.y += p.fy * dt;
+
+	// Send position to other players
+	if (p.fx != 0 || p.fy != 0) {
+		tx_cursor();
+	}
 }
 
 void game_paint(unsigned dt_usec)
 {
 	(void)dt_usec;
 	tft_fill(0);
+
 	if (menu.start) {
 		game_start_menu();
 		return;
 	}
+
 	if (menu.costume) {
 		game_costume();
 		game_save_player();
 		return;
 	}
+
 	tft_set_origin(p.x - TFT_WIDTH / 2.0 + PLAYER_WIDTH / 2.0,
 		       p.y - TFT_HEIGHT / 2.0 + PLAYER_HEIGHT / 2.0);
 	tiles();
-	player_paint(p.x, p.y, p.direction);
+
+	// Draw current player
+	player_paint(p.x, p.y, p.direction, p.head, p.body, p.Larm, p.Rarm, p.Lleg, p.Rleg);
+
+	// Draw player name above current player
+	tft_set_origin(0, 0); // Reset origin for UI elements
+	draw_small_string(p.x - 20, p.y - 40, "%s", p.name);
+
+	// Draw other players
+	for (int i = 0; i < NUM_CURSORS; i++) {
+		if (cursors[i].id < 0 || cursors[i].id == device_id_16)
+			continue;
+
+		// Set origin for world rendering of other players
+		tft_set_origin(p.x - TFT_WIDTH / 2.0 + PLAYER_WIDTH / 2.0,
+			       p.y - TFT_HEIGHT / 2.0 + PLAYER_HEIGHT / 2.0);
+
+		// Draw other player with their customizations
+		player_paint(cursors[i].x, cursors[i].y, cursors[i].direction, cursors[i].head,
+			     cursors[i].body, cursors[i].Larm, cursors[i].Rarm, cursors[i].Lleg,
+			     cursors[i].Lleg); // Using Lleg for both legs
+
+		// Draw other player's name
+		tft_set_origin(0, 0);
+		draw_small_string(cursors[i].x - 20, cursors[i].y - 40, "%s", cursors[i].name);
+	}
+
+	// Draw channel info (from multiplayer example)
+	tft_set_origin(0, 0);
+	tft_draw_string(0, 0, rgb_to_rgb565(127, 0, 0), "CH:%i", channel);
 }
 
 static void tiles()
@@ -334,6 +464,7 @@ static void tiles()
 		}
 	}
 }
+
 static void draw_rect_ins(int x1, int y1, int x2, int y2, color_t color)
 {
 	tft_draw_rect(x1, y1, x2, y1, color);
@@ -503,82 +634,98 @@ static void game_start_menu()
 	tft_draw_string(120, 70, WHITE, "9");
 	tft_draw_string(0, 40, WHITE, "0");
 }
-static void player_paint(float x, float y, int direction)
+
+static void player_paint(float x, float y, int direction, int head, int body, int Larm, int Rarm,
+			 int Lleg, int Rleg)
 {
-	if (p.Lleg > PLAYER_SPRITES - 1)
-		p.Lleg = 0;
+	// Clamp values to valid ranges
+	if (Lleg > PLAYER_SPRITES - 1)
+		Lleg = 0;
+	if (Rleg > PLAYER_SPRITES - 1)
+		Rleg = 0;
+	if (body > PLAYER_SPRITES - 1)
+		body = 0;
+	if (head > PLAYER_SPRITES - 1)
+		head = 0;
+	if (Larm > PLAYER_SPRITES - 1)
+		Larm = 0;
+	if (Rarm > PLAYER_SPRITES - 1)
+		Rarm = 0;
 
-	if (p.Rleg > PLAYER_SPRITES - 1)
-		p.Rleg = 0;
-
-	if (p.body > PLAYER_SPRITES - 1)
-		p.body = 0;
-
-	if (p.head > PLAYER_SPRITES - 1)
-		p.head = 0;
-
-	if (p.Larm > PLAYER_SPRITES - 1)
-		p.Larm = 0;
-
-	if (p.Rarm > PLAYER_SPRITES - 1)
-		p.Rarm = 0;
-
-	if (p.Lleg < 0)
-		p.Lleg = PLAYER_SPRITES;
-
-	if (p.Rleg < 0)
-		p.Rleg = PLAYER_SPRITES;
-
-	if (p.body < 0)
-		p.body = PLAYER_SPRITES;
-
-	if (p.head < 0)
-		p.head = PLAYER_SPRITES;
-
-	if (p.Rarm < 0)
-		p.Rarm = PLAYER_SPRITES;
-
-	if (p.Larm < 0)
-		p.Larm = PLAYER_SPRITES;
+	if (Lleg < 0)
+		Lleg = PLAYER_SPRITES;
+	if (Rleg < 0)
+		Rleg = PLAYER_SPRITES;
+	if (body < 0)
+		body = PLAYER_SPRITES;
+	if (head < 0)
+		head = PLAYER_SPRITES;
+	if (Rarm < 0)
+		Rarm = PLAYER_SPRITES;
+	if (Larm < 0)
+		Larm = PLAYER_SPRITES;
 
 	// x and y its bottom center
 
 	// legs
-	sdk_draw_tile(x - 1, y - 1, &ts_lleg_2x2_png, p.Lleg * PLAYER_DIRECTION + direction);
-	sdk_draw_tile(x + 1, y - 1, &ts_rleg_2x2_png, p.Rleg * PLAYER_DIRECTION + direction);
+	sdk_draw_tile(x - 1, y - 1, &ts_lleg_2x2_png, Lleg * PLAYER_DIRECTION + direction);
+	sdk_draw_tile(x + 1, y - 1, &ts_rleg_2x2_png, Rleg * PLAYER_DIRECTION + direction);
 
 	// body
-	sdk_draw_tile(x - 1, y - 5, &ts_body_4x4_png, p.body * PLAYER_DIRECTION + direction);
+	sdk_draw_tile(x - 1, y - 5, &ts_body_4x4_png, body * PLAYER_DIRECTION + direction);
 
 	// Head
-	sdk_draw_tile(x - 2, y - 11, &ts_head_6x6_png, p.head * PLAYER_DIRECTION + direction);
+	sdk_draw_tile(x - 2, y - 11, &ts_head_6x6_png, head * PLAYER_DIRECTION + direction);
 
 	// right arm
-	sdk_draw_tile(x - 2, y - 5, &ts_rarm_1x3_png, p.Rarm * PLAYER_DIRECTION + direction);
+	sdk_draw_tile(x - 2, y - 5, &ts_rarm_1x3_png, Rarm * PLAYER_DIRECTION + direction);
 
 	// left arm
-	sdk_draw_tile(x + 3, y - 5, &ts_larm_1x3_png, p.Larm * PLAYER_DIRECTION + direction);
-
-	// pixel
-	//tft_draw_pixel(x, y, WHITE);
+	sdk_draw_tile(x + 3, y - 5, &ts_larm_1x3_png, Larm * PLAYER_DIRECTION + direction);
 }
+
 static void game_costume()
 {
 	tft_set_origin(0, 0);
-	player_paint(135, 90, p.d2);
-
-	// 120 , 8, 124 , 12
+	player_paint(135, 90, p.d2, p.head, p.body, p.Larm, p.Rarm, p.Lleg, p.Rleg);
 
 	tft_draw_rect(100, 8 + menu.whut * 11, 104, 12 + menu.whut * 11, WHITE);
 	tft_draw_string(5, 05, WHITE, "Head      %i", p.head);
-
 	tft_draw_string(5, 16, WHITE, "Body      %i", p.body);
-
 	tft_draw_string(5, 27, WHITE, "Right arm %i", p.Rarm);
 	tft_draw_string(5, 38, WHITE, "Left arm  %i", p.Larm);
-
 	tft_draw_string(5, 49, WHITE, "Right leg %i", p.Rleg);
 	tft_draw_string(5, 60, WHITE, "Left leg  %i", p.Lleg);
+}
+
+static void draw_small_string(int x, int y, const char *format, ...)
+{
+	char buffer[64];
+	va_list args;
+
+	va_start(args, format);
+	vsnprintf(buffer, sizeof(buffer), format, args);
+	va_end(args);
+
+	int current_x = x;
+	const char *str = buffer;
+
+	while (*str) {
+		char c = *str++;
+		int tile_index;
+
+		if (c >= 'a' && c <= 'z') {
+			tile_index = c - 'a'; // a=0, b=1, ..., z=25
+		} else if (c >= '0' && c <= '9') {
+			tile_index = 26 + (c - '0'); // 0=26, 1=27, ..., 9=35
+		} else {
+			tile_index = 36; // Default for unsupported characters
+		}
+
+		if (tile_index != 36)
+			sdk_draw_tile(current_x, y, &ts_font_5x5_png, tile_index);
+		current_x += 6;
+	}
 }
 
 int main()
