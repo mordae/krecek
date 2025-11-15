@@ -1,26 +1,23 @@
 #!/usr/bin/env python3
 import socket
 
-PORT = 13570
+PORT = 13571
+BROADCAST = "<broadcast>"
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
+# Listen on all interfaces
 sock.bind(("", PORT))
 
-clients = set()
-
-print("RF Routing Server running")
-print(f"Listening on UDP port {PORT}")
+print("RF Broadcast Server started")
+print(f"Listening on UDP {PORT}, rebroadcasting to LAN")
 
 while True:
     data, addr = sock.recvfrom(2048)
 
-    # add client
-    clients.add(addr)
-
     print(f"[RX from {addr}] {data.hex()}")
 
-    # send to all other clients
-    for c in clients:
-        if c != addr:
-            sock.sendto(data, c)
+    # rebroadcast to whole LAN
+    sock.sendto(data, (BROADCAST, PORT))
 
