@@ -149,7 +149,7 @@ void sdk_comms_init(void)
 	// LISTEN on all IPs
 	struct sockaddr_in bind_addr = { 0 };
 	bind_addr.sin_family = AF_INET;
-	bind_addr.sin_port = htons(13570);
+	bind_addr.sin_port = htons(13571);
 	bind_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	if (bind(rf_sock, (struct sockaddr *)&bind_addr, sizeof(bind_addr)) < 0)
