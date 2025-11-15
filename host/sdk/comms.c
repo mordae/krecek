@@ -12,7 +12,7 @@ static int rf_sock;
 static int rf_channel = 42;
 static struct sockaddr_in rf_addr;
 
-static bool debug = false;
+static bool debug = true;
 
 bool sdk_send_ir(uint32_t word)
 {
@@ -136,27 +136,27 @@ bool sdk_set_rf_channel(int ch)
 
 void sdk_comms_init(void)
 {
-	if (getenv("DEBUG_COMMS"))
-		debug = true;
-
-	if (0 > (rf_sock = socket(AF_INET, SOCK_DGRAM, 0)))
+	if ((rf_sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
 		sdk_panic("socket() failed");
 
 	int reuse = 1;
-	if (setsockopt(rf_sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)))
-		sdk_panic("setsockopt() failed");
-
-	if (setsockopt(rf_sock, SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse)))
-		sdk_panic("setsockopt() failed");
+	setsockopt(rf_sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+	setsockopt(rf_sock, SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse));
 
 	int broadcast = 1;
-	if (setsockopt(rf_sock, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast)))
-		sdk_panic("setsockopt() failed");
+	setsockopt(rf_sock, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
 
+	// LISTEN on all IPs
+	struct sockaddr_in bind_addr = { 0 };
+	bind_addr.sin_family = AF_INET;
+	bind_addr.sin_port = htons(13570);
+	bind_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+	if (bind(rf_sock, (struct sockaddr *)&bind_addr, sizeof(bind_addr)) < 0)
+		sdk_panic("bind failed");
+
+	// SEND to LAN broadcast address
 	rf_addr.sin_family = AF_INET;
 	rf_addr.sin_port = htons(13570);
-	rf_addr.sin_addr.s_addr = inet_addr("127.255.255.255");
-
-	if (0 > bind(rf_sock, (struct sockaddr *)&rf_addr, sizeof(rf_addr)))
-		sdk_panic("bind(13570) failed");
+	rf_addr.sin_addr.s_addr = inet_addr("255.255.255.255");
 }

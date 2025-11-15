@@ -1,7 +1,6 @@
 add_executable(
   super_platform_bros
   ../../src/super_platform_bros/main.c
-  math.c
 )
 
 generate_png_headers()

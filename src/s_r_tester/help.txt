@@ -1,0 +1,8 @@
+Run these commands:
+sudo firewall-cmd --permanent --add-port=13570/udp
+sudo firewall-cmd --reload
+Check if it worked:
+sudo firewall-cmd --list-all
+You should see:
+ports: 13570/udp
+

@@ -1,7 +1,6 @@
 add_executable(
   super_platform_bros
   main.c
-  math.S
 )
 target_include_directories(super_platform_bros PRIVATE include)
 generate_png_headers()
