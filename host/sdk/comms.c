@@ -12,7 +12,7 @@ static int rf_sock;
 static int rf_channel = 42;
 static struct sockaddr_in rf_addr;
 
-static bool debug = true;
+static bool debug = false;
 
 bool sdk_send_ir(uint32_t word)
 {
