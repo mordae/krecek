@@ -448,15 +448,6 @@ static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int 
 		}
 	}
 }
-static int dist(int x1, int y1, int x2, int y2)
-{
-	int distance = sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
-	return distance;
-}
-
-// Recompute per-sector distances from the current player position
-// so we can sort and draw sectors in correct back-to-front order
-// in the same frame.
 static void update_sector_distances(void)
 {
 	float CS = M.cos[P.a], SN = M.sin[P.a];

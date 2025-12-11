@@ -4,6 +4,8 @@
 #include "maps.h"
 #include "sdk/input.h"
 
+#include <limits.h>
+
 //*
 //*   TODO: RANDOM GENERATE
 //*
@@ -13,6 +15,55 @@ static fixed_t fixed_tile_size;
 static fixed_t fixed_max_dist;
 static fixed_t fixed_min_shade;
 static fixed_t fixed_side_shade;
+static fixed_t fixed_proj_plane_dist;
+static fixed_t fixed_plane_scale;
+
+#define FIXED_ONE ((fixed_t)FIXED_SCALE)
+
+static inline __attribute__((always_inline)) fixed_t fixed_abs(fixed_t v)
+{
+	return v < 0 ? -v : v;
+}
+
+// Trig lookup table (Q16.16) to avoid per-ray sinf/cosf on RP2040.
+// Size 1024 -> 8 KiB for sin+cos.
+#define TRIG_LUT_BITS 10
+#define TRIG_LUT_SIZE (1u << TRIG_LUT_BITS)
+#define TRIG_LUT_MASK (TRIG_LUT_SIZE - 1u)
+
+static fixed_t sin_lut[TRIG_LUT_SIZE];
+static fixed_t cos_lut[TRIG_LUT_SIZE];
+static bool trig_lut_ready = false;
+
+static void trig_init_once(void)
+{
+	if (trig_lut_ready)
+		return;
+
+	for (unsigned i = 0; i < TRIG_LUT_SIZE; i++) {
+		float a = (2.0f * (float)M_PI) * ((float)i / (float)TRIG_LUT_SIZE);
+		sin_lut[i] = float_to_fixed(sinf(a));
+		cos_lut[i] = float_to_fixed(cosf(a));
+	}
+
+	fixed_tile_size = float_to_fixed(TILE_SIZE);
+	fixed_max_dist = float_to_fixed(15.0f * TILE_SIZE);
+	fixed_min_shade = float_to_fixed(0.3f);
+	fixed_side_shade = float_to_fixed(0.8f);
+	fixed_proj_plane_dist = float_to_fixed(PROJECTION_PLANE_DISTANCE);
+	fixed_plane_scale = float_to_fixed(tanf(FOV_RADIANS / 2.0f));
+
+	trig_lut_ready = true;
+}
+
+static inline __attribute__((always_inline)) unsigned angle_to_lut(float radians)
+{
+	// Map radians -> [0, TRIG_LUT_SIZE)
+	float t = radians * ((float)TRIG_LUT_SIZE / (2.0f * (float)M_PI));
+	int idx = (int)t;
+	idx &= (int)TRIG_LUT_MASK;
+	return (unsigned)idx;
+}
 
 sdk_game_info("krecdoom", &image_cover_png);
 
@@ -177,152 +228,141 @@ static uint16_t rgb565_darken(uint16_t color, float factor)
 
 static void renderGame()
 {
-	// Draw floor and ceiling
-	for (int y = 0; y < SCREEN_HEIGHT / 2; y++) {
-		for (int x = 0; x < SCREEN_WIDTH; x++) {
-			tft_draw_pixel(x, y, GRAY); // Ceiling
-		}
-	}
-	for (int y = SCREEN_HEIGHT / 2; y < SCREEN_HEIGHT; y++) {
-		for (int x = 0; x < SCREEN_WIDTH; x++) {
-			tft_draw_pixel(x, y, GRAY); // Floor
-		}
-	}
+	trig_init_once();
 
-	float rayAngle;
-
-	// Precompute fixed-point values if not already done
-	if (fixed_tile_size == 0) {
-		fixed_tile_size = float_to_fixed(TILE_SIZE);
-		fixed_max_dist = float_to_fixed(15.0f * TILE_SIZE);
-		fixed_min_shade = float_to_fixed(0.3f);
-		fixed_side_shade = float_to_fixed(0.8f);
-	}
-
+	// Clear depth buffer
 	for (int x = 0; x < SCREEN_WIDTH; x++) {
 		zBuffer[x] = 1e30f;
 	}
 
-	// going each vertical line
-	for (int x = 0; x < SCREEN_WIDTH; x++) {
-		rayAngle = (player.angle - FOV_RADIANS / 2.0f) + (x * (FOV_RADIANS / SCREEN_WIDTH));
+	// Player direction + camera plane from angle (fixed point)
+	unsigned aidx = angle_to_lut(player.angle);
+	fixed_t dirX = cos_lut[aidx];
+	fixed_t dirY = sin_lut[aidx];
+	fixed_t planeX = -fixed_mul(dirY, fixed_plane_scale);
+	fixed_t planeY = fixed_mul(dirX, fixed_plane_scale);
 
-		int Tile_x = (int)(player.x / TILE_SIZE);
-		int Tile_y = (int)(player.y / TILE_SIZE);
+	// Player position in tile units (Q16.16)
+	fixed_t posX = (fixed_t)(player.x * (float)FIXED_SCALE / TILE_SIZE);
+	fixed_t posY = (fixed_t)(player.y * (float)FIXED_SCALE / TILE_SIZE);
 
-		float rayDirX = cosf(rayAngle);
-		float rayDirY = sinf(rayAngle);
+	// Raycast every 2 columns and duplicate to the next column.
+	for (int x = 0; x < SCREEN_WIDTH; x += 2) {
+		int x2 = x + 1;
 
-		float deltaDistX = (rayDirX == 0.0f) ? 1e30f : fabsf(1.0f / rayDirX) * TILE_SIZE;
-		float deltaDistY = (rayDirY == 0.0f) ? 1e30f : fabsf(1.0f / rayDirY) * TILE_SIZE;
+		// cameraX in [-1, +1]
+		fixed_t cameraX = ((2 * x) << FIXED_SHIFT) / (SCREEN_WIDTH - 1) - FIXED_ONE;
 
-		float sideDistX;
-		float sideDistY;
+		fixed_t rayDirX = dirX + fixed_mul(planeX, cameraX);
+		fixed_t rayDirY = dirY + fixed_mul(planeY, cameraX);
 
-		mmap.hit = 0;
+		int mapX = posX >> FIXED_SHIFT;
+		int mapY = posY >> FIXED_SHIFT;
 
-		if (rayDirX < 0.0f) {
-			mmap.step_x = -1;
-			sideDistX = (player.x - Tile_x * TILE_SIZE) * deltaDistX / TILE_SIZE;
+		fixed_t deltaDistX = (rayDirX == 0) ? INT32_MAX / 2 : fixed_abs(fixed_div(FIXED_ONE, rayDirX));
+		fixed_t deltaDistY = (rayDirY == 0) ? INT32_MAX / 2 : fixed_abs(fixed_div(FIXED_ONE, rayDirY));
+
+		fixed_t sideDistX;
+		fixed_t sideDistY;
+
+		int stepX;
+		int stepY;
+		int side;
+
+		if (rayDirX < 0) {
+			stepX = -1;
+			sideDistX = fixed_mul(posX - (mapX << FIXED_SHIFT), deltaDistX);
 		} else {
-			mmap.step_x = 1;
-			sideDistX = ((Tile_x + 1) * TILE_SIZE - player.x) * deltaDistX / TILE_SIZE;
+			stepX = 1;
+			sideDistX = fixed_mul(((mapX + 1) << FIXED_SHIFT) - posX, deltaDistX);
 		}
 
-		if (rayDirY < 0.0f) {
-			mmap.step_y = -1;
-			sideDistY = (player.y - Tile_y * TILE_SIZE) * deltaDistY / TILE_SIZE;
+		if (rayDirY < 0) {
+			stepY = -1;
+			sideDistY = fixed_mul(posY - (mapY << FIXED_SHIFT), deltaDistY);
 		} else {
-			mmap.step_y = 1;
-			sideDistY = ((Tile_y + 1) * TILE_SIZE - player.y) * deltaDistY / TILE_SIZE;
+			stepY = 1;
+			sideDistY = fixed_mul(((mapY + 1) << FIXED_SHIFT) - posY, deltaDistY);
 		}
 
-		while (mmap.hit == 0) {
+		// DDA
+		for (;;) {
 			if (sideDistX < sideDistY) {
 				sideDistX += deltaDistX;
-				Tile_x += mmap.step_x;
-				mmap.side = 0;
+				mapX += stepX;
+				side = 0;
 			} else {
 				sideDistY += deltaDistY;
-				Tile_y += mmap.step_y;
-				mmap.side = 1;
+				mapY += stepY;
+				side = 1;
 			}
 
-			if (isWall(Tile_x, Tile_y)) {
-				mmap.hit = 1;
-			}
+			if (isWall(mapX, mapY))
+				break;
 		}
 
-		float perpWallDist;
-		if (mmap.side == 0) {
-			perpWallDist = (sideDistX - deltaDistX);
-		} else {
-			perpWallDist = (sideDistY - deltaDistY);
-		}
-		perpWallDist *= cosf(rayAngle - player.angle);
+		fixed_t perpDist = (side == 0) ? (sideDistX - deltaDistX) : (sideDistY - deltaDistY);
+		if (perpDist < 1)
+			perpDist = 1;
 
-		if (perpWallDist < 0.001f)
-			perpWallDist = 0.001f;
+		// Convert to world units for z-buffer / shading
+		fixed_t perpDistWorld = fixed_mul(perpDist, fixed_tile_size);
+		if (perpDistWorld < 1)
+			perpDistWorld = 1;
 
-		// Store in zBuffer
-		zBuffer[x] = perpWallDist;
+		float z = fixed_to_float(perpDistWorld);
+		zBuffer[x] = z;
+		if (x2 < SCREEN_WIDTH)
+			zBuffer[x2] = z;
 
-		float wallHeight = (TILE_SIZE * PROJECTION_PLANE_DISTANCE / perpWallDist);
+		// Project wall height (fixed -> int pixels)
+		fixed_t wallHeight_fixed =
+			fixed_div(fixed_mul(fixed_tile_size, fixed_proj_plane_dist), perpDistWorld);
+		int wallHeight = wallHeight_fixed >> FIXED_SHIFT;
+		if (wallHeight < 1)
+			wallHeight = 1;
 
-		int drawStart = (int)((SCREEN_HEIGHT / 2.0f) - (wallHeight / 2.0f));
-		int drawEnd = (int)((SCREEN_HEIGHT / 2.0f) + (wallHeight / 2.0f));
+		int drawStart = (SCREEN_HEIGHT / 2) - (wallHeight / 2);
+		int drawEnd = (SCREEN_HEIGHT / 2) + (wallHeight / 2);
 
 		if (drawStart < 0)
 			drawStart = 0;
 		if (drawEnd >= SCREEN_HEIGHT)
 			drawEnd = SCREEN_HEIGHT - 1;
 
-		int wallType = currentMap[Tile_y][Tile_x] - 1;
+		int wallType = currentMap[mapY][mapX] - 1;
 		if (wallType <= 0)
 			wallType = 0;
-
-		float wallX;
-		if (mmap.side == 0) {
-			float rayDist = perpWallDist / cosf(rayAngle - player.angle);
-			wallX = player.y + rayDist * rayDirY;
-		} else {
-			float rayDist = perpWallDist / cosf(rayAngle - player.angle);
-			wallX = player.x + rayDist * rayDirX;
-		}
-		wallX /= TILE_SIZE;
-		wallX -= floorf(wallX);
 
 		int texWidth = Textures[wallType].w;
 		int texHeight = Textures[wallType].h;
 
-		int texX = (int)(wallX * (float)texWidth);
-		if ((mmap.side == 0 && rayDirX > 0) || (mmap.side == 1 && rayDirY < 0)) {
+		// wallX is the exact point of impact in tile units
+		fixed_t wallX = (side == 0) ? (posY + fixed_mul(perpDist, rayDirY)) : (posX + fixed_mul(perpDist, rayDirX));
+		fixed_t wallXFrac = wallX & (FIXED_ONE - 1);
+
+		int texX = (int)(((int64_t)wallXFrac * texWidth) >> FIXED_SHIFT);
+		if ((side == 0 && rayDirX > 0) || (side == 1 && rayDirY < 0)) {
 			texX = texWidth - texX - 1;
 		}
 
-		float step = 1.0f * texHeight / wallHeight;
-		float texPos = (drawStart - SCREEN_HEIGHT / 2.0f + wallHeight / 2.0f) * step;
+		// Texture stepping in fixed
+		fixed_t step = (fixed_t)(((int64_t)texHeight << FIXED_SHIFT) / wallHeight);
+		fixed_t texPos = (fixed_t)(((int64_t)(drawStart - SCREEN_HEIGHT / 2 + wallHeight / 2) * step));
 
-		fixed_t perpWallDist_fixed = float_to_fixed(perpWallDist);
-
-		fixed_t shade = FIXED_SCALE - fixed_div(perpWallDist_fixed, fixed_max_dist);
-
-		if (shade < fixed_min_shade) {
+		// Distance-based shade in fixed (world units)
+		fixed_t shade = FIXED_SCALE - fixed_div(perpDistWorld, fixed_max_dist);
+		if (shade < fixed_min_shade)
 			shade = fixed_min_shade;
-		}
-
-		if (mmap.side == 1) {
+		if (side == 1)
 			shade = fixed_mul(shade, fixed_side_shade);
-		}
-
 		int shade_int = (shade >> 8) & 0xFFFF;
 
 		for (int y = drawStart; y <= drawEnd; y++) {
-			int texY = (int)texPos & (texHeight - 1);
+			int texY = (texPos >> FIXED_SHIFT) & (texHeight - 1);
 			texPos += step;
 
 			int pixelIndex = texY * 3 * texWidth + texX * 3;
-
 			int r = Textures[wallType].name[pixelIndex + 0];
 			int g = Textures[wallType].name[pixelIndex + 1];
 			int b = Textures[wallType].name[pixelIndex + 2];
@@ -338,13 +378,15 @@ static void renderGame()
 			if (b > 255)
 				b = 255;
 
-			tft_draw_pixel(x, y, rgb_to_rgb565(r, g, b));
+			color_t c = rgb_to_rgb565(r, g, b);
+			tft_draw_pixel(x, y, c);
+			if (x2 < SCREEN_WIDTH)
+				tft_draw_pixel(x2, y, c);
 		}
 	}
 
-	// Draw enemies
+	// Draw enemies / pickups using existing code (zBuffer remains in world units)
 	renderEnemies();
-
 	renderPickups();
 
 	// Draw crosshair
@@ -1725,13 +1767,15 @@ void game_paint(unsigned dt_usec)
 {
 	float dt = dt_usec / 1000000.0f;
 
-	tft_fill(0);
 	switch (game_state) {
 	case GAME_MENU:
+		tft_fill(0);
 		render_menu(dt);
 		break;
 
 	case GAME_PLAYING:
+		// Fast clear (fills the framebuffer, actual LCD update is handled by the SDK swap)
+		tft_fill(GRAY);
 		renderGame();
 		if (mode.debug) {
 			debug();
@@ -1740,6 +1784,7 @@ void game_paint(unsigned dt_usec)
 		break;
 
 	case GAME_DEAD:
+		tft_fill(GRAY);
 		renderGame(); // Still render the game world in background
 		render_dead_state();
 		break;
