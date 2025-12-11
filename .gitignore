@@ -8,4 +8,5 @@
 _autosave-*
 *-backups/
 *.lck
+WARP.md
 /src/*/saves/
