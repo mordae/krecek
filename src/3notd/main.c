@@ -45,9 +45,9 @@
 #include "assets/T_17.h"
 #include "assets/T_18.h"
 #include "assets/T_19.h"
-int numText = 19; //number of assets
-int numSect = 0;  //number of sectors
-int numWall = 0;  //number of walls
+int numText = 20;
+int numSect = 0;
+int numWall = 0;
 
 //------------------------------------------------------------------------------
 
@@ -89,7 +89,39 @@ static sectors S[128];
 static player P;
 static math M;
 static void textures_load();
+static void load_sectors()
+{
+	FILE *fp = fopen("level.h", "r");
+	if (fp == NULL) {
+		printf("OH NOO AN ERROR level.h");
+		return;
+	}
+	int s, w;
 
+	fscanf(fp, "%i", &numSect);   //number of sectors
+	for (s = 0; s < numSect; s++) //load all sectors
+	{
+		fscanf(fp, "%i", &S[s].ws);
+		fscanf(fp, "%i", &S[s].we);
+		fscanf(fp, "%i", &S[s].z1);
+		fscanf(fp, "%i", &S[s].z2);
+		fscanf(fp, "%i", &S[s].st);
+		fscanf(fp, "%i", &S[s].ss);
+	}
+	fscanf(fp, "%i", &numWall);   //number of walls
+	for (s = 0; s < numWall; s++) //load all walls
+	{
+		fscanf(fp, "%i", &W[s].x1);
+		fscanf(fp, "%i", &W[s].y1);
+		fscanf(fp, "%i", &W[s].x2);
+		fscanf(fp, "%i", &W[s].y2);
+		fscanf(fp, "%i", &W[s].wt);
+		fscanf(fp, "%i", &W[s].u);
+		fscanf(fp, "%i", &W[s].v);
+		fscanf(fp, "%i", &W[s].shade);
+	}
+	fclose(fp);
+}
 static void load()
 {
 	FILE *fp = fopen("level.h", "r");
@@ -174,6 +206,10 @@ void game_input(unsigned dt_usec)
 	}
 	//moving
 
+	if (sdk_inputs_delta.aux[1] == 1) {
+		load_sectors();
+	}
+
 	if (sdk_inputs.joy_y < -500 && sdk_inputs.start == 0 && sdk_inputs.select == 0) {
 		printf("moving forward\n");
 		P.x += dx;
@@ -231,59 +267,6 @@ static void clipBehindPlayer(int *x1, int *y1, int *z1, int x2, int y2, int z2) 
 		*y1 = 1;
 	} //prevent divide by zero
 	*z1 = *z1 + s * (z2 - (*z1));
-}
-static void floors()
-{
-	int x, y;
-	int xo = TFT_WIDTH2;
-	int yo = TFT_HEIGHT2;
-	float lookUpDown = -P.l * 4;
-	if (lookUpDown > TFT_HEIGHT) {
-		lookUpDown = TFT_HEIGHT;
-	}
-	if (lookUpDown < -TFT_HEIGHT) {
-		lookUpDown = -TFT_HEIGHT;
-	}
-	float moveUpDown = P.z / 16.f;
-	if (moveUpDown == 0) {
-		moveUpDown = 0.001;
-	}
-
-	int ys = yo;
-	int ye = -lookUpDown;
-	if (moveUpDown < 0) {
-		ys = -lookUpDown;
-		ye = -yo + lookUpDown;
-	}
-	for (y = ye; y < ys; y++) {
-		for (x = -xo; x < xo; x++) {
-			float z = y + lookUpDown;
-			if (z == 0) {
-				z = 0.0001;
-			}
-			float fx = x / z * moveUpDown;
-			float fy = FOV / z * moveUpDown;
-
-			float ry = fx * M.sin[P.a] - fy * M.cos[P.a] + (-P.y / 30.0);
-			float rx = fx * M.cos[P.a] + fy * M.sin[P.a] + (P.x / 30.0);
-
-			if (rx < 0) {
-				rx = -rx + 1;
-			}
-			if (ry < 0) {
-				ry = -ry + 1;
-			}
-
-			if (rx < 0 || ry < 0 || rx > 5 || ry > 5) {
-				continue;
-			}
-			if ((int)rx % 2 == (int)ry % 2) {
-				drawpixel(x + xo, y + yo, 255, 0, 0);
-			} else {
-				drawpixel(x + xo, y + yo, 0, 255, 0);
-			}
-		}
-	}
 }
 static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int w, int frontBack)
 {
@@ -371,15 +354,97 @@ static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int 
 			ht += ht_step;
 		}
 		if (frontBack == 1) {
+			int sector_index = s;
+			int tex_index = S[sector_index].st;
+			if (tex_index < 0 || tex_index >= numText) {
+				continue;
+			}
+
+			const TexureMaps *tex = &Textures[tex_index];
+			float tile = (float)S[sector_index].ss * 7.0f; // how big the tiles are
+			if (tile <= 0.0f) {
+				tile = 7.0f;
+			}
+
+			int xo = TFT_WIDTH2;  // x offset (screen center)
+			int yo = TFT_HEIGHT2; // y offset (screen center)
+			float fov = FOV;      // field of view
+			int x2 = x - xo;      // screen x relative to center
+
+			int wo = 0; // world floor/ceiling height reference
 			if (S[s].surface == 1) {
+				// bottom surface (floor)
 				y2 = S[s].surf[x];
+				wo = S[s].z1;
 			}
 			if (S[s].surface == 2) {
+				// top surface (ceiling)
 				y1 = S[s].surf[x];
+				wo = S[s].z2;
 			}
-			for (y = y1; y < y2; y++) {
-				drawpixel(x, y, 255, 0, 0);
-			} //normal wall
+
+			float lookUpDown = -P.l * 6.2f;
+			if (lookUpDown > TFT_HEIGHT) {
+				lookUpDown = TFT_HEIGHT;
+			}
+			if (lookUpDown < -TFT_HEIGHT) {
+				lookUpDown = -TFT_HEIGHT;
+			}
+
+			// Player height relative to the floor/ceiling plane.
+			float moveUpDown = (float)(P.z - wo) / (float)yo;
+			if (moveUpDown == 0.0f) {
+				moveUpDown = 0.001f;
+			}
+
+			int ys = y1 - yo;
+			int ye = y2 - yo;
+
+			for (y = ys; y < ye; y++) {
+				float z = y + lookUpDown;
+				if (z == 0.0f) {
+					z = 0.0001f;
+				}
+
+				// World floor/ceiling coordinates before rotation.
+				float fx = x2 / z * moveUpDown * tile;
+				float fy = fov / z * moveUpDown * tile;
+
+				// Rotate and offset by player position (matching the example).
+				float rx = fx * M.sin[P.a] - fy * M.cos[P.a] + (P.y / 60.0f * tile);
+				float ry = fx * M.cos[P.a] + fy * M.sin[P.a] - (P.x / 60.0f * tile);
+
+				// Remove negative values as in the example.
+				if (rx < 0.0f) {
+					rx = -rx + 1.0f;
+				}
+				if (ry < 0.0f) {
+					ry = -ry + 1.0f;
+				}
+
+				// Map to texture coordinates.
+				int tw = tex->w;
+				int th = tex->h;
+				if (tw <= 0 || th <= 0) {
+					continue;
+				}
+
+				int u = (int)rx;
+				int v = (int)ry;
+				u = (u % tw + tw) % tw;
+				v = (v % th + th) % th;
+
+				int pixel = v * 3 * tw + u * 3;
+				int r = tex->name[pixel + 0];
+				int g = tex->name[pixel + 1];
+				int b = tex->name[pixel + 2];
+
+				int sy = y + yo;
+				int sx = x2 + xo;
+				if (sx >= 0 && sx < TFT_WIDTH && sy >= 0 && sy < TFT_HEIGHT) {
+					drawpixel(sx, sy, r, g, b);
+				}
+			} // textured floor/ceiling
 		}
 	}
 }
@@ -388,10 +453,48 @@ static int dist(int x1, int y1, int x2, int y2)
 	int distance = sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 	return distance;
 }
+
+// Recompute per-sector distances from the current player position
+// so we can sort and draw sectors in correct back-to-front order
+// in the same frame.
+static void update_sector_distances(void)
+{
+	float CS = M.cos[P.a], SN = M.sin[P.a];
+
+	for (int s = 0; s < numSect; s++) {
+		// Compute a view-space depth for the sector based on the average
+		// Y coordinate (along the view direction) of its wall midpoints.
+		float sum_depth = 0.0f;
+		int count = 0;
+
+		for (int w = S[s].ws; w < S[s].we; w++) {
+			int x1 = W[w].x1 - P.x, y1 = W[w].y1 - P.y;
+			int x2 = W[w].x2 - P.x, y2 = W[w].y2 - P.y;
+
+			int wx0 = x1 * CS - y1 * SN;
+			int wy0 = y1 * CS + x1 * SN;
+			int wx1 = x2 * CS - y2 * SN;
+			int wy1 = y2 * CS + x2 * SN;
+
+			int mid_y = (wy0 + wy1) / 2;
+			sum_depth += (float)mid_y;
+			count++;
+		}
+
+		if (count > 0) {
+			S[s].d = sum_depth / (float)count;
+		} else {
+			S[s].d = 0.0f;
+		}
+	}
+}
 static void draw_3d(void)
 {
 	int x, s, w, frontBack, cycles, wx[4], wy[4], wz[4];
 	float CS = M.cos[P.a], SN = M.sin[P.a];
+
+	// First compute current distances for all sectors.
+	update_sector_distances();
 	//oreder sectors
 	for (s = 0; s < numSect - 1; s++) {
 		for (w = 0; w < numSect - s - 1; w++) {
@@ -405,7 +508,6 @@ static void draw_3d(void)
 
 	//draw sectors
 	for (s = 0; s < numSect; s++) {
-		S[s].d = 0;
 		if (P.z < S[s].z1) {
 			S[s].surface = 1;
 			cycles = 2;
@@ -447,7 +549,6 @@ static void draw_3d(void)
 				wy[1] = y2 * CS + x2 * SN;
 				wy[2] = wy[0];
 				wy[3] = wy[1];
-				S[s].d += dist(0, 0, (wx[0] + wx[1]) / 2, (wy[0] + wy[1]) / 2);
 
 				wz[0] = S[s].z1 - P.z + ((P.l * wy[0]) / 32.0);
 				wz[1] = S[s].z1 - P.z + ((P.l * wy[1]) / 32.0);
@@ -493,7 +594,6 @@ void game_paint(unsigned dt_usec)
 	(void)dt_usec;
 	tft_fill(0);
 	draw_3d();
-	floors();
 	//testTextures(4);
 }
 static void textures_load()
