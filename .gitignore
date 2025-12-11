@@ -9,4 +9,5 @@ _autosave-*
 *-backups/
 *.lck
 WARP.md
+New-game.py
 /src/*/saves/
