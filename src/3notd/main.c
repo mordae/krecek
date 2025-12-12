@@ -583,7 +583,7 @@ static void draw_3d(void)
 void game_paint(unsigned dt_usec)
 {
 	(void)dt_usec;
-	tft_fill(0);
+	tft_fill(rgb_to_rgb565(0, 60, 130));
 	draw_3d();
 	//testTextures(4);
 }
