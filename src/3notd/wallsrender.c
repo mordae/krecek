@@ -21,8 +21,6 @@
 #include "assets/T_18.h"
 #include "assets/T_19.h"
 
-#include <stdio.h>
-
 extern void drawpixel(int x, int y, int r, int g, int b);
 
 static void clipBehindPlayer(int *x1, int *y1, int *z1, int x2, int y2, int z2) //clip line

@@ -186,7 +186,6 @@ static Mode mode;
 static Bullet bullet;
 static MuzzleFlash muzzle_flash;
 static PickupMessage pickup_msg;
-static MMap mmap;
 static TexureMaps Textures[64];
 static GameState game_state = GAME_MENU;
 static bool collected_pickups[MAP_ROWS][MAP_COLS];
@@ -199,7 +198,6 @@ static void shootBullet(float start_angle, float max_range_tiles, int visual_siz
 			uint16_t visual_color);
 static void Map_starter(const TileType map[MAP_ROWS][MAP_COLS]);
 static void handleShooting();
-static bool Can_shot(float dt);
 static void map_starter_caller();
 static void textures_load();
 static void handlePickup(int tile_x, int tile_y);
@@ -213,18 +211,6 @@ static void initEnemies();
 static void spawnEnemy(float x, float y, int health);
 static void updateEnemies(float dt);
 static void renderEnemies();
-static uint16_t rgb565_darken(uint16_t color, float factor)
-{
-	uint8_t r = (color >> 11) & 0x1F;
-	uint8_t g = (color >> 5) & 0x3F;
-	uint8_t b = color & 0x1F;
-
-	r = (uint8_t)(r * factor);
-	g = (uint8_t)(g * factor);
-	b = (uint8_t)(b * factor);
-
-	return (r << 11) | (g << 5) | b;
-}
 
 static void renderGame()
 {
@@ -259,8 +245,10 @@ static void renderGame()
 		int mapX = posX >> FIXED_SHIFT;
 		int mapY = posY >> FIXED_SHIFT;
 
-		fixed_t deltaDistX = (rayDirX == 0) ? INT32_MAX / 2 : fixed_abs(fixed_div(FIXED_ONE, rayDirX));
-		fixed_t deltaDistY = (rayDirY == 0) ? INT32_MAX / 2 : fixed_abs(fixed_div(FIXED_ONE, rayDirY));
+		fixed_t deltaDistX = (rayDirX == 0) ? INT32_MAX / 2 :
+						      fixed_abs(fixed_div(FIXED_ONE, rayDirX));
+		fixed_t deltaDistY = (rayDirY == 0) ? INT32_MAX / 2 :
+						      fixed_abs(fixed_div(FIXED_ONE, rayDirY));
 
 		fixed_t sideDistX;
 		fixed_t sideDistY;
@@ -301,7 +289,8 @@ static void renderGame()
 				break;
 		}
 
-		fixed_t perpDist = (side == 0) ? (sideDistX - deltaDistX) : (sideDistY - deltaDistY);
+		fixed_t perpDist = (side == 0) ? (sideDistX - deltaDistX) :
+						 (sideDistY - deltaDistY);
 		if (perpDist < 1)
 			perpDist = 1;
 
@@ -338,7 +327,8 @@ static void renderGame()
 		int texHeight = Textures[wallType].h;
 
 		// wallX is the exact point of impact in tile units
-		fixed_t wallX = (side == 0) ? (posY + fixed_mul(perpDist, rayDirY)) : (posX + fixed_mul(perpDist, rayDirX));
+		fixed_t wallX = (side == 0) ? (posY + fixed_mul(perpDist, rayDirY)) :
+					      (posX + fixed_mul(perpDist, rayDirX));
 		fixed_t wallXFrac = wallX & (FIXED_ONE - 1);
 
 		int texX = (int)(((int64_t)wallXFrac * texWidth) >> FIXED_SHIFT);
@@ -348,7 +338,8 @@ static void renderGame()
 
 		// Texture stepping in fixed
 		fixed_t step = (fixed_t)(((int64_t)texHeight << FIXED_SHIFT) / wallHeight);
-		fixed_t texPos = (fixed_t)(((int64_t)(drawStart - SCREEN_HEIGHT / 2 + wallHeight / 2) * step));
+		fixed_t texPos = (fixed_t)((
+			(int64_t)(drawStart - SCREEN_HEIGHT / 2 + wallHeight / 2) * step));
 
 		// Distance-based shade in fixed (world units)
 		fixed_t shade = FIXED_SCALE - fixed_div(perpDistWorld, fixed_max_dist);
@@ -1794,29 +1785,29 @@ void game_paint(unsigned dt_usec)
 static void textures_load()
 {
 	for (int i = 0; i < 19; i++) {
-		Textures[i].name = texture_names[i];
+		Textures[i].name = (const unsigned char *)texture_names[i];
 		Textures[i].h = texture_heights[i];
 		Textures[i].w = texture_widths[i];
 	}
 
 	// Load enemy textures - using the exact array names from your headers
-	Textures[TEX_ENEMY1].name = TTE_00; // ENEMY1 texture
+	Textures[TEX_ENEMY1].name = (const unsigned char *)TTE_00; // ENEMY1 texture
 	Textures[TEX_ENEMY1].w = TTE_00_WIDTH;
 	Textures[TEX_ENEMY1].h = TTE_00_HEIGHT;
 
-	Textures[TEX_ENEMY2].name = TTE_01; // ENEMY2 texture
+	Textures[TEX_ENEMY2].name = (const unsigned char *)TTE_01; // ENEMY2 texture
 	Textures[TEX_ENEMY2].w = TTE_01_WIDTH;
 	Textures[TEX_ENEMY2].h = TTE_01_HEIGHT;
 
-	Textures[TEX_HEALTH_PICKUP].name = TTO_00; // Health pickup
+	Textures[TEX_HEALTH_PICKUP].name = (const unsigned char *)TTO_00; // Health pickup
 	Textures[TEX_HEALTH_PICKUP].w = TTO_00_WIDTH;
 	Textures[TEX_HEALTH_PICKUP].h = TTO_00_HEIGHT;
 
-	Textures[TEX_AMMO_PICKUP].name = TTO_01; // Ammo pickup
+	Textures[TEX_AMMO_PICKUP].name = (const unsigned char *)TTO_01; // Ammo pickup
 	Textures[TEX_AMMO_PICKUP].w = TTO_01_WIDTH;
 	Textures[TEX_AMMO_PICKUP].h = TTO_01_HEIGHT;
 
-	Textures[TEX_SHOTGUN_PICKUP].name = TTO_02; // Shotgun pickup
+	Textures[TEX_SHOTGUN_PICKUP].name = (const unsigned char *)TTO_02; // Shotgun pickup
 	Textures[TEX_SHOTGUN_PICKUP].w = TTO_02_WIDTH;
 	Textures[TEX_SHOTGUN_PICKUP].h = TTO_02_HEIGHT;
 }

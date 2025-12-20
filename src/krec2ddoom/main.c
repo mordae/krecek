@@ -139,12 +139,8 @@ typedef struct {
 } Menu;
 
 typedef struct {
-	float y;
-} Files;
-
-typedef struct {
-	char *name;
-	char *file_path;
+	const char *name;
+	const char *file_path;
 	float timer;
 	bool chosen;
 } Edited_File;
@@ -167,7 +163,6 @@ typedef struct {
 } TexureMaps;
 
 static Camera C;
-static Files file;
 static Edited_File edited_file;
 static sprites S;
 static TM tm;
@@ -290,7 +285,7 @@ static void draw_texture(int x, int y, int t)
 static void textures_load()
 {
 	for (int i = 0; i < 19; i++) {
-		Textures[i].name = texture_names[i];
+		Textures[i].name = (const unsigned char *)texture_names[i];
 		Textures[i].h = texture_heights[i];
 		Textures[i].w = texture_widths[i];
 	}
@@ -679,6 +674,7 @@ static void update_host_krecdoom_cmakelists(int total_maps)
 	fclose(host_cmake);
 	printf("Updated host krecdoom CMakeLists.txt\n");
 }
+
 static void update_krecdoom_include_maps(int total_maps)
 {
 	FILE *file = fopen("../krecdoom/include_maps.h", "w");
@@ -686,27 +682,24 @@ static void update_krecdoom_include_maps(int total_maps)
 		printf("Failed to create ../krecdoom/include_maps.h\n");
 		return;
 	}
-	fprintf(file, "#pragma once  \n");
-	fprintf(file, "#include \"maps.h\"  \n");
-	fprintf(file, "  \n");
+	fprintf(file, "#pragma once\n");
+	fprintf(file, "#include \"maps.h\"\n\n");
+
 	for (int i = 1; i <= total_maps; i++) {
 		fprintf(file, "extern const TileType maps_map%d[MAP_ROWS][MAP_COLS];\n", i);
 	}
-	fprintf(file, "                                                              "
-		      "                                           \n");
+
+	fprintf(file, "\n#define FILE_NUM %d\n\n", total_maps);
+
+	// Added the attribute here to suppress the "defined but not used" warning
 	fprintf(file,
-		"#define FILE_NUM %d                                                 "
-		"                                      \n",
-		total_maps);
-	fprintf(file, "                                                              "
-		      "                                           \n");
-	fprintf(file, "static const TileType (*FILES[FILE_NUM])[MAP_COLS] = {        "
-		      "                                           \n");
+		"static const TileType (*FILES[FILE_NUM])[MAP_COLS] __attribute__((unused)) = {\n");
+
 	for (int i = 1; i <= total_maps; i++) {
 		if (i == total_maps) {
-			fprintf(file, "        maps_map%d\n", i);
+			fprintf(file, "    maps_map%d\n", i);
 		} else {
-			fprintf(file, "        maps_map%d,\n", i);
+			fprintf(file, "    maps_map%d,\n", i);
 		}
 	}
 	fprintf(file, "};\n");
@@ -850,8 +843,8 @@ static void delete_selected_map(int map_index)
 		return;
 	}
 
-	char *map_name = FILES_NAME[map_index];
-	char *map_path = FILES_PATH[map_index];
+	const char *map_name = FILES_NAME[map_index];
+	const char *map_path = FILES_PATH[map_index];
 	printf("Deleting map: %s (%s)\n", map_name, map_path);
 
 	// Delete the map file
@@ -1087,7 +1080,7 @@ void game_paint(unsigned dt_usec)
 		tft_draw_string(40, 10, WHITE, "FILE");
 		tft_draw_string(40, 40, WHITE, "New File");
 		tft_draw_string(40, 55, WHITE, "Delete File");
-		tft_draw_string(40, 70, WHITE, "");
+		//tft_draw_string(40, 70, WHITE, "");
 		sdk_draw_sprite(&S.a);
 		draw_small_string(151, 112, "7");
 		draw_small_string(143, 112, "0");
@@ -1243,6 +1236,9 @@ static void ui_editor()
 
 	case THIRD:
 		num_status = 3;
+		break;
+	default:
+		num_status = 0;
 		break;
 	}
 	draw_small_string(1, 2, "%i", num_status);
