@@ -1,6 +1,4 @@
-#pragma once
 #include <tft.h>
-#include <stdio.h>
 void drawpixel(int x, int y, int r, int g, int b) //draw a pixel at x/y with rgb
 {
 	uint16_t color = rgb_to_rgb565(r, g, b);

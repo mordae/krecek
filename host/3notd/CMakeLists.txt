@@ -1,6 +1,8 @@
 add_executable(
   3notd
   ../../src/3notd/main.c
+  ../../src/3notd/wallsrender.c
+  ../../src/3notd/pixel.c
 )
 
 generate_png_headers()
