@@ -601,6 +601,7 @@ static void update_krecdoom_cmakelists(int total_maps)
 		fprintf(target_cmake, "    krecdoom\n");
 		fprintf(target_cmake, "    main.c\n");
 		fprintf(target_cmake, "    extras/volume.c\n");
+		fprintf(target_cmake, "    draw_wall_column.S\n");
 		for (int i = 1; i <= total_maps; i++) {
 			fprintf(target_cmake, "    maps/map%d.c\n", i);
 		}
@@ -655,6 +656,7 @@ static void update_host_krecdoom_cmakelists(int total_maps)
 	fprintf(host_cmake, "  krecdoom\n");
 	fprintf(host_cmake, "  ../../src/krecdoom/main.c\n");
 	fprintf(host_cmake, "  ../../src/krecdoom/extras/textures.c\n");
+	fprintf(host_cmake, "  ../../src/krecdoom/render_asm.S\n");
 	for (int i = 1; i <= total_maps; i++) {
 		fprintf(host_cmake, "  ../../src/krecdoom/maps/map%d.c\n", i);
 	}

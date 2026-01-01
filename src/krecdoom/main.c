@@ -1487,7 +1487,9 @@ static void map_starter_caller()
 static void Map_starter(const TileType map[MAP_ROWS][MAP_COLS])
 {
 	player.angle = (float)M_PI / 2.0f;
-	player.ammo = 15;
+	if (player.ammo < 15) {
+		player.ammo = 15;
+	}
 	player.alive = true;
 
 	bullet.hit_visible = false;
