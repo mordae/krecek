@@ -6,6 +6,7 @@ add_executable(
   ../../src/krecdoom/maps/map2.c
   ../../src/krecdoom/maps/map3.c
   ../../src/krecdoom/maps/map4.c
+  draw_wall_column.S
 )
 
 generate_png_headers()

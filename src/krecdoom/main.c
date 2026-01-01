@@ -212,6 +212,14 @@ static void spawnEnemy(float x, float y, int health);
 static void updateEnemies(float dt);
 static void renderEnemies();
 
+extern void draw_wall_column_asm(int x, int y_start, int y_end, uint32_t tex_pos, uint32_t step,
+				 const uint8_t *tex_data, int tex_width, int tex_height, int tex_x,
+				 int shade_int, int x2);
+
+extern void draw_sprite_column_asm(int x, int y_start, int y_end, uint32_t tex_pos, uint32_t step,
+				   const uint8_t *tex_data, int tex_width, int tex_height,
+				   int tex_x, int shade_int, int is_hurt);
+
 static void renderGame()
 {
 	trig_init_once();
@@ -349,31 +357,8 @@ static void renderGame()
 			shade = fixed_mul(shade, fixed_side_shade);
 		int shade_int = (shade >> 8) & 0xFFFF;
 
-		for (int y = drawStart; y <= drawEnd; y++) {
-			int texY = (texPos >> FIXED_SHIFT) & (texHeight - 1);
-			texPos += step;
-
-			int pixelIndex = texY * 3 * texWidth + texX * 3;
-			int r = Textures[wallType].name[pixelIndex + 0];
-			int g = Textures[wallType].name[pixelIndex + 1];
-			int b = Textures[wallType].name[pixelIndex + 2];
-
-			r = (r * shade_int) >> 8;
-			g = (g * shade_int) >> 8;
-			b = (b * shade_int) >> 8;
-
-			if (r > 255)
-				r = 255;
-			if (g > 255)
-				g = 255;
-			if (b > 255)
-				b = 255;
-
-			color_t c = rgb_to_rgb565(r, g, b);
-			tft_draw_pixel(x, y, c);
-			if (x2 < SCREEN_WIDTH)
-				tft_draw_pixel(x2, y, c);
-		}
+		draw_wall_column_asm(x, drawStart, drawEnd, texPos, step, Textures[wallType].name,
+				     texWidth, texHeight, texX, shade_int, x2);
 	}
 
 	// Draw enemies / pickups using existing code (zBuffer remains in world units)
@@ -1284,64 +1269,28 @@ static void renderEnemies()
 			bool is_hurt = enemies[i].state == ENEMY_HURT;
 
 			// Draw the enemy texture with depth testing and transparency
-			for (int y_pixel = y_loop_start; y_pixel < y_loop_end; y_pixel++) {
-				for (int x_pixel = x_loop_start; x_pixel < x_loop_end; x_pixel++) {
-					// Only draw if enemy is closer than wall at this x position
-					if (distToEnemy < zBuffer[x_pixel]) {
-						// Calculate texture coordinates
-						float texX = (float)(x_pixel - draw_x_start) /
-							     enemy_draw_size;
-						float texY = (float)(y_pixel - draw_y_start) /
-							     enemy_draw_size;
+			fixed_t step =
+				(fixed_t)(((int64_t)texHeight << FIXED_SHIFT) / enemy_draw_size);
 
-						int tex_x = (int)(texX * texWidth);
-						int tex_y = (int)(texY * texHeight);
+			for (int x_pixel = x_loop_start; x_pixel < x_loop_end; x_pixel++) {
+				// Only draw if enemy is closer than wall at this x position
+				if (distToEnemy < zBuffer[x_pixel]) {
+					int tex_x = ((x_pixel - draw_x_start) * texWidth) /
+						    enemy_draw_size;
+					if (tex_x < 0)
+						tex_x = 0;
+					if (tex_x >= texWidth)
+						tex_x = texWidth - 1;
 
-						// Ensure texture coordinates are within bounds
-						if (tex_x < 0)
-							tex_x = 0;
-						if (tex_x >= texWidth)
-							tex_x = texWidth - 1;
-						if (tex_y < 0)
-							tex_y = 0;
-						if (tex_y >= texHeight)
-							tex_y = texHeight - 1;
+					fixed_t tex_pos =
+						(fixed_t)((int64_t)(y_loop_start - draw_y_start) *
+							  step);
 
-						// Get pixel from texture
-						int pixelIndex = tex_y * 3 * texWidth + tex_x * 3;
-
-						int r = Textures[texIndex].name[pixelIndex + 0];
-						int g = Textures[texIndex].name[pixelIndex + 1];
-						int b = Textures[texIndex].name[pixelIndex + 2];
-
-						// Check for transparency (magenta: 255, 60, 255) - exact match from your files
-						if (r == TRANS_R && g == TRANS_G && b == TRANS_B) {
-							continue; // Skip transparent pixels
-						}
-
-						// Apply red tint if enemy is hurt
-						if (is_hurt) {
-							// Boost red, reduce green and blue for hurt effect
-							r = (r + 100 > 255) ? 255 : r + 100;
-							g = g / 2;
-							b = b / 2;
-						}
-
-						// Apply distance shading
-						r = (r * shade_int) >> 8;
-						g = (g * shade_int) >> 8;
-						b = (b * shade_int) >> 8;
-
-						if (r > 255)
-							r = 255;
-						if (g > 255)
-							g = 255;
-						if (b > 255)
-							b = 255;
-
-						tft_draw_pixel(x_pixel, y_pixel,
-							       rgb_to_rgb565(r, g, b));
-					}
+					draw_sprite_column_asm(x_pixel, y_loop_start,
+							       y_loop_end - 1, tex_pos, step,
+							       Textures[texIndex].name, texWidth,
+							       texHeight, tex_x, shade_int,
+							       is_hurt ? 1 : 0);
 				}
 			}
 
@@ -1465,56 +1414,27 @@ static void renderPickups()
 			int shade_int = (shade >> 8) & 0xFFFF;
 
 			// Draw the pickup texture with depth testing and transparency
-			for (int y_pixel = y_loop_start; y_pixel < y_loop_end; y_pixel++) {
-				for (int x_pixel = x_loop_start; x_pixel < x_loop_end; x_pixel++) {
-					// Only draw if pickup is closer than wall at this x position
-					if (distToPickup < zBuffer[x_pixel]) {
-						// Calculate texture coordinates
-						float texX = (float)(x_pixel - draw_x_start) /
-							     pickup_draw_size;
-						float texY = (float)(y_pixel - draw_y_start) /
-							     pickup_draw_size;
+			fixed_t step =
+				(fixed_t)(((int64_t)texHeight << FIXED_SHIFT) / pickup_draw_size);
 
-						int tex_x = (int)(texX * texWidth);
-						int tex_y = (int)(texY * texHeight);
+			for (int x_pixel = x_loop_start; x_pixel < x_loop_end; x_pixel++) {
+				// Only draw if pickup is closer than wall at this x position
+				if (distToPickup < zBuffer[x_pixel]) {
+					int tex_x = ((x_pixel - draw_x_start) * texWidth) /
+						    pickup_draw_size;
+					if (tex_x < 0)
+						tex_x = 0;
+					if (tex_x >= texWidth)
+						tex_x = texWidth - 1;
 
-						// Ensure texture coordinates are within bounds
-						if (tex_x < 0)
-							tex_x = 0;
-						if (tex_x >= texWidth)
-							tex_x = texWidth - 1;
-						if (tex_y < 0)
-							tex_y = 0;
-						if (tex_y >= texHeight)
-							tex_y = texHeight - 1;
+					fixed_t tex_pos =
+						(fixed_t)((int64_t)(y_loop_start - draw_y_start) *
+							  step);
 
-						// Get pixel from texture
-						int pixelIndex = tex_y * 3 * texWidth + tex_x * 3;
-
-						int r = Textures[texIndex].name[pixelIndex + 0];
-						int g = Textures[texIndex].name[pixelIndex + 1];
-						int b = Textures[texIndex].name[pixelIndex + 2];
-
-						// Check for transparency (magenta: 255, 60, 255)
-						if (r == TRANS_R && g == TRANS_G && b == TRANS_B) {
-							continue; // Skip transparent pixels
-						}
-
-						// Apply distance shading
-						r = (r * shade_int) >> 8;
-						g = (g * shade_int) >> 8;
-						b = (b * shade_int) >> 8;
-
-						if (r > 255)
-							r = 255;
-						if (g > 255)
-							g = 255;
-						if (b > 255)
-							b = 255;
-
-						tft_draw_pixel(x_pixel, y_pixel,
-							       rgb_to_rgb565(r, g, b));
-					}
+					draw_sprite_column_asm(x_pixel, y_loop_start,
+							       y_loop_end - 1, tex_pos, step,
+							       Textures[texIndex].name, texWidth,
+							       texHeight, tex_x, shade_int, 0);
 				}
 			}
 		}
@@ -1746,12 +1666,12 @@ static void render_dead_state(void) // Removed unused dt parameter
 	}
 
 	// Draw game over message
-	tft_draw_string(SCREEN_WIDTH / 2 - 40, SCREEN_HEIGHT / 2 - 20, RED, "YOU DIED");
-	tft_draw_string(SCREEN_WIDTH / 2 - 60, SCREEN_HEIGHT / 2, WHITE, "Final Score: %d",
+	tft_draw_string(SCREEN_WIDTH / 2 - 20, SCREEN_HEIGHT / 2 - 20, RED, "YOU DIED");
+	tft_draw_string(SCREEN_WIDTH / 2 - 20, SCREEN_HEIGHT / 2, WHITE, "Final Score: %d",
 			player.score);
-	tft_draw_string(SCREEN_WIDTH / 2 - 70, SCREEN_HEIGHT / 2 + 20, WHITE,
+	tft_draw_string(SCREEN_WIDTH / 2 - 20, SCREEN_HEIGHT / 2 + 20, WHITE,
 			"Press START to restart");
-	tft_draw_string(SCREEN_WIDTH / 2 - 60, SCREEN_HEIGHT / 2 + 40, WHITE,
+	tft_draw_string(SCREEN_WIDTH / 2 - 20, SCREEN_HEIGHT / 2 + 40, WHITE,
 			"Press SELECT for menu");
 }
 void game_paint(unsigned dt_usec)

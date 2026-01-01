@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-project(krecek)
+project(krecek C CXX ASM)
 
 find_package(PkgConfig REQUIRED)
 find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
