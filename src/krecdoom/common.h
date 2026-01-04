@@ -37,8 +37,8 @@
 #define HEALTH_PACK_HEAL 25
 #define AMMO_BOX_AMOUNT 10
 #define MAX_HEALTH 100
-#define MAX_AMMO 50
-
+#define MAX_AMMO 60
+#define AMMO_SHOTBOX 5
 #define MAX_PICKUPS 64
 
 // Colors
@@ -62,6 +62,7 @@
 #define fixed_mul(a, b) ((fixed_t)(((int64_t)(a) * (b)) >> FIXED_SHIFT))
 #define fixed_div(a, b) ((fixed_t)(((int64_t)(a) << FIXED_SHIFT) / (b)))
 
+int seed = 11565;
 float volume = 0.5f;
 float timer = 0;
 float footstep_timer = 0;

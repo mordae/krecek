@@ -3,6 +3,7 @@
 #include "include_maps.h"
 #include "maps.h"
 #include "sdk/input.h"
+#include "sdk/util.h"
 
 #include <limits.h>
 
@@ -58,7 +59,6 @@ static void trig_init_once(void)
 
 static inline __attribute__((always_inline)) unsigned angle_to_lut(float radians)
 {
-	// Map radians -> [0, TRIG_LUT_SIZE)
 	float t = radians * ((float)TRIG_LUT_SIZE / (2.0f * (float)M_PI));
 	int idx = (int)t;
 	idx &= (int)TRIG_LUT_MASK;
@@ -102,6 +102,7 @@ typedef enum {
 	ENEMY_HURT,
 	ENEMY_DEAD
 } EnemyState;
+typedef enum { CAMPAIGN, RANDOM } MapState;
 
 typedef struct {
 	float x, y;
@@ -127,7 +128,7 @@ typedef struct {
 	float attack_timer;
 	uint32_t last_attack_time;
 	uint32_t last_hit_time;
-	int type; // 1 for ENEMY1, 2 for ENEMY2
+	int type; // 1 for Solder, 2 for
 	EnemyState state;
 	float state_timer;
 	float patrol_angle;
@@ -142,6 +143,7 @@ typedef struct {
 	bool low;
 	uint16_t tilecolor;
 	float is_seen;
+	MapState map_type;
 } Mode;
 
 typedef struct {
@@ -177,9 +179,13 @@ typedef struct {
 	int w, h;
 	const unsigned char *name;
 } TexureMaps;
+typedef struct {
+	int pointer;
+} Menu;
 
 Gun gun_select[N_GUNS] = { 0, 1, 2 };
 static Player player;
+static Menu menu;
 static Enemy enemies[MAX_ENEMIES];
 static int active_enemy_count = 0;
 static Mode mode;
@@ -202,9 +208,10 @@ static void map_starter_caller();
 static void textures_load();
 static void handlePickup(int tile_x, int tile_y);
 extern void game_handle_audio(float dt, float volume);
-const TileType (*currentMap)[MAP_COLS] = maps_map1;
-
+const TileType (*Maps)[MAP_COLS] = maps_map1;
+TileType currentMap[MAP_ROWS][MAP_COLS];
 static void renderPickups();
+static void give_pickup(TileType tile);
 
 // Enemy functions
 static void initEnemies();
@@ -219,6 +226,15 @@ extern void draw_wall_column_asm(int x, int y_start, int y_end, uint32_t tex_pos
 extern void draw_sprite_column_asm(int x, int y_start, int y_end, uint32_t tex_pos, uint32_t step,
 				   const uint8_t *tex_data, int tex_width, int tex_height,
 				   int tex_x, int shade_int, int is_hurt);
+int randomnumb(int maxnumber)
+{
+	int number;
+
+	number = seed * 214013 + 2531011;
+
+	seed += 1;
+	return abs((number >> 16) % maxnumber);
+}
 
 static void renderGame()
 {
@@ -407,6 +423,8 @@ static bool isWall(int Tile_x, int Tile_y)
 	case TELEPORT:
 	case EMPTY:
 		return false;
+	default:
+		break;
 	}
 	return false;
 }
@@ -424,23 +442,8 @@ static bool isPickup(int Tile_x, int Tile_y)
 	// Enemy tiles are not pickups
 	return (tile == HEALTH_PACK || tile == AMMO_BOX || tile == SHOTGUN_PICKUP);
 }
-
-static void handlePickup(int tile_x, int tile_y)
+static void give_pickup(TileType tile)
 {
-	TileType tile = currentMap[tile_y][tile_x];
-	collected_pickups[tile_y][tile_x] = true;
-
-	// Deactivate the pickup in the array
-	for (int i = 0; i < active_pickup_count; i++) {
-		int pickup_tile_x = (int)(pickups[i].x / TILE_SIZE);
-		int pickup_tile_y = (int)(pickups[i].y / TILE_SIZE);
-		if (pickup_tile_x == tile_x && pickup_tile_y == tile_y) {
-			pickups[i].collected = true;
-			pickups[i].active = false;
-			break;
-		}
-	}
-
 	if (tile == HEALTH_PACK) {
 		if (player.health < MAX_HEALTH) {
 			player.health += HEALTH_PACK_HEAL;
@@ -461,6 +464,9 @@ static void handlePickup(int tile_x, int tile_y)
 			player.ammo += AMMO_BOX_AMOUNT;
 			if (player.ammo > MAX_AMMO) {
 				player.ammo = MAX_AMMO;
+				pickup_msg.visible = true;
+				pickup_msg.timer_start = time_us_64();
+				strcpy(pickup_msg.message, "MAX AMMO");
 			}
 			sdk_melody_play("/i:square d");
 			// Show pickup message
@@ -482,8 +488,49 @@ static void handlePickup(int tile_x, int tile_y)
 			if (mode.debug) {
 				printf("Shotgun unlocked!\n");
 			}
+		} else if (player.ammo < MAX_AMMO) {
+			player.ammo += AMMO_SHOTBOX;
+			if (player.ammo > MAX_AMMO) {
+				pickup_msg.visible = true;
+				pickup_msg.timer_start = time_us_64();
+				strcpy(pickup_msg.message, "MAX AMMO");
+				player.ammo = MAX_AMMO;
+			}
+			sdk_melody_play("/i:square d");
+			pickup_msg.visible = true;
+			pickup_msg.timer_start = time_us_64();
+			strcpy(pickup_msg.message, "AMMO +5");
+			if (mode.debug) {
+				printf("Picked up ammo! Ammo: %d\n", player.ammo);
+			}
 		}
 	}
+}
+static void handlePickup(int tile_x, int tile_y)
+{
+	TileType tile = currentMap[tile_y][tile_x];
+	collected_pickups[tile_y][tile_x] = true;
+
+	// Deactivate the pickup in the array
+	for (int i = 0; i < active_pickup_count; i++) {
+		int pickup_tile_x = (int)(pickups[i].x / TILE_SIZE);
+		int pickup_tile_y = (int)(pickups[i].y / TILE_SIZE);
+		if (pickup_tile_x == tile_x && pickup_tile_y == tile_y) {
+			pickups[i].collected = true;
+			pickups[i].active = false;
+			break;
+		}
+	}
+	give_pickup(tile);
+}
+static void load_map(const TileType load_map[MAP_ROWS][MAP_COLS])
+{
+	for (int r = 0; r < MAP_ROWS; r++) {
+		for (int co = 0; co < MAP_COLS; co++) {
+			currentMap[r][co] = load_map[r][co];
+		}
+	}
+	Maps = load_map;
 }
 
 static void handlePlayerMovement(float dt)
@@ -526,15 +573,6 @@ static void handlePlayerMovement(float dt)
 			mode.debug = false;
 		} else
 			mode.debug = true;
-	}
-	if (sdk_inputs_delta.x == 1 && sdk_inputs.start) {
-		if (currentMap == maps_map1) {
-			currentMap = maps_map2;
-			map_starter_caller();
-		} else {
-			currentMap = maps_map1;
-			map_starter_caller();
-		}
 	}
 	if (sdk_inputs_delta.y == 1) {
 		player.gun += 1;
@@ -581,11 +619,7 @@ static void handlePlayerMovement(float dt)
 
 	// Teleport
 	if (currentMap[player_tile_y][player_tile_x] == TELEPORT) {
-		if (currentMap == maps_map1) {
-			map_starter_caller();
-		} else {
-			map_starter_caller();
-		}
+		map_starter_caller();
 	}
 
 	// Update enemies
@@ -624,6 +658,8 @@ static void player_view_draw()
 		break;
 	case BROKE:
 		sdk_draw_tile(55, 49, &ts_chainsaw_png, 1);
+		break;
+	default:
 		break;
 	}
 
@@ -902,6 +938,23 @@ static void shootBullet(float current_shoot_angle, float max_range_tiles, int vi
 			player.score += (enemies[hit_enemy_index].type == 1) ? 100 : 200;
 			active_enemy_count--;
 
+			int random = randomnumb(10);
+			;
+			if (mode.debug)
+				printf("dead random number %i\n", random);
+			switch (random) {
+			case 3:
+				give_pickup(HEALTH_PACK);
+				break;
+			case 2:
+				give_pickup(AMMO_BOX);
+				break;
+			case 1:
+				give_pickup(SHOTGUN_PICKUP);
+				break;
+			default:
+				break;
+			}
 			if (mode.debug) {
 				printf("Enemy %d killed immediately! Score: %d, Active enemies: %d\n",
 				       hit_enemy_index, player.score, active_enemy_count);
@@ -1176,17 +1229,14 @@ static void updateEnemies(float dt)
 		case ENEMY_DEAD:
 			// This should never be reached due to the continue above
 			break;
+		default:
+			break;
 		}
 	}
 }
 
 static void renderEnemies()
 {
-	// Define transparent color (magenta: RGB 255, 60, 255) - matches your texture files
-	const int TRANS_R = 255;
-	const int TRANS_G = 60;
-	const int TRANS_B = 255;
-
 	for (int i = 0; i < MAX_ENEMIES; i++) {
 		// Skip dead or inactive enemies completely
 		if (!enemies[i].alive || !enemies[i].active)
@@ -1325,9 +1375,6 @@ static void renderEnemies()
 static void renderPickups()
 {
 	// Define transparent color (magenta: RGB 255, 60, 255)
-	const int TRANS_R = 255;
-	const int TRANS_G = 60;
-	const int TRANS_B = 255;
 
 	for (int i = 0; i < active_pickup_count; i++) {
 		if (!pickups[i].active || pickups[i].collected)
@@ -1443,7 +1490,6 @@ static void renderPickups()
 
 static void real_game_start(void)
 {
-	currentMap = maps_map1;
 	Map_starter(maps_map1);
 	textures_load();
 
@@ -1467,18 +1513,15 @@ void game_start(void)
 
 static void map_starter_caller()
 {
-	if (currentMap == maps_map2) {
-		currentMap = maps_map3;
+	if (Maps == maps_map2) {
 		Map_starter(maps_map3);
 		return;
 	}
-	if (currentMap == maps_map1) {
+	if (Maps == maps_map1) {
 		Map_starter(maps_map2);
-		currentMap = maps_map2;
 		return;
 	}
-	if (currentMap == maps_map3) {
-		currentMap = maps_map1;
+	if (Maps == maps_map3) {
 		Map_starter(maps_map1);
 		return;
 	}
@@ -1486,6 +1529,7 @@ static void map_starter_caller()
 
 static void Map_starter(const TileType map[MAP_ROWS][MAP_COLS])
 {
+	load_map(map);
 	player.angle = (float)M_PI / 2.0f;
 	if (player.ammo < 15) {
 		player.ammo = 15;
@@ -1593,9 +1637,21 @@ static void Map_starter(const TileType map[MAP_ROWS][MAP_COLS])
 static void menu_inputs()
 {
 	if (sdk_inputs_delta.start == 1) {
-		real_game_start();
-		game_state = GAME_PLAYING;
+		switch (menu.pointer) {
+		case 0:
+			real_game_start();
+			game_state = GAME_PLAYING;
+			mode.map_type = CAMPAIGN;
+			break;
+		case 1:
+			game_state = GAME_PLAYING;
+			mode.map_type = RANDOM;
+			break;
+		default:
+			break;
+		}
 	}
+	menu.pointer = clamp(menu.pointer += sdk_inputs_delta.vertical, 0, 1);
 }
 
 static void dead_state_inputs()
@@ -1610,7 +1666,9 @@ static void dead_state_inputs()
 
 void game_input(unsigned dt_usec)
 {
+	seed += 1;
 	float dt = dt_usec / 1000000.0f;
+
 	switch (game_state) {
 	case GAME_MENU:
 		menu_inputs();
@@ -1623,6 +1681,8 @@ void game_input(unsigned dt_usec)
 		break;
 	case GAME_DEAD:
 		dead_state_inputs();
+		break;
+	default:
 		break;
 	}
 	game_handle_audio(dt, volume);
@@ -1650,12 +1710,9 @@ static void render_menu(float dt)
 {
 	tft_draw_rect(48, 18, 115, 32, WHITE);
 	tft_draw_string(50, 20, 0, "KRECDOOM");
-	mode.is_seen += dt;
-	if (mode.is_seen < 0.5) {
-		tft_draw_string(60, 50, RED, "START");
-	} else if (mode.is_seen > 1.0) {
-		mode.is_seen = 0;
-	}
+	tft_draw_string(60, 40, WHITE, "Campaign");
+	tft_draw_string(60, 51, WHITE, "Random");
+	tft_draw_string(50, 40 + menu.pointer * 10 + menu.pointer, YELLOW, ">");
 }
 
 static void render_dead_state(void) // Removed unused dt parameter
@@ -1668,13 +1725,10 @@ static void render_dead_state(void) // Removed unused dt parameter
 	}
 
 	// Draw game over message
-	tft_draw_string(SCREEN_WIDTH / 2 - 20, SCREEN_HEIGHT / 2 - 20, RED, "YOU DIED");
-	tft_draw_string(SCREEN_WIDTH / 2 - 20, SCREEN_HEIGHT / 2, WHITE, "Final Score: %d",
-			player.score);
-	tft_draw_string(SCREEN_WIDTH / 2 - 20, SCREEN_HEIGHT / 2 + 20, WHITE,
-			"Press START to restart");
-	tft_draw_string(SCREEN_WIDTH / 2 - 20, SCREEN_HEIGHT / 2 + 40, WHITE,
-			"Press SELECT for menu");
+	tft_draw_string(20, SCREEN_HEIGHT / 2 - 20, RED, "YOU DIED");
+	tft_draw_string(20, SCREEN_HEIGHT / 2, WHITE, "Score: %d", player.score);
+	tft_draw_string(20, SCREEN_HEIGHT / 2 + 20, WHITE, "START to restart");
+	tft_draw_string(20, SCREEN_HEIGHT / 2 + 40, WHITE, "SELECT for menu");
 }
 void game_paint(unsigned dt_usec)
 {
@@ -1700,6 +1754,8 @@ void game_paint(unsigned dt_usec)
 		tft_fill(GRAY);
 		renderGame(); // Still render the game world in background
 		render_dead_state();
+		break;
+	default:
 		break;
 	}
 }

@@ -14,12 +14,13 @@ TEXT_COLOR = (220, 220, 220)
 HIGHLIGHT_COLOR = (86, 182, 194)
 BUTTON_COLOR = (61, 90, 128)
 BUTTON_HOVER_COLOR = (78, 110, 154)
+SAVE_BUTTON_COLOR = (152, 195, 121) # Greenish color for save
 MENU_BG_COLOR = (30, 33, 40)
 
 class TextureViewer:
     def __init__(self):
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-        pygame.display.set_caption("Texture Viewer")
+        pygame.display.set_caption("Texture Viewer & Exporter")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont('Arial', 16)
         self.title_font = pygame.font.SysFont('Arial', 24, bold=True)
@@ -32,7 +33,8 @@ class TextureViewer:
         self.load_textures_from_directory()
         
         self.scroll_offset = 0
-        self.max_scroll = 0
+        self.status_message = ""
+        self.status_timer = 0
 
     def load_textures_from_directory(self):
         """Load textures from .h files in the current directory"""
@@ -46,35 +48,24 @@ class TextureViewer:
             with open(filename, 'r') as file:
                 content = file.read()
             
-            # Extract texture name
             name_match = re.search(r'const char (\w+)\[\]', content)
-            if not name_match:
-                return
+            if not name_match: return
                 
             texture_name = name_match.group(1)
-            
-            # Extract width and height
             width_match = re.search(r'#define\s+' + texture_name + '_WIDTH\s+(\d+)', content)
             height_match = re.search(r'#define\s+' + texture_name + '_HEIGHT\s+(\d+)', content)
             
-            if not width_match or not height_match:
-                return
+            if not width_match or not height_match: return
                 
             width = int(width_match.group(1))
             height = int(height_match.group(1))
             
-            # Extract array data
             array_match = re.search(r'=\s*\{([^}]+)\}', content, re.DOTALL)
-            if not array_match:
-                return
+            if not array_match: return
                 
-            array_data = array_match.group(1)
-            # Clean up the data - remove newlines and extra spaces
-            array_data = re.sub(r'\s+', ' ', array_data).strip()
-            # Parse the numbers
+            array_data = re.sub(r'\s+', ' ', array_match.group(1)).strip()
             numbers = [int(x.strip()) for x in array_data.split(',') if x.strip()]
             
-            # Create a surface and set pixels
             surface = pygame.Surface((width, height))
             pixel_array = pygame.PixelArray(surface)
             
@@ -82,434 +73,105 @@ class TextureViewer:
             for y in range(height):
                 for x in range(width):
                     if idx + 2 < len(numbers):
-                        r = numbers[idx]
-                        g = numbers[idx+1]
-                        b = numbers[idx+2]
-                        pixel_array[x, y] = (r, g, b)
+                        pixel_array[x, y] = (numbers[idx], numbers[idx+1], numbers[idx+2])
                         idx += 3
             
             pixel_array.close()
-            
-            # Store the texture
-            self.textures[texture_name] = {
-                'surface': surface,
-                'width': width,
-                'height': height,
-                'filename': filename
-            }
+            self.textures[texture_name] = {'surface': surface, 'width': width, 'height': height}
             self.texture_list.append(texture_name)
-            
         except Exception as e:
             print(f"Error parsing {filename}: {e}")
 
+    def save_current_as_png(self):
+        """Exports the current surface to a PNG file"""
+        if self.current_texture:
+            filename = f"{self.current_texture_name}.png"
+            try:
+                pygame.image.save(self.current_texture, filename)
+                self.status_message = f"Saved: {filename}"
+                self.status_timer = 120 # Show for 2 seconds (60fps)
+            except Exception as e:
+                self.status_message = "Error saving file!"
+                print(e)
+
     def draw_menu(self):
-        """Draw the texture selection menu"""
-        # Draw background
         self.screen.fill(BG_COLOR)
-        
-        # Draw title
         title = self.title_font.render("Texture Viewer", True, TEXT_COLOR)
         self.screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 20))
         
-        # Draw instructions
-        instructions = self.font.render("Select a texture to display:", True, TEXT_COLOR)
-        self.screen.blit(instructions, (SCREEN_WIDTH // 2 - instructions.get_width() // 2, 70))
-        
-        # Draw texture list
         menu_rect = pygame.Rect(SCREEN_WIDTH // 4, 120, SCREEN_WIDTH // 2, SCREEN_HEIGHT - 200)
         pygame.draw.rect(self.screen, MENU_BG_COLOR, menu_rect, border_radius=10)
         
-        # Calculate visible items based on scroll
         item_height = 40
         visible_items = (menu_rect.height - 20) // item_height
         start_index = max(0, min(self.scroll_offset, len(self.texture_list) - visible_items))
         
         for i in range(start_index, min(start_index + visible_items, len(self.texture_list))):
             texture_name = self.texture_list[i]
-            item_rect = pygame.Rect(menu_rect.x + 10, menu_rect.y + 10 + (i - start_index) * item_height, 
-                                   menu_rect.width - 20, item_height - 5)
+            item_rect = pygame.Rect(menu_rect.x + 10, menu_rect.y + 10 + (i - start_index) * item_height, menu_rect.width - 20, item_height - 5)
+            color = HIGHLIGHT_COLOR if texture_name == self.current_texture_name else BUTTON_COLOR
+            pygame.draw.rect(self.screen, color, item_rect, border_radius=5)
             
-            # Highlight selected texture
-            if texture_name == self.current_texture_name:
-                pygame.draw.rect(self.screen, HIGHLIGHT_COLOR, item_rect, border_radius=5)
-            else:
-                pygame.draw.rect(self.screen, BUTTON_COLOR, item_rect, border_radius=5)
-            
-            # Draw texture name and dimensions
-            texture_info = self.textures[texture_name]
             name_text = self.font.render(texture_name, True, TEXT_COLOR)
-            dim_text = self.font.render(f"{texture_info['width']}x{texture_info['height']}", True, TEXT_COLOR)
-            
             self.screen.blit(name_text, (item_rect.x + 10, item_rect.y + item_rect.height // 2 - name_text.get_height() // 2))
-            self.screen.blit(dim_text, (item_rect.x + item_rect.width - dim_text.get_width() - 10, 
-                                       item_rect.y + item_rect.height // 2 - dim_text.get_height() // 2))
-        
-        # Draw scrollbar if needed
-        if len(self.texture_list) > visible_items:
-            scrollbar_height = menu_rect.height * visible_items / len(self.texture_list)
-            scrollbar_pos = menu_rect.y + (self.scroll_offset / len(self.texture_list)) * menu_rect.height
-            scrollbar_rect = pygame.Rect(menu_rect.right - 10, scrollbar_pos, 8, scrollbar_height)
-            pygame.draw.rect(self.screen, BUTTON_HOVER_COLOR, scrollbar_rect, border_radius=4)
-        
-        # Draw close button
-        close_rect = pygame.Rect(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT - 60, 200, 40)
-        pygame.draw.rect(self.screen, BUTTON_COLOR, close_rect, border_radius=5)
-        close_text = self.font.render("Close Menu", True, TEXT_COLOR)
-        self.screen.blit(close_text, (close_rect.x + close_rect.width // 2 - close_text.get_width() // 2, 
-                                     close_rect.y + close_rect.height // 2 - close_text.get_height() // 2))
 
     def draw_texture_view(self):
-        """Draw the currently selected texture"""
         self.screen.fill(BG_COLOR)
-        
         if self.current_texture:
-            # Draw texture name and dimensions
-            texture_info = self.textures[self.current_texture_name]
+            # Info Text
             name_text = self.title_font.render(self.current_texture_name, True, TEXT_COLOR)
-            dim_text = self.font.render(f"Size: {texture_info['width']}x{texture_info['height']}", True, TEXT_COLOR)
-            
             self.screen.blit(name_text, (20, 20))
-            self.screen.blit(dim_text, (20, 50))
             
-            # Calculate scaling to fit texture on screen
-            max_width = SCREEN_WIDTH - 40
-            max_height = SCREEN_HEIGHT - 100
+            # Display Texture (Scaled)
+            scale = min((SCREEN_WIDTH - 100) / self.textures[self.current_texture_name]['width'], (SCREEN_HEIGHT - 150) / self.textures[self.current_texture_name]['height'])
+            sw, sh = int(self.textures[self.current_texture_name]['width'] * scale), int(self.textures[self.current_texture_name]['height'] * scale)
+            scaled_tex = pygame.transform.scale(self.current_texture, (sw, sh))
+            self.screen.blit(scaled_tex, ((SCREEN_WIDTH - sw)//2, (SCREEN_HEIGHT - sh)//2 + 20))
+
+            # UI Buttons
+            self.btn_menu = pygame.Rect(SCREEN_WIDTH - 120, 20, 100, 35)
+            self.btn_save = pygame.Rect(SCREEN_WIDTH - 120, 65, 100, 35)
             
-            scale_factor = min(max_width / texture_info['width'], max_height / texture_info['height'])
-            scaled_width = int(texture_info['width'] * scale_factor)
-            scaled_height = int(texture_info['height'] * scale_factor)
+            pygame.draw.rect(self.screen, BUTTON_COLOR, self.btn_menu, border_radius=5)
+            pygame.draw.rect(self.screen, SAVE_BUTTON_COLOR, self.btn_save, border_radius=5)
             
-            # Scale and draw texture
-            scaled_texture = pygame.transform.scale(self.current_texture, (scaled_width, scaled_height))
-            texture_x = (SCREEN_WIDTH - scaled_width) // 2
-            texture_y = (SCREEN_HEIGHT - scaled_height) // 2 + 20
-            self.screen.blit(scaled_texture, (texture_x, texture_y))
-            
-            # Draw border around texture
-            pygame.draw.rect(self.screen, TEXT_COLOR, (texture_x - 2, texture_y - 2, 
-                                                     scaled_width + 4, scaled_height + 4), 2)
-        
-        # Draw menu button
-        menu_rect = pygame.Rect(SCREEN_WIDTH - 120, 20, 100, 30)
-        pygame.draw.rect(self.screen, BUTTON_COLOR, menu_rect, border_radius=5)
-        menu_text = self.font.render("Menu", True, TEXT_COLOR)
-        self.screen.blit(menu_text, (menu_rect.x + menu_rect.width // 2 - menu_text.get_width() // 2, 
-                                    menu_rect.y + menu_rect.height // 2 - menu_text.get_height() // 2))
+            self.screen.blit(self.font.render("Menu", True, TEXT_COLOR), (self.btn_menu.centerx - 20, self.btn_menu.centery - 8))
+            self.screen.blit(self.font.render("Save PNG", True, BG_COLOR), (self.btn_save.centerx - 35, self.btn_save.centery - 8))
+
+            # Status Message
+            if self.status_timer > 0:
+                msg = self.font.render(self.status_message, True, SAVE_BUTTON_COLOR)
+                self.screen.blit(msg, (20, SCREEN_HEIGHT - 40))
+                self.status_timer -= 1
 
     def handle_events(self):
-        """Handle PyGame events"""
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return False
-            
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    if self.menu_open:
-                        return False
-                    else:
-                        self.menu_open = True
-            
-            if self.menu_open:
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    mouse_pos = pygame.mouse.get_pos()
-                    
-                    # Check if texture item was clicked
+            if event.type == pygame.QUIT: return False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                if self.menu_open:
+                    # Simplified selection logic for the demo
                     menu_rect = pygame.Rect(SCREEN_WIDTH // 4, 120, SCREEN_WIDTH // 2, SCREEN_HEIGHT - 200)
-                    if menu_rect.collidepoint(mouse_pos):
-                        item_height = 40
-                        visible_items = (menu_rect.height - 20) // item_height
-                        start_index = max(0, min(self.scroll_offset, len(self.texture_list) - visible_items))
-                        
-                        for i in range(start_index, min(start_index + visible_items, len(self.texture_list))):
-                            item_rect = pygame.Rect(menu_rect.x + 10, menu_rect.y + 10 + (i - start_index) * item_height, 
-                                                   menu_rect.width - 20, item_height - 5)
-                            if item_rect.collidepoint(mouse_pos):
-                                self.current_texture_name = self.texture_list[i]
-                                self.current_texture = self.textures[self.current_texture_name]['surface']
-                                self.menu_open = False
-                                break
-                    
-                    # Check if close button was clicked
-                    close_rect = pygame.Rect(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT - 60, 200, 40)
-                    if close_rect.collidepoint(mouse_pos):
-                        return False
-                    
-                    # Handle scrolling
-                    if event.button == 4:  # Scroll up
-                        self.scroll_offset = max(0, self.scroll_offset - 1)
-                    elif event.button == 5:  # Scroll down
-                        self.scroll_offset = min(len(self.texture_list) - 1, self.scroll_offset + 1)
-            else:
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    mouse_pos = pygame.mouse.get_pos()
-                    menu_rect = pygame.Rect(SCREEN_WIDTH - 120, 20, 100, 30)
-                    if menu_rect.collidepoint(mouse_pos):
-                        self.menu_open = True
-        
+                    if menu_rect.collidepoint(pos):
+                        idx = (pos[1] - 130) // 40 + self.scroll_offset
+                        if idx < len(self.texture_list):
+                            self.current_texture_name = self.texture_list[idx]
+                            self.current_texture = self.textures[self.current_texture_name]['surface']
+                            self.menu_open = False
+                else:
+                    if self.btn_menu.collidepoint(pos): self.menu_open = True
+                    if self.btn_save.collidepoint(pos): self.save_current_as_png()
         return True
 
     def run(self):
-        """Main game loop"""
-        running = True
-        while running:
-            running = self.handle_events()
-            
-            if self.menu_open:
-                self.draw_menu()
-            else:
-                self.draw_texture_view()
-            
+        while self.handle_events():
+            if self.menu_open: self.draw_menu()
+            else: self.draw_texture_view()
             pygame.display.flip()
             self.clock.tick(60)
-        
         pygame.quit()
-        sys.exit()
 
 if __name__ == "__main__":
-    # Create sample texture files if they don't exist
-    sample_files = {
-        "T_00.h": """
-#define T_00_HEIGHT 32
-#define T_00_WIDTH 32
-
-// array size is 3072
-const char T_00[] = {
-	137, 137, 137, 81,  81,	 81,  81,  81,	81,  81,  81,  81,  117, 117, 117, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 135, 135, 135, 135, 135, 135, 135, 135, 135,
-	135, 135, 135, 45,  45,	 45,  45,  45,	45,  44,  44,  44,  44,	 44,  44,  58,	58,  58,
-	59,  59,  59,  59,  59,	 59,  44,  44,	44,  44,  44,  44,  44,	 44,  44,  44,	44,  44,
-	81,  81,  81,  44,  44,	 44,  81,  81,	81,  134, 134, 134, 135, 135, 135, 117, 117, 117,
-	117, 117, 117, 116, 116, 116, 135, 135, 135, 81,  81,  81,  81,	 81,  81,  117, 117, 117,
-	119, 119, 119, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 136, 136, 136, 135, 135, 135, 135, 135, 135, 44,	44,  44,
-	44,  44,  44,  59,  59,	 59,  43,  43,	43,  44,  44,  44,  44,	 44,  44,  44,	44,  44,
-	44,  44,  44,  81,  81,	 81,  81,  81,	81,  44,  44,  44,  59,	 59,  59,  81,	81,  81,
-	135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 81,	 81,  81,  81,	81,  81,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 118, 118, 118, 116, 116, 116, 135, 135, 135,
-	135, 135, 135, 44,  44,	 44,  44,  44,	44,  45,  45,  45,  44,	 44,  44,  44,	44,  44,
-	44,  44,  44,  44,  44,	 44,  82,  82,	82,  81,  81,  81,  44,	 44,  44,  44,	44,  44,
-	59,  59,  59,  81,  81,	 81,  80,  80,	80,  80,  80,  80,  117, 117, 117, 116, 116, 116,
-	81,  81,  81,  118, 118, 118, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 116, 116, 116, 135, 135, 135, 135, 135, 135, 135, 135, 135,
-	134, 134, 134, 136, 136, 136, 117, 117, 117, 43,  43,  43,  44,	 44,  44,  80,	80,  80,
-	81,  81,  81,  81,  81,	 81,  118, 118, 118, 117, 117, 117, 117, 117, 117, 116, 116, 116,
-	44,  44,  44,  44,  44,	 44,  59,  59,	59,  59,  59,  59,  81,	 81,  81,  81,	81,  81,
-	59,  59,  59,  59,  59,	 59,  81,  81,	81,  136, 136, 136, 135, 135, 135, 135, 135, 135,
-	135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 136, 136, 136, 135, 135, 135,
-	45,  45,  45,  59,  59,	 59,  59,  59,	59,  44,  44,  44,  43,	 43,  43,  45,	45,  45,
-	79,  79,  79,  80,  80,	 80,  81,  81,	81,  81,  81,  81,  135, 135, 135, 118, 118, 118,
-	117, 117, 117, 118, 118, 118, 115, 115, 115, 44,  44,  44,  42,	 42,  42,  59,	59,  59,
-	59,  59,  59,  58,  58,	 58,  59,  59,	59,  45,  45,  45,  43,	 43,  43,  81,	81,  81,
-	81,  81,  81,  81,  81,	 81,  81,  81,	81,  81,  81,  81,  81,	 81,  81,  81,	81,  81,
-	81,  81,  81,  82,  82,	 82,  59,  59,	59,  44,  44,  44,  43,	 43,  43,  45,	45,  45,
-	117, 117, 117, 118, 118, 118, 116, 116, 116, 133, 133, 133, 82,	 82,  82,  81,	81,  81,
-	134, 134, 134, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 44,	44,  44,
-	44,  44,  44,  44,  44,	 44,  44,  44,	44,  44,  44,  44,  44,	 44,  44,  44,	44,  44,
-	44,  44,  44,  59,  59,	 59,  59,  59,	59,  59,  59,  59,  81,	 81,  81,  81,	81,  81,
-	59,  59,  59,  59,  59,	 59,  59,  59,	59,  58,  58,  58,  59,	 59,  59,  46,	46,  46,
-	117, 117, 117, 118, 118, 118, 117, 117, 117, 117, 117, 117, 134, 134, 134, 135, 135, 135,
-	81,  81,  81,  81,  81,	 81,  43,  43,	43,  136, 136, 136, 135, 135, 135, 117, 117, 117,
-	117, 117, 117, 118, 118, 118, 44,  44,	44,  44,  44,  44,  44,	 44,  44,  45,	45,  45,
-	115, 115, 115, 45,  45,	 45,  45,  45,	45,  46,  46,  46,  44,	 44,  44,  59,	59,  59,
-	59,  59,  59,  44,  44,	 44,  43,  43,	43,  44,  44,  44,  44,	 44,  44,  43,	43,  43,
-	117, 117, 117, 117, 117, 117, 118, 118, 118, 117, 117, 117, 117, 117, 117, 134, 134, 134,
-	136, 136, 136, 82,  82,	 82,  90,  90,	90,  44,  44,  44,  59,	 59,  59,  81,	81,  81,
-	135, 135, 135, 136, 136, 136, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 135, 135, 135, 45,	45,  45,
-	44,  44,  44,  44,  44,	 44,  44,  44,	44,  45,  45,  45,  45,	 45,  45,  135, 135, 135,
-	135, 135, 135, 117, 117, 117, 117, 117, 117, 117, 117, 117, 118, 118, 118, 136, 136, 136,
-	135, 135, 135, 135, 135, 135, 83,  83,	83,  61,  61,  61,  59,	 59,  59,  59,	59,  59,
-	60,  60,  60,  81,  81,	 81,  81,  81,	81,  135, 135, 135, 136, 136, 136, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117,
-	135, 135, 135, 119, 119, 119, 43,  43,	43,  44,  44,  44,  43,	 43,  43,  117, 117, 117,
-	80,  80,  80,  137, 137, 137, 134, 134, 134, 117, 117, 117, 117, 117, 117, 117, 117, 117,
-	118, 118, 118, 135, 135, 135, 81,  81,	81,  81,  81,  81,  59,	 59,  59,  60,	60,  60,
-	44,  44,  44,  44,  44,	 44,  59,  59,	59,  59,  59,  59,  59,	 59,  59,  81,	81,  81,
-	134, 134, 134, 135, 135, 135, 135, 135, 135, 117, 117, 117, 117, 117, 117, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 134, 134, 134, 80,  80,  80,  44,	 44,  44,  43,	43,  43,
-	117, 117, 117, 118, 118, 118, 44,  44,	44,  46,  46,  46,  134, 134, 134, 136, 136, 136,
-	117, 117, 117, 117, 117, 117, 135, 135, 135, 136, 136, 136, 82,	 82,  82,  82,	82,  82,
-	59,  59,  59,  45,  45,	 45,  44,  44,	44,  44,  44,  44,  45,	 45,  45,  44,	44,  44,
-	58,  58,  58,  59,  59,	 59,  59,  59,	59,  59,  59,  59,  136, 136, 136, 135, 135, 135,
-	135, 135, 135, 135, 135, 135, 134, 134, 134, 136, 136, 136, 58,	 58,  58,  60,	60,  60,
-	42,  42,  42,  117, 117, 117, 117, 117, 117, 117, 117, 117, 118, 118, 118, 42,	42,  42,
-	46,  46,  46,  136, 136, 136, 135, 135, 135, 135, 135, 135, 135, 135, 135, 81,	81,  81,
-	44,  44,  44,  59,  59,	 59,  44,  44,	44,  44,  44,  44,  44,	 44,  44,  117, 117, 117,
-	44,  44,  44,  44,  44,	 44,  44,  44,	44,  44,  44,  44,  44,	 44,  44,  44,	44,  44,
-	45,  45,  45,  60,  60,	 60,  59,  59,	59,  81,  81,  81,  81,	 81,  81,  59,	59,  59,
-	44,  44,  44,  44,  44,	 44,  117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117,
-	117, 117, 117, 115, 115, 115, 45,  45,	45,  46,  46,  46,  116, 116, 116, 118, 118, 118,
-	80,  80,  80,  82,  82,	 82,  59,  59,	59,  59,  59,  59,  45,	 45,  45,  44,	44,  44,
-	119, 119, 119, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117,
-	44,  44,  44,  44,  44,	 44,  46,  46,	46,  44,  44,  44,  45,	 45,  45,  45,	45,  45,
-	59,  59,  59,  59,  59,	 59,  116, 116, 116, 117, 117, 117, 117, 117, 117, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 116, 116, 116, 44,	44,  44,
-	44,  44,  44,  81,  81,	 81,  81,  81,	81,  59,  59,  59,  44,	 44,  44,  44,	44,  44,
-	44,  44,  44,  116, 116, 116, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 135, 135, 135, 58,	58,  58,
-	44,  44,  44,  82,  82,	 82,  133, 133, 133, 135, 135, 135, 135, 135, 135, 136, 136, 136,
-	134, 134, 134, 116, 116, 116, 116, 116, 116, 117, 117, 117, 117, 117, 117, 116, 116, 116,
-	134, 134, 134, 137, 137, 137, 45,  45,	45,  59,  59,  59,  59,	 59,  59,  44,	44,  44,
-	45,  45,  45,  44,  44,	 44,  116, 116, 116, 117, 117, 117, 117, 117, 117, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 116, 116, 116, 116, 116, 116,
-	135, 135, 135, 58,  58,	 58,  44,  44,	44,  81,  81,  81,  80,	 80,  80,  134, 134, 134,
-	81,  81,  81,  117, 117, 117, 135, 135, 135, 134, 134, 134, 136, 136, 136, 135, 135, 135,
-	116, 116, 116, 135, 135, 135, 135, 135, 135, 44,  44,  44,  59,	 59,  59,  43,	43,  43,
-	44,  44,  44,  45,  45,	 45,  81,  81,	81,  82,  82,  82,  117, 117, 117, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 116, 116, 116, 117, 117, 117,
-	133, 133, 133, 135, 135, 135, 134, 134, 134, 58,  58,  58,  44,	 44,  44,  80,	80,  80,
-	81,  81,  81,  80,  80,	 80,  81,  81,	81,  81,  81,  81,  81,	 81,  81,  117, 117, 117,
-	116, 116, 116, 134, 134, 134, 135, 135, 135, 134, 134, 134, 81,	 81,  81,  58,	58,  58,
-	44,  44,  44,  45,  45,	 45,  81,  81,	81,  82,  82,  82,  81,	 81,  81,  117, 117, 117,
-	135, 135, 135, 135, 135, 135, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117,
-	136, 136, 136, 135, 135, 135, 135, 135, 135, 45,  45,  45,  59,	 59,  59,  58,	58,  58,
-	44,  44,  44,  44,  44,	 44,  81,  81,	81,  80,  80,  80,  81,	 81,  81,  81,	81,  81,
-	81,  81,  81,  81,  81,	 81,  81,  81,	81,  82,  82,  82,  59,	 59,  59,  59,	59,  59,
-	60,  60,  60,  58,  58,	 58,  44,  44,	44,  45,  45,  45,  43,	 43,  43,  81,	81,  81,
-	81,  81,  81,  81,  81,	 81,  82,  82,	82,  135, 135, 135, 134, 134, 134, 135, 135, 135,
-	135, 135, 135, 135, 135, 135, 134, 134, 134, 81,  81,  81,  80,	 80,  80,  59,	59,  59,
-	59,  59,  59,  44,  44,	 44,  43,  43,	43,  116, 116, 116, 60,	 60,  60,  59,	59,  59,
-	44,  44,  44,  59,  59,	 59,  59,  59,	59,  59,  59,  59,  59,	 59,  59,  60,	60,  60,
-	60,  60,  60,  117, 117, 117, 118, 118, 118, 81,  81,  81,  79,	 79,  79,  44,	44,  44,
-	45,  45,  45,  59,  59,	 59,  59,  59,	59,  81,  81,  81,  81,	 81,  81,  82,	82,  82,
-	81,  81,  81,  81,  81,	 81,  81,  81,	81,  81,  81,  81,  81,	 81,  81,  81,	81,  81,
-	59,  59,  59,  58,  58,	 58,  46,  46,	46,  117, 117, 117, 117, 117, 117, 135, 135, 135,
-	134, 134, 134, 44,  44,	 44,  44,  44,	44,  44,  44,  44,  44,	 44,  44,  44,	44,  44,
-	44,  44,  44,  44,  44,	 44,  44,  44,	44,  117, 117, 117, 117, 117, 117, 117, 117, 117,
-	117, 117, 117, 116, 116, 116, 45,  45,	45,  44,  44,  44,  59,	 59,  59,  59,	59,  59,
-	59,  59,  59,  59,  59,	 59,  82,  82,	82,  81,  81,  81,  81,	 81,  81,  81,	81,  81,
-	81,  81,  81,  44,  44,	 44,  58,  58,	58,  80,  80,  80,  118, 118, 118, 117, 117, 117,
-	117, 117, 117, 116, 116, 116, 134, 134, 134, 135, 135, 135, 117, 117, 117, 81,	81,  81,
-	81,  81,  81,  115, 115, 115, 118, 118, 118, 118, 118, 118, 116, 116, 116, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 116, 116, 116, 118, 118, 118, 116, 116, 116,
-	44,  44,  44,  44,  44,	 44,  44,  44,	44,  60,  60,  60,  59,	 59,  59,  59,	59,  59,
-	59,  59,  59,  59,  59,	 59,  42,  42,	42,  44,  44,  44,  80,	 80,  80,  119, 119, 119,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 118, 118, 118, 115, 115, 115, 136, 136, 136,
-	81,  81,  81,  81,  81,	 81,  81,  81,	81,  117, 117, 117, 117, 117, 117, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 116, 116, 116, 135, 135, 135,
-	135, 135, 135, 82,  82,	 82,  81,  81,	81,  44,  44,  44,  44,	 44,  44,  44,	44,  44,
-	43,  43,  43,  43,  43,	 43,  60,  60,	60,  59,  59,  59,  59,	 59,  59,  117, 117, 117,
-	116, 116, 116, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117,
-	117, 117, 117, 136, 136, 136, 81,  81,	81,  81,  81,  81,  116, 116, 116, 118, 118, 118,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 116, 116, 116,
-	137, 137, 137, 135, 135, 135, 81,  81,	81,  82,  82,  82,  59,	 59,  59,  44,	44,  44,
-	44,  44,  44,  44,  44,	 44,  44,  44,	44,  44,  44,  44,  43,	 43,  43,  43,	43,  43,
-	43,  43,  43,  117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 135, 135, 135, 135, 135, 135, 81,	 81,  81,  81,	81,  81,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 135, 135, 135, 136, 136, 136, 116, 116, 116,
-	135, 135, 135, 135, 135, 135, 134, 134, 134, 80,  80,  80,  42,	 42,  42,  59,	59,  59,
-	59,  59,  59,  44,  44,	 44,  115, 115, 115, 117, 117, 117, 42,	 42,  42,  44,	44,  44,
-	44,  44,  44,  44,  44,	 44,  44,  44,	44,  117, 117, 117, 117, 117, 117, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 133, 133, 133, 81,	81,  81,
-	81,  81,  81,  81,  81,	 81,  117, 117, 117, 117, 117, 117, 135, 135, 135, 135, 135, 135,
-	81,  81,  81,  136, 136, 136, 137, 137, 137, 81,  81,  81,  80,	 80,  80,  59,	59,  59,
-	60,  60,  60,  44,  44,	 44,  43,  43,	43,  118, 118, 118, 119, 119, 119, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 43,	 43,  43,  44,	44,  44,
-	134, 134, 134, 134, 134, 134, 136, 136, 136, 117, 117, 117, 117, 117, 117, 136, 136, 136,
-	135, 135, 135, 81,  81,	 81,  44,  44,	44,  44,  44,  44,  117, 117, 117, 117, 117, 117,
-	135, 135, 135, 81,  81,	 81,  81,  81,	81,  80,  80,  80,  81,	 81,  81,  81,	81,  81,
-	59,  59,  59,  59,  59,	 59,  44,  44,	44,  46,  46,  46,  117, 117, 117, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117,
-	117, 117, 117, 59,  59,	 59,  60,  60,	60,  43,  43,  43,  135, 135, 135, 135, 135, 135,
-	135, 135, 135, 136, 136, 136, 81,  81,	81,  80,  80,  80,  44,	 44,  44,  42,	42,  42,
-	44,  44,  44,  118, 118, 118, 81,  81,	81,  81,  81,  81,  81,	 81,  81,  82,	82,  82,
-	58,  58,  58,  81,  81,	 81,  60,  60,	60,  43,  43,  43,  46,	 46,  46,  117, 117, 117,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 135, 135, 135, 59,	 59,  59,  59,	59,  59,
-	44,  44,  44,  82,  82,	 82,  82,  82,	82,  81,  81,  81,  81,	 81,  81,  81,	81,  81,
-	45,  45,  45,  117, 117, 117, 45,  45,	45,  43,  43,  43,  59,	 59,  59,  59,	59,  59,
-	59,  59,  59,  59,  59,	 59,  60,  60,	60,  44,  44,  44,  43,	 43,  43,  43,	43,  43,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 135, 135, 135,
-	58,  58,  58,  59,  59,	 59,  59,  59,	59,  59,  59,  59,  80,	 80,  80,  59,	59,  59,
-	59,  59,  59,  58,  58,	 58,  117, 117, 117, 117, 117, 117, 135, 135, 135, 44,	44,  44,
-	44,  44,  44,  45,  45,	 45,  58,  58,	58,  44,  44,  44,  45,	 45,  45,  45,	45,  45,
-	42,  42,  42,  117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 114, 114, 114, 119, 119, 119, 117, 117, 117,
-	135, 135, 135, 136, 136, 136, 59,  59,	59,  44,  44,  44,  44,	 44,  44,  44,	44,  44,
-	44,  44,  44,  45,  45,	 45,  44,  44,	44,  43,  43,  43,  117, 117, 117, 116, 116, 116,
-	133, 133, 133, 45,  45,	 45,  44,  44,	44,  44,  44,  44,  45,	 45,  45,  44,	44,  44,
-	47,  47,  47,  118, 118, 118, 136, 136, 136, 135, 135, 135, 135, 135, 135, 135, 135, 135,
-	135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 135, 134, 134, 134, 117, 117, 117,
-	134, 134, 134, 132, 132, 132, 135, 135, 135, 59,  59,  59,  44,	 44,  44,  42,	42,  42,
-	118, 118, 118, 44,  44,	 44,  44,  44,	44,  45,  45,  45,  117, 117, 117, 117, 117, 117,
-	116, 116, 116, 135, 135, 135, 135, 135, 135, 81,  81,  81,  81,	 81,  81,  43,	43,  43,
-	82,  82,  82,  117, 117, 117, 117, 117, 117, 44,  44,  44,  58,	 58,  58,  81,	81,  81,
-	81,  81,  81,  81,  81,	 81,  81,  81,	81,  81,  81,  81,  81,	 81,  81,  81,	81,  81,
-	133, 133, 133, 134, 134, 134, 135, 135, 135, 81,  81,  81,  81,	 81,  81,  60,	60,  60,
-	44,  44,  44,  80,  80,	 80,  44,  44,	44,  117, 117, 117, 117, 117, 117, 117, 117, 117,
-	117, 117, 117, 117, 117, 117, 137, 137, 137, 135, 135, 135, 135, 135, 135, 82,	82,  82,
-	81,  81,  81,  81,  81,	 81,  117, 117, 117, 117, 117, 117, 116, 116, 116, 44,	44,  44,
-	44,  44,  44,  44,  44,	 44,  45,  45,	45,  59,  59,  59,  59,	 59,  59,  59,	59,  59,
-	59,  59,  59,  82,  82,	 82,  81,  81,	81,  81,  81,  81,  58,	 58,  58,  59,	59,  59,
-	59,  59,  59,  44,  44,	 44,  45,  45,	45,  81,  81,  81,  46,	 46,  46,  135, 135, 135,
-	117, 117, 117, 117, 117, 117, 117, 117, 117, 116, 116, 116
-};
-""",
-        "T_19.h": """
-#define T_19_HEIGHT 16
-#define T_19_WIDTH 16
-
-// array size is 768
-const char T_19[]  = {
-  139, 155, 180, 38, 43, 68, 38, 43, 68, 38, 43, 68, 38, 43, 68, 38, 
-  43, 68, 38, 43, 68, 139, 155, 180, 139, 155, 180, 38, 43, 68, 38, 43, 
-  68, 38, 43, 68, 38, 43, 68, 38, 43, 68, 38, 43, 68, 139, 155, 180, 
-  192, 203, 220, 90, 105, 136, 139, 155, 180, 139, 155, 180, 139, 155, 180, 139, 
-  155, 180, 139, 155, 180, 192, 203, 220, 192, 203, 220, 90, 105, 136, 139, 155, 
-  180, 139, 155, 180, 139, 155, 180, 139, 155, 180, 139, 155, 180, 192, 203, 220, 
-  192, 203, 220, 139, 155, 180, 192, 203, 220, 192, 203, 220, 192, 203, 220, 192, 
-  203, 220, 192, 203, 220, 192, 203, 220, 192, 203, 220, 139, 155, 180, 192, 203, 
-  220, 192, 203, 220, 192, 203, 220, 192, 203, 220, 192, 203, 220, 192, 203, 220, 
-  192, 203, 220, 90, 105, 136, 139, 155, 180, 139, 155, 180, 139, 155, 180, 139, 
-  155, 180, 139, 155, 180, 192, 203, 220, 192, 203, 220, 90, 105, 136, 139, 155, 
-  180, 139, 155, 180, 139, 155, 180, 139, 155, 180, 139, 155, 180, 192, 203, 220, 
-  139, 155, 180, 38, 43, 68, 90, 105, 136, 90, 105, 136, 90, 105, 136, 90, 
-  105, 136, 90, 105, 136, 139, 155, 180, 139, 155, 180, 38, 43, 68, 90, 105, 
-  136, 90, 105, 136, 90, 105, 136, 90, 105, 136, 90, 105, 136, 139, 155, 180, 
-  139, 155, 180, 38, 43, 68, 90, 105, 136, 90, 105, 136, 90, 105, 136, 90, 
-  105, 136, 90, 105, 136, 139, 155, 180, 139, 155, 180, 38, 43, 68, 90, 105, 
-  136, 90, 105, 136, 90, 105, 136, 90, 105, 136, 90, 105, 136, 139, 155, 180, 
-  90, 105, 136, 38, 43, 68, 38, 43, 68, 38, 43, 68, 38, 43, 68, 38, 
-  43, 68, 38, 43, 68, 90, 105, 136, 90, 105, 136, 38, 43, 68, 38, 43, 
-  68, 38, 43, 68, 38, 43, 68, 38, 43, 68, 38, 43, 68, 90, 105, 136, 
-  90, 105, 136, 38, 43, 68, 38, 43, 68, 38, 43, 68, 38, 43, 68, 38, 
-  43, 68, 38, 43, 68, 90, 105, 136, 90, 105, 136, 38, 43, 68, 38, 43, 
-  68, 38, 43, 68, 38, 43, 68, 38, 43, 68, 38, 43, 68, 90, 105, 136, 
-  139, 155, 180, 38, 43, 68, 38, 43, 68, 38, 43, 68, 38, 43, 68, 38, 
-  43, 68, 38, 43, 68, 139, 155, 180, 139, 155, 180, 38, 43, 68, 38, 43, 
-  68, 38, 43, 68, 38, 43, 68, 38, 43, 68, 38, 43, 68, 139, 155, 180, 
-  192, 203, 220, 90, 105, 136, 139, 155, 180, 139, 155, 180, 139, 155, 180, 139, 
-  155, 180, 139, 155, 180, 192, 203, 220, 192, 203, 220, 90, 105, 136, 139, 155, 
-  180, 139, 155, 180, 139, 155, 180, 139, 155, 180, 139, 155, 180, 192, 203, 220, 
-  192, 203, 220, 139, 155, 180, 192, 203, 220, 192, 203, 220, 192, 203, 220, 192, 
-  203, 220, 192, 203, 220, 192, 203, 220, 192, 203, 220, 139, 155, 180, 192, 203, 
-  220, 192, 203, 220, 192, 203, 220, 192, 203, 220, 192, 203, 220, 192, 203, 220, 
-  192, 203, 220, 90, 105, 136, 139, 155, 180, 139, 155, 180, 139, 155, 180, 139, 
-  155, 180, 139, 155, 180, 192, 203, 220, 192, 203, 220, 90, 105, 136, 139, 155, 
-  180, 139, 155, 180, 139, 155, 180, 139, 155, 180, 139, 155, 180, 192, 203, 220, 
-  139, 155, 180, 38, 43, 68, 90, 105, 136, 90, 105, 136, 90, 105, 136, 90, 
-  105, 136, 90, 105, 136, 139, 155, 180, 139, 155, 180, 38, 43, 68, 90, 105, 
-  136, 90, 105, 136, 90, 105, 136, 90, 105, 136, 90, 105, 136, 139, 155, 180, 
-  139, 155, 180, 38, 43, 68, 90, 105, 136, 90, 105, 136, 90, 105, 136, 90, 
-  105, 136, 90, 105, 136, 139, 155, 180, 139, 155, 180, 38, 43, 68, 90, 105, 
-  136, 90, 105, 136, 90, 105, 136, 90, 105, 136, 90, 105, 136, 139, 155, 180, 
-  90, 105, 136, 38, 43, 68, 38, 43, 68, 38, 43, 68, 38, 43, 68, 38, 
-  43, 68, 38, 43, 68, 90, 105, 136, 90, 105, 136, 38, 43, 68, 38, 43, 
-  68, 38, 43, 68, 38, 43, 68, 38, 43, 68, 38, 43, 68, 90, 105, 136, 
-  90, 105, 136, 38, 43, 68, 38, 43, 68, 38, 43, 68, 38, 43, 68, 38, 
-  43, 68, 38, 43, 68, 90, 105, 136, 90, 105, 136, 38, 43, 68, 38, 43, 
-  68, 38, 43, 68, 38, 43, 68, 38, 43, 68, 38, 43, 68, 90, 105, 136
-};
-"""
-    }
-    
-    for filename, content in sample_files.items():
-        if not os.path.exists(filename):
-            with open(filename, 'w') as f:
-                f.write(content)
-    
-    # Run the application
+    # Ensure T_00.h exists for testing if needed...
     app = TextureViewer()
     app.run()
