@@ -93,6 +93,7 @@ typedef enum {
 	TEX_ENEMY1 = 20, // TTE_00
 	TEX_ENEMY2 = 21	 // TTE_01
 } EnemyTexture;
+typedef enum { TEX_DOORS = 25 } DoorTexture;
 
 // Enemy states
 typedef enum {
@@ -1750,6 +1751,10 @@ static void textures_load()
 		Textures[i].h = texture_heights[i];
 		Textures[i].w = texture_widths[i];
 	}
+
+	Textures[TEX_DOORS].name = (const unsigned char *)DOORS; // ENEMY1 texture
+	Textures[TEX_DOORS].w = DOORS_WIDTH;
+	Textures[TEX_DOORS].h = DOORS_HEIGHT;
 
 	// Load enemy textures - using the exact array names from your headers
 	Textures[TEX_ENEMY1].name = (const unsigned char *)TTE_00; // ENEMY1 texture

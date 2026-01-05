@@ -19,6 +19,7 @@
 #include "../textures/TTO_00.h"
 #include "../textures/TTO_01.h"
 #include "../textures/TTO_02.h"
+#include "../textures/DOORS.h"
 #include "../textures/T_00.h"
 #include "../textures/T_01.h"
 #include "../textures/T_02.h"
