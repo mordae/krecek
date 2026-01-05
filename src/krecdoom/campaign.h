@@ -3,22 +3,20 @@
 #include "maps.h"
 #include <sdk.h>
 #include "common.h"
-extern void Map_starter(const TileType map[MAP_ROWS][MAP_COLS]);
+void Map_starter(const TileType (*next_map)[MAP_ROWS][MAP_COLS]);
 
 static inline void map_starter_caller(void)
 {
-	if (Maps == maps_map2) {
-		Map_starter(maps_map3);
+	if (map.map_id == &maps_map2) {
+		Map_starter(&maps_map3);
 		return;
 	}
-
-	if (Maps == maps_map1) {
-		Map_starter(maps_map2);
+	if (map.map_id == &maps_map1) {
+		Map_starter(&maps_map2);
 		return;
 	}
-
-	if (Maps == maps_map3) {
-		Map_starter(maps_map1);
+	if (map.map_id == &maps_map3) {
+		Map_starter(&maps_map1);
 		return;
 	}
 }

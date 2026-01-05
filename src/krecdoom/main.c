@@ -203,7 +203,7 @@ static bool isWall(int Tile_x, int Tile_y);
 static bool isPickup(int Tile_x, int Tile_y);
 static void shootBullet(float start_angle, float max_range_tiles, int visual_size,
 			uint16_t visual_color);
-void Map_starter(const TileType map[MAP_ROWS][MAP_COLS]);
+void Map_starter(const TileType (*next_map)[MAP_ROWS][MAP_COLS]);
 static void handleShooting();
 extern void map_starter_caller();
 static void textures_load();
@@ -341,7 +341,7 @@ static void renderGame()
 		if (drawEnd >= SCREEN_HEIGHT)
 			drawEnd = SCREEN_HEIGHT - 1;
 
-		int wallType = currentMap[mapY][mapX] - 1;
+		int wallType = map.type[mapY][mapX] - 1;
 		if (wallType <= 0)
 			wallType = 0;
 
@@ -394,7 +394,7 @@ static bool isWall(int Tile_x, int Tile_y)
 	if (Tile_x < 0 || Tile_x >= MAP_COLS || Tile_y < 0 || Tile_y >= MAP_ROWS) {
 		return true;
 	}
-	TileType tile = currentMap[Tile_y][Tile_x];
+	TileType tile = map.type[Tile_y][Tile_x];
 	switch (tile) {
 	case COBLE:
 	case BRICKS:
@@ -437,7 +437,8 @@ static bool isPickup(int Tile_x, int Tile_y)
 	if (collected_pickups[Tile_y][Tile_x]) {
 		return false;
 	}
-	TileType tile = currentMap[Tile_y][Tile_x];
+	TileType tile = map.type[Tile_y][Tile_x];
+
 	// Enemy tiles are not pickups
 	return (tile == HEALTH_PACK || tile == AMMO_BOX || tile == SHOTGUN_PICKUP);
 }
@@ -507,7 +508,7 @@ static void give_pickup(TileType tile)
 }
 static void handlePickup(int tile_x, int tile_y)
 {
-	TileType tile = currentMap[tile_y][tile_x];
+	TileType tile = map.type[tile_y][tile_x];
 	collected_pickups[tile_y][tile_x] = true;
 
 	// Deactivate the pickup in the array
@@ -522,16 +523,15 @@ static void handlePickup(int tile_x, int tile_y)
 	}
 	give_pickup(tile);
 }
-static void load_map(const TileType load_map[MAP_ROWS][MAP_COLS])
+static void load_map(const TileType (*load_map)[MAP_ROWS][MAP_COLS])
 {
 	for (int r = 0; r < MAP_ROWS; r++) {
 		for (int co = 0; co < MAP_COLS; co++) {
-			currentMap[r][co] = load_map[r][co];
+			map.type[r][co] = (*load_map)[r][co];
 		}
 	}
-	Maps = load_map;
+	map.map_id = load_map;
 }
-
 static void handlePlayerMovement(float dt)
 {
 	float player_dx = 0;
@@ -617,7 +617,7 @@ static void handlePlayerMovement(float dt)
 	int player_tile_y = player.y / TILE_SIZE;
 
 	// Teleport
-	if (currentMap[player_tile_y][player_tile_x] == TELEPORT) {
+	if (map.type[player_tile_y][player_tile_x] == TELEPORT) {
 		map_starter_caller();
 	}
 
@@ -1489,7 +1489,7 @@ static void renderPickups()
 
 static void real_game_start(void)
 {
-	Map_starter(maps_map1);
+	Map_starter(&maps_map1);
 	textures_load();
 
 	player.health = 100;
@@ -1510,9 +1510,9 @@ void game_start(void)
 	sdk_set_output_gain_db(volume);
 }
 
-void Map_starter(const TileType map[MAP_ROWS][MAP_COLS])
+void Map_starter(const TileType (*next_map)[MAP_ROWS][MAP_COLS])
 {
-	load_map(map);
+	load_map(next_map);
 	player.angle = (float)M_PI / 2.0f;
 	if (player.ammo < 15) {
 		player.ammo = 15;
@@ -1544,21 +1544,21 @@ void Map_starter(const TileType map[MAP_ROWS][MAP_COLS])
 	bool player_found = false;
 	for (int y = 0; y < MAP_ROWS; y++) {
 		for (int x = 0; x < MAP_COLS; x++) {
-			if (map[y][x] == PLAYER_SPAWN && !player_found) {
+			if ((*next_map)[y][x] == PLAYER_SPAWN && !player_found) {
 				player.x = x * TILE_SIZE + TILE_SIZE / 2;
 				player.y = y * TILE_SIZE + TILE_SIZE / 2;
 				player_found = true;
 				if (mode.debug) {
 					printf("Player spawned at (%d, %d)\n", x, y);
 				}
-			} else if (map[y][x] == ENEMY1 || map[y][x] == ENEMY2) {
+			} else if ((*next_map)[y][x] == ENEMY1 || (*next_map)[y][x] == ENEMY2) {
 				// Spawn enemy at this position
 				float enemy_x = x * TILE_SIZE + TILE_SIZE / 2;
 				float enemy_y = y * TILE_SIZE + TILE_SIZE / 2;
 
 				// Different enemy types based on tile
 				int enemy_health = ENEMY_HEALTH; // ENEMY1: 60 health
-				if (map[y][x] == ENEMY2) {
+				if ((*next_map)[y][x] == ENEMY2) {
 					enemy_health = 180; // ENEMY2: 180 health (3 shotgun hits)
 				}
 
@@ -1566,7 +1566,8 @@ void Map_starter(const TileType map[MAP_ROWS][MAP_COLS])
 
 				if (mode.debug) {
 					printf("Enemy spawned at (%d, %d) type: %s, health: %d\n",
-					       x, y, map[y][x] == ENEMY1 ? "ENEMY1" : "ENEMY2",
+					       x, y,
+					       (*next_map)[y][x] == ENEMY1 ? "ENEMY1" : "ENEMY2",
 					       enemy_health);
 				}
 			}
@@ -1594,14 +1595,14 @@ void Map_starter(const TileType map[MAP_ROWS][MAP_COLS])
 	// Find and spawn pickups from the map
 	for (int y = 0; y < MAP_ROWS; y++) {
 		for (int x = 0; x < MAP_COLS; x++) {
-			TileType tile = map[y][x];
-			if (tile == HEALTH_PACK || tile == AMMO_BOX || tile == SHOTGUN_PICKUP) {
+			TileType Ntile = (*next_map)[y][x];
+			if (Ntile == HEALTH_PACK || Ntile == AMMO_BOX || Ntile == SHOTGUN_PICKUP) {
 				if (active_pickup_count < MAX_PICKUPS) {
 					pickups[active_pickup_count].x =
 						x * TILE_SIZE + TILE_SIZE / 2;
 					pickups[active_pickup_count].y =
 						y * TILE_SIZE + TILE_SIZE / 2;
-					pickups[active_pickup_count].type = tile;
+					pickups[active_pickup_count].type = Ntile;
 					pickups[active_pickup_count].collected =
 						collected_pickups[y][x];
 					pickups[active_pickup_count].active =

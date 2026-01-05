@@ -71,5 +71,6 @@ float footstep_timer = 0;
 #include "maps.h"
 
 const TileType (*Maps)[MAP_COLS] = maps_map1;
+Tile map;
 
 #endif
