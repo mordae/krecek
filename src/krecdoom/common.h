@@ -66,11 +66,9 @@ int seed = 11565;
 float volume = 0.5f;
 float timer = 0;
 float footstep_timer = 0;
+
 #include <stdint.h>
 #include "include_maps.h"
 #include "maps.h"
-
-const TileType (*Maps)[MAP_COLS] = maps_map1;
-Tile map;
-
+Level level;
 #endif

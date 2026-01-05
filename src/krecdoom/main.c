@@ -209,7 +209,6 @@ extern void map_starter_caller();
 static void textures_load();
 static void handlePickup(int tile_x, int tile_y);
 extern void game_handle_audio(float dt, float volume);
-TileType currentMap[MAP_ROWS][MAP_COLS];
 static void renderPickups();
 static void give_pickup(TileType tile);
 
@@ -341,7 +340,7 @@ static void renderGame()
 		if (drawEnd >= SCREEN_HEIGHT)
 			drawEnd = SCREEN_HEIGHT - 1;
 
-		int wallType = map.type[mapY][mapX] - 1;
+		int wallType = level.map[mapY][mapX].type - 1;
 		if (wallType <= 0)
 			wallType = 0;
 
@@ -394,7 +393,7 @@ static bool isWall(int Tile_x, int Tile_y)
 	if (Tile_x < 0 || Tile_x >= MAP_COLS || Tile_y < 0 || Tile_y >= MAP_ROWS) {
 		return true;
 	}
-	TileType tile = map.type[Tile_y][Tile_x];
+	TileType tile = level.map[Tile_y][Tile_x].type;
 	switch (tile) {
 	case COBLE:
 	case BRICKS:
@@ -437,7 +436,7 @@ static bool isPickup(int Tile_x, int Tile_y)
 	if (collected_pickups[Tile_y][Tile_x]) {
 		return false;
 	}
-	TileType tile = map.type[Tile_y][Tile_x];
+	TileType tile = level.map[Tile_y][Tile_x].type;
 
 	// Enemy tiles are not pickups
 	return (tile == HEALTH_PACK || tile == AMMO_BOX || tile == SHOTGUN_PICKUP);
@@ -472,7 +471,7 @@ static void give_pickup(TileType tile)
 			// Show pickup message
 			pickup_msg.visible = true;
 			pickup_msg.timer_start = time_us_64();
-			strcpy(pickup_msg.message, "AMMO +15");
+			strcpy(pickup_msg.message, "AMMO +10");
 			if (mode.debug) {
 				printf("Picked up ammo! Ammo: %d\n", player.ammo);
 			}
@@ -508,7 +507,7 @@ static void give_pickup(TileType tile)
 }
 static void handlePickup(int tile_x, int tile_y)
 {
-	TileType tile = map.type[tile_y][tile_x];
+	TileType tile = level.map[tile_y][tile_x].type;
 	collected_pickups[tile_y][tile_x] = true;
 
 	// Deactivate the pickup in the array
@@ -527,10 +526,10 @@ static void load_map(const TileType (*load_map)[MAP_ROWS][MAP_COLS])
 {
 	for (int r = 0; r < MAP_ROWS; r++) {
 		for (int co = 0; co < MAP_COLS; co++) {
-			map.type[r][co] = (*load_map)[r][co];
+			level.map[r][co].type = (*load_map)[r][co];
 		}
 	}
-	map.map_id = load_map;
+	level.map_id = load_map;
 }
 static void handlePlayerMovement(float dt)
 {
@@ -617,7 +616,7 @@ static void handlePlayerMovement(float dt)
 	int player_tile_y = player.y / TILE_SIZE;
 
 	// Teleport
-	if (map.type[player_tile_y][player_tile_x] == TELEPORT) {
+	if (level.map[player_tile_y][player_tile_x].type == TELEPORT) {
 		map_starter_caller();
 	}
 

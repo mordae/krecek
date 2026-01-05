@@ -30,12 +30,25 @@ typedef enum {
 	TELEPORT = 21,
 	PLAYER_SPAWN
 } TileType;
+typedef enum {
+	NOTHING = 0, //should not reach
+	NORTH,
+	SOUTH,
+	EAST,
+	WEST
+
+} Door_Side;
+typedef struct Doors {
+	Door_Side side;
+} Doors;
 
 typedef struct Tile {
-	uint8_t pick_up_id;
-	uint8_t enemy_id;
-	uint8_t UN;
+	Doors doors;
 	bool solid;
-	TileType type[MAP_ROWS][MAP_COLS];
-	const TileType (*map_id)[MAP_ROWS][MAP_COLS];
+	TileType type;
 } Tile;
+
+typedef struct Level {
+	Tile map[MAP_ROWS][MAP_COLS];
+	const TileType (*map_id)[MAP_ROWS][MAP_COLS];
+} Level;
