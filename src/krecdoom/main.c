@@ -4,6 +4,7 @@
 #include "maps.h"
 #include "sdk/input.h"
 #include "sdk/util.h"
+#include "campaign.h"
 
 #include <limits.h>
 
@@ -202,23 +203,20 @@ static bool isWall(int Tile_x, int Tile_y);
 static bool isPickup(int Tile_x, int Tile_y);
 static void shootBullet(float start_angle, float max_range_tiles, int visual_size,
 			uint16_t visual_color);
-static void Map_starter(const TileType map[MAP_ROWS][MAP_COLS]);
+void Map_starter(const TileType map[MAP_ROWS][MAP_COLS]);
 static void handleShooting();
-static void map_starter_caller();
+extern void map_starter_caller();
 static void textures_load();
 static void handlePickup(int tile_x, int tile_y);
 extern void game_handle_audio(float dt, float volume);
-const TileType (*Maps)[MAP_COLS] = maps_map1;
 TileType currentMap[MAP_ROWS][MAP_COLS];
 static void renderPickups();
 static void give_pickup(TileType tile);
 
-// Enemy functions
 static void initEnemies();
 static void spawnEnemy(float x, float y, int health);
 static void updateEnemies(float dt);
 static void renderEnemies();
-
 extern void draw_wall_column_asm(int x, int y_start, int y_end, uint32_t tex_pos, uint32_t step,
 				 const uint8_t *tex_data, int tex_width, int tex_height, int tex_x,
 				 int shade_int, int x2);
@@ -424,6 +422,7 @@ static bool isWall(int Tile_x, int Tile_y)
 	case EMPTY:
 		return false;
 	default:
+		return false;
 		break;
 	}
 	return false;
@@ -1511,23 +1510,7 @@ void game_start(void)
 	sdk_set_output_gain_db(volume);
 }
 
-static void map_starter_caller()
-{
-	if (Maps == maps_map2) {
-		Map_starter(maps_map3);
-		return;
-	}
-	if (Maps == maps_map1) {
-		Map_starter(maps_map2);
-		return;
-	}
-	if (Maps == maps_map3) {
-		Map_starter(maps_map1);
-		return;
-	}
-}
-
-static void Map_starter(const TileType map[MAP_ROWS][MAP_COLS])
+void Map_starter(const TileType map[MAP_ROWS][MAP_COLS])
 {
 	load_map(map);
 	player.angle = (float)M_PI / 2.0f;

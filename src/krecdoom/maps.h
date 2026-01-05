@@ -1,7 +1,6 @@
 #pragma once
 #define MAP_COLS 30
 #define MAP_ROWS 30
-
 #define ENUM_TYPES 22
 
 typedef enum {
