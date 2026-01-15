@@ -9,6 +9,10 @@
 #define MOVE_SPEED 225.0f
 #define ROTATE_SPEED 3.0f
 
+#define DOOR_OPEN_SPEED 2.0f
+#define DOOR_AUTO_CLOSE_TIME 3.0f
+#define DOOR_DETECT_RANGE (1.5f * TILE_SIZE)
+
 // Increased weapon damage
 #define PISTOL_DAMAGE 35
 #define CHAINSAW_DAMAGE 10
@@ -62,13 +66,13 @@
 #define fixed_mul(a, b) ((fixed_t)(((int64_t)(a) * (b)) >> FIXED_SHIFT))
 #define fixed_div(a, b) ((fixed_t)(((int64_t)(a) << FIXED_SHIFT) / (b)))
 
-int seed = 11565;
-float volume = 0.5f;
-float timer = 0;
-float footstep_timer = 0;
+extern int seed;
+extern float volume;
+extern float timer;
+extern float footstep_timer;
 
 #include <stdint.h>
 #include "include_maps.h"
 #include "maps.h"
-Level level;
+extern Level level;
 #endif
