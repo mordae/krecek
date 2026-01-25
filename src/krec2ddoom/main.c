@@ -5,29 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <tft.h>
-//*     USE MAUSE in everthing *
-//*  MAP_EDITOR
-//*
-//*   STATUS 0
-//*     right click to look at texture
-//*   STATUS 1
-//*     use right click to tile +1
-//*   STATUS 2
-//*     use right click to set the tile from memory
-//*     use start/enter to set the memory tile
-//*   STATUS 3
-//*     set tile to 0
-//*   Use select to use cheet sheet
-//*
-//*   To edit what map and where use it edit struct edited_file
-//*
-//*----------------------TODO--------------------------
-//*   RENAME
-//*   NAMING
-//*   make the convert py skript into C function
-//*
-//*
-//*
+
 #include <T_00-4x4.png.h>
 #include <T_01-4x4.png.h>
 #include <T_02-4x4.png.h>
@@ -117,7 +95,7 @@ typedef enum {
 	EDITOR_NEW,
 	EDITOR_DELETE
 } EDITOR_STATE;
-typedef enum { FIRST, SECOND, THIRD, NONE } EDITOR_STATUS;
+typedef enum { FIRST, SECOND, THIRD, FOURTH, NONE } EDITOR_STATUS;
 
 typedef struct {
 	sdk_sprite_t a;
@@ -130,11 +108,13 @@ typedef struct {
 typedef struct {
 	float timer;
 	TileType map[MAP_ROWS][MAP_COLS];
+	Door_Side door_map[MAP_ROWS][MAP_COLS];
 } Saves;
 
 typedef struct {
 	bool tiles;
 	int tile_sel;
+	Door_Side door_sel;
 	bool tile_show;
 } Menu;
 
@@ -174,7 +154,9 @@ static EDITOR_STATUS editor_status = NONE;
 static TexureMaps Textures[64];
 
 const TileType (*load_map)[MAP_COLS];
+const Door_Side (*load_door_map)[MAP_COLS];
 static TileType map[MAP_ROWS][MAP_COLS];
+static Door_Side door_map[MAP_ROWS][MAP_COLS];
 
 static void tile_ui(int x, int y);
 static void tiles();
@@ -202,6 +184,7 @@ static void editor_auto_read()
 	for (int r = 0; r < MAP_ROWS; r++) {
 		for (int co = 0; co < MAP_COLS; co++) {
 			map[r][co] = saves.map[r][co];
+			door_map[r][co] = saves.door_map[r][co];
 		}
 	}
 	printf("Read");
@@ -217,12 +200,14 @@ static void editor_auto_save()
 	Saves saves = { .timer = save.total_time };
 
 	memcpy(saves.map, map, sizeof(saves.map));
+	memcpy(saves.door_map, door_map, sizeof(saves.door_map));
 
 	printf("save\n");
 
 	sdk_save_write(0, &saves, sizeof(saves));
 }
-static void saveMap(const char *filepath, const char *mapName, TileType map[MAP_ROWS][MAP_COLS])
+static void saveMap(const char *filepath, const char *mapName, TileType map[MAP_ROWS][MAP_COLS],
+		    Door_Side door_map[MAP_ROWS][MAP_COLS])
 {
 	// Create directories if they don't exist (simple approach)
 	char dir_path[256];
@@ -244,14 +229,19 @@ static void saveMap(const char *filepath, const char *mapName, TileType map[MAP_
 	}
 
 	// Write the include directive and array declaration for a .c file
-	fprintf(file, "#include \"../maps.h\"\n\n");
-	fprintf(file, "TileType %s[MAP_ROWS][MAP_COLS] = {\n", mapName);
+	fprintf(file, "#include \"../common.h\"\n\n");
+	fprintf(file, "const TileType %s[MAP_ROWS][MAP_COLS] = {\n", mapName);
 
 	// Write each row of the map
 	for (int i = 0; i < MAP_ROWS; i++) {
 		fprintf(file, "\t{ ");
 		for (int j = 0; j < MAP_COLS; j++) {
-			fprintf(file, "%d", map[i][j]);
+			// If there is a door defined in the door_map, ensure the tile type is saved as DOOR
+			int val = map[i][j];
+			if (door_map[i][j] != 0) {
+				val = DOOR;
+			}
+			fprintf(file, "%d", val);
 			if (j < MAP_COLS - 1) {
 				fprintf(file, ", ");
 			}
@@ -263,6 +253,37 @@ static void saveMap(const char *filepath, const char *mapName, TileType map[MAP_
 		fprintf(file, "\n");
 	}
 
+	fprintf(file, "};\n\n");
+
+	// Construct door variable name
+	char doorName[256];
+	const char *prefix = "maps_map";
+	const char *target = mapName;
+	if (strncmp(target, prefix, strlen(prefix)) == 0) {
+		// e.g. maps_map1 -> maps_doors1
+		snprintf(doorName, sizeof(doorName), "maps_doors%s", target + strlen(prefix));
+	} else {
+		// Fallback
+		snprintf(doorName, sizeof(doorName), "%s_doors", mapName);
+	}
+
+	fprintf(file, "const Door_Side %s[MAP_ROWS][MAP_COLS] = {\n", doorName);
+
+	// Write each row of the door map
+	for (int i = 0; i < MAP_ROWS; i++) {
+		fprintf(file, "\t{ ");
+		for (int j = 0; j < MAP_COLS; j++) {
+			fprintf(file, "%d", door_map[i][j]);
+			if (j < MAP_COLS - 1) {
+				fprintf(file, ", ");
+			}
+		}
+		fprintf(file, " }");
+		if (i < MAP_ROWS - 1) {
+			fprintf(file, ",");
+		}
+		fprintf(file, "\n");
+	}
 	fprintf(file, "};\n");
 	fclose(file);
 	printf("Map saved successfully to %s\n", filepath);
@@ -503,9 +524,11 @@ void game_input(unsigned dt_usec)
 							case SECOND:
 								if (sdk_inputs_delta.tp == 1) {
 									map[x][y] = M.tile_sel;
+									door_map[x][y] = M.door_sel;
 								}
 								if (sdk_inputs_delta.start == 1) {
 									M.tile_sel = map[x][y];
+									M.door_sel = door_map[x][y];
 								}
 								break;
 							case NONE:
@@ -522,6 +545,20 @@ void game_input(unsigned dt_usec)
 							case THIRD:
 								if (sdk_inputs_delta.tp == 1) {
 									map[x][y] = 0;
+									door_map[x][y] = 0;
+								}
+								break;
+							case FOURTH:
+								if (sdk_inputs_delta.tp == 1) {
+									if (door_map[x][y] ==
+									    NOTHING)
+										door_map[x][y] = NS;
+									else if (door_map[x][y] ==
+										 NS)
+										door_map[x][y] = EW;
+									else
+										door_map[x][y] =
+											NOTHING;
 								}
 								break;
 							}
@@ -555,7 +592,7 @@ void game_input(unsigned dt_usec)
 			snprintf(full_path, sizeof(full_path), "../krecdoom/maps/%s.c",
 				 edited_file.file_path);
 			editor_auto_save();
-			saveMap(full_path, edited_file.name, map);
+			saveMap(full_path, edited_file.name, map, door_map);
 			editor_state = EDITOR_MAP;
 		}
 		break;
@@ -689,6 +726,7 @@ static void update_krecdoom_include_maps(int total_maps)
 
 	for (int i = 1; i <= total_maps; i++) {
 		fprintf(file, "extern const TileType maps_map%d[MAP_ROWS][MAP_COLS];\n", i);
+		fprintf(file, "extern const Door_Side maps_doors%d[MAP_ROWS][MAP_COLS];\n", i);
 	}
 
 	fprintf(file, "\n#define FILE_NUM %d\n\n", total_maps);
@@ -726,11 +764,24 @@ static void update_files_header(int total_maps)
 	}
 	fprintf(file, "extern const TileType auto_safe[MAP_ROWS][MAP_COLS];\n\n");
 
+	fprintf(file, "extern const Door_Side maps_doors1[MAP_ROWS][MAP_COLS];\n");
+	for (int i = 2; i <= total_maps; i++) {
+		fprintf(file, "extern const Door_Side maps_doors%d[MAP_ROWS][MAP_COLS];\n", i);
+	}
+	fprintf(file, "extern const Door_Side auto_safe_doors[MAP_ROWS][MAP_COLS];\n\n");
+
 	fprintf(file, "#define FILE_NUM %d\n\n", total_maps + 1); // +1 for auto_safe
 
 	fprintf(file, "static const TileType (*FILES[FILE_NUM])[MAP_COLS] = { auto_safe");
 	for (int i = 1; i <= total_maps; i++) {
 		fprintf(file, ", maps_map%d", i);
+	}
+	fprintf(file, " };\n\n");
+
+	fprintf(file,
+		"static const Door_Side (*DOOR_FILES[FILE_NUM])[MAP_COLS] = { auto_safe_doors");
+	for (int i = 1; i <= total_maps; i++) {
+		fprintf(file, ", maps_doors%d", i);
 	}
 	fprintf(file, " };\n\n");
 
@@ -811,7 +862,8 @@ static void create_and_setup_new_map(void)
 	snprintf(filepath, sizeof(filepath), "map%d", new_map_number);
 
 	TileType new_map[MAP_ROWS][MAP_COLS] = { 0 };
-	saveMap(filename, mapname, new_map);
+	Door_Side new_doors[MAP_ROWS][MAP_COLS] = { 0 };
+	saveMap(filename, mapname, new_map, new_doors);
 
 	edited_file.name = mapname;
 	edited_file.file_path = filepath;
@@ -830,6 +882,7 @@ static void create_and_setup_new_map(void)
 	for (int r = 0; r < MAP_ROWS; r++) {
 		for (int co = 0; co < MAP_COLS; co++) {
 			map[r][co] = 0;
+			door_map[r][co] = 0;
 		}
 	}
 }
@@ -973,12 +1026,18 @@ static void IS_FILE_DRAW(int file, int c, bool is_delete_mode)
 				edited_file.name = FILES_NAME[my];
 				edited_file.file_path = FILES_PATH[my];
 				load_map = FILES[my];
+				load_door_map = DOOR_FILES[my];
 				if (FILES[my] == 0) {
 					editor_auto_read();
 				} else {
 					for (int r = 0; r < MAP_ROWS; r++) {
 						for (int co = 0; co < MAP_COLS; co++) {
 							map[r][co] = load_map[r][co];
+							if (load_door_map)
+								door_map[r][co] =
+									load_door_map[r][co];
+							else
+								door_map[r][co] = 0;
 						}
 					}
 				}
@@ -1020,12 +1079,17 @@ static void FILE_DRAW(int file, int c)
 			edited_file.name = FILES_NAME[my];
 			edited_file.file_path = FILES_PATH[my];
 			load_map = FILES[my];
+			load_door_map = DOOR_FILES[my];
 			if (FILES[my] == 0) {
 				editor_auto_read();
 			} else {
 				for (int r = 0; r < MAP_ROWS; r++) {
 					for (int co = 0; co < MAP_COLS; co++) {
 						map[r][co] = load_map[r][co];
+						if (load_door_map)
+							door_map[r][co] = load_door_map[r][co];
+						else
+							door_map[r][co] = 0;
 					}
 				}
 			}
@@ -1052,6 +1116,7 @@ void game_paint(unsigned dt_usec)
 			for (int r = 0; r < MAP_ROWS; r++) {
 				for (int co = 0; co < MAP_COLS; co++) {
 					map[r][co] = 0;
+					door_map[r][co] = 0;
 				}
 			}
 		}
@@ -1169,7 +1234,7 @@ static void ui_input_editor(int mx, int my)
 			}
 		}
 	}
-	if (sdk_inputs_delta.aux[0] == 1 || sdk_inputs_delta.aux[4]) {
+	if (sdk_inputs_delta.aux[0] == 1) {
 		editor_status = NONE;
 	}
 	if (sdk_inputs_delta.aux[1] == 1) {
@@ -1180,6 +1245,9 @@ static void ui_input_editor(int mx, int my)
 	}
 	if (sdk_inputs_delta.aux[3] == 1) {
 		editor_status = THIRD;
+	}
+	if (sdk_inputs_delta.aux[4] == 1) {
+		editor_status = FOURTH;
 	}
 }
 static void draw_small_string(int x, int y, const char *format, ...)
@@ -1238,6 +1306,9 @@ static void ui_editor()
 
 	case THIRD:
 		num_status = 3;
+		break;
+	case FOURTH:
+		num_status = 4;
 		break;
 	default:
 		num_status = 0;
@@ -1445,6 +1516,11 @@ static void draw_tile(int x0, int y0, int x1, int y1, int tx, int ty)
 		break;
 	case EMPTY:
 		break;
+	}
+	if (door_map[tx][ty] == NS) {
+		tft_draw_rect(x0 + 1, y0, x0 + 3, y1, RED);
+	} else if (door_map[tx][ty] == EW) {
+		tft_draw_rect(x0, y0 + 1, x1, y0 + 3, RED);
 	}
 }
 static void tiles()

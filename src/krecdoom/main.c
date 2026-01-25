@@ -211,7 +211,8 @@ static bool isWall(int Tile_x, int Tile_y);
 static bool isPickup(int Tile_x, int Tile_y);
 static void shootBullet(float start_angle, float max_range_tiles, int visual_size,
 			uint16_t visual_color);
-void Map_starter(const TileType (*next_map)[MAP_ROWS][MAP_COLS], const Door_Side (*door_map)[MAP_ROWS][MAP_COLS]);
+void Map_starter(const TileType (*next_map)[MAP_ROWS][MAP_COLS],
+		 const Door_Side (*door_map)[MAP_ROWS][MAP_COLS]);
 static void handleShooting();
 extern void map_starter_caller();
 static void textures_load();
@@ -304,10 +305,11 @@ static void renderGame()
 			sideDistY = fixed_mul(((mapY + 1) << FIXED_SHIFT) - posY, deltaDistY);
 		}
 
-        bool doorHit = false;
-        fixed_t doorDist = 0;
-        int doorTexX = 0;
+		bool doorHit = false;
+		fixed_t doorDist = 0;
+		int doorTexX = 0;
 
+		bool hit = false;
 		// DDA
 		for (;;) {
 			if (sideDistX < sideDistY) {
@@ -320,119 +322,142 @@ static void renderGame()
 				side = 1;
 			}
 
-            // Check bounds
-            if (mapX < 0 || mapX >= MAP_COLS || mapY < 0 || mapY >= MAP_ROWS) {
-                break;
-            }
+			// Check bounds
+			if (mapX < 0 || mapX >= MAP_COLS || mapY < 0 || mapY >= MAP_ROWS) {
+				hit = false;
+				break;
+			}
 
-            TileType type = level.map[mapY][mapX].type;
-            if (type == DOOR) {
-                // Check if we hit the door in the middle of the tile
-                Door_Side doorSide = level.map[mapY][mapX].doors.side;
-                
-                // Let's use simplified logic:
-                // If door is NS, we treat it as a wall at x+0.5.
-                // If door is EW, we treat it as a wall at y+0.5.
+			TileType type = level.map[mapY][mapX].type;
+			if (type == DOOR) {
+				// Check if we hit the door in the middle of the tile
+				Door_Side doorSide = level.map[mapY][mapX].doors.side;
 
-                if (doorSide == NS) {
-                    // Vertical door at x + 0.5
-                    fixed_t half = FIXED_ONE / 2;
-                    fixed_t doorX = (mapX << FIXED_SHIFT) + half;
-                    fixed_t perpDistFixed = fixed_div(doorX - posX, rayDirX);
+				// Let's use simplified logic:
+				// If door is NS, we treat it as a wall at x+0.5.
+				// If door is EW, we treat it as a wall at y+0.5.
 
-                    if (perpDistFixed > 0) {
-                        // Intersection Y
-                        fixed_t intersectY = posY + fixed_mul(perpDistFixed, rayDirY);
-                        int tileY = intersectY >> FIXED_SHIFT;
-                        if (tileY == mapY) {
-                             // Hit is valid within this tile Y
-                             // Calculate texture X
-                             fixed_t hitX = intersectY - (mapY << FIXED_SHIFT); // 0.0 to 1.0
-                             
-                             float openAmt = level.map[mapY][mapX].doors.open_amount;
-                             
-                             // Slide Left Logic
-                             fixed_t openFixed = float_to_fixed(openAmt);
-                             fixed_t solidEnd = FIXED_ONE - openFixed;
-                             
-                             if (hitX <= solidEnd) {
-                                 doorDist = perpDistFixed;
-                                 side = 0; 
-                                 // Texture slides left (add openAmt to hitX)
-                                 fixed_t texFrac = hitX + openFixed;
-                                 
-                                 int texWidth = Textures[TEX_DOORS].w;
-                                 doorTexX = (int)(((int64_t)texFrac * texWidth) >> FIXED_SHIFT);
-                                 
-                                 doorHit = true;
-                                 break;
-                             }
-                        }
-                    }
-                } else if (doorSide == EW) { // EW
-                    // Horizontal door at y + 0.5
-                    fixed_t half = FIXED_ONE / 2;
-                    fixed_t doorY = (mapY << FIXED_SHIFT) + half;
-                    fixed_t perpDistFixed = fixed_div(doorY - posY, rayDirY);
-                    
-                    if (perpDistFixed > 0) {
-                        fixed_t intersectX = posX + fixed_mul(perpDistFixed, rayDirX);
-                        int tileX = intersectX >> FIXED_SHIFT;
-                        if (tileX == mapX) {
-                             fixed_t hitX = intersectX - (mapX << FIXED_SHIFT); // 0.0 to 1.0
-                             float openAmt = level.map[mapY][mapX].doors.open_amount;
-                             fixed_t openFixed = float_to_fixed(openAmt);
-                             fixed_t solidEnd = FIXED_ONE - openFixed;
-                             
-                             if (hitX <= solidEnd) {
-                                 doorDist = perpDistFixed;
-                                 side = 1; // Horizontal hit
-                                 fixed_t texFrac = hitX + openFixed;
-                                 int texWidth = Textures[TEX_DOORS].w;
-                                 doorTexX = (int)(((int64_t)texFrac * texWidth) >> FIXED_SHIFT);
-                                 
-                                 doorHit = true;
-                                 break;
-                             }
-                        }
-                    }
-                }
-            }
+				if (doorSide == NS) {
+					// Vertical door at x + 0.5
+					fixed_t half = FIXED_ONE / 2;
+					fixed_t doorX = (mapX << FIXED_SHIFT) + half;
+					fixed_t perpDistFixed = fixed_div(doorX - posX, rayDirX);
+
+					if (perpDistFixed > 0) {
+						// Intersection Y
+						fixed_t intersectY =
+							posY + fixed_mul(perpDistFixed, rayDirY);
+						int tileY = intersectY >> FIXED_SHIFT;
+						if (tileY == mapY) {
+							// Hit is valid within this tile Y
+							// Calculate texture X
+							fixed_t hitX =
+								intersectY -
+								(mapY << FIXED_SHIFT); // 0.0 to 1.0
+
+							float openAmt = level.map[mapY][mapX]
+										.doors.open_amount;
+
+							// Slide Left Logic
+							fixed_t openFixed = float_to_fixed(openAmt);
+							fixed_t solidEnd = FIXED_ONE - openFixed;
+
+							if (hitX <= solidEnd) {
+								doorDist = perpDistFixed;
+								side = 0;
+								// Texture slides left (add openAmt to hitX)
+								fixed_t texFrac = hitX + openFixed;
+
+								int texWidth =
+									Textures[TEX_DOORS].w;
+								doorTexX = (int)(((int64_t)texFrac *
+										  texWidth) >>
+										 FIXED_SHIFT);
+
+								doorHit = true;
+								hit = true;
+								break;
+							}
+						}
+					}
+				} else if (doorSide == EW) { // EW
+					// Horizontal door at y + 0.5
+					fixed_t half = FIXED_ONE / 2;
+					fixed_t doorY = (mapY << FIXED_SHIFT) + half;
+					fixed_t perpDistFixed = fixed_div(doorY - posY, rayDirY);
+
+					if (perpDistFixed > 0) {
+						fixed_t intersectX =
+							posX + fixed_mul(perpDistFixed, rayDirX);
+						int tileX = intersectX >> FIXED_SHIFT;
+						if (tileX == mapX) {
+							fixed_t hitX =
+								intersectX -
+								(mapX << FIXED_SHIFT); // 0.0 to 1.0
+							float openAmt = level.map[mapY][mapX]
+										.doors.open_amount;
+							fixed_t openFixed = float_to_fixed(openAmt);
+							fixed_t solidEnd = FIXED_ONE - openFixed;
+
+							if (hitX <= solidEnd) {
+								doorDist = perpDistFixed;
+								side = 1; // Horizontal hit
+								fixed_t texFrac = hitX + openFixed;
+								int texWidth =
+									Textures[TEX_DOORS].w;
+								doorTexX = (int)(((int64_t)texFrac *
+										  texWidth) >>
+										 FIXED_SHIFT);
+
+								doorHit = true;
+								hit = true;
+								break;
+							}
+						}
+					}
+				}
+			}
 
 			if (isWall(mapX, mapY)) {
+				hit = true;
 				break;
-            }
+			}
 		}
-        
-        // Render
-        fixed_t perpDist;
-        int texX = 0;
-        int wallType = 0;
 
-        if (doorHit) {
-            perpDist = doorDist;
-            wallType = TEX_DOORS; // 25
-            texX = doorTexX;
-        } else {
-            // Standard Wall
-            perpDist = (side == 0) ? (sideDistX - deltaDistX) :
-                            (sideDistY - deltaDistY);
-            if (perpDist < 1) perpDist = 1;
-            
-            wallType = level.map[mapY][mapX].type - 1;
-            if (wallType <= 0) wallType = 0;
-            
-            // Calculate texX for standard wall
-            int texWidth = Textures[wallType].w;
-            // wallX calculation...
-            fixed_t wallX = (side == 0) ? (posY + fixed_mul(perpDist, rayDirY)) :
-                                          (posX + fixed_mul(perpDist, rayDirX));
-            fixed_t wallXFrac = wallX & (FIXED_ONE - 1);
-            texX = (int)(((int64_t)wallXFrac * texWidth) >> FIXED_SHIFT);
-            if ((side == 0 && rayDirX > 0) || (side == 1 && rayDirY < 0)) {
-                texX = texWidth - texX - 1;
-            }
-        }
+		if (!hit)
+			continue;
+
+		// Render
+		fixed_t perpDist;
+		int texX = 0;
+		int wallType = 0;
+
+		if (doorHit) {
+			perpDist = doorDist;
+			wallType = TEX_DOORS; // 25
+			texX = doorTexX;
+		} else {
+			// Standard Wall
+			perpDist = (side == 0) ? (sideDistX - deltaDistX) :
+						 (sideDistY - deltaDistY);
+			if (perpDist < 1)
+				perpDist = 1;
+
+			wallType = level.map[mapY][mapX].type - 1;
+			if (wallType <= 0)
+				wallType = 0;
+
+			// Calculate texX for standard wall
+			int texWidth = Textures[wallType].w;
+			// wallX calculation...
+			fixed_t wallX = (side == 0) ? (posY + fixed_mul(perpDist, rayDirY)) :
+						      (posX + fixed_mul(perpDist, rayDirX));
+			fixed_t wallXFrac = wallX & (FIXED_ONE - 1);
+			texX = (int)(((int64_t)wallXFrac * texWidth) >> FIXED_SHIFT);
+			if ((side == 0 && rayDirX > 0) || (side == 1 && rayDirY < 0)) {
+				texX = texWidth - texX - 1;
+			}
+		}
 
 		// Convert to world units for z-buffer / shading
 		fixed_t perpDistWorld = fixed_mul(perpDist, fixed_tile_size);
@@ -493,19 +518,20 @@ static void renderGame()
 	tft_draw_pixel(cx, cy + 1, WHITE);
 }
 
-static bool isSolid(int Tile_x, int Tile_y) {
+static bool isSolid(int Tile_x, int Tile_y)
+{
 	if (Tile_x < 0 || Tile_x >= MAP_COLS || Tile_y < 0 || Tile_y >= MAP_ROWS) {
 		return true;
 	}
-    if (level.map[Tile_y][Tile_x].type == DOOR) {
-        // Solid if mostly closed
-        if (level.map[Tile_y][Tile_x].doors.open_amount < 0.7f) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-    return isWall(Tile_x, Tile_y);
+	if (level.map[Tile_y][Tile_x].type == DOOR) {
+		// Solid if mostly closed
+		if (level.map[Tile_y][Tile_x].doors.open_amount < 0.7f) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	return isWall(Tile_x, Tile_y);
 }
 
 static bool isWall(int Tile_x, int Tile_y)
@@ -539,7 +565,7 @@ static bool isWall(int Tile_x, int Tile_y)
 	case ENEMY2:
 	case TELEPORT:
 	case EMPTY:
-    case DOOR: // Doors are handled specially in raycast, and isSolid for collision
+	case DOOR: // Doors are handled specially in raycast, and isSolid for collision
 		return false;
 	default:
 		return false;
@@ -643,29 +669,34 @@ static void handlePickup(int tile_x, int tile_y)
 	}
 	give_pickup(tile);
 }
-static void load_map(const TileType (*load_map)[MAP_ROWS][MAP_COLS], const Door_Side (*door_map)[MAP_ROWS][MAP_COLS])
+static void load_map(const TileType (*load_map)[MAP_ROWS][MAP_COLS],
+		     const Door_Side (*door_map)[MAP_ROWS][MAP_COLS])
 {
 	for (int r = 0; r < MAP_ROWS; r++) {
 		for (int co = 0; co < MAP_COLS; co++) {
 			level.map[r][co].type = (*load_map)[r][co];
-            if (door_map) {
-                level.map[r][co].doors.side = (*door_map)[r][co];
-            } else {
-                level.map[r][co].doors.side = 0;
-            }
-            // Initialize door state
-            if (level.map[r][co].type == DOOR) {
-                level.map[r][co].doors.active = true;
-                level.map[r][co].doors.state = DOOR_CLOSED;
-                level.map[r][co].doors.open_amount = 0.0f;
-                level.map[r][co].doors.timer = 0.0f;
-            } else {
-                level.map[r][co].doors.active = false;
-            }
+			if (door_map) {
+				level.map[r][co].doors.side = (*door_map)[r][co];
+			} else {
+				level.map[r][co].doors.side = 0;
+			}
+			// Initialize door state
+			if (level.map[r][co].type == DOOR) {
+				level.map[r][co].doors.active = true;
+				// Default to NS if no side specified to prevent invisible doors
+				if (level.map[r][co].doors.side == NOTHING) {
+					level.map[r][co].doors.side = NS;
+				}
+				level.map[r][co].doors.state = DOOR_CLOSED;
+				level.map[r][co].doors.open_amount = 0.0f;
+				level.map[r][co].doors.timer = 0.0f;
+			} else {
+				level.map[r][co].doors.active = false;
+			}
 		}
 	}
 	level.map_id = load_map;
-    level.door_map_id = door_map;
+	level.door_map_id = door_map;
 }
 static void handlePlayerMovement(float dt)
 {
@@ -708,28 +739,28 @@ static void handlePlayerMovement(float dt)
 		} else
 			mode.debug = true;
 	}
-    
-    // Manual door open check (START button)
-    if (sdk_inputs_delta.start == 1) {
-        float checkX = player.x + cosf(player.angle) * TILE_SIZE;
-        float checkY = player.y + sinf(player.angle) * TILE_SIZE;
-        int tileX = (int)(checkX / TILE_SIZE);
-        int tileY = (int)(checkY / TILE_SIZE);
-        
-        if (tileX >= 0 && tileX < MAP_COLS && tileY >= 0 && tileY < MAP_ROWS) {
-            if (level.map[tileY][tileX].type == DOOR) {
-                if (level.map[tileY][tileX].doors.state == DOOR_CLOSED || 
-                    level.map[tileY][tileX].doors.state == DOOR_CLOSING) {
-                    level.map[tileY][tileX].doors.state = DOOR_OPENING;
-                    sdk_melody_play("/i:square c#"); // Door sound
-                } else if (level.map[tileY][tileX].doors.state == DOOR_OPEN || 
-                           level.map[tileY][tileX].doors.state == DOOR_OPENING) {
-                    // Maybe manual close?
-                     level.map[tileY][tileX].doors.state = DOOR_CLOSING;
-                }
-            }
-        }
-    }
+
+	// Manual door open check (START button)
+	if (sdk_inputs_delta.start == 1) {
+		float checkX = player.x + cosf(player.angle) * TILE_SIZE;
+		float checkY = player.y + sinf(player.angle) * TILE_SIZE;
+		int tileX = (int)(checkX / TILE_SIZE);
+		int tileY = (int)(checkY / TILE_SIZE);
+
+		if (tileX >= 0 && tileX < MAP_COLS && tileY >= 0 && tileY < MAP_ROWS) {
+			if (level.map[tileY][tileX].type == DOOR) {
+				if (level.map[tileY][tileX].doors.state == DOOR_CLOSED ||
+				    level.map[tileY][tileX].doors.state == DOOR_CLOSING) {
+					level.map[tileY][tileX].doors.state = DOOR_OPENING;
+					sdk_melody_play("/i:square c#"); // Door sound
+				} else if (level.map[tileY][tileX].doors.state == DOOR_OPEN ||
+					   level.map[tileY][tileX].doors.state == DOOR_OPENING) {
+					// Maybe manual close?
+					level.map[tileY][tileX].doors.state = DOOR_CLOSING;
+				}
+			}
+		}
+	}
 
 	if (sdk_inputs_delta.y == 1) {
 		player.gun += 1;
@@ -760,7 +791,7 @@ static void handlePlayerMovement(float dt)
 
 	// Collision with walls - use isSolid instead of isWall
 	if (isSolid(player_tile_fx, player_tile_fy)) {
-        // Simple slide/collision response could be added here, but for now just stop
+		// Simple slide/collision response could be added here, but for now just stop
 		return;
 	}
 
@@ -782,9 +813,9 @@ static void handlePlayerMovement(float dt)
 
 	// Update enemies
 	updateEnemies(dt);
-    
-    // Update doors
-    updateDoors(dt);
+
+	// Update doors
+	updateDoors(dt);
 
 	// Low ammo warning
 	if (player.ammo <= 3 && player.ammo > 0) {
@@ -797,62 +828,65 @@ static void handlePlayerMovement(float dt)
 	}
 }
 
-static void updateDoors(float dt) {
-    for (int y = 0; y < MAP_ROWS; y++) {
-        for (int x = 0; x < MAP_COLS; x++) {
-            if (level.map[y][x].type == DOOR && level.map[y][x].doors.active) {
-                Doors *d = &level.map[y][x].doors;
-                
-                // Auto Open
-                if (mode.auto_door_open) {
-                    float dx = (x * TILE_SIZE + TILE_SIZE/2) - player.x;
-                    float dy = (y * TILE_SIZE + TILE_SIZE/2) - player.y;
-                    float dist = sqrtf(dx*dx + dy*dy);
-                    if (dist < DOOR_DETECT_RANGE) {
-                        if (d->state == DOOR_CLOSED || d->state == DOOR_CLOSING) {
-                            d->state = DOOR_OPENING;
-                        }
-                        // Keep open if player is near
-                        if (d->state == DOOR_OPEN) {
-                             d->timer = DOOR_AUTO_CLOSE_TIME;
-                        }
-                    }
-                }
+static void updateDoors(float dt)
+{
+	for (int y = 0; y < MAP_ROWS; y++) {
+		for (int x = 0; x < MAP_COLS; x++) {
+			if (level.map[y][x].type == DOOR && level.map[y][x].doors.active) {
+				Doors *d = &level.map[y][x].doors;
 
-                switch (d->state) {
-                    case DOOR_OPENING:
-                        d->open_amount += DOOR_OPEN_SPEED * dt;
-                        if (d->open_amount >= 1.0f) {
-                            d->open_amount = 1.0f;
-                            d->state = DOOR_OPEN;
-                            d->timer = DOOR_AUTO_CLOSE_TIME;
-                        }
-                        break;
-                    case DOOR_CLOSING:
-                        // Don't close if player is inside
-                        if ((int)(player.x / TILE_SIZE) == x && (int)(player.y / TILE_SIZE) == y) {
-                             d->state = DOOR_OPENING;
-                             break;
-                        }
-                    
-                        d->open_amount -= DOOR_OPEN_SPEED * dt;
-                        if (d->open_amount <= 0.0f) {
-                            d->open_amount = 0.0f;
-                            d->state = DOOR_CLOSED;
-                        }
-                        break;
-                    case DOOR_OPEN:
-                        d->timer -= dt;
-                        if (d->timer <= 0) {
-                            d->state = DOOR_CLOSING;
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-    }
+				// Auto Open
+				if (mode.auto_door_open) {
+					float dx = (x * TILE_SIZE + TILE_SIZE / 2) - player.x;
+					float dy = (y * TILE_SIZE + TILE_SIZE / 2) - player.y;
+					float dist = sqrtf(dx * dx + dy * dy);
+					if (dist < DOOR_DETECT_RANGE) {
+						if (d->state == DOOR_CLOSED ||
+						    d->state == DOOR_CLOSING) {
+							d->state = DOOR_OPENING;
+						}
+						// Keep open if player is near
+						if (d->state == DOOR_OPEN) {
+							d->timer = DOOR_AUTO_CLOSE_TIME;
+						}
+					}
+				}
+
+				switch (d->state) {
+				case DOOR_OPENING:
+					d->open_amount += DOOR_OPEN_SPEED * dt;
+					if (d->open_amount >= 1.0f) {
+						d->open_amount = 1.0f;
+						d->state = DOOR_OPEN;
+						d->timer = DOOR_AUTO_CLOSE_TIME;
+					}
+					break;
+				case DOOR_CLOSING:
+					// Don't close if player is inside
+					if ((int)(player.x / TILE_SIZE) == x &&
+					    (int)(player.y / TILE_SIZE) == y) {
+						d->state = DOOR_OPENING;
+						break;
+					}
+
+					d->open_amount -= DOOR_OPEN_SPEED * dt;
+					if (d->open_amount <= 0.0f) {
+						d->open_amount = 0.0f;
+						d->state = DOOR_CLOSED;
+					}
+					break;
+				case DOOR_OPEN:
+					d->timer -= dt;
+					if (d->timer <= 0) {
+						d->state = DOOR_CLOSING;
+					}
+					break;
+				default:
+					break;
+				}
+			}
+		}
+	}
 }
 
 static void player_view_draw()
@@ -1082,13 +1116,14 @@ static void shootBullet(float current_shoot_angle, float max_range_tiles, int vi
 		int current_tile_y = (int)(rayY / TILE_SIZE);
 
 		if (isWall(current_tile_x, current_tile_y)) {
-            // Check for doors if we want bullets to hit closed doors
-            if (level.map[current_tile_y][current_tile_x].type == DOOR) {
-                 if (level.map[current_tile_y][current_tile_x].doors.open_amount > 0.7f) {
-                     continue; // Bullet passes through open door
-                 }
-            }
-            
+			// Check for doors if we want bullets to hit closed doors
+			if (level.map[current_tile_y][current_tile_x].type == DOOR) {
+				if (level.map[current_tile_y][current_tile_x].doors.open_amount >
+				    0.7f) {
+					continue; // Bullet passes through open door
+				}
+			}
+
 			wall_hit_dist = dist;
 
 			// Show wall hit effect
@@ -1719,7 +1754,7 @@ static void real_game_start(void)
 	Map_starter(&maps_map1, &maps_doors1);
 	textures_load();
 
-    mode.auto_door_open = true;
+	mode.auto_door_open = false;
 
 	player.health = 100;
 	player.angle = (float)M_PI / 2.0f;
@@ -1739,7 +1774,8 @@ void game_start(void)
 	sdk_set_output_gain_db(volume);
 }
 
-void Map_starter(const TileType (*next_map)[MAP_ROWS][MAP_COLS], const Door_Side (*door_map)[MAP_ROWS][MAP_COLS])
+void Map_starter(const TileType (*next_map)[MAP_ROWS][MAP_COLS],
+		 const Door_Side (*door_map)[MAP_ROWS][MAP_COLS])
 {
 	load_map(next_map, door_map);
 	player.angle = (float)M_PI / 2.0f;
@@ -1921,7 +1957,7 @@ static void debug(void)
 
 static void render_menu(float dt)
 {
-    (void)dt;
+	(void)dt;
 	tft_draw_rect(48, 18, 115, 32, WHITE);
 	tft_draw_string(50, 20, 0, "KRECDOOM");
 	tft_draw_string(60, 40, WHITE, "Campaign");
