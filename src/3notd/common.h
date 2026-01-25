@@ -1,4 +1,5 @@
 #pragma once
+#include <stdint.h>
 #include <tft.h>
 
 #define LOOKING_POWER 80.f
@@ -9,36 +10,65 @@
 #define YELLOW rgb_to_rgb565(160, 160, 0)
 #define WHITE rgb_to_rgb565(255, 255, 255)
 
+#define MAX_NUMBER_SECTORS 128
+#define MAX_WALLS_PER_SECTOR 8
+
 #define TFT_WIDTH2 TFT_WIDTH / 2
 #define TFT_HEIGHT2 TFT_HEIGHT / 2
 
+// Max textures are 64
 typedef struct {
-	int Text;
-	int Sect;
-	int Wall;
-} NUM;
-typedef struct {
-	int w, h;		   //texture width/height
-	const unsigned char *name; //texture name
-} TexureMaps;
+	int w, h;		   // texture width/height
+	const unsigned char *name; // pointer to pixel data
+} TextureMaps;
 
-typedef struct {
-	int x1, y1; //bottom line point 1
-	int x2, y2; //bottom line point 2
-	int c;
-	int wt, u, v; //wall texture and u/v tile
-	int shade;    //shade of the wall
-} walls;
+// Range: -32,767 to +32,767
+typedef int16_t fixed_t;
 
-typedef struct {
-	int ws, we; //wall number start and end
-	int z1, z2; //height of bottom and top
-	int d;
-	int c1, c2;
-	int st, ss;	     //surface texture, surface scale
-	int surf[TFT_WIDTH]; //to hold points for surfaces
-	int surface;
-} sectors;
+struct Texture {
+	uint8_t texture_index;
+	uint8_t shade;
+};
+
+struct WallProperties {
+	uint8_t active : 1; // used ?
+	uint8_t solid : 1;  // 0 = portal (walkable), 1 = solid wall
+	uint8_t texture_scale;
+
+	struct Texture texture;
+
+	// These bits define the wall's vertical size
+	uint32_t bottom_height : 12;
+	uint32_t top_height : 12;
+
+	// Range: -32,767 to +32,767
+	fixed_t p1_x;
+	fixed_t p1_y;
+	fixed_t p2_x;
+	fixed_t p2_y;
+};
+
+struct FloorProperties {
+	uint8_t walkable;
+	uint32_t texture_tile_x : 12;
+	uint32_t texture_tile_y : 12;
+	struct Texture texture;
+};
+
+struct Sector {
+	struct WallProperties walls[MAX_WALLS_PER_SECTOR];
+	struct FloorProperties floor;
+
+	fixed_t distance; // Runtime Painter's Algorithm
+	uint8_t surface;  // Runtime flag for rendering
+};
+
+struct Map {
+	char name[32];	   // Map Name
+	char filename[32]; // File Name
+	uint16_t num_sectors;
+	struct Sector sectors[MAX_NUMBER_SECTORS];
+};
 
 typedef struct {
 	float cos[360];
@@ -47,13 +77,11 @@ typedef struct {
 
 typedef struct {
 	int x, y, z;
-	int a;
-	int l;
+	int a; // Angle
+	int l; // Look
 } player;
 
 extern player P;
 extern math M;
-extern NUM Num;
-extern walls W[256];
-extern sectors S[128];
-extern TexureMaps Textures[64];
+extern struct Map current_map;
+extern TextureMaps Textures[64];

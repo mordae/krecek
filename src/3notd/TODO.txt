@@ -1,0 +1,42 @@
+Map struct 
+name
+file
+struct sector (number of sectors)
+//
+doors later
+spawners
+stats
+//
+
+
+make every sector like an struct with 
+struct wall_properties (max 8 walls)
+struct floor_properties
+16 bits for wall start , end
+
+
+
+
+Map size is 
+-32 767 to +32 767
+
+
+
+
+struct with wall_prperties
+doors stuff //implemant later
+1 bite for solid
+*texture
+8 bit for texture scale 
+8 bit shade
+12 bit for bottom height, top height
+16 bit for point 1x, point 1 y, point 2x, point 2y 
+
+
+
+
+struct floor_properties
+1 bite walkeble
+* texture
+12 bit texture tile x , texture tile y 
+8 bit shade

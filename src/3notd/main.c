@@ -3,6 +3,7 @@
 #include <tft.h>
 #include <stdio.h>
 #include "common.h"
+#include "level_data.h"
 
 //    TODO    //
 //    Menu    //
@@ -16,85 +17,13 @@
 
 player P;
 math M;
-NUM Num;
-walls W[256];
-sectors S[128];
-TexureMaps Textures[64];
+TextureMaps Textures[64];
 
+struct Map current_map;
 extern void textures_load();
 extern void drawpixel(int x, int y, int r, int g, int b);
 extern void draw_3d();
-
-static void load_sectors()
-{
-	FILE *fp = fopen("level.h", "r");
-	if (fp == NULL) {
-		printf("OH NOO AN ERROR level.h\n");
-		return;
-	}
-	int s;
-	//int w;
-
-	fscanf(fp, "%i", &Num.Sect);   //number of sectors
-	for (s = 0; s < Num.Sect; s++) //load all sectors
-	{
-		fscanf(fp, "%i", &S[s].ws);
-		fscanf(fp, "%i", &S[s].we);
-		fscanf(fp, "%i", &S[s].z1);
-		fscanf(fp, "%i", &S[s].z2);
-		fscanf(fp, "%i", &S[s].st);
-		fscanf(fp, "%i", &S[s].ss);
-	}
-	fscanf(fp, "%i", &Num.Wall);   //number of walls
-	for (s = 0; s < Num.Wall; s++) //load all walls
-	{
-		fscanf(fp, "%i", &W[s].x1);
-		fscanf(fp, "%i", &W[s].y1);
-		fscanf(fp, "%i", &W[s].x2);
-		fscanf(fp, "%i", &W[s].y2);
-		fscanf(fp, "%i", &W[s].wt);
-		fscanf(fp, "%i", &W[s].u);
-		fscanf(fp, "%i", &W[s].v);
-		fscanf(fp, "%i", &W[s].shade);
-	}
-	fclose(fp);
-}
-static void load()
-{
-	FILE *fp = fopen("level.h", "r");
-	if (fp == NULL) {
-		printf("OH NOO AN ERROR level.h\n");
-		return;
-	}
-	int s;
-	//int w;
-
-	fscanf(fp, "%i", &Num.Sect);   //number of sectors
-	for (s = 0; s < Num.Sect; s++) //load all sectors
-	{
-		fscanf(fp, "%i", &S[s].ws);
-		fscanf(fp, "%i", &S[s].we);
-		fscanf(fp, "%i", &S[s].z1);
-		fscanf(fp, "%i", &S[s].z2);
-		fscanf(fp, "%i", &S[s].st);
-		fscanf(fp, "%i", &S[s].ss);
-	}
-	fscanf(fp, "%i", &Num.Wall);   //number of walls
-	for (s = 0; s < Num.Wall; s++) //load all walls
-	{
-		fscanf(fp, "%i", &W[s].x1);
-		fscanf(fp, "%i", &W[s].y1);
-		fscanf(fp, "%i", &W[s].x2);
-		fscanf(fp, "%i", &W[s].y2);
-		fscanf(fp, "%i", &W[s].wt);
-		fscanf(fp, "%i", &W[s].u);
-		fscanf(fp, "%i", &W[s].v);
-		fscanf(fp, "%i", &W[s].shade);
-	}
-	fscanf(fp, "%i %i %i %i %i", &P.x, &P.y, &P.z, &P.a,
-	       &P.l); //player position, angle, look direction
-	fclose(fp);
-}
+extern void legacy_load_sectors(void);
 
 void game_start(void)
 {
@@ -105,7 +34,6 @@ void game_start(void)
 		M.sin[x] = sin(x / 180.0 * M_PI);
 	}
 
-	Num.Text = 20;
 	//starter player
 	P.x = 0;
 	P.y = -10;
@@ -113,7 +41,7 @@ void game_start(void)
 	P.a = 0;
 	P.l = 0;
 	textures_load();
-	load();
+	//legacy_load_sectors();
 }
 
 void game_reset(void)
@@ -146,7 +74,7 @@ void game_input(unsigned dt_usec)
 	//moving
 
 	if (sdk_inputs_delta.aux[1] == 1) {
-		load_sectors();
+		legacy_load_sectors();
 	}
 
 	if (sdk_inputs.joy_y < -500 && sdk_inputs.start == 0 && sdk_inputs.select == 0) {

@@ -3,6 +3,7 @@ add_executable(
   ../../src/3notd/main.c
   ../../src/3notd/wallsrender.c
   ../../src/3notd/pixel.c
+  ../../src/3notd/legacy_loader.c
 )
 
 generate_png_headers()

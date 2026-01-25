@@ -1,5 +1,8 @@
 #include "common.h"
+#include <stdlib.h>
+#include <stdio.h>
 
+// Assets
 #include "assets/T_00.h"
 #include "assets/T_01.h"
 #include "assets/T_02.h"
@@ -23,28 +26,41 @@
 
 extern void drawpixel(int x, int y, int r, int g, int b);
 
-static void clipBehindPlayer(int *x1, int *y1, int *z1, int x2, int y2, int z2) //clip line
+// Replacement for S[s].surf[x] since it is missing in the new struct
+static int16_t sector_surf[MAX_NUMBER_SECTORS][TFT_WIDTH];
+
+static void clipBehindPlayer(int *x1, int *y1, int *z1, int x2, int y2, int z2)
 {
-	float da = *y1; //distance plane -> point a
-	float db = y2;	//distance plane -> point b
+	float da = *y1;
+	float db = y2;
 	float d = da - db;
-	if (d == 0) {
+	if (d == 0)
 		d = 1;
-	}
-	float s = da / (da - db); //intersection factor (between 0 and 1)
+
+	float s = da / (da - db);
 	*x1 = *x1 + s * (x2 - (*x1));
 	*y1 = *y1 + s * (y2 - (*y1));
-	if (*y1 == 0) {
+	if (*y1 == 0)
 		*y1 = 1;
-	} //prevent divide by zero
 	*z1 = *z1 + s * (z2 - (*z1));
 }
+
 static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int w, int frontBack)
 {
-	// wall texture
-	int wt = W[w].wt;
+	struct Sector *sect = &current_map.sectors[s];
+	struct WallProperties *wall = &sect->walls[w];
 
-	float ht = 0, ht_step = (float)Textures[wt].w * W[w].u / (float)(x2 - x1);
+	// wall texture
+	int wt = wall->texture.texture_index;
+	if (wt < 0 || wt >= 64)
+		wt = 0;
+
+	// Mapping 'u' from old code to 'texture_scale' in new code.
+	// If texture_scale is 0, default to 1 to avoid divide by zero or bad scaling.
+	float u_val = (wall->texture_scale > 0) ? (float)wall->texture_scale : 1.0f;
+	float v_val = u_val; // Assuming uniform scaling since 'v' is missing in new struct
+
+	float ht = 0, ht_step = (float)Textures[wt].w * u_val / (float)(x2 - x1);
 
 	int x, y;
 	//Hold diffrent
@@ -78,7 +94,7 @@ static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int 
 			continue; // Skip
 		}
 
-		float vt = 0, vt_step = (float)Textures[wt].h * W[w].v / (float)(y2 - y1);
+		float vt = 0, vt_step = (float)Textures[wt].h * v_val / (float)(y2 - y1);
 		int clipped_y = 0;
 		if (y1 < 0) {
 			clipped_y = 0 - y1;
@@ -96,26 +112,28 @@ static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int 
 		}
 		//draw front wall
 		if (frontBack == 0) {
-			if (S[s].surface == 1) {
-				S[s].surf[x] = y1;
+			if (sect->surface == 1) {
+				sector_surf[s][x] = y1; // WAS: S[s].surf[x] = y1;
 			}
-			if (S[s].surface == 2) {
-				S[s].surf[x] = y2;
+			if (sect->surface == 2) {
+				sector_surf[s][x] = y2; // WAS: S[s].surf[x] = y2;
 			}
 
 			for (y = y1; y < y2; y++) {
 				int tex_x = (int)ht % Textures[wt].w;
 				int tex_y = (int)vt % Textures[wt].h;
 				int pixel = tex_y * 3 * Textures[wt].w + tex_x * 3;
-				int r = Textures[wt].name[pixel + 0] - (W[w].shade / 4);
+
+				int shade = wall->texture.shade / 4;
+				int r = Textures[wt].name[pixel + 0] - shade;
 				if (r < 0) {
 					r = 0;
 				}
-				int g = Textures[wt].name[pixel + 1] - (W[w].shade / 4);
+				int g = Textures[wt].name[pixel + 1] - shade;
 				if (g < 0) {
 					g = 0;
 				}
-				int b = Textures[wt].name[pixel + 2] - (W[w].shade / 4);
+				int b = Textures[wt].name[pixel + 2] - shade;
 				if (b < 0) {
 					b = 0;
 				}
@@ -126,13 +144,17 @@ static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int 
 		}
 		if (frontBack == 1) {
 			int sector_index = s;
-			int tex_index = S[sector_index].st;
-			if (tex_index < 0 || tex_index >= Num.Text) {
+			int tex_index =
+				sect->floor.texture.texture_index; // WAS: S[sector_index].st
+
+			if (tex_index < 0 || tex_index >= 64) {
 				continue;
 			}
 
-			const TexureMaps *tex = &Textures[tex_index];
-			float tile = (float)S[sector_index].ss * 7.0f; // how big the tiles are
+			const TextureMaps *tex = &Textures[tex_index];
+			// WAS: float tile = (float)S[sector_index].ss * 7.0f;
+			// Since .ss is missing, defaulting to 1 * 7.0f or hardcoded 7.0f
+			float tile = 7.0f;
 			if (tile <= 0.0f) {
 				tile = 7.0f;
 			}
@@ -140,18 +162,18 @@ static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int 
 			int xo = TFT_WIDTH2;  // x offset (screen center)
 			int yo = TFT_HEIGHT2; // y offset (screen center)
 			float fov = FOV;      // field of view
-			int x2 = x - xo;      // screen x relative to center
+			int x2_pos = x - xo;  // renamed local var to x2_pos to avoid conflict
 
 			int wo = 0; // world floor/ceiling height reference
-			if (S[s].surface == 1) {
+			if (sect->surface == 1) {
 				// bottom surface (floor)
-				y2 = S[s].surf[x];
-				wo = S[s].z1;
+				y2 = sector_surf[s][x];	  // WAS: S[s].surf[x];
+				wo = wall->bottom_height; // WAS: S[s].z1;
 			}
-			if (S[s].surface == 2) {
+			if (sect->surface == 2) {
 				// top surface (ceiling)
-				y1 = S[s].surf[x];
-				wo = S[s].z2;
+				y1 = sector_surf[s][x]; // WAS: S[s].surf[x];
+				wo = wall->top_height;	// WAS: S[s].z2;
 			}
 
 			float lookUpDown = -P.l * 6.2f;
@@ -178,7 +200,7 @@ static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int 
 				}
 
 				// World floor/ceiling coordinates before rotation.
-				float fx = x2 / z * moveUpDown * tile;
+				float fx = x2_pos / z * moveUpDown * tile;
 				float fy = fov / z * moveUpDown * tile;
 
 				// Rotate and offset by player position (matching the example).
@@ -211,7 +233,7 @@ static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int 
 				int b = tex->name[pixel + 2];
 
 				int sy = y + yo;
-				int sx = x2 + xo;
+				int sx = x2_pos + xo;
 				if (sx >= 0 && sx < TFT_WIDTH && sy >= 0 && sy < TFT_HEIGHT) {
 					drawpixel(sx, sy, r, g, b);
 				}
@@ -219,19 +241,26 @@ static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int 
 		}
 	}
 }
+
 static void update_sector_distances(void)
 {
 	float CS = M.cos[P.a], SN = M.sin[P.a];
 
-	for (int s = 0; s < Num.Sect; s++) {
+	for (int s = 0; s < current_map.num_sectors; s++) {
 		// Compute a view-space depth for the sector based on the average
 		// Y coordinate (along the view direction) of its wall midpoints.
 		float sum_depth = 0.0f;
 		int count = 0;
 
-		for (int w = S[s].ws; w < S[s].we; w++) {
-			int x1 = W[w].x1 - P.x, y1 = W[w].y1 - P.y;
-			int x2 = W[w].x2 - P.x, y2 = W[w].y2 - P.y;
+		for (int w = 0; w < MAX_WALLS_PER_SECTOR; w++) {
+			if (!current_map.sectors[s].walls[w].active)
+				continue;
+
+			struct WallProperties *wall = &current_map.sectors[s].walls[w];
+			int x1 = wall->p1_x - P.x;
+			int y1 = wall->p1_y - P.y;
+			int x2 = wall->p2_x - P.x;
+			int y2 = wall->p2_y - P.y;
 
 			//int wx0 = x1 * CS - y1 * SN;
 			int wy0 = y1 * CS + x1 * SN;
@@ -244,12 +273,13 @@ static void update_sector_distances(void)
 		}
 
 		if (count > 0) {
-			S[s].d = sum_depth / (float)count;
+			current_map.sectors[s].distance = sum_depth / (float)count;
 		} else {
-			S[s].d = 0.0f;
+			current_map.sectors[s].distance = 0.0f;
 		}
 	}
 }
+
 void draw_3d(void)
 {
 	int x, s, w, frontBack, cycles, wx[4], wy[4], wz[4];
@@ -258,39 +288,57 @@ void draw_3d(void)
 	// First compute current distances for all sectors.
 	update_sector_distances();
 	//oreder sectors
-	for (s = 0; s < Num.Sect - 1; s++) {
-		for (w = 0; w < Num.Sect - s - 1; w++) {
-			if (S[w].d < S[w + 1].d) {
-				sectors st = S[w];
-				S[w] = S[w + 1];
-				S[w + 1] = st;
+	for (s = 0; s < current_map.num_sectors - 1; s++) {
+		for (w = 0; w < current_map.num_sectors - s - 1; w++) {
+			if (current_map.sectors[w].distance < current_map.sectors[w + 1].distance) {
+				struct Sector st = current_map.sectors[w];
+				current_map.sectors[w] = current_map.sectors[w + 1];
+				current_map.sectors[w + 1] = st;
 			}
 		}
 	}
 
 	//draw sectors
-	for (s = 0; s < Num.Sect; s++) {
-		if (P.z < S[s].z1) {
-			S[s].surface = 1;
-			cycles = 2;
-			for (x = 0; x < TFT_WIDTH; x++) {
-				S[s].surf[x] = TFT_HEIGHT;
+	for (s = 0; s < current_map.num_sectors; s++) {
+		struct Sector *sect = &current_map.sectors[s];
+
+		// Find floor/ceil heights from the first active wall (since they are stored in walls now)
+		int32_t z1 = 0, z2 = 0;
+		for (int k = 0; k < MAX_WALLS_PER_SECTOR; k++) {
+			if (sect->walls[k].active) {
+				z1 = sect->walls[k].bottom_height;
+				z2 = sect->walls[k].top_height;
+				break;
 			}
-		} else if (P.z > S[s].z2) {
-			S[s].surface = 2;
+		}
+
+		if (P.z < z1) {
+			sect->surface = 1;
 			cycles = 2;
 			for (x = 0; x < TFT_WIDTH; x++) {
-				S[s].surf[x] = 0;
+				sector_surf[s][x] = TFT_HEIGHT; // WAS: S[s].surf[x]
+			}
+		} else if (P.z > z2) {
+			sect->surface = 2;
+			cycles = 2;
+			for (x = 0; x < TFT_WIDTH; x++) {
+				sector_surf[s][x] = 0; // WAS: S[s].surf[x]
 			}
 		} else {
-			S[s].surface = 0;
+			sect->surface = 0;
 			cycles = 1;
 		}
 		for (frontBack = 0; frontBack < cycles; frontBack++) {
-			for (w = S[s].ws; w < S[s].we; w++) {
+			for (w = 0; w < MAX_WALLS_PER_SECTOR; w++) {
+				if (!sect->walls[w].active)
+					continue;
+				struct WallProperties *wall = &sect->walls[w];
+
 				//offset
-				int x1 = W[w].x1 - P.x, y1 = W[w].y1 - P.y;
-				int x2 = W[w].x2 - P.x, y2 = W[w].y2 - P.y;
+				int x1 = wall->p1_x - P.x;
+				int y1 = wall->p1_y - P.y;
+				int x2 = wall->p2_x - P.x;
+				int y2 = wall->p2_y - P.y;
 
 				//swap
 				if (frontBack == 1) {
@@ -312,10 +360,12 @@ void draw_3d(void)
 				wy[2] = wy[0];
 				wy[3] = wy[1];
 
-				wz[0] = S[s].z1 - P.z + ((P.l * wy[0]) / 32.0);
-				wz[1] = S[s].z1 - P.z + ((P.l * wy[1]) / 32.0);
-				wz[2] = S[s].z2 - P.z + ((P.l * wy[0]) / 32.0);
-				wz[3] = S[s].z2 - P.z + ((P.l * wy[1]) / 32.0);
+				wz[0] = wall->bottom_height - P.z +
+					((P.l * wy[0]) / 32.0); // WAS S[s].z1
+				wz[1] = wall->bottom_height - P.z + ((P.l * wy[1]) / 32.0);
+				wz[2] = wall->top_height - P.z +
+					((P.l * wy[0]) / 32.0); // WAS S[s].z2
+				wz[3] = wall->top_height - P.z + ((P.l * wy[1]) / 32.0);
 
 				if (wy[0] < 1 && wy[1] < 1) {
 					continue;

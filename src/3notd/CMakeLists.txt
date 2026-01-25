@@ -3,6 +3,7 @@ add_executable(
   main.c
   wallsrender.c
   pixel.c
+  legacy_loader.c
 )
 target_include_directories(3notd PRIVATE include)
 generate_png_headers()
