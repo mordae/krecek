@@ -193,6 +193,31 @@ static void drawWall(int x1, int x2, int b1, int b2, int t1, int t2, int s, int 
 			int ys = y1 - yo;
 			int ye = y2 - yo;
 
+			// FIX: Clip floor/ceiling drawing to horizon to avoid divide-by-zero or inversion
+			// The horizon in screen-relative Y coordinates (y = PixelY - yo) is at -lookUpDown.
+			// We must ensure 'z' (which is y + lookUpDown) never crosses 0.
+
+			int hor_y = (int)(-lookUpDown);
+
+			if (moveUpDown > 0.0f) {
+				// Floor mode: We need z > 0 => y > -lookUpDown
+				// Clip top of strip (ys) to be below horizon
+				if (ys <= hor_y) {
+					ys = hor_y + 1;
+				}
+			} else {
+				// Ceiling mode: We need z < 0 => y < -lookUpDown
+				// Clip bottom of strip (ye) to be above horizon
+				if (ye >= hor_y) {
+					ye = hor_y - 1;
+				}
+			}
+
+			// Safety check if clipping emptied the range
+			if (ys >= ye) {
+				continue;
+			}
+
 			for (y = ys; y < ye; y++) {
 				float z = y + lookUpDown;
 				if (z == 0.0f) {
@@ -287,19 +312,32 @@ void draw_3d(void)
 
 	// First compute current distances for all sectors.
 	update_sector_distances();
-	//oreder sectors
-	for (s = 0; s < current_map.num_sectors - 1; s++) {
-		for (w = 0; w < current_map.num_sectors - s - 1; w++) {
-			if (current_map.sectors[w].distance < current_map.sectors[w + 1].distance) {
-				struct Sector st = current_map.sectors[w];
-				current_map.sectors[w] = current_map.sectors[w + 1];
-				current_map.sectors[w + 1] = st;
+
+	// Create an index array to sort, protecting the actual sector structs from being moved
+	int draw_order[MAX_NUMBER_SECTORS];
+	for (int i = 0; i < current_map.num_sectors; i++) {
+		draw_order[i] = i;
+	}
+
+	// Order the indices based on distance (Bubble Sort)
+	for (int i = 0; i < current_map.num_sectors - 1; i++) {
+		for (int j = 0; j < current_map.num_sectors - i - 1; j++) {
+			int idxA = draw_order[j];
+			int idxB = draw_order[j + 1];
+
+			// Compare distances using the indices
+			if (current_map.sectors[idxA].distance <
+			    current_map.sectors[idxB].distance) {
+				// Swap indices only
+				draw_order[j] = idxB;
+				draw_order[j + 1] = idxA;
 			}
 		}
 	}
 
 	//draw sectors
-	for (s = 0; s < current_map.num_sectors; s++) {
+	for (int i = 0; i < current_map.num_sectors; i++) {
+		s = draw_order[i]; // Get the actual sector index to draw
 		struct Sector *sect = &current_map.sectors[s];
 
 		// Find floor/ceil heights from the first active wall (since they are stored in walls now)

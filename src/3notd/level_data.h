@@ -4,59 +4,99 @@
 
 #include "common.h"
 
-player P_Init = { 263, -12, 30, 40, 0 };
+player P_Init = { 286, 48, 30, 0, 0 };
 
 struct Map current_map = {
     .name = "Generated Map",
     .filename = "level_data.h",
-    .num_sectors = 6,
+    .num_sectors = 8,
     .sectors = {
         { // Sector 0
             .floor = {
                 .walkable = 1,
                 .texture_tile_x = 0, .texture_tile_y = 0,
-                .texture = { .texture_index = 8, .shade = 0 }
+                .texture = { .texture_index = 1, .shade = 0 }
             },
             .walls = {
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 8, .shade = 0 },
-                    .bottom_height = 95,
-                    .top_height = 100,
-                    .p1_x = 64, .p1_y = 32,
-                    .p2_x = 512, .p2_y = 32
+                    .texture = { .texture_index = 0, .shade = 0 },
+                    .bottom_height = 100,
+                    .top_height = 110,
+                    .p1_x = 256, .p1_y = 160,
+                    .p2_x = 320, .p2_y = 160
                 },
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 8, .shade = 90 },
-                    .bottom_height = 95,
-                    .top_height = 100,
-                    .p1_x = 512, .p1_y = 32,
-                    .p2_x = 512, .p2_y = 448
+                    .texture = { .texture_index = 0, .shade = 45 },
+                    .bottom_height = 100,
+                    .top_height = 110,
+                    .p1_x = 320, .p1_y = 160,
+                    .p2_x = 352, .p2_y = 192
                 },
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 8, .shade = 0 },
-                    .bottom_height = 95,
-                    .top_height = 100,
-                    .p1_x = 512, .p1_y = 448,
-                    .p2_x = 64, .p2_y = 448
+                    .texture = { .texture_index = 0, .shade = 90 },
+                    .bottom_height = 100,
+                    .top_height = 110,
+                    .p1_x = 352, .p1_y = 192,
+                    .p2_x = 352, .p2_y = 256
                 },
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 8, .shade = 90 },
-                    .bottom_height = 95,
-                    .top_height = 100,
-                    .p1_x = 64, .p1_y = 448,
-                    .p2_x = 64, .p2_y = 32
+                    .texture = { .texture_index = 0, .shade = 45 },
+                    .bottom_height = 100,
+                    .top_height = 110,
+                    .p1_x = 352, .p1_y = 256,
+                    .p2_x = 320, .p2_y = 288
+                },
+                {
+                    .active = 1,
+                    .solid = 1,
+                    .texture_scale = 1,
+                    .texture = { .texture_index = 0, .shade = 0 },
+                    .bottom_height = 100,
+                    .top_height = 110,
+                    .p1_x = 320, .p1_y = 288,
+                    .p2_x = 256, .p2_y = 288
+                },
+                {
+                    .active = 1,
+                    .solid = 1,
+                    .texture_scale = 1,
+                    .texture = { .texture_index = 0, .shade = 45 },
+                    .bottom_height = 100,
+                    .top_height = 110,
+                    .p1_x = 256, .p1_y = 288,
+                    .p2_x = 224, .p2_y = 256
+                },
+                {
+                    .active = 1,
+                    .solid = 1,
+                    .texture_scale = 1,
+                    .texture = { .texture_index = 0, .shade = 90 },
+                    .bottom_height = 100,
+                    .top_height = 110,
+                    .p1_x = 224, .p1_y = 256,
+                    .p2_x = 224, .p2_y = 192
+                },
+                {
+                    .active = 1,
+                    .solid = 1,
+                    .texture_scale = 1,
+                    .texture = { .texture_index = 0, .shade = 45 },
+                    .bottom_height = 100,
+                    .top_height = 110,
+                    .p1_x = 224, .p1_y = 192,
+                    .p2_x = 256, .p2_y = 160
                 },
             },
             .distance = 0,
@@ -66,48 +106,48 @@ struct Map current_map = {
             .floor = {
                 .walkable = 1,
                 .texture_tile_x = 0, .texture_tile_y = 0,
-                .texture = { .texture_index = 8, .shade = 0 }
+                .texture = { .texture_index = 3, .shade = 0 }
             },
             .walls = {
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 8, .shade = 0 },
-                    .bottom_height = 0,
-                    .top_height = 25,
-                    .p1_x = 128, .p1_y = 288,
-                    .p2_x = 256, .p2_y = 288
-                },
-                {
-                    .active = 1,
-                    .solid = 1,
-                    .texture_scale = 1,
-                    .texture = { .texture_index = 8, .shade = 90 },
-                    .bottom_height = 0,
-                    .top_height = 25,
+                    .texture = { .texture_index = 13, .shade = 0 },
+                    .bottom_height = 90,
+                    .top_height = 110,
                     .p1_x = 256, .p1_y = 288,
-                    .p2_x = 256, .p2_y = 416
+                    .p2_x = 320, .p2_y = 288
                 },
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 8, .shade = 0 },
-                    .bottom_height = 0,
-                    .top_height = 25,
-                    .p1_x = 256, .p1_y = 416,
-                    .p2_x = 128, .p2_y = 416
+                    .texture = { .texture_index = 13, .shade = 90 },
+                    .bottom_height = 90,
+                    .top_height = 110,
+                    .p1_x = 320, .p1_y = 288,
+                    .p2_x = 320, .p2_y = 320
                 },
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 8, .shade = 90 },
-                    .bottom_height = 0,
-                    .top_height = 25,
-                    .p1_x = 128, .p1_y = 416,
-                    .p2_x = 128, .p2_y = 288
+                    .texture = { .texture_index = 13, .shade = 0 },
+                    .bottom_height = 90,
+                    .top_height = 110,
+                    .p1_x = 320, .p1_y = 320,
+                    .p2_x = 256, .p2_y = 320
+                },
+                {
+                    .active = 1,
+                    .solid = 1,
+                    .texture_scale = 1,
+                    .texture = { .texture_index = 13, .shade = 90 },
+                    .bottom_height = 90,
+                    .top_height = 110,
+                    .p1_x = 256, .p1_y = 320,
+                    .p2_x = 256, .p2_y = 288
                 },
             },
             .distance = 0,
@@ -117,48 +157,48 @@ struct Map current_map = {
             .floor = {
                 .walkable = 1,
                 .texture_tile_x = 0, .texture_tile_y = 0,
-                .texture = { .texture_index = 8, .shade = 0 }
+                .texture = { .texture_index = 4, .shade = 0 }
             },
             .walls = {
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 11, .shade = 0 },
+                    .texture = { .texture_index = 4, .shade = 0 },
                     .bottom_height = 0,
-                    .top_height = 40,
-                    .p1_x = 128, .p1_y = 224,
-                    .p2_x = 192, .p2_y = 224
+                    .top_height = 110,
+                    .p1_x = 384, .p1_y = 224,
+                    .p2_x = 416, .p2_y = 224
                 },
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 11, .shade = 90 },
+                    .texture = { .texture_index = 4, .shade = 90 },
                     .bottom_height = 0,
-                    .top_height = 40,
-                    .p1_x = 192, .p1_y = 224,
-                    .p2_x = 192, .p2_y = 288
+                    .top_height = 110,
+                    .p1_x = 416, .p1_y = 224,
+                    .p2_x = 416, .p2_y = 256
                 },
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 11, .shade = 0 },
+                    .texture = { .texture_index = 4, .shade = 0 },
                     .bottom_height = 0,
-                    .top_height = 40,
-                    .p1_x = 192, .p1_y = 288,
-                    .p2_x = 128, .p2_y = 288
+                    .top_height = 110,
+                    .p1_x = 416, .p1_y = 256,
+                    .p2_x = 384, .p2_y = 256
                 },
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 11, .shade = 90 },
+                    .texture = { .texture_index = 4, .shade = 90 },
                     .bottom_height = 0,
-                    .top_height = 40,
-                    .p1_x = 128, .p1_y = 288,
-                    .p2_x = 128, .p2_y = 224
+                    .top_height = 110,
+                    .p1_x = 384, .p1_y = 256,
+                    .p2_x = 384, .p2_y = 224
                 },
             },
             .distance = 0,
@@ -168,48 +208,48 @@ struct Map current_map = {
             .floor = {
                 .walkable = 1,
                 .texture_tile_x = 0, .texture_tile_y = 0,
-                .texture = { .texture_index = 8, .shade = 0 }
+                .texture = { .texture_index = 3, .shade = 0 }
             },
             .walls = {
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 11, .shade = 0 },
-                    .bottom_height = 65,
-                    .top_height = 95,
-                    .p1_x = 128, .p1_y = 96,
-                    .p2_x = 192, .p2_y = 96
+                    .texture = { .texture_index = 13, .shade = 0 },
+                    .bottom_height = 70,
+                    .top_height = 110,
+                    .p1_x = 256, .p1_y = 320,
+                    .p2_x = 320, .p2_y = 320
                 },
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 11, .shade = 90 },
-                    .bottom_height = 65,
-                    .top_height = 95,
-                    .p1_x = 192, .p1_y = 96,
-                    .p2_x = 192, .p2_y = 160
+                    .texture = { .texture_index = 13, .shade = 90 },
+                    .bottom_height = 70,
+                    .top_height = 110,
+                    .p1_x = 320, .p1_y = 320,
+                    .p2_x = 320, .p2_y = 352
                 },
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 11, .shade = 0 },
-                    .bottom_height = 65,
-                    .top_height = 95,
-                    .p1_x = 192, .p1_y = 160,
-                    .p2_x = 128, .p2_y = 160
+                    .texture = { .texture_index = 13, .shade = 0 },
+                    .bottom_height = 70,
+                    .top_height = 110,
+                    .p1_x = 320, .p1_y = 352,
+                    .p2_x = 256, .p2_y = 352
                 },
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 11, .shade = 90 },
-                    .bottom_height = 65,
-                    .top_height = 95,
-                    .p1_x = 128, .p1_y = 160,
-                    .p2_x = 128, .p2_y = 96
+                    .texture = { .texture_index = 13, .shade = 90 },
+                    .bottom_height = 70,
+                    .top_height = 110,
+                    .p1_x = 256, .p1_y = 352,
+                    .p2_x = 256, .p2_y = 320
                 },
             },
             .distance = 0,
@@ -219,48 +259,48 @@ struct Map current_map = {
             .floor = {
                 .walkable = 1,
                 .texture_tile_x = 0, .texture_tile_y = 0,
-                .texture = { .texture_index = 7, .shade = 0 }
+                .texture = { .texture_index = 3, .shade = 0 }
             },
             .walls = {
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 11, .shade = 0 },
-                    .bottom_height = 80,
-                    .top_height = 95,
-                    .p1_x = 128, .p1_y = 160,
-                    .p2_x = 192, .p2_y = 160
+                    .texture = { .texture_index = 13, .shade = 0 },
+                    .bottom_height = 50,
+                    .top_height = 110,
+                    .p1_x = 256, .p1_y = 384,
+                    .p2_x = 320, .p2_y = 384
                 },
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 11, .shade = 90 },
-                    .bottom_height = 80,
-                    .top_height = 95,
-                    .p1_x = 192, .p1_y = 160,
-                    .p2_x = 192, .p2_y = 224
+                    .texture = { .texture_index = 13, .shade = 45 },
+                    .bottom_height = 50,
+                    .top_height = 110,
+                    .p1_x = 320, .p1_y = 384,
+                    .p2_x = 352, .p2_y = 416
                 },
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 11, .shade = 0 },
-                    .bottom_height = 80,
-                    .top_height = 95,
-                    .p1_x = 192, .p1_y = 224,
-                    .p2_x = 128, .p2_y = 224
+                    .texture = { .texture_index = 13, .shade = 90 },
+                    .bottom_height = 50,
+                    .top_height = 110,
+                    .p1_x = 352, .p1_y = 416,
+                    .p2_x = 352, .p2_y = 448
                 },
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 11, .shade = 90 },
-                    .bottom_height = 80,
-                    .top_height = 95,
-                    .p1_x = 128, .p1_y = 224,
-                    .p2_x = 128, .p2_y = 160
+                    .texture = { .texture_index = 13, .shade = 0 },
+                    .bottom_height = 50,
+                    .top_height = 110,
+                    .p1_x = 352, .p1_y = 448,
+                    .p2_x = 224, .p2_y = 448
                 },
             },
             .distance = 0,
@@ -270,48 +310,170 @@ struct Map current_map = {
             .floor = {
                 .walkable = 1,
                 .texture_tile_x = 0, .texture_tile_y = 0,
-                .texture = { .texture_index = 8, .shade = 0 }
+                .texture = { .texture_index = 3, .shade = 0 }
             },
             .walls = {
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 11, .shade = 0 },
-                    .bottom_height = 0,
-                    .top_height = 40,
-                    .p1_x = 128, .p1_y = 160,
-                    .p2_x = 192, .p2_y = 160
+                    .texture = { .texture_index = 13, .shade = 0 },
+                    .bottom_height = 50,
+                    .top_height = 110,
+                    .p1_x = 256, .p1_y = 384,
+                    .p2_x = 320, .p2_y = 384
                 },
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 11, .shade = 90 },
+                    .texture = { .texture_index = 13, .shade = 45 },
+                    .bottom_height = 50,
+                    .top_height = 110,
+                    .p1_x = 320, .p1_y = 384,
+                    .p2_x = 352, .p2_y = 416
+                },
+                {
+                    .active = 1,
+                    .solid = 1,
+                    .texture_scale = 1,
+                    .texture = { .texture_index = 13, .shade = 90 },
+                    .bottom_height = 50,
+                    .top_height = 110,
+                    .p1_x = 352, .p1_y = 416,
+                    .p2_x = 352, .p2_y = 448
+                },
+                {
+                    .active = 1,
+                    .solid = 1,
+                    .texture_scale = 1,
+                    .texture = { .texture_index = 13, .shade = 0 },
+                    .bottom_height = 50,
+                    .top_height = 110,
+                    .p1_x = 352, .p1_y = 448,
+                    .p2_x = 224, .p2_y = 448
+                },
+                {
+                    .active = 1,
+                    .solid = 1,
+                    .texture_scale = 1,
+                    .texture = { .texture_index = 13, .shade = 90 },
+                    .bottom_height = 50,
+                    .top_height = 110,
+                    .p1_x = 224, .p1_y = 448,
+                    .p2_x = 224, .p2_y = 416
+                },
+                {
+                    .active = 1,
+                    .solid = 1,
+                    .texture_scale = 1,
+                    .texture = { .texture_index = 13, .shade = 45 },
+                    .bottom_height = 50,
+                    .top_height = 110,
+                    .p1_x = 224, .p1_y = 416,
+                    .p2_x = 256, .p2_y = 384
+                },
+            },
+            .distance = 0,
+            .surface = 0
+        },
+        { // Sector 6
+            .floor = {
+                .walkable = 1,
+                .texture_tile_x = 0, .texture_tile_y = 0,
+                .texture = { .texture_index = 3, .shade = 0 }
+            },
+            .walls = {
+                {
+                    .active = 1,
+                    .solid = 1,
+                    .texture_scale = 1,
+                    .texture = { .texture_index = 13, .shade = 0 },
+                    .bottom_height = 50,
+                    .top_height = 110,
+                    .p1_x = 256, .p1_y = 352,
+                    .p2_x = 320, .p2_y = 352
+                },
+                {
+                    .active = 1,
+                    .solid = 1,
+                    .texture_scale = 1,
+                    .texture = { .texture_index = 13, .shade = 90 },
+                    .bottom_height = 50,
+                    .top_height = 110,
+                    .p1_x = 320, .p1_y = 352,
+                    .p2_x = 320, .p2_y = 384
+                },
+                {
+                    .active = 1,
+                    .solid = 1,
+                    .texture_scale = 1,
+                    .texture = { .texture_index = 13, .shade = 0 },
+                    .bottom_height = 50,
+                    .top_height = 110,
+                    .p1_x = 320, .p1_y = 384,
+                    .p2_x = 256, .p2_y = 384
+                },
+                {
+                    .active = 1,
+                    .solid = 1,
+                    .texture_scale = 1,
+                    .texture = { .texture_index = 13, .shade = 90 },
+                    .bottom_height = 50,
+                    .top_height = 110,
+                    .p1_x = 256, .p1_y = 384,
+                    .p2_x = 256, .p2_y = 352
+                },
+            },
+            .distance = 0,
+            .surface = 0
+        },
+        { // Sector 7
+            .floor = {
+                .walkable = 1,
+                .texture_tile_x = 0, .texture_tile_y = 0,
+                .texture = { .texture_index = 4, .shade = 0 }
+            },
+            .walls = {
+                {
+                    .active = 1,
+                    .solid = 1,
+                    .texture_scale = 1,
+                    .texture = { .texture_index = 4, .shade = 0 },
                     .bottom_height = 0,
-                    .top_height = 40,
-                    .p1_x = 192, .p1_y = 160,
+                    .top_height = 110,
+                    .p1_x = 160, .p1_y = 224,
                     .p2_x = 192, .p2_y = 224
                 },
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 11, .shade = 0 },
+                    .texture = { .texture_index = 4, .shade = 90 },
                     .bottom_height = 0,
-                    .top_height = 40,
+                    .top_height = 110,
                     .p1_x = 192, .p1_y = 224,
-                    .p2_x = 128, .p2_y = 224
+                    .p2_x = 192, .p2_y = 256
                 },
                 {
                     .active = 1,
                     .solid = 1,
                     .texture_scale = 1,
-                    .texture = { .texture_index = 11, .shade = 90 },
+                    .texture = { .texture_index = 4, .shade = 0 },
                     .bottom_height = 0,
-                    .top_height = 40,
-                    .p1_x = 128, .p1_y = 224,
-                    .p2_x = 128, .p2_y = 160
+                    .top_height = 110,
+                    .p1_x = 192, .p1_y = 256,
+                    .p2_x = 160, .p2_y = 256
+                },
+                {
+                    .active = 1,
+                    .solid = 1,
+                    .texture_scale = 1,
+                    .texture = { .texture_index = 4, .shade = 90 },
+                    .bottom_height = 0,
+                    .top_height = 110,
+                    .p1_x = 160, .p1_y = 256,
+                    .p2_x = 160, .p2_y = 224
                 },
             },
             .distance = 0,
