@@ -680,6 +680,12 @@ static void load_map(const TileType (*load_map)[MAP_ROWS][MAP_COLS],
 			} else {
 				level.map[r][co].doors.side = 0;
 			}
+
+			// Fix for maps where door side is set but tile type is not DOOR (e.g. 0)
+			if (level.map[r][co].doors.side != NOTHING) {
+				level.map[r][co].type = DOOR;
+			}
+
 			// Initialize door state
 			if (level.map[r][co].type == DOOR) {
 				level.map[r][co].doors.active = true;
@@ -1303,7 +1309,7 @@ static bool canSeePlayer(Enemy *enemy)
 		int tile_x = (int)(checkX / TILE_SIZE);
 		int tile_y = (int)(checkY / TILE_SIZE);
 
-		if (isWall(tile_x, tile_y)) {
+		if (isSolid(tile_x, tile_y)) {
 			return false;
 		}
 	}
@@ -1383,7 +1389,7 @@ static void updateEnemies(float dt)
 			int new_tile_x = (int)(new_x / TILE_SIZE);
 			int new_tile_y = (int)(new_y / TILE_SIZE);
 
-			if (!isWall(new_tile_x, new_tile_y)) {
+			if (!isSolid(new_tile_x, new_tile_y)) {
 				enemies[i].x = new_x;
 				enemies[i].y = new_y;
 			} else {
@@ -1426,7 +1432,7 @@ static void updateEnemies(float dt)
 			int chase_tile_x = (int)(chase_x / TILE_SIZE);
 			int chase_tile_y = (int)(chase_y / TILE_SIZE);
 
-			if (!isWall(chase_tile_x, chase_tile_y)) {
+			if (!isSolid(chase_tile_x, chase_tile_y)) {
 				enemies[i].x = chase_x;
 				enemies[i].y = chase_y;
 			}
@@ -1475,7 +1481,7 @@ static void updateEnemies(float dt)
 					int retreat_tile_x = (int)(retreat_x / TILE_SIZE);
 					int retreat_tile_y = (int)(retreat_y / TILE_SIZE);
 
-					if (!isWall(retreat_tile_x, retreat_tile_y)) {
+					if (!isSolid(retreat_tile_x, retreat_tile_y)) {
 						enemies[i].x = retreat_x;
 						enemies[i].y = retreat_y;
 					}
