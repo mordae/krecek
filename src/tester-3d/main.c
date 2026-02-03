@@ -22,9 +22,9 @@
 #define TAN_HALF_FOV (tanf(FOV_DEG * M_PI / 360.0f))
 
 // Colors
-#define COL_SKY     rgb_to_rgb565(135, 206, 235)
-#define COL_FLOOR   rgb_to_rgb565(50, 50, 50)
-#define COL_WALL    rgb_to_rgb565(180, 180, 180)
+#define COL_SKY rgb_to_rgb565(135, 206, 235)
+#define COL_FLOOR rgb_to_rgb565(50, 50, 50)
+#define COL_WALL rgb_to_rgb565(180, 180, 180)
 #define COL_BLOCK_1 rgb_to_rgb565(200, 50, 50)
 #define COL_BLOCK_2 rgb_to_rgb565(50, 200, 50)
 #define COL_BLOCK_3 rgb_to_rgb565(50, 50, 200)
@@ -33,17 +33,14 @@
 static uint8_t map[MAP_W][MAP_H][MAP_D];
 
 typedef struct {
-    float x, y, z;
-    float yaw, pitch;
+	float x, y, z;
+	float yaw, pitch;
 } Player;
 
 static Player player;
 
 // Game State
-typedef enum {
-    MODE_MOVE_LOOK = 0,
-    MODE_EDIT = 1
-} GameMode;
+typedef enum { MODE_MOVE_LOOK = 0, MODE_EDIT = 1 } GameMode;
 
 static GameMode current_mode = MODE_MOVE_LOOK;
 static int selected_block_type = 1;
@@ -52,421 +49,465 @@ static int selected_block_type = 1;
 sdk_game_info("tester-3d", NULL);
 
 // Initialize Map
-static void init_map() {
-    for (int x = 0; x < MAP_W; x++) {
-        for (int y = 0; y < MAP_H; y++) {
-            for (int z = 0; z < MAP_D; z++) {
-                if (z == 0) {
-                    map[x][y][z] = 1; // Floor
-                } else if (x == 0 || x == MAP_W - 1 || y == 0 || y == MAP_H - 1) {
-                    map[x][y][z] = 2; // Wall
-                } else if ((x % 5 == 0 && y % 5 == 0) && z < 3) {
-                     map[x][y][z] = 3; // Pillars
-                } else {
-                    map[x][y][z] = 0; // Air
-                }
-            }
-        }
-    }
+static void init_map()
+{
+	for (int x = 0; x < MAP_W; x++) {
+		for (int y = 0; y < MAP_H; y++) {
+			for (int z = 0; z < MAP_D; z++) {
+				if (z == 0) {
+					map[x][y][z] = 1; // Floor
+				} else if (x == 0 || x == MAP_W - 1 || y == 0 || y == MAP_H - 1) {
+					map[x][y][z] = 2; // Wall
+				} else if ((x % 5 == 0 && y % 5 == 0) && z < 3) {
+					map[x][y][z] = 3; // Pillars
+				} else {
+					map[x][y][z] = 0; // Air
+				}
+			}
+		}
+	}
 }
 
-void game_start(void) {
-    init_map();
-    player.x = MAP_W / 2.0f;
-    player.y = MAP_H / 2.0f;
-    player.z = 2.5f;
-    player.yaw = 0.0f;
-    player.pitch = 0.0f;
-    current_mode = MODE_MOVE_LOOK;
+void game_start(void)
+{
+	init_map();
+	player.x = MAP_W / 2.0f;
+	player.y = MAP_H / 2.0f;
+	player.z = 2.5f;
+	player.yaw = 0.0f;
+	player.pitch = 0.0f;
+	current_mode = MODE_MOVE_LOOK;
 
-    sdk_set_backlight(SDK_BACKLIGHT_STD);
+	sdk_set_backlight(SDK_BACKLIGHT_STD);
 }
 
-void game_reset(void) {
-    game_start();
+void game_reset(void)
+{
+	game_start();
 }
 
 // Raycast function for Rendering and Interaction
 // Returns 1 if hit, 0 if no hit. Fills hit info if provided.
 // if 'target_block' is passed, it fills the coordinates of the block hit.
 // if 'prev_block' is passed, it fills the coordinates of the air block before the hit.
-int cast_ray(float start_x, float start_y, float start_z,
-             float dir_x, float dir_y, float dir_z,
-             float max_dist,
-             int* out_x, int* out_y, int* out_z,
-             int* prev_x, int* prev_y, int* prev_z,
-             int* out_side) {
+int cast_ray(float start_x, float start_y, float start_z, float dir_x, float dir_y, float dir_z,
+	     float max_dist, int *out_x, int *out_y, int *out_z, int *prev_x, int *prev_y,
+	     int *prev_z, int *out_side)
+{
+	int mapX = (int)start_x;
+	int mapY = (int)start_y;
+	int mapZ = (int)start_z;
 
-    int mapX = (int)start_x;
-    int mapY = (int)start_y;
-    int mapZ = (int)start_z;
+	float deltaDistX = (dir_x == 0) ? 1e30f : fabsf(1.0f / dir_x);
+	float deltaDistY = (dir_y == 0) ? 1e30f : fabsf(1.0f / dir_y);
+	float deltaDistZ = (dir_z == 0) ? 1e30f : fabsf(1.0f / dir_z);
 
-    float deltaDistX = (dir_x == 0) ? 1e30f : fabsf(1.0f / dir_x);
-    float deltaDistY = (dir_y == 0) ? 1e30f : fabsf(1.0f / dir_y);
-    float deltaDistZ = (dir_z == 0) ? 1e30f : fabsf(1.0f / dir_z);
+	int stepX, stepY, stepZ;
+	float sideDistX, sideDistY, sideDistZ;
 
-    int stepX, stepY, stepZ;
-    float sideDistX, sideDistY, sideDistZ;
+	if (dir_x < 0) {
+		stepX = -1;
+		sideDistX = (start_x - mapX) * deltaDistX;
+	} else {
+		stepX = 1;
+		sideDistX = (mapX + 1.0f - start_x) * deltaDistX;
+	}
+	if (dir_y < 0) {
+		stepY = -1;
+		sideDistY = (start_y - mapY) * deltaDistY;
+	} else {
+		stepY = 1;
+		sideDistY = (mapY + 1.0f - start_y) * deltaDistY;
+	}
+	if (dir_z < 0) {
+		stepZ = -1;
+		sideDistZ = (start_z - mapZ) * deltaDistZ;
+	} else {
+		stepZ = 1;
+		sideDistZ = (mapZ + 1.0f - start_z) * deltaDistZ;
+	}
 
-    if (dir_x < 0) {
-        stepX = -1;
-        sideDistX = (start_x - mapX) * deltaDistX;
-    } else {
-        stepX = 1;
-        sideDistX = (mapX + 1.0f - start_x) * deltaDistX;
-    }
-    if (dir_y < 0) {
-        stepY = -1;
-        sideDistY = (start_y - mapY) * deltaDistY;
-    } else {
-        stepY = 1;
-        sideDistY = (mapY + 1.0f - start_y) * deltaDistY;
-    }
-    if (dir_z < 0) {
-        stepZ = -1;
-        sideDistZ = (start_z - mapZ) * deltaDistZ;
-    } else {
-        stepZ = 1;
-        sideDistZ = (mapZ + 1.0f - start_z) * deltaDistZ;
-    }
+	int hit = 0;
+	int side = -1;
+	float dist = 0.0f;
 
-    int hit = 0;
-    int side = -1;
-    float dist = 0.0f;
+	// Track previous step
+	int lastX = mapX, lastY = mapY, lastZ = mapZ;
 
-    // Track previous step
-    int lastX = mapX, lastY = mapY, lastZ = mapZ;
+	while (hit == 0 && dist < max_dist) {
+		lastX = mapX;
+		lastY = mapY;
+		lastZ = mapZ;
 
-    while (hit == 0 && dist < max_dist) {
-        lastX = mapX; lastY = mapY; lastZ = mapZ;
+		if (sideDistX < sideDistY) {
+			if (sideDistX < sideDistZ) {
+				sideDistX += deltaDistX;
+				mapX += stepX;
+				side = 0;
+			} else {
+				sideDistZ += deltaDistZ;
+				mapZ += stepZ;
+				side = 2;
+			}
+		} else {
+			if (sideDistY < sideDistZ) {
+				sideDistY += deltaDistY;
+				mapY += stepY;
+				side = 1;
+			} else {
+				sideDistZ += deltaDistZ;
+				mapZ += stepZ;
+				side = 2;
+			}
+		}
 
-        if (sideDistX < sideDistY) {
-            if (sideDistX < sideDistZ) {
-                sideDistX += deltaDistX;
-                mapX += stepX;
-                side = 0;
-            } else {
-                sideDistZ += deltaDistZ;
-                mapZ += stepZ;
-                side = 2;
-            }
-        } else {
-            if (sideDistY < sideDistZ) {
-                sideDistY += deltaDistY;
-                mapY += stepY;
-                side = 1;
-            } else {
-                sideDistZ += deltaDistZ;
-                mapZ += stepZ;
-                side = 2;
-            }
-        }
+		// Check Bounds
+		if (mapX < 0 || mapX >= MAP_W || mapY < 0 || mapY >= MAP_H || mapZ < 0 ||
+		    mapZ >= MAP_D) {
+			return 0; // Out of bounds
+		}
 
-        // Check Bounds
-        if (mapX < 0 || mapX >= MAP_W || mapY < 0 || mapY >= MAP_H || mapZ < 0 || mapZ >= MAP_D) {
-            return 0; // Out of bounds
-        }
+		if (map[mapX][mapY][mapZ] > 0) {
+			hit = 1;
+		}
 
-        if (map[mapX][mapY][mapZ] > 0) {
-            hit = 1;
-        }
+		// Approximate distance check (Manhattan-ish for loop safety)
+		// Accurate distance isn't strictly needed for the loop condition
+		// if we trust max_dist steps, but let's just use a step counter or large number
+	}
 
-        // Approximate distance check (Manhattan-ish for loop safety)
-        // Accurate distance isn't strictly needed for the loop condition
-        // if we trust max_dist steps, but let's just use a step counter or large number
-    }
-
-    if (hit) {
-        if (out_x) *out_x = mapX;
-        if (out_y) *out_y = mapY;
-        if (out_z) *out_z = mapZ;
-        if (prev_x) *prev_x = lastX;
-        if (prev_y) *prev_y = lastY;
-        if (prev_z) *prev_z = lastZ;
-        if (out_side) *out_side = side;
-        return 1;
-    }
-    return 0;
+	if (hit) {
+		if (out_x)
+			*out_x = mapX;
+		if (out_y)
+			*out_y = mapY;
+		if (out_z)
+			*out_z = mapZ;
+		if (prev_x)
+			*prev_x = lastX;
+		if (prev_y)
+			*prev_y = lastY;
+		if (prev_z)
+			*prev_z = lastZ;
+		if (out_side)
+			*out_side = side;
+		return 1;
+	}
+	return 0;
 }
 
+void game_input(unsigned dt_usec)
+{
+	float dt = dt_usec / 1000000.0f;
+	float move_speed = 5.0f;
+	float rot_speed = 2.0f;
 
-void game_input(unsigned dt_usec) {
-    float dt = dt_usec / 1000000.0f;
-    float move_speed = 5.0f;
-    float rot_speed = 2.0f;
+	// --- Mode Switching ---
+	if (sdk_inputs_delta.select == 1) {
+		current_mode = (current_mode == MODE_MOVE_LOOK) ? MODE_EDIT : MODE_MOVE_LOOK;
+	}
 
-    // --- Mode Switching ---
-    if (sdk_inputs_delta.select == 1) {
-        current_mode = (current_mode == MODE_MOVE_LOOK) ? MODE_EDIT : MODE_MOVE_LOOK;
-    }
+	// --- Movement (Always Active) ---
+	// Joystick Y: Forward/Backward
+	if (abs(sdk_inputs.joy_y) > 200) {
+		float move = -(sdk_inputs.joy_y / 2048.0f) * move_speed * dt;
+		float new_x = player.x + cosf(player.yaw) * move;
+		float new_y = player.y + sinf(player.yaw) * move;
 
-    // --- Movement (Always Active) ---
-    // Joystick Y: Forward/Backward
-    if (abs(sdk_inputs.joy_y) > 200) {
-        float move = -(sdk_inputs.joy_y / 2048.0f) * move_speed * dt;
-        float new_x = player.x + cosf(player.yaw) * move;
-        float new_y = player.y + sinf(player.yaw) * move;
+		// Simple bounds check
+		if (new_x >= 0.1f && new_x < MAP_W - 0.1f)
+			player.x = new_x;
+		if (new_y >= 0.1f && new_y < MAP_H - 0.1f)
+			player.y = new_y;
+	}
 
-        // Simple bounds check
-        if (new_x >= 0.1f && new_x < MAP_W - 0.1f) player.x = new_x;
-        if (new_y >= 0.1f && new_y < MAP_H - 0.1f) player.y = new_y;
-    }
+	// Joystick X: Yaw
+	if (abs(sdk_inputs.joy_x) > 200) {
+		float rot = (sdk_inputs.joy_x / 2048.0f) * rot_speed * dt;
+		player.yaw += rot;
+	}
 
-    // Joystick X: Yaw
-    if (abs(sdk_inputs.joy_x) > 200) {
-        float rot = (sdk_inputs.joy_x / 2048.0f) * rot_speed * dt;
-        player.yaw += rot;
-    }
+	// --- Actions based on Mode ---
+	if (current_mode == MODE_MOVE_LOOK) {
+		// Fly Up (A)
+		if (sdk_inputs.a) {
+			player.z += move_speed * dt;
+			if (player.z >= MAP_D - 0.5f)
+				player.z = MAP_D - 0.5f;
+		}
+		// Fly Down (B)
+		if (sdk_inputs.b) {
+			player.z -= move_speed * dt;
+			if (player.z < 0.5f)
+				player.z = 0.5f;
+		}
+		// Pitch Up (Y)
+		if (sdk_inputs.y) {
+			player.pitch += rot_speed * dt;
+		}
+		// Pitch Down (X)
+		if (sdk_inputs.x) {
+			player.pitch -= rot_speed * dt;
+		}
+	} else { // MODE_EDIT
+		// Interaction Ray
+		float cy = cosf(player.yaw);
+		float sy = sinf(player.yaw);
+		float cp = cosf(player.pitch);
+		float sp = sinf(player.pitch);
+		float dir_x = cy * cp;
+		float dir_y = sy * cp;
+		float dir_z = sp;
 
-    // --- Actions based on Mode ---
-    if (current_mode == MODE_MOVE_LOOK) {
-        // Fly Up (A)
-        if (sdk_inputs.a) {
-            player.z += move_speed * dt;
-            if (player.z >= MAP_D - 0.5f) player.z = MAP_D - 0.5f;
-        }
-        // Fly Down (B)
-        if (sdk_inputs.b) {
-            player.z -= move_speed * dt;
-            if (player.z < 0.5f) player.z = 0.5f;
-        }
-        // Pitch Up (Y)
-        if (sdk_inputs.y) {
-            player.pitch += rot_speed * dt;
-        }
-        // Pitch Down (X)
-        if (sdk_inputs.x) {
-            player.pitch -= rot_speed * dt;
-        }
-    } else { // MODE_EDIT
-        // Interaction Ray
-        float cy = cosf(player.yaw);
-        float sy = sinf(player.yaw);
-        float cp = cosf(player.pitch);
-        float sp = sinf(player.pitch);
-        float dir_x = cy * cp;
-        float dir_y = sy * cp;
-        float dir_z = sp;
+		// Place Block (A)
+		if (sdk_inputs_delta.a == 1) {
+			int hx, hy, hz, px, py, pz;
+			if (cast_ray(player.x, player.y, player.z, dir_x, dir_y, dir_z, 10.0f, &hx,
+				     &hy, &hz, &px, &py, &pz, NULL)) {
+				// Place at previous (air) spot
+				if (px >= 0 && px < MAP_W && py >= 0 && py < MAP_H && pz >= 0 &&
+				    pz < MAP_D) {
+					// Don't place inside player
+					if (!((int)player.x == px && (int)player.y == py &&
+					      (int)player.z == pz)) {
+						map[px][py][pz] = selected_block_type;
+					}
+				}
+			}
+		}
 
-        // Place Block (A)
-        if (sdk_inputs_delta.a == 1) {
-            int hx, hy, hz, px, py, pz;
-            if (cast_ray(player.x, player.y, player.z, dir_x, dir_y, dir_z, 10.0f, &hx, &hy, &hz, &px, &py, &pz, NULL)) {
-                // Place at previous (air) spot
-                if (px >= 0 && px < MAP_W && py >= 0 && py < MAP_H && pz >= 0 && pz < MAP_D) {
-                    // Don't place inside player
-                    if (!((int)player.x == px && (int)player.y == py && (int)player.z == pz)) {
-                        map[px][py][pz] = selected_block_type;
-                    }
-                }
-            }
-        }
+		// Break Block (B)
+		if (sdk_inputs_delta.b == 1) {
+			int hx, hy, hz;
+			if (cast_ray(player.x, player.y, player.z, dir_x, dir_y, dir_z, 10.0f, &hx,
+				     &hy, &hz, NULL, NULL, NULL, NULL)) {
+				map[hx][hy][hz] = 0;
+			}
+		}
 
-        // Break Block (B)
-        if (sdk_inputs_delta.b == 1) {
-            int hx, hy, hz;
-            if (cast_ray(player.x, player.y, player.z, dir_x, dir_y, dir_z, 10.0f, &hx, &hy, &hz, NULL, NULL, NULL, NULL)) {
-                map[hx][hy][hz] = 0;
-            }
-        }
+		// Change Block Type (X/Y)
+		if (sdk_inputs_delta.y == 1) {
+			selected_block_type++;
+			if (selected_block_type > 5)
+				selected_block_type = 1;
+		}
+	}
 
-        // Change Block Type (X/Y)
-        if (sdk_inputs_delta.y == 1) {
-            selected_block_type++;
-            if (selected_block_type > 5) selected_block_type = 1;
-        }
-    }
-
-    // Clamp Pitch
-    float max_pitch = 89.0f * M_PI / 180.0f;
-    if (player.pitch > max_pitch) player.pitch = max_pitch;
-    if (player.pitch < -max_pitch) player.pitch = -max_pitch;
+	// Clamp Pitch
+	float max_pitch = 89.0f * M_PI / 180.0f;
+	if (player.pitch > max_pitch)
+		player.pitch = max_pitch;
+	if (player.pitch < -max_pitch)
+		player.pitch = -max_pitch;
 }
 
-void game_paint(unsigned dt_usec) {
-    (void)dt_usec;
-    tft_fill(COL_SKY);
+void game_paint(unsigned dt_usec)
+{
+	(void)dt_usec;
+	tft_fill(COL_SKY);
 
-    // Camera Basis
-    float cy = cosf(player.yaw);
-    float sy = sinf(player.yaw);
-    float cp = cosf(player.pitch);
-    float sp = sinf(player.pitch);
+	// Camera Basis
+	float cy = cosf(player.yaw);
+	float sy = sinf(player.yaw);
+	float cp = cosf(player.pitch);
+	float sp = sinf(player.pitch);
 
-    float fx = cy * cp;
-    float fy = sy * cp;
-    float fz = sp;
+	float fx = cy * cp;
+	float fy = sy * cp;
+	float fz = sp;
 
-    float rx = sy;
-    float ry = -cy;
-    float rz = 0.0f;
+	float rx = sy;
+	float ry = -cy;
+	float rz = 0.0f;
 
-    float ux = ry * fz - rz * fy;
-    float uy = rz * fx - rx * fz;
-    float uz = rx * fy - ry * fx;
+	float ux = ry * fz - rz * fy;
+	float uy = rz * fx - rx * fz;
+	float uz = rx * fy - ry * fx;
 
-    float aspect = (float)SCREEN_W / SCREEN_H;
-    float tan_fov = TAN_HALF_FOV;
+	float aspect = (float)SCREEN_W / SCREEN_H;
+	float tan_fov = TAN_HALF_FOV;
 
-    // Render Loop
-    for (int y = 0; y < SCREEN_H; y++) {
-        float ndc_y = 1.0f - (2.0f * y / SCREEN_H);
-        float cam_y = ndc_y * tan_fov;
+	// Render Loop
+	for (int y = 0; y < SCREEN_H; y++) {
+		float ndc_y = 1.0f - (2.0f * y / SCREEN_H);
+		float cam_y = ndc_y * tan_fov;
 
-        float ray_part_x = ux * cam_y;
-        float ray_part_y = uy * cam_y;
-        float ray_part_z = uz * cam_y;
+		float ray_part_x = ux * cam_y;
+		float ray_part_y = uy * cam_y;
+		float ray_part_z = uz * cam_y;
 
-        for (int x = 0; x < SCREEN_W; x++) {
-            float ndc_x = (2.0f * x / SCREEN_W) - 1.0f;
-            float cam_x = ndc_x * tan_fov * aspect;
+		for (int x = 0; x < SCREEN_W; x++) {
+			float ndc_x = (2.0f * x / SCREEN_W) - 1.0f;
+			float cam_x = ndc_x * tan_fov * aspect;
 
-            float dir_x = fx + rx * cam_x + ray_part_x;
-            float dir_y = fy + ry * cam_x + ray_part_y;
-            float dir_z = fz + rz * cam_x + ray_part_z;
+			float dir_x = fx + rx * cam_x + ray_part_x;
+			float dir_y = fy + ry * cam_x + ray_part_y;
+			float dir_z = fz + rz * cam_x + ray_part_z;
 
-            // DDA directly in render loop for performance
-            // (Re-implementing DDA inline to avoid function call overhead per pixel)
-            int mapX = (int)player.x;
-            int mapY = (int)player.y;
-            int mapZ = (int)player.z;
+			// DDA directly in render loop for performance
+			// (Re-implementing DDA inline to avoid function call overhead per pixel)
+			int mapX = (int)player.x;
+			int mapY = (int)player.y;
+			int mapZ = (int)player.z;
 
-            float deltaDistX = (dir_x == 0) ? 1e30f : fabsf(1.0f / dir_x);
-            float deltaDistY = (dir_y == 0) ? 1e30f : fabsf(1.0f / dir_y);
-            float deltaDistZ = (dir_z == 0) ? 1e30f : fabsf(1.0f / dir_z);
+			float deltaDistX = (dir_x == 0) ? 1e30f : fabsf(1.0f / dir_x);
+			float deltaDistY = (dir_y == 0) ? 1e30f : fabsf(1.0f / dir_y);
+			float deltaDistZ = (dir_z == 0) ? 1e30f : fabsf(1.0f / dir_z);
 
-            int stepX, stepY, stepZ;
-            float sideDistX, sideDistY, sideDistZ;
+			int stepX, stepY, stepZ;
+			float sideDistX, sideDistY, sideDistZ;
 
-            if (dir_x < 0) {
-                stepX = -1;
-                sideDistX = (player.x - mapX) * deltaDistX;
-            } else {
-                stepX = 1;
-                sideDistX = (mapX + 1.0f - player.x) * deltaDistX;
-            }
-            if (dir_y < 0) {
-                stepY = -1;
-                sideDistY = (player.y - mapY) * deltaDistY;
-            } else {
-                stepY = 1;
-                sideDistY = (mapY + 1.0f - player.y) * deltaDistY;
-            }
-            if (dir_z < 0) {
-                stepZ = -1;
-                sideDistZ = (player.z - mapZ) * deltaDistZ;
-            } else {
-                stepZ = 1;
-                sideDistZ = (mapZ + 1.0f - player.z) * deltaDistZ;
-            }
+			if (dir_x < 0) {
+				stepX = -1;
+				sideDistX = (player.x - mapX) * deltaDistX;
+			} else {
+				stepX = 1;
+				sideDistX = (mapX + 1.0f - player.x) * deltaDistX;
+			}
+			if (dir_y < 0) {
+				stepY = -1;
+				sideDistY = (player.y - mapY) * deltaDistY;
+			} else {
+				stepY = 1;
+				sideDistY = (mapY + 1.0f - player.y) * deltaDistY;
+			}
+			if (dir_z < 0) {
+				stepZ = -1;
+				sideDistZ = (player.z - mapZ) * deltaDistZ;
+			} else {
+				stepZ = 1;
+				sideDistZ = (mapZ + 1.0f - player.z) * deltaDistZ;
+			}
 
-            int hit = 0;
-            int side = -1;
-            int steps = 0;
+			int hit = 0;
+			int side = -1;
+			int steps = 0;
 
-            while (hit == 0 && steps < 40) { // Limit draw distance
-                if (sideDistX < sideDistY) {
-                    if (sideDistX < sideDistZ) {
-                        sideDistX += deltaDistX;
-                        mapX += stepX;
-                        side = 0;
-                    } else {
-                        sideDistZ += deltaDistZ;
-                        mapZ += stepZ;
-                        side = 2;
-                    }
-                } else {
-                    if (sideDistY < sideDistZ) {
-                        sideDistY += deltaDistY;
-                        mapY += stepY;
-                        side = 1;
-                    } else {
-                        sideDistZ += deltaDistZ;
-                        mapZ += stepZ;
-                        side = 2;
-                    }
-                }
+			while (hit == 0 && steps < 40) { // Limit draw distance
+				if (sideDistX < sideDistY) {
+					if (sideDistX < sideDistZ) {
+						sideDistX += deltaDistX;
+						mapX += stepX;
+						side = 0;
+					} else {
+						sideDistZ += deltaDistZ;
+						mapZ += stepZ;
+						side = 2;
+					}
+				} else {
+					if (sideDistY < sideDistZ) {
+						sideDistY += deltaDistY;
+						mapY += stepY;
+						side = 1;
+					} else {
+						sideDistZ += deltaDistZ;
+						mapZ += stepZ;
+						side = 2;
+					}
+				}
 
-                if (mapX < 0 || mapX >= MAP_W || mapY < 0 || mapY >= MAP_H || mapZ < 0 || mapZ >= MAP_D) {
-                    break;
-                }
+				if (mapX < 0 || mapX >= MAP_W || mapY < 0 || mapY >= MAP_H ||
+				    mapZ < 0 || mapZ >= MAP_D) {
+					break;
+				}
 
-                if (map[mapX][mapY][mapZ] > 0) {
-                    hit = 1;
-                }
-                steps++;
-            }
+				if (map[mapX][mapY][mapZ] > 0) {
+					hit = 1;
+				}
+				steps++;
+			}
 
-            if (hit) {
-                uint8_t block = map[mapX][mapY][mapZ];
-                uint16_t color;
+			if (hit) {
+				uint8_t block = map[mapX][mapY][mapZ];
+				uint16_t color;
 
-                switch (block) {
-                    case 1: color = COL_FLOOR; break;
-                    case 2: color = COL_WALL; break;
-                    case 3: color = COL_BLOCK_1; break;
-                    case 4: color = COL_BLOCK_2; break;
-                    case 5: color = COL_BLOCK_3; break;
-                    default: color = COL_WALL; break;
-                }
+				switch (block) {
+				case 1:
+					color = COL_FLOOR;
+					break;
+				case 2:
+					color = COL_WALL;
+					break;
+				case 3:
+					color = COL_BLOCK_1;
+					break;
+				case 4:
+					color = COL_BLOCK_2;
+					break;
+				case 5:
+					color = COL_BLOCK_3;
+					break;
+				default:
+					color = COL_WALL;
+					break;
+				}
 
-                // Simple directional shading
-                // Top (Z+) = Brightest
-                // Sides = Darker
-                // Bottom (Z-) = Darkest
-                if (side == 2) {
-                    if (stepZ > 0) { // Bottom face of block (Ray went up)
-                         color = rgb_to_rgb565(
-                            (rgb565_red(color) * 120) / 255,
-                            (rgb565_green(color) * 120) / 255,
-                            (rgb565_blue(color) * 120) / 255
-                        );
-                    } else { // Top face (Ray went down)
-                        // Normal color
-                    }
-                } else if (side == 0) { // X Face
-                     color = rgb_to_rgb565(
-                        (rgb565_red(color) * 200) / 255,
-                        (rgb565_green(color) * 200) / 255,
-                        (rgb565_blue(color) * 200) / 255
-                    );
-                } else { // Y Face
-                     color = rgb_to_rgb565(
-                        (rgb565_red(color) * 160) / 255,
-                        (rgb565_green(color) * 160) / 255,
-                        (rgb565_blue(color) * 160) / 255
-                    );
-                }
+				// Simple directional shading
+				// Top (Z+) = Brightest
+				// Sides = Darker
+				// Bottom (Z-) = Darkest
+				if (side == 2) {
+					if (stepZ > 0) { // Bottom face of block (Ray went up)
+						color = rgb_to_rgb565(
+							(rgb565_red(color) * 120) / 255,
+							(rgb565_green(color) * 120) / 255,
+							(rgb565_blue(color) * 120) / 255);
+					} else { // Top face (Ray went down)
+						 // Normal color
+					}
+				} else if (side == 0) { // X Face
+					color = rgb_to_rgb565((rgb565_red(color) * 200) / 255,
+							      (rgb565_green(color) * 200) / 255,
+							      (rgb565_blue(color) * 200) / 255);
+				} else { // Y Face
+					color = rgb_to_rgb565((rgb565_red(color) * 160) / 255,
+							      (rgb565_green(color) * 160) / 255,
+							      (rgb565_blue(color) * 160) / 255);
+				}
 
-                tft_draw_pixel(x, y, color);
-            } else {
-                // Sky is already filled
-                // Maybe draw a horizon line or gradient?
-                // For now, flat color is fine.
-            }
+				tft_draw_pixel(x, y, color);
+			} else {
+				// Sky is already filled
+				// Maybe draw a horizon line or gradient?
+				// For now, flat color is fine.
+			}
 
-            // Draw Crosshair (in center pixels)
-            if (x == SCREEN_W/2 && y == SCREEN_H/2) {
-                tft_draw_pixel(x, y, rgb_to_rgb565(255, 255, 255));
-            }
-        }
-    }
+			// Draw Crosshair (in center pixels)
+			if (x == SCREEN_W / 2 && y == SCREEN_H / 2) {
+				tft_draw_pixel(x, y, rgb_to_rgb565(255, 255, 255));
+			}
+		}
+	}
 
-    // UI Overlay
-    char buf[32];
-    tft_draw_string(5, 5, rgb_to_rgb565(255, 255, 255), "Mode: %s", (current_mode == MODE_MOVE_LOOK) ? "MOVE/LOOK" : "EDIT");
-    if (current_mode == MODE_EDIT) {
-        tft_draw_string(5, 15, rgb_to_rgb565(255, 255, 255), "Block: %d", selected_block_type);
-        tft_draw_string(5, 105, rgb_to_rgb565(200, 200, 200), "A: Place, B: Break");
-    } else {
-        tft_draw_string(5, 105, rgb_to_rgb565(200, 200, 200), "A/B: Fly, Y/X: Look");
-    }
+	// UI Overlay
+	char buf[32];
+	tft_draw_string(5, 5, rgb_to_rgb565(255, 255, 255), "Mode: %s",
+			(current_mode == MODE_MOVE_LOOK) ? "MOVE/LOOK" : "EDIT");
+	if (current_mode == MODE_EDIT) {
+		tft_draw_string(5, 15, rgb_to_rgb565(255, 255, 255), "Block: %d",
+				selected_block_type);
+		tft_draw_string(5, 105, rgb_to_rgb565(200, 200, 200), "A: Place, B: Break");
+	} else {
+		tft_draw_string(5, 105, rgb_to_rgb565(200, 200, 200), "A/B: Fly, Y/X: Look");
+	}
 }
 
-void game_audio(int nsamples) {
-    (void)nsamples;
+void game_audio(int nsamples)
+{
+	(void)nsamples;
 }
 
-void game_inbox(sdk_message_t msg) {
-    (void)msg;
+void game_inbox(sdk_message_t msg)
+{
+	(void)msg;
+}
+int main()
+{
+	struct sdk_config config = {
+		.wait_for_usb = true,
+		.show_fps = true,
+		.off_on_select = true,
+		.fps_color = 0,
+	};
+	sdk_main(&config);
 }
