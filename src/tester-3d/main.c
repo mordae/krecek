@@ -25,17 +25,28 @@
 #define COL_SKY     rgb_to_rgb565(135, 206, 235)
 #define COL_FLOOR   rgb_to_rgb565(50, 50, 50)
 #define COL_WALL    rgb_to_rgb565(180, 180, 180)
-#define COL_BLOCK_R rgb_to_rgb565(200, 50, 50)
-#define COL_BLOCK_G rgb_to_rgb565(50, 200, 50)
-#define COL_BLOCK_B rgb_to_rgb565(50, 50, 200)
+#define COL_BLOCK_1 rgb_to_rgb565(200, 50, 50)
+#define COL_BLOCK_2 rgb_to_rgb565(50, 200, 50)
+#define COL_BLOCK_3 rgb_to_rgb565(50, 50, 200)
 
 // Map and Player
 static uint8_t map[MAP_W][MAP_H][MAP_D];
 
-struct {
+typedef struct {
     float x, y, z;
     float yaw, pitch;
-} player;
+} Player;
+
+static Player player;
+
+// Game State
+typedef enum {
+    MODE_MOVE_LOOK = 0,
+    MODE_EDIT = 1
+} GameMode;
+
+static GameMode current_mode = MODE_MOVE_LOOK;
+static int selected_block_type = 1;
 
 // Game Info
 sdk_game_info("tester-3d", NULL);
@@ -51,8 +62,6 @@ static void init_map() {
                     map[x][y][z] = 2; // Wall
                 } else if ((x % 5 == 0 && y % 5 == 0) && z < 3) {
                      map[x][y][z] = 3; // Pillars
-                } else if (rand() % 40 == 0 && z > 0) {
-                     map[x][y][z] = 4 + (rand() % 3); // Random Blocks
                 } else {
                     map[x][y][z] = 0; // Air
                 }
@@ -65,11 +74,11 @@ void game_start(void) {
     init_map();
     player.x = MAP_W / 2.0f;
     player.y = MAP_H / 2.0f;
-    player.z = 1.5f; // Eye height (Floor is z=0 block, so on top of it is z=1.0 to 2.0)
+    player.z = 2.5f;
     player.yaw = 0.0f;
     player.pitch = 0.0f;
+    current_mode = MODE_MOVE_LOOK;
 
-    // Set backlight to standard
     sdk_set_backlight(SDK_BACKLIGHT_STD);
 }
 
@@ -77,37 +86,198 @@ void game_reset(void) {
     game_start();
 }
 
+// Raycast function for Rendering and Interaction
+// Returns 1 if hit, 0 if no hit. Fills hit info if provided.
+// if 'target_block' is passed, it fills the coordinates of the block hit.
+// if 'prev_block' is passed, it fills the coordinates of the air block before the hit.
+int cast_ray(float start_x, float start_y, float start_z,
+             float dir_x, float dir_y, float dir_z,
+             float max_dist,
+             int* out_x, int* out_y, int* out_z,
+             int* prev_x, int* prev_y, int* prev_z,
+             int* out_side) {
+
+    int mapX = (int)start_x;
+    int mapY = (int)start_y;
+    int mapZ = (int)start_z;
+
+    float deltaDistX = (dir_x == 0) ? 1e30f : fabsf(1.0f / dir_x);
+    float deltaDistY = (dir_y == 0) ? 1e30f : fabsf(1.0f / dir_y);
+    float deltaDistZ = (dir_z == 0) ? 1e30f : fabsf(1.0f / dir_z);
+
+    int stepX, stepY, stepZ;
+    float sideDistX, sideDistY, sideDistZ;
+
+    if (dir_x < 0) {
+        stepX = -1;
+        sideDistX = (start_x - mapX) * deltaDistX;
+    } else {
+        stepX = 1;
+        sideDistX = (mapX + 1.0f - start_x) * deltaDistX;
+    }
+    if (dir_y < 0) {
+        stepY = -1;
+        sideDistY = (start_y - mapY) * deltaDistY;
+    } else {
+        stepY = 1;
+        sideDistY = (mapY + 1.0f - start_y) * deltaDistY;
+    }
+    if (dir_z < 0) {
+        stepZ = -1;
+        sideDistZ = (start_z - mapZ) * deltaDistZ;
+    } else {
+        stepZ = 1;
+        sideDistZ = (mapZ + 1.0f - start_z) * deltaDistZ;
+    }
+
+    int hit = 0;
+    int side = -1;
+    float dist = 0.0f;
+
+    // Track previous step
+    int lastX = mapX, lastY = mapY, lastZ = mapZ;
+
+    while (hit == 0 && dist < max_dist) {
+        lastX = mapX; lastY = mapY; lastZ = mapZ;
+
+        if (sideDistX < sideDistY) {
+            if (sideDistX < sideDistZ) {
+                sideDistX += deltaDistX;
+                mapX += stepX;
+                side = 0;
+            } else {
+                sideDistZ += deltaDistZ;
+                mapZ += stepZ;
+                side = 2;
+            }
+        } else {
+            if (sideDistY < sideDistZ) {
+                sideDistY += deltaDistY;
+                mapY += stepY;
+                side = 1;
+            } else {
+                sideDistZ += deltaDistZ;
+                mapZ += stepZ;
+                side = 2;
+            }
+        }
+
+        // Check Bounds
+        if (mapX < 0 || mapX >= MAP_W || mapY < 0 || mapY >= MAP_H || mapZ < 0 || mapZ >= MAP_D) {
+            return 0; // Out of bounds
+        }
+
+        if (map[mapX][mapY][mapZ] > 0) {
+            hit = 1;
+        }
+
+        // Approximate distance check (Manhattan-ish for loop safety)
+        // Accurate distance isn't strictly needed for the loop condition
+        // if we trust max_dist steps, but let's just use a step counter or large number
+    }
+
+    if (hit) {
+        if (out_x) *out_x = mapX;
+        if (out_y) *out_y = mapY;
+        if (out_z) *out_z = mapZ;
+        if (prev_x) *prev_x = lastX;
+        if (prev_y) *prev_y = lastY;
+        if (prev_z) *prev_z = lastZ;
+        if (out_side) *out_side = side;
+        return 1;
+    }
+    return 0;
+}
+
+
 void game_input(unsigned dt_usec) {
     float dt = dt_usec / 1000000.0f;
     float move_speed = 5.0f;
     float rot_speed = 2.0f;
 
-    // Joystick Y - Move Forward/Back
+    // --- Mode Switching ---
+    if (sdk_inputs_delta.select == 1) {
+        current_mode = (current_mode == MODE_MOVE_LOOK) ? MODE_EDIT : MODE_MOVE_LOOK;
+    }
+
+    // --- Movement (Always Active) ---
+    // Joystick Y: Forward/Backward
     if (abs(sdk_inputs.joy_y) > 200) {
         float move = -(sdk_inputs.joy_y / 2048.0f) * move_speed * dt;
         float new_x = player.x + cosf(player.yaw) * move;
         float new_y = player.y + sinf(player.yaw) * move;
 
-        // Simple collision check (only check floor/walls at head height? nah just bounds for now)
-        if (new_x > 0 && new_x < MAP_W) player.x = new_x;
-        if (new_y > 0 && new_y < MAP_H) player.y = new_y;
+        // Simple bounds check
+        if (new_x >= 0.1f && new_x < MAP_W - 0.1f) player.x = new_x;
+        if (new_y >= 0.1f && new_y < MAP_H - 0.1f) player.y = new_y;
     }
 
-    // Joystick X - Yaw
+    // Joystick X: Yaw
     if (abs(sdk_inputs.joy_x) > 200) {
         float rot = (sdk_inputs.joy_x / 2048.0f) * rot_speed * dt;
         player.yaw += rot;
     }
 
-    // Buttons for Pitch
-    if (sdk_inputs.a) { // Look Up
-        player.pitch += rot_speed * dt;
-    }
-    if (sdk_inputs.y) { // Look Down
-        player.pitch -= rot_speed * dt;
+    // --- Actions based on Mode ---
+    if (current_mode == MODE_MOVE_LOOK) {
+        // Fly Up (A)
+        if (sdk_inputs.a) {
+            player.z += move_speed * dt;
+            if (player.z >= MAP_D - 0.5f) player.z = MAP_D - 0.5f;
+        }
+        // Fly Down (B)
+        if (sdk_inputs.b) {
+            player.z -= move_speed * dt;
+            if (player.z < 0.5f) player.z = 0.5f;
+        }
+        // Pitch Up (Y)
+        if (sdk_inputs.y) {
+            player.pitch += rot_speed * dt;
+        }
+        // Pitch Down (X)
+        if (sdk_inputs.x) {
+            player.pitch -= rot_speed * dt;
+        }
+    } else { // MODE_EDIT
+        // Interaction Ray
+        float cy = cosf(player.yaw);
+        float sy = sinf(player.yaw);
+        float cp = cosf(player.pitch);
+        float sp = sinf(player.pitch);
+        float dir_x = cy * cp;
+        float dir_y = sy * cp;
+        float dir_z = sp;
+
+        // Place Block (A)
+        if (sdk_inputs_delta.a == 1) {
+            int hx, hy, hz, px, py, pz;
+            if (cast_ray(player.x, player.y, player.z, dir_x, dir_y, dir_z, 10.0f, &hx, &hy, &hz, &px, &py, &pz, NULL)) {
+                // Place at previous (air) spot
+                if (px >= 0 && px < MAP_W && py >= 0 && py < MAP_H && pz >= 0 && pz < MAP_D) {
+                    // Don't place inside player
+                    if (!((int)player.x == px && (int)player.y == py && (int)player.z == pz)) {
+                        map[px][py][pz] = selected_block_type;
+                    }
+                }
+            }
+        }
+
+        // Break Block (B)
+        if (sdk_inputs_delta.b == 1) {
+            int hx, hy, hz;
+            if (cast_ray(player.x, player.y, player.z, dir_x, dir_y, dir_z, 10.0f, &hx, &hy, &hz, NULL, NULL, NULL, NULL)) {
+                map[hx][hy][hz] = 0;
+            }
+        }
+
+        // Change Block Type (X/Y)
+        if (sdk_inputs_delta.y == 1) {
+            selected_block_type++;
+            if (selected_block_type > 5) selected_block_type = 1;
+        }
     }
 
-    // Clamp Pitch (-89 to 89 degrees)
+    // Clamp Pitch
     float max_pitch = 89.0f * M_PI / 180.0f;
     if (player.pitch > max_pitch) player.pitch = max_pitch;
     if (player.pitch < -max_pitch) player.pitch = -max_pitch;
@@ -117,34 +287,29 @@ void game_paint(unsigned dt_usec) {
     (void)dt_usec;
     tft_fill(COL_SKY);
 
-    // Camera Vectors
+    // Camera Basis
     float cy = cosf(player.yaw);
     float sy = sinf(player.yaw);
     float cp = cosf(player.pitch);
     float sp = sinf(player.pitch);
 
-    // Forward (F)
     float fx = cy * cp;
     float fy = sy * cp;
     float fz = sp;
 
-    // Right (R) - Horizontal
     float rx = sy;
     float ry = -cy;
     float rz = 0.0f;
 
-    // Up (U) = R x F
-    float ux = ry * fz - rz * fy; // -cy * sp
-    float uy = rz * fx - rx * fz; // -sy * sp
-    float uz = rx * fy - ry * fx; // sy*sy*cp - (-cy*cy*cp) = cp
+    float ux = ry * fz - rz * fy;
+    float uy = rz * fx - rx * fz;
+    float uz = rx * fy - ry * fx;
 
-    // Precalculate aspect ratio factor
     float aspect = (float)SCREEN_W / SCREEN_H;
     float tan_fov = TAN_HALF_FOV;
 
-    // Raycast per pixel
+    // Render Loop
     for (int y = 0; y < SCREEN_H; y++) {
-        // Optimization: Precalculate Y-dependent camera coord
         float ndc_y = 1.0f - (2.0f * y / SCREEN_H);
         float cam_y = ndc_y * tan_fov;
 
@@ -156,44 +321,38 @@ void game_paint(unsigned dt_usec) {
             float ndc_x = (2.0f * x / SCREEN_W) - 1.0f;
             float cam_x = ndc_x * tan_fov * aspect;
 
-            // Ray Direction
-            float dx = fx + rx * cam_x + ray_part_x;
-            float dy = fy + ry * cam_x + ray_part_y;
-            float dz = fz + rz * cam_x + ray_part_z;
+            float dir_x = fx + rx * cam_x + ray_part_x;
+            float dir_y = fy + ry * cam_x + ray_part_y;
+            float dir_z = fz + rz * cam_x + ray_part_z;
 
-            // Normalize Ray
-            float len = sqrtf(dx*dx + dy*dy + dz*dz);
-            dx /= len; dy /= len; dz /= len;
-
-            // Map Position
+            // DDA directly in render loop for performance
+            // (Re-implementing DDA inline to avoid function call overhead per pixel)
             int mapX = (int)player.x;
             int mapY = (int)player.y;
             int mapZ = (int)player.z;
 
-            // Delta Distance
-            float deltaDistX = (dx == 0) ? 1e30f : fabsf(1.0f / dx);
-            float deltaDistY = (dy == 0) ? 1e30f : fabsf(1.0f / dy);
-            float deltaDistZ = (dz == 0) ? 1e30f : fabsf(1.0f / dz);
+            float deltaDistX = (dir_x == 0) ? 1e30f : fabsf(1.0f / dir_x);
+            float deltaDistY = (dir_y == 0) ? 1e30f : fabsf(1.0f / dir_y);
+            float deltaDistZ = (dir_z == 0) ? 1e30f : fabsf(1.0f / dir_z);
 
-            // Step and SideDist
             int stepX, stepY, stepZ;
             float sideDistX, sideDistY, sideDistZ;
 
-            if (dx < 0) {
+            if (dir_x < 0) {
                 stepX = -1;
                 sideDistX = (player.x - mapX) * deltaDistX;
             } else {
                 stepX = 1;
                 sideDistX = (mapX + 1.0f - player.x) * deltaDistX;
             }
-            if (dy < 0) {
+            if (dir_y < 0) {
                 stepY = -1;
                 sideDistY = (player.y - mapY) * deltaDistY;
             } else {
                 stepY = 1;
                 sideDistY = (mapY + 1.0f - player.y) * deltaDistY;
             }
-            if (dz < 0) {
+            if (dir_z < 0) {
                 stepZ = -1;
                 sideDistZ = (player.z - mapZ) * deltaDistZ;
             } else {
@@ -201,12 +360,11 @@ void game_paint(unsigned dt_usec) {
                 sideDistZ = (mapZ + 1.0f - player.z) * deltaDistZ;
             }
 
-            // DDA Loop
             int hit = 0;
-            int side = -1; // 0=X, 1=Y, 2=Z
+            int side = -1;
             int steps = 0;
 
-            while (hit == 0 && steps < 50) {
+            while (hit == 0 && steps < 40) { // Limit draw distance
                 if (sideDistX < sideDistY) {
                     if (sideDistX < sideDistZ) {
                         sideDistX += deltaDistX;
@@ -229,7 +387,6 @@ void game_paint(unsigned dt_usec) {
                     }
                 }
 
-                // Check Bounds
                 if (mapX < 0 || mapX >= MAP_W || mapY < 0 || mapY >= MAP_H || mapZ < 0 || mapZ >= MAP_D) {
                     break;
                 }
@@ -247,36 +404,62 @@ void game_paint(unsigned dt_usec) {
                 switch (block) {
                     case 1: color = COL_FLOOR; break;
                     case 2: color = COL_WALL; break;
-                    case 3: color = COL_BLOCK_R; break;
-                    case 4: color = COL_BLOCK_G; break;
-                    case 5: color = COL_BLOCK_B; break;
+                    case 3: color = COL_BLOCK_1; break;
+                    case 4: color = COL_BLOCK_2; break;
+                    case 5: color = COL_BLOCK_3; break;
                     default: color = COL_WALL; break;
                 }
 
-                // Shading based on side
-                if (side == 0) {
-                    // X side - Normal
-                } else if (side == 1) {
-                    // Y side - Darker
-                    color = rgb_to_rgb565(
+                // Simple directional shading
+                // Top (Z+) = Brightest
+                // Sides = Darker
+                // Bottom (Z-) = Darkest
+                if (side == 2) {
+                    if (stepZ > 0) { // Bottom face of block (Ray went up)
+                         color = rgb_to_rgb565(
+                            (rgb565_red(color) * 120) / 255,
+                            (rgb565_green(color) * 120) / 255,
+                            (rgb565_blue(color) * 120) / 255
+                        );
+                    } else { // Top face (Ray went down)
+                        // Normal color
+                    }
+                } else if (side == 0) { // X Face
+                     color = rgb_to_rgb565(
                         (rgb565_red(color) * 200) / 255,
                         (rgb565_green(color) * 200) / 255,
                         (rgb565_blue(color) * 200) / 255
                     );
-                } else {
-                    // Z side (Top/Bottom) - Darkest or Brightest?
-                    // Usually Top is bright, Bottom is dark?
-                    // Let's make Z side distinct.
+                } else { // Y Face
                      color = rgb_to_rgb565(
-                        (rgb565_red(color) * 150) / 255,
-                        (rgb565_green(color) * 150) / 255,
-                        (rgb565_blue(color) * 150) / 255
+                        (rgb565_red(color) * 160) / 255,
+                        (rgb565_green(color) * 160) / 255,
+                        (rgb565_blue(color) * 160) / 255
                     );
                 }
 
                 tft_draw_pixel(x, y, color);
+            } else {
+                // Sky is already filled
+                // Maybe draw a horizon line or gradient?
+                // For now, flat color is fine.
+            }
+
+            // Draw Crosshair (in center pixels)
+            if (x == SCREEN_W/2 && y == SCREEN_H/2) {
+                tft_draw_pixel(x, y, rgb_to_rgb565(255, 255, 255));
             }
         }
+    }
+
+    // UI Overlay
+    char buf[32];
+    tft_draw_string(5, 5, rgb_to_rgb565(255, 255, 255), "Mode: %s", (current_mode == MODE_MOVE_LOOK) ? "MOVE/LOOK" : "EDIT");
+    if (current_mode == MODE_EDIT) {
+        tft_draw_string(5, 15, rgb_to_rgb565(255, 255, 255), "Block: %d", selected_block_type);
+        tft_draw_string(5, 105, rgb_to_rgb565(200, 200, 200), "A: Place, B: Break");
+    } else {
+        tft_draw_string(5, 105, rgb_to_rgb565(200, 200, 200), "A/B: Fly, Y/X: Look");
     }
 }
 
