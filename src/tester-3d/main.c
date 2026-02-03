@@ -23,9 +23,13 @@
 
 // Colors
 #define COL_SKY rgb_to_rgb565(135, 206, 235)
+#define COL_GRAY rgb_to_rgb565(160, 160, 160)
+#define COL_PURPLE rgb_to_rgb565(128, 0, 128)
+#define COL_BLACK rgb_to_rgb565(0, 0, 0)
+
 #define COL_FLOOR rgb_to_rgb565(50, 50, 50)
-#define COL_WALL rgb_to_rgb565(180, 180, 180)
-#define COL_BLOCK_1 rgb_to_rgb565(200, 50, 50)
+#define COL_WALL COL_GRAY
+#define COL_BLOCK_1 COL_PURPLE
 #define COL_BLOCK_2 rgb_to_rgb565(50, 200, 50)
 #define COL_BLOCK_3 rgb_to_rgb565(50, 50, 200)
 
@@ -224,7 +228,7 @@ void game_input(unsigned dt_usec)
 	// Joystick X: Yaw
 	if (abs(sdk_inputs.joy_x) > 200) {
 		float rot = (sdk_inputs.joy_x / 2048.0f) * rot_speed * dt;
-		player.yaw += rot;
+		player.yaw -= rot; // Inverted rotation
 	}
 
 	// --- Actions based on Mode ---
@@ -421,6 +425,38 @@ void game_paint(unsigned dt_usec)
 				uint8_t block = map[mapX][mapY][mapZ];
 				uint16_t color;
 
+				// Calculate Hit Position for Outline
+				float perpWallDist;
+				if (side == 0)
+					perpWallDist = sideDistX - deltaDistX;
+				else if (side == 1)
+					perpWallDist = sideDistY - deltaDistY;
+				else
+					perpWallDist = sideDistZ - deltaDistZ;
+
+				float hit_x = player.x + dir_x * perpWallDist;
+				float hit_y = player.y + dir_y * perpWallDist;
+				float hit_z = player.z + dir_z * perpWallDist;
+
+				float u, v;
+				if (side == 0) {
+					u = hit_y - floorf(hit_y);
+					v = hit_z - floorf(hit_z);
+				} else if (side == 1) {
+					u = hit_x - floorf(hit_x);
+					v = hit_z - floorf(hit_z);
+				} else {
+					u = hit_x - floorf(hit_x);
+					v = hit_y - floorf(hit_y);
+				}
+
+				float margin = 1.0f / 16.0f;
+				int is_edge = 0;
+				if (u < margin || u > 1.0f - margin || v < margin ||
+				    v > 1.0f - margin) {
+					is_edge = 1;
+				}
+
 				switch (block) {
 				case 1:
 					color = COL_FLOOR;
@@ -440,6 +476,10 @@ void game_paint(unsigned dt_usec)
 				default:
 					color = COL_WALL;
 					break;
+				}
+
+				if (is_edge) {
+					color = COL_BLACK;
 				}
 
 				// Simple directional shading
