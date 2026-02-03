@@ -55,4 +55,5 @@ add_subdirectory(puntog)
 add_subdirectory(3notd)
 add_subdirectory(super_platform_bros)
 add_subdirectory(s_r_tester)
+add_subdirectory(tester-3d)
 
