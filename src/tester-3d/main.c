@@ -291,6 +291,18 @@ void game_input(unsigned dt_usec)
 					// Don't place inside player
 					if (!((int)player.x == px && (int)player.y == py &&
 					      (int)player.z == pz)) {
+						// Check if we are overwriting a light (unlikely since we target air, but safe)
+						if (map[px][py][pz] == 3) {
+							for (int i = 0; i < num_lights; i++) {
+								if (lights[i].x == px &&
+								    lights[i].y == py &&
+								    lights[i].z == pz) {
+									lights[i] = lights[--num_lights];
+									break;
+								}
+							}
+						}
+
 						map[px][py][pz] = selected_block_type;
 						// Update lights if block is white
 						if (selected_block_type == 3 &&
@@ -503,17 +515,23 @@ void game_paint(unsigned dt_usec)
 							// Since user said "don't worry about performance", we do it.
 							int hx, hy, hz;
 							if (cast_ray(hit_x - dir_x * 0.01f, hit_y - dir_y * 0.01f, hit_z - dir_z * 0.01f,
-										 ldir_x, ldir_y, ldir_z, dist - 0.5f,
+										 ldir_x, ldir_y, ldir_z, dist + 1.0f, // Go past light center to ensure we hit it if valid
 										 &hx, &hy, &hz, NULL, NULL, NULL, NULL)) {
-								shadow_hit = 1;
+								// Check if we hit the light source itself
+								if (hx == lights[i].x && hy == lights[i].y && hz == lights[i].z) {
+									shadow_hit = 0; // Visible!
+								} else {
+									shadow_hit = 1; // Blocked by something else
+								}
 							}
 						}
 
 						if (!shadow_hit) {
-							// Inverse square lawish
-							float attenuation = 1.0f - (dist / max_light_dist);
+							// Smoother falloff (quadratic-ish)
+							float norm_dist = dist / max_light_dist;
+							float attenuation = 1.0f - (norm_dist * norm_dist);
 							if (attenuation > 0)
-								light_intensity += attenuation;
+								light_intensity += attenuation * 1.5f; // Boost slightly
 						}
 					}
 				}
@@ -601,10 +619,31 @@ void game_paint(unsigned dt_usec)
 				lit_g *= shade;
 				lit_b *= shade;
 
+				// Dithering (Ordered Bayer 2x2)
+				// Coordinates: x, y
+				// Matrix: [ 0  2 ]
+				//         [ 3  1 ]
+				// Scale factor: 4
+				int dither_val = 0;
+				if ((x % 2 == 0) && (y % 2 == 0)) dither_val = 0;
+				else if ((x % 2 != 0) && (y % 2 == 0)) dither_val = 2;
+				else if ((x % 2 == 0) && (y % 2 != 0)) dither_val = 3;
+				else dither_val = 1;
+
+				// Map 0..3 to a small range, e.g., -4..4 or similar, to affect the LSBs
+				float dither_offset = (dither_val - 1.5f) * 4.0f;
+
+				lit_r += dither_offset;
+				lit_g += dither_offset;
+				lit_b += dither_offset;
+
 				// Clamp
 				if (lit_r > 255) lit_r = 255;
 				if (lit_g > 255) lit_g = 255;
 				if (lit_b > 255) lit_b = 255;
+				if (lit_r < 0) lit_r = 0;
+				if (lit_g < 0) lit_g = 0;
+				if (lit_b < 0) lit_b = 0;
 
 				color = rgb_to_rgb565((int)lit_r, (int)lit_g, (int)lit_b);
 
