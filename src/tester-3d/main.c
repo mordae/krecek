@@ -70,19 +70,23 @@ static void init_map()
 			for (int z = 0; z < MAP_D; z++) {
 				if (z == 0) {
 					map[x][y][z] = 1; // Floor
+				} else if (z == MAP_D - 1) {
+					map[x][y][z] = 2; // Ceiling
 				} else if (x == 0 || x == MAP_W - 1 || y == 0 || y == MAP_H - 1) {
 					map[x][y][z] = 2; // Wall
-				} else if ((x % 5 == 0 && y % 5 == 0) && z < 3) {
-					map[x][y][z] = 3; // Pillars
-					if (num_lights < MAX_LIGHTS) {
-						lights[num_lights++] = (LightSource){ x, y, z };
-					}
 				} else {
 					map[x][y][z] = 0; // Air
 				}
 			}
 		}
 	}
+
+	// Add a single light source in the ceiling center
+	int lx = MAP_W / 2;
+	int ly = MAP_H / 2;
+	int lz = MAP_D - 1; // In the ceiling
+	map[lx][ly][lz] = 3; // White Block (Light)
+	lights[num_lights++] = (LightSource){ lx, ly, lz };
 }
 
 void game_start(void)
@@ -287,6 +291,18 @@ void game_input(unsigned dt_usec)
 					// Don't place inside player
 					if (!((int)player.x == px && (int)player.y == py &&
 					      (int)player.z == pz)) {
+						// Check if we are overwriting a light (unlikely since we target air, but safe)
+						if (map[px][py][pz] == 3) {
+							for (int i = 0; i < num_lights; i++) {
+								if (lights[i].x == px &&
+								    lights[i].y == py &&
+								    lights[i].z == pz) {
+									lights[i] = lights[--num_lights];
+									break;
+								}
+							}
+						}
+
 						map[px][py][pz] = selected_block_type;
 						// Update lights if block is white
 						if (selected_block_type == 3 &&
@@ -470,7 +486,7 @@ void game_paint(unsigned dt_usec)
 
 				// --- Lighting Calculation ---
 				float light_intensity = 0.0f;
-				float max_light_dist = 10.0f;
+				float max_light_dist = 20.0f; // Increased for room coverage
 
 				for (int i = 0; i < num_lights; i++) {
 					float lx = lights[i].x + 0.5f;
@@ -499,17 +515,23 @@ void game_paint(unsigned dt_usec)
 							// Since user said "don't worry about performance", we do it.
 							int hx, hy, hz;
 							if (cast_ray(hit_x - dir_x * 0.01f, hit_y - dir_y * 0.01f, hit_z - dir_z * 0.01f,
-										 ldir_x, ldir_y, ldir_z, dist - 0.5f,
+										 ldir_x, ldir_y, ldir_z, dist + 1.0f, // Go past light center to ensure we hit it if valid
 										 &hx, &hy, &hz, NULL, NULL, NULL, NULL)) {
-								shadow_hit = 1;
+								// Check if we hit the light source itself
+								if (hx == lights[i].x && hy == lights[i].y && hz == lights[i].z) {
+									shadow_hit = 0; // Visible!
+								} else {
+									shadow_hit = 1; // Blocked by something else
+								}
 							}
 						}
 
 						if (!shadow_hit) {
-							// Inverse square lawish
-							float attenuation = 1.0f - (dist / max_light_dist);
+							// Smoother falloff (quadratic-ish)
+							float norm_dist = dist / max_light_dist;
+							float attenuation = 1.0f - (norm_dist * norm_dist);
 							if (attenuation > 0)
-								light_intensity += attenuation;
+								light_intensity += attenuation * 1.5f; // Boost slightly
 						}
 					}
 				}
@@ -565,7 +587,7 @@ void game_paint(unsigned dt_usec)
 
 				// Apply Lighting (White)
 				// Base lighting (ambient) - Dark Room
-				float ambient = 0.05f; // Very dark ambient
+				float ambient = 0.0f; // Pitch black ambient
 				float total_light = ambient + light_intensity;
 				if (total_light > 1.0f) total_light = 1.0f;
 
@@ -574,16 +596,13 @@ void game_paint(unsigned dt_usec)
 				uint8_t g = rgb565_green(color);
 				uint8_t b = rgb565_blue(color);
 
-				// White light color (255, 255, 255)
-				float pr = 255.0f;
-				float pg = 255.0f;
-				float pb = 255.0f;
+				// Modulative Lighting: SurfaceColor * (Ambient + Intensity)
+				// This preserves black outlines (0 * anything = 0)
+				float intensity_factor = ambient + light_intensity;
 
-				// Blend: (BaseColor * Ambient) + (WhiteLight * Intensity)
-
-				float lit_r = r * ambient + pr * light_intensity;
-				float lit_g = g * ambient + pg * light_intensity;
-				float lit_b = b * ambient + pb * light_intensity;
+				float lit_r = r * intensity_factor;
+				float lit_g = g * intensity_factor;
+				float lit_b = b * intensity_factor;
 
 				// Use original shading as a modulation factor if needed
 				// For now, let's keep the simple side shading
@@ -597,10 +616,31 @@ void game_paint(unsigned dt_usec)
 				lit_g *= shade;
 				lit_b *= shade;
 
+				// Dithering (Ordered Bayer 2x2)
+				// Coordinates: x, y
+				// Matrix: [ 0  2 ]
+				//         [ 3  1 ]
+				// Scale factor: 4
+				int dither_val = 0;
+				if ((x % 2 == 0) && (y % 2 == 0)) dither_val = 0;
+				else if ((x % 2 != 0) && (y % 2 == 0)) dither_val = 2;
+				else if ((x % 2 == 0) && (y % 2 != 0)) dither_val = 3;
+				else dither_val = 1;
+
+				// Map 0..3 to a small range, e.g., -4..4 or similar, to affect the LSBs
+				float dither_offset = (dither_val - 1.5f) * 4.0f;
+
+				lit_r += dither_offset;
+				lit_g += dither_offset;
+				lit_b += dither_offset;
+
 				// Clamp
 				if (lit_r > 255) lit_r = 255;
 				if (lit_g > 255) lit_g = 255;
 				if (lit_b > 255) lit_b = 255;
+				if (lit_r < 0) lit_r = 0;
+				if (lit_g < 0) lit_g = 0;
+				if (lit_b < 0) lit_b = 0;
 
 				color = rgb_to_rgb565((int)lit_r, (int)lit_g, (int)lit_b);
 
