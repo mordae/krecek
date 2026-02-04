@@ -23,9 +23,13 @@
 
 // Colors
 #define COL_SKY rgb_to_rgb565(135, 206, 235)
+#define COL_GRAY rgb_to_rgb565(160, 160, 160)
+#define COL_PURPLE rgb_to_rgb565(128, 0, 128)
+#define COL_BLACK rgb_to_rgb565(0, 0, 0)
+
 #define COL_FLOOR rgb_to_rgb565(50, 50, 50)
-#define COL_WALL rgb_to_rgb565(180, 180, 180)
-#define COL_BLOCK_1 rgb_to_rgb565(200, 50, 50)
+#define COL_WALL COL_GRAY
+#define COL_BLOCK_1 COL_PURPLE
 #define COL_BLOCK_2 rgb_to_rgb565(50, 200, 50)
 #define COL_BLOCK_3 rgb_to_rgb565(50, 50, 200)
 
@@ -45,12 +49,22 @@ typedef enum { MODE_MOVE_LOOK = 0, MODE_EDIT = 1 } GameMode;
 static GameMode current_mode = MODE_MOVE_LOOK;
 static int selected_block_type = 1;
 
+// Lighting
+typedef struct {
+	int x, y, z;
+} LightSource;
+
+#define MAX_LIGHTS 64
+static LightSource lights[MAX_LIGHTS];
+static int num_lights = 0;
+
 // Game Info
 sdk_game_info("tester-3d", NULL);
 
 // Initialize Map
 static void init_map()
 {
+	num_lights = 0;
 	for (int x = 0; x < MAP_W; x++) {
 		for (int y = 0; y < MAP_H; y++) {
 			for (int z = 0; z < MAP_D; z++) {
@@ -60,6 +74,9 @@ static void init_map()
 					map[x][y][z] = 2; // Wall
 				} else if ((x % 5 == 0 && y % 5 == 0) && z < 3) {
 					map[x][y][z] = 3; // Pillars
+					if (num_lights < MAX_LIGHTS) {
+						lights[num_lights++] = (LightSource){ x, y, z };
+					}
 				} else {
 					map[x][y][z] = 0; // Air
 				}
@@ -224,7 +241,7 @@ void game_input(unsigned dt_usec)
 	// Joystick X: Yaw
 	if (abs(sdk_inputs.joy_x) > 200) {
 		float rot = (sdk_inputs.joy_x / 2048.0f) * rot_speed * dt;
-		player.yaw += rot;
+		player.yaw -= rot; // Inverted rotation
 	}
 
 	// --- Actions based on Mode ---
@@ -271,6 +288,12 @@ void game_input(unsigned dt_usec)
 					if (!((int)player.x == px && (int)player.y == py &&
 					      (int)player.z == pz)) {
 						map[px][py][pz] = selected_block_type;
+						// Update lights if block is purple
+						if (selected_block_type == 3 &&
+						    num_lights < MAX_LIGHTS) {
+							lights[num_lights++] =
+								(LightSource){ px, py, pz };
+						}
 					}
 				}
 			}
@@ -281,6 +304,17 @@ void game_input(unsigned dt_usec)
 			int hx, hy, hz;
 			if (cast_ray(player.x, player.y, player.z, dir_x, dir_y, dir_z, 10.0f, &hx,
 				     &hy, &hz, NULL, NULL, NULL, NULL)) {
+				// Remove light if it was purple
+				if (map[hx][hy][hz] == 3) {
+					for (int i = 0; i < num_lights; i++) {
+						if (lights[i].x == hx && lights[i].y == hy &&
+						    lights[i].z == hz) {
+							// Swap with last
+							lights[i] = lights[--num_lights];
+							break;
+						}
+					}
+				}
 				map[hx][hy][hz] = 0;
 			}
 		}
@@ -421,6 +455,87 @@ void game_paint(unsigned dt_usec)
 				uint8_t block = map[mapX][mapY][mapZ];
 				uint16_t color;
 
+				// Calculate Hit Position
+				float perpWallDist;
+				if (side == 0)
+					perpWallDist = sideDistX - deltaDistX;
+				else if (side == 1)
+					perpWallDist = sideDistY - deltaDistY;
+				else
+					perpWallDist = sideDistZ - deltaDistZ;
+
+				float hit_x = player.x + dir_x * perpWallDist;
+				float hit_y = player.y + dir_y * perpWallDist;
+				float hit_z = player.z + dir_z * perpWallDist;
+
+				// --- Lighting Calculation ---
+				float light_intensity = 0.0f;
+				float max_light_dist = 10.0f;
+
+				for (int i = 0; i < num_lights; i++) {
+					float lx = lights[i].x + 0.5f;
+					float ly = lights[i].y + 0.5f;
+					float lz = lights[i].z + 0.5f;
+
+					float dx = lx - hit_x;
+					float dy = ly - hit_y;
+					float dz = lz - hit_z;
+					float dist_sq = dx * dx + dy * dy + dz * dz;
+					float dist = sqrtf(dist_sq);
+
+					if (dist < max_light_dist) {
+						// Shadow Ray
+						float ldir_x = dx / dist;
+						float ldir_y = dy / dist;
+						float ldir_z = dz / dist;
+
+						// Offset start position slightly to avoid self-intersection
+						int shadow_hit = 0;
+						if (dist > 1.0f) {
+							// Simple raycast to light
+							// We can reuse cast_ray logic or a simplified version
+							// For performance, let's use cast_ray but only for geometry check
+							// Note: cast_ray is relatively expensive to call in a loop.
+							// Since user said "don't worry about performance", we do it.
+							int hx, hy, hz;
+							if (cast_ray(hit_x - dir_x * 0.01f, hit_y - dir_y * 0.01f, hit_z - dir_z * 0.01f,
+										 ldir_x, ldir_y, ldir_z, dist - 0.5f,
+										 &hx, &hy, &hz, NULL, NULL, NULL, NULL)) {
+								shadow_hit = 1;
+							}
+						}
+
+						if (!shadow_hit) {
+							// Inverse square lawish
+							float attenuation = 1.0f - (dist / max_light_dist);
+							if (attenuation > 0)
+								light_intensity += attenuation;
+						}
+					}
+				}
+				if (light_intensity > 1.0f) light_intensity = 1.0f;
+
+
+				// Outline Logic
+				float u, v;
+				if (side == 0) {
+					u = hit_y - floorf(hit_y);
+					v = hit_z - floorf(hit_z);
+				} else if (side == 1) {
+					u = hit_x - floorf(hit_x);
+					v = hit_z - floorf(hit_z);
+				} else {
+					u = hit_x - floorf(hit_x);
+					v = hit_y - floorf(hit_y);
+				}
+
+				float margin = 1.0f / 16.0f;
+				int is_edge = 0;
+				if (u < margin || u > 1.0f - margin || v < margin ||
+				    v > 1.0f - margin) {
+					is_edge = 1;
+				}
+
 				switch (block) {
 				case 1:
 					color = COL_FLOOR;
@@ -430,6 +545,8 @@ void game_paint(unsigned dt_usec)
 					break;
 				case 3:
 					color = COL_BLOCK_1;
+					// Purple blocks are self-illuminated
+					light_intensity = 1.0f;
 					break;
 				case 4:
 					color = COL_BLOCK_2;
@@ -442,28 +559,53 @@ void game_paint(unsigned dt_usec)
 					break;
 				}
 
-				// Simple directional shading
-				// Top (Z+) = Brightest
-				// Sides = Darker
-				// Bottom (Z-) = Darkest
-				if (side == 2) {
-					if (stepZ > 0) { // Bottom face of block (Ray went up)
-						color = rgb_to_rgb565(
-							(rgb565_red(color) * 120) / 255,
-							(rgb565_green(color) * 120) / 255,
-							(rgb565_blue(color) * 120) / 255);
-					} else { // Top face (Ray went down)
-						 // Normal color
-					}
-				} else if (side == 0) { // X Face
-					color = rgb_to_rgb565((rgb565_red(color) * 200) / 255,
-							      (rgb565_green(color) * 200) / 255,
-							      (rgb565_blue(color) * 200) / 255);
-				} else { // Y Face
-					color = rgb_to_rgb565((rgb565_red(color) * 160) / 255,
-							      (rgb565_green(color) * 160) / 255,
-							      (rgb565_blue(color) * 160) / 255);
+				if (is_edge) {
+					color = COL_BLACK;
 				}
+
+				// Apply Lighting (Purple Tint)
+				// Base lighting (ambient)
+				float ambient = 0.2f;
+				float total_light = ambient + light_intensity;
+				if (total_light > 1.0f) total_light = 1.0f;
+
+				// Mix original color with purple light
+				uint8_t r = rgb565_red(color);
+				uint8_t g = rgb565_green(color);
+				uint8_t b = rgb565_blue(color);
+
+				// Purple light color (say 200, 50, 200)
+				float pr = 200.0f;
+				float pg = 50.0f;
+				float pb = 200.0f;
+
+				// Blend: (BaseColor * Ambient) + (PurpleLight * Intensity)
+				// Or more simply: BaseColor * TotalLight, but shifting towards purple
+
+				float lit_r = r * ambient + pr * light_intensity;
+				float lit_g = g * ambient + pg * light_intensity;
+				float lit_b = b * ambient + pb * light_intensity;
+
+				// Use original shading as a modulation factor if needed
+				// For now, let's keep the simple side shading
+				float shade = 1.0f;
+				if (side == 2 && stepZ > 0) shade = 0.5f;
+				else if (side == 0) shade = 0.8f;
+				else if (side == 1) shade = 0.7f;
+
+				// Apply directional shading to the result?
+				// Maybe not if we want the light source to dominate.
+				// Let's multiply the final lit color by the directional shade for texture depth.
+				lit_r *= shade;
+				lit_g *= shade;
+				lit_b *= shade;
+
+				// Clamp
+				if (lit_r > 255) lit_r = 255;
+				if (lit_g > 255) lit_g = 255;
+				if (lit_b > 255) lit_b = 255;
+
+				color = rgb_to_rgb565((int)lit_r, (int)lit_g, (int)lit_b);
 
 				tft_draw_pixel(x, y, color);
 			} else {
