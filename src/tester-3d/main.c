@@ -70,19 +70,23 @@ static void init_map()
 			for (int z = 0; z < MAP_D; z++) {
 				if (z == 0) {
 					map[x][y][z] = 1; // Floor
+				} else if (z == MAP_D - 1) {
+					map[x][y][z] = 2; // Ceiling
 				} else if (x == 0 || x == MAP_W - 1 || y == 0 || y == MAP_H - 1) {
 					map[x][y][z] = 2; // Wall
-				} else if ((x % 5 == 0 && y % 5 == 0) && z < 3) {
-					map[x][y][z] = 3; // Pillars
-					if (num_lights < MAX_LIGHTS) {
-						lights[num_lights++] = (LightSource){ x, y, z };
-					}
 				} else {
 					map[x][y][z] = 0; // Air
 				}
 			}
 		}
 	}
+
+	// Add a single light source in the ceiling center
+	int lx = MAP_W / 2;
+	int ly = MAP_H / 2;
+	int lz = MAP_D - 1; // In the ceiling
+	map[lx][ly][lz] = 3; // White Block (Light)
+	lights[num_lights++] = (LightSource){ lx, ly, lz };
 }
 
 void game_start(void)
@@ -470,7 +474,7 @@ void game_paint(unsigned dt_usec)
 
 				// --- Lighting Calculation ---
 				float light_intensity = 0.0f;
-				float max_light_dist = 10.0f;
+				float max_light_dist = 20.0f; // Increased for room coverage
 
 				for (int i = 0; i < num_lights; i++) {
 					float lx = lights[i].x + 0.5f;
