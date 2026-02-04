@@ -22,14 +22,14 @@
 #define TAN_HALF_FOV (tanf(FOV_DEG * M_PI / 360.0f))
 
 // Colors
-#define COL_SKY rgb_to_rgb565(135, 206, 235)
+#define COL_SKY rgb_to_rgb565(10, 10, 20) // Dark Sky
 #define COL_GRAY rgb_to_rgb565(160, 160, 160)
-#define COL_PURPLE rgb_to_rgb565(128, 0, 128)
+#define COL_WHITE rgb_to_rgb565(255, 255, 255)
 #define COL_BLACK rgb_to_rgb565(0, 0, 0)
 
 #define COL_FLOOR rgb_to_rgb565(50, 50, 50)
 #define COL_WALL COL_GRAY
-#define COL_BLOCK_1 COL_PURPLE
+#define COL_BLOCK_1 COL_WHITE
 #define COL_BLOCK_2 rgb_to_rgb565(50, 200, 50)
 #define COL_BLOCK_3 rgb_to_rgb565(50, 50, 200)
 
@@ -288,7 +288,7 @@ void game_input(unsigned dt_usec)
 					if (!((int)player.x == px && (int)player.y == py &&
 					      (int)player.z == pz)) {
 						map[px][py][pz] = selected_block_type;
-						// Update lights if block is purple
+						// Update lights if block is white
 						if (selected_block_type == 3 &&
 						    num_lights < MAX_LIGHTS) {
 							lights[num_lights++] =
@@ -304,7 +304,7 @@ void game_input(unsigned dt_usec)
 			int hx, hy, hz;
 			if (cast_ray(player.x, player.y, player.z, dir_x, dir_y, dir_z, 10.0f, &hx,
 				     &hy, &hz, NULL, NULL, NULL, NULL)) {
-				// Remove light if it was purple
+				// Remove light if it was white
 				if (map[hx][hy][hz] == 3) {
 					for (int i = 0; i < num_lights; i++) {
 						if (lights[i].x == hx && lights[i].y == hy &&
@@ -545,7 +545,7 @@ void game_paint(unsigned dt_usec)
 					break;
 				case 3:
 					color = COL_BLOCK_1;
-					// Purple blocks are self-illuminated
+					// White blocks are self-illuminated
 					light_intensity = 1.0f;
 					break;
 				case 4:
@@ -563,24 +563,23 @@ void game_paint(unsigned dt_usec)
 					color = COL_BLACK;
 				}
 
-				// Apply Lighting (Purple Tint)
-				// Base lighting (ambient)
-				float ambient = 0.2f;
+				// Apply Lighting (White)
+				// Base lighting (ambient) - Dark Room
+				float ambient = 0.05f; // Very dark ambient
 				float total_light = ambient + light_intensity;
 				if (total_light > 1.0f) total_light = 1.0f;
 
-				// Mix original color with purple light
+				// Mix original color with White light
 				uint8_t r = rgb565_red(color);
 				uint8_t g = rgb565_green(color);
 				uint8_t b = rgb565_blue(color);
 
-				// Purple light color (say 200, 50, 200)
-				float pr = 200.0f;
-				float pg = 50.0f;
-				float pb = 200.0f;
+				// White light color (255, 255, 255)
+				float pr = 255.0f;
+				float pg = 255.0f;
+				float pb = 255.0f;
 
-				// Blend: (BaseColor * Ambient) + (PurpleLight * Intensity)
-				// Or more simply: BaseColor * TotalLight, but shifting towards purple
+				// Blend: (BaseColor * Ambient) + (WhiteLight * Intensity)
 
 				float lit_r = r * ambient + pr * light_intensity;
 				float lit_g = g * ambient + pg * light_intensity;
@@ -594,8 +593,6 @@ void game_paint(unsigned dt_usec)
 				else if (side == 1) shade = 0.7f;
 
 				// Apply directional shading to the result?
-				// Maybe not if we want the light source to dominate.
-				// Let's multiply the final lit color by the directional shade for texture depth.
 				lit_r *= shade;
 				lit_g *= shade;
 				lit_b *= shade;
@@ -609,9 +606,8 @@ void game_paint(unsigned dt_usec)
 
 				tft_draw_pixel(x, y, color);
 			} else {
-				// Sky is already filled
-				// Maybe draw a horizon line or gradient?
-				// For now, flat color is fine.
+				// Dark Sky for dark room
+				tft_draw_pixel(x, y, COL_SKY);
 			}
 
 			// Draw Crosshair (in center pixels)
