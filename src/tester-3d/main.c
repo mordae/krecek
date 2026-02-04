@@ -587,7 +587,7 @@ void game_paint(unsigned dt_usec)
 
 				// Apply Lighting (White)
 				// Base lighting (ambient) - Dark Room
-				float ambient = 0.05f; // Very dark ambient
+				float ambient = 0.0f; // Pitch black ambient
 				float total_light = ambient + light_intensity;
 				if (total_light > 1.0f) total_light = 1.0f;
 
@@ -596,16 +596,13 @@ void game_paint(unsigned dt_usec)
 				uint8_t g = rgb565_green(color);
 				uint8_t b = rgb565_blue(color);
 
-				// White light color (255, 255, 255)
-				float pr = 255.0f;
-				float pg = 255.0f;
-				float pb = 255.0f;
+				// Modulative Lighting: SurfaceColor * (Ambient + Intensity)
+				// This preserves black outlines (0 * anything = 0)
+				float intensity_factor = ambient + light_intensity;
 
-				// Blend: (BaseColor * Ambient) + (WhiteLight * Intensity)
-
-				float lit_r = r * ambient + pr * light_intensity;
-				float lit_g = g * ambient + pg * light_intensity;
-				float lit_b = b * ambient + pb * light_intensity;
+				float lit_r = r * intensity_factor;
+				float lit_g = g * intensity_factor;
+				float lit_b = b * intensity_factor;
 
 				// Use original shading as a modulation factor if needed
 				// For now, let's keep the simple side shading
