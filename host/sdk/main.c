@@ -20,9 +20,6 @@
 
 struct sdk_config sdk_config = {};
 
-/* The renderer, so that input.c can undo the window scaling. */
-SDL_Renderer *sdk_sdl_renderer = NULL;
-
 uint64_t sdk_device_id = 0;
 
 int current_slot = 0;
@@ -101,12 +98,6 @@ void __noreturn sdk_main(const struct sdk_config *conf)
 
 	if (!renderer)
 		sdl_error("SDL_CreateRenderer");
-
-	/*
-	 * Shared with input.c, which needs it to map mouse positions from
-	 * window pixels back to the 160x120 the game thinks in.
-	 */
-	sdk_sdl_renderer = renderer;
 
 	if (SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE))
 		sdl_error("SDL_SetRenderDrawBlendMode");

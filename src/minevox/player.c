@@ -373,6 +373,24 @@ static void update_target(void)
 	}
 }
 
+/*
+ * Tools.
+ *
+ * Only a PICKAXE is ever a hard requirement. Blocks marked TOOL_AXE are
+ * merely quicker with one: you can always pull a tree apart with your
+ * hands, it just takes longer, exactly as in the real game.
+ *
+ * Getting this wrong is worth remembering. An earlier version demanded an
+ * exact tool match for every block that named one, which meant logs
+ * needed an axe, and there is no axe in the game. Wood is the very first
+ * thing a new player mines, so the entire progression was sealed shut
+ * behind a tool that did not exist.
+ */
+static bool needs_tool(const struct block_info *info)
+{
+	return info->tool == TOOL_PICK;
+}
+
 /* How long this block takes to break with what we are holding. */
 static float mining_time(uint8_t block)
 {
@@ -385,10 +403,12 @@ static float mining_time(uint8_t block)
 	if (held >= ITEM_BASE && held < NUM_ITEM_IDS)
 		speed = item_info[held - ITEM_BASE].tool_speed;
 
-	bool right_tool = info->tool == TOOL_NONE || item_tool_kind(held) == info->tool;
+	bool holding_right_tool = info->tool == TOOL_NONE || item_tool_kind(held) == info->tool;
 
-	if (!right_tool)
-		return base * 3.0f; /* Bare hands on stone: slow and pointless. */
+	if (!holding_right_tool) {
+		/* Bare hands on rock is hopeless; on wood, merely slow. */
+		return base * (needs_tool(info) ? 3.0f : 1.6f);
+	}
 
 	return base * 16.0f / (float)speed;
 }
@@ -398,10 +418,10 @@ static bool tool_gets_drop(uint8_t block)
 {
 	const struct block_info *info = &block_info[block];
 
-	if (info->tool == TOOL_NONE)
+	if (!needs_tool(info))
 		return true;
 
-	return item_tool_kind(player_held_item()) == info->tool;
+	return item_tool_kind(player_held_item()) == TOOL_PICK;
 }
 
 static void try_break(float dt)

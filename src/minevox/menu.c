@@ -97,15 +97,28 @@ void pointer_update(void)
 {
 	static bool was_down;
 
-	pointer.x = clampi((int)(sdk_inputs.tx * SCREEN_W), 0, SCREEN_W - 1);
-	pointer.y = clampi((int)(sdk_inputs.ty * SCREEN_H), 0, SCREEN_H - 1);
+	/*
+	 * The SDK hands us the pointer as a fraction of the screen, from 0
+	 * to 1 on each axis, so multiplying by the screen size gives
+	 * pixels. This is exactly what krec2ddoom's editor does, and its
+	 * touch support is the one that has actually been used in anger.
+	 *
+	 * On the desktop the same numbers come from the mouse. SDL scales
+	 * mouse events into the renderer's logical size for us, so they
+	 * already arrive in 160 by 120 space no matter how large the window
+	 * is. Converting a second time is a mistake, and one this file made
+	 * for a while: it squeezed the whole pointer range into the top
+	 * left corner of the screen.
+	 */
+	pointer.x = clampi((int)roundf(sdk_inputs.tx * SCREEN_W), 0, SCREEN_W - 1);
+	pointer.y = clampi((int)roundf(sdk_inputs.ty * SCREEN_H), 0, SCREEN_H - 1);
 
 	/*
-	 * The touch panel reports a pressure rather than a clean up or
-	 * down, so we pick a threshold. Too low and the panel triggers on
-	 * its own; this value is the one the SDK's own examples use.
+	 * The panel reports a pressure rather than a clean up or down, so
+	 * we pick a threshold. Half is what the editor uses: high enough
+	 * that the panel does not trigger on its own.
 	 */
-	bool down = sdk_inputs.tp > 0.15f;
+	bool down = sdk_inputs.tp > 0.5f;
 
 	pointer.pressed = down && !was_down;
 	pointer.released = !down && was_down;
