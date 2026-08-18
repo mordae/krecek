@@ -21,6 +21,28 @@ static int mouse_down = 0;
 static int mouse_x = 0;
 static int mouse_y = 0;
 
+/* Set in main.c once the renderer exists. */
+extern SDL_Renderer *sdk_sdl_renderer;
+
+/*
+ * Convert a position in window pixels to the game's 160x120 space.
+ *
+ * The window is several times larger than the screen it stands in for, and
+ * it can be resized and letterboxed. SDL knows the mapping because we gave
+ * the renderer a logical size, so we ask it rather than guessing.
+ */
+static void set_mouse_position(int window_x, int window_y)
+{
+	float lx = window_x;
+	float ly = window_y;
+
+	if (sdk_sdl_renderer)
+		SDL_RenderWindowToLogical(sdk_sdl_renderer, window_x, window_y, &lx, &ly);
+
+	mouse_x = (int)lx;
+	mouse_y = (int)ly;
+}
+
 static void on_keydown(SDL_Scancode code)
 {
 	switch (code) {
@@ -240,15 +262,13 @@ void sdk_input_handle(const SDL_Event *event)
 	}
 
 	if (event->type == SDL_MOUSEMOTION) {
-		mouse_x = event->motion.x;
-		mouse_y = event->motion.y;
+		set_mouse_position(event->motion.x, event->motion.y);
 	}
 
 	if (event->type == SDL_MOUSEBUTTONDOWN) {
 		if (event->button.button == SDL_BUTTON_LEFT) {
 			mouse_down = 1;
-			mouse_x = event->button.x;
-			mouse_y = event->button.y;
+			set_mouse_position(event->button.x, event->button.y);
 		}
 	}
 
@@ -278,8 +298,8 @@ void sdk_input_commit(uint32_t dt)
 	sdk_inputs.jx = joy_right - joy_left;
 	sdk_inputs.jy = joy_down - joy_up;
 
-	sdk_inputs.tx = (float)mouse_x / 160.0f;
-	sdk_inputs.ty = (float)mouse_y / 120.0f;
+	sdk_inputs.tx = (float)mouse_x / (float)TFT_WIDTH;
+	sdk_inputs.ty = (float)mouse_y / (float)TFT_HEIGHT;
 	sdk_inputs.tp = mouse_down ? 1 : 0;
 
 	if (sdk_inputs.tx < 0.0f)

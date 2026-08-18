@@ -3,7 +3,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-uint8_t world_data[WORLD_X * WORLD_Y * WORLD_Z / 2];
+/*
+ * ===========================================================================
+ * The world: storage, generation and ray casting
+ * ===========================================================================
+ *
+ * The voxel volume itself is a plain three dimensional array flattened
+ * into one dimension. Everything else in this file either fills it in at
+ * the start of a game or answers questions about it afterwards.
+ */
+
+uint8_t world_data[WORLD_X * WORLD_Y * WORLD_Z];
 uint8_t world_height[WORLD_X][WORLD_Y];
 uint8_t world_top = WORLD_Z;
 
@@ -17,25 +27,37 @@ uint32_t world_seed = 1;
 float world_time = 90.0f;
 
 /*
- * Player edits, kept separately so that we can save a whole world
- * as a seed plus a short list of changes.
- */
-#define MAX_EDITS 1300
-
-static uint32_t edits[MAX_EDITS];
-static int num_edits = 0;
-
-static inline uint32_t edit_pack(int x, int y, int z, uint8_t block)
-{
-	return (uint32_t)x | ((uint32_t)y << 6) | ((uint32_t)z << 12) | ((uint32_t)block << 17);
-}
-
-/*
- * Value noise.
+ * ---------------------------------------------------------------------------
+ * Noise
+ * ---------------------------------------------------------------------------
+ *
+ * Terrain comes from VALUE NOISE, which is the simplest way to make a
+ * landscape that looks natural but is completely reproducible from a seed.
+ *
+ * The idea in three steps:
+ *
+ *   1. Imagine a grid of points, each holding a random height. We do not
+ *      store that grid, we compute a point's value on demand by hashing
+ *      its coordinates, which costs no memory at all.
+ *   2. To find the height between grid points, blend the four corners
+ *      around you.
+ *   3. Blending linearly leaves visible creases along the grid lines, so
+ *      first bend the blending factor with a smoothstep curve, which
+ *      flattens the slope at each end and hides the seams.
+ *
+ * One layer of that gives gentle rolling ground. Adding several layers at
+ * doubling frequency and halving strength, which is called FRACTIONAL
+ * BROWNIAN MOTION, adds detail without losing the large shapes. That is
+ * the fbm2 function below, and it is the whole of our terrain generator.
  */
 static uint32_t hash_coords(int x, int y, int z, uint32_t seed)
 {
-	/* Unsigned throughout, signed overflow would be undefined. */
+	/*
+	 * Everything is unsigned on purpose. Signed overflow is undefined
+	 * behaviour in C, and the optimiser will happily exploit that; the
+	 * first version of this file had exactly that bug and the compiler
+	 * quietly rewrote the terrain generator.
+	 */
 	uint32_t h = seed;
 	h ^= (uint32_t)x * 374761393u;
 	h ^= (uint32_t)y * 668265263u;
@@ -51,6 +73,7 @@ static float lattice(int x, int y, int z, uint32_t seed)
 	return (hash_coords(x, y, z, seed) & 0xffff) * (1.0f / 65535.0f);
 }
 
+/* Eases from 0 to 1 with zero slope at both ends: 3t^2 - 2t^3. */
 static float smoothstep(float t)
 {
 	return t * t * (3.0f - 2.0f * t);
@@ -73,6 +96,7 @@ static float noise2(float x, float y, uint32_t seed)
 	return ab + (cd - ab) * fy;
 }
 
+/* The same idea in three dimensions, used to carve caves. */
 static float noise3(float x, float y, float z, uint32_t seed)
 {
 	int ix = (int)floorf(x);
@@ -109,6 +133,8 @@ static float fbm2(float x, float y, uint32_t seed, int octaves)
 	for (int i = 0; i < octaves; i++) {
 		sum += amp * noise2(x, y, seed + i * 7919u);
 		total += amp;
+
+		/* Each layer is twice as detailed and half as strong. */
 		amp *= 0.5f;
 		x *= 2.0f;
 		y *= 2.0f;
@@ -118,7 +144,9 @@ static float fbm2(float x, float y, uint32_t seed, int octaves)
 }
 
 /*
- * Terrain.
+ * ---------------------------------------------------------------------------
+ * Terrain
+ * ---------------------------------------------------------------------------
  */
 static void place_tree(int x, int y, int base)
 {
@@ -127,18 +155,17 @@ static void place_tree(int x, int y, int base)
 	if (base + height + 2 >= WORLD_Z)
 		return;
 
-	/* Canopy first so that the trunk stays visible from below. */
+	/* Canopy first, so the trunk is still visible from underneath. */
 	for (int dz = height - 2; dz <= height + 1; dz++) {
 		int radius = (dz >= height) ? 1 : 2;
 
 		for (int dy = -radius; dy <= radius; dy++) {
 			for (int dx = -radius; dx <= radius; dx++) {
+				/* Clip the corners so the crown looks round. */
 				if (abs(dx) == radius && abs(dy) == radius && radius > 1)
 					continue;
 
-				int lx = x + dx;
-				int ly = y + dy;
-				int lz = base + dz;
+				int lx = x + dx, ly = y + dy, lz = base + dz;
 
 				if (!world_inside(lx, ly, lz))
 					continue;
@@ -158,23 +185,31 @@ static void place_tree(int x, int y, int base)
 void world_generate(uint32_t seed)
 {
 	world_seed = seed;
-	memset(world_data, 0, sizeof(world_data));
+	memset(world_data, BLOCK_AIR, sizeof(world_data));
 
 	const float cx = WORLD_X * 0.5f;
 	const float cy = WORLD_Y * 0.5f;
 	const float radius = WORLD_X * 0.46f;
 
-	/* Kept out of the stack, it would not fit there. */
+	/*
+	 * The surface height of every column, kept while we build so that
+	 * later passes do not have to search for it. Static rather than a
+	 * local because 2 KiB will not fit on the console's small stack.
+	 */
 	static uint8_t height_of[WORLD_X][WORLD_Y];
 
 	for (int x = 0; x < WORLD_X; x++) {
 		for (int y = 0; y < WORLD_Y; y++) {
-			/* Rolling hills. */
-			float h = fbm2(x * 0.055f, y * 0.055f, seed, 4);
-			float ridge = fbm2(x * 0.021f, y * 0.021f, seed + 555u, 2);
+			/* Two layers of noise: fine hills over broad ridges. */
+			float h = fbm2(x * 0.070f, y * 0.070f, seed, 4);
+			float ridge = fbm2(x * 0.028f, y * 0.028f, seed + 555u, 2);
 			float land = (h - 0.42f) * 26.0f + (ridge - 0.5f) * 12.0f;
 
-			/* Sink the rim of the map into the sea. */
+			/*
+			 * Sink the rim of the map into the sea. Without this
+			 * the world would end in a cliff wall, and an island
+			 * explains the edge of the map far more gracefully.
+			 */
 			float dx = x - cx;
 			float dy = y - cy;
 			float dist = sqrtf(dx * dx + dy * dy) / radius;
@@ -182,7 +217,7 @@ void world_generate(uint32_t seed)
 
 			int top =
 				(int)(SEA_LEVEL + 1.0f + land * falloff - (1.0f - falloff) * 7.0f);
-			top = clampi(top, 1, WORLD_Z - 6);
+			top = clampi(top, 1, WORLD_Z - 12);
 			height_of[x][y] = top;
 
 			int stone_top = top - 3 - (int)(noise2(x * 0.3f, y * 0.3f, seed + 99u) * 2);
@@ -190,42 +225,50 @@ void world_generate(uint32_t seed)
 			for (int z = 0; z <= top; z++) {
 				uint8_t block;
 
-				if (z == 0) {
+				if (z == 0)
 					block = BLOCK_BEDROCK;
-				} else if (z <= stone_top) {
+				else if (z <= stone_top)
 					block = BLOCK_STONE;
-				} else if (z < top) {
+				else if (z < top)
 					block = BLOCK_DIRT;
-				} else if (top <= SEA_LEVEL + 1) {
+				else if (top <= SEA_LEVEL + 1)
 					block = BLOCK_SAND;
-				} else {
+				else
 					block = BLOCK_GRASS;
-				}
 
 				world_put_raw(x, y, z, block);
 			}
 
+			/* Flood everything below sea level that is still air. */
 			for (int z = top + 1; z <= SEA_LEVEL; z++)
 				world_put_raw(x, y, z, BLOCK_WATER);
 		}
 	}
 
-	/* Carve caves out of the stone. */
+	/*
+	 * Caves. Where the three dimensional noise dips below a threshold we
+	 * remove the stone, which produces winding connected tunnels rather
+	 * than isolated bubbles. We keep them away from the surface and the
+	 * sea floor so that nothing floods.
+	 */
 	for (int x = 1; x < WORLD_X - 1; x++) {
 		for (int y = 1; y < WORLD_Y - 1; y++) {
 			int top = height_of[x][y];
 
 			for (int z = 1; z < top - 1; z++) {
-				float n = noise3(x * 0.14f, y * 0.14f, z * 0.22f, seed + 4242u);
+				float n = noise3(x * 0.16f, y * 0.16f, z * 0.24f, seed + 4242u);
 
-				/* Keep the caves away from the surface and the sea. */
 				if (n < 0.36f && z < SEA_LEVEL - 1 && z < top - 3)
 					world_put_raw(x, y, z, BLOCK_AIR);
 			}
 		}
 	}
 
-	/* Sprinkle ores and a few glowing blocks into the dark. */
+	/*
+	 * Ores, and the occasional pool of lava to make the deep dangerous.
+	 * Rarity is just a number out of a thousand, and the depth limits
+	 * are what make it worth digging further down.
+	 */
 	for (int x = 0; x < WORLD_X; x++) {
 		for (int y = 0; y < WORLD_Y; y++) {
 			for (int z = 1; z < height_of[x][y] - 2; z++) {
@@ -234,29 +277,40 @@ void world_generate(uint32_t seed)
 
 				uint32_t r = hash_coords(x, y, z, seed + 7777u) % 1000;
 
-				if (r < 14)
+				if (r < 18)
 					world_put_raw(x, y, z, BLOCK_COAL_ORE);
-				else if (r < 22 && z < 10)
+				else if (r < 28 && z < 11)
 					world_put_raw(x, y, z, BLOCK_IRON_ORE);
-				else if (r < 24 && z < 8)
+				else if (r < 33 && z < 7)
+					world_put_raw(x, y, z, BLOCK_GOLD_ORE);
+				else if (r < 35 && z < 6)
 					world_put_raw(x, y, z, BLOCK_GLOWSTONE);
+			}
+
+			/* Lava settles in the lowest hollows. */
+			for (int z = 1; z < 5; z++) {
+				if (world_get_fast(x, y, z) != BLOCK_AIR)
+					continue;
+
+				if (hash_coords(x, y, z, seed + 2024u) % 100 < 55)
+					world_put_raw(x, y, z, BLOCK_LAVA);
 			}
 		}
 	}
 
 	/*
-	 * Plant trees on dry grass. At most one per cell so that they have
-	 * room to grow, and only where the forest noise says so, which
-	 * leaves us with a mix of woods and meadows.
+	 * Trees, at most one per six by six cell so their crowns have room,
+	 * and only where a slow noise field says a forest belongs. That
+	 * second test is what creates clearings instead of an even carpet.
 	 */
 	const int cell = 6;
 
-	for (int cx = 0; cx < WORLD_X / cell; cx++) {
-		for (int cy = 0; cy < WORLD_Y / cell; cy++) {
-			uint32_t h = hash_coords(cx, cy, 5, seed + 31u);
+	for (int cellx = 0; cellx < WORLD_X / cell; cellx++) {
+		for (int celly = 0; celly < WORLD_Y / cell; celly++) {
+			uint32_t h = hash_coords(cellx, celly, 5, seed + 31u);
 
-			int x = cx * cell + h % cell;
-			int y = cy * cell + (h >> 8) % cell;
+			int x = cellx * cell + h % cell;
+			int y = celly * cell + (h >> 8) % cell;
 
 			if (x < 3 || y < 3 || x >= WORLD_X - 3 || y >= WORLD_Y - 3)
 				continue;
@@ -269,7 +323,7 @@ void world_generate(uint32_t seed)
 			if (world_get_fast(x, y, top) != BLOCK_GRASS)
 				continue;
 
-			float density = fbm2(x * 0.045f, y * 0.045f, seed + 909u, 2);
+			float density = fbm2(x * 0.05f, y * 0.05f, seed + 909u, 2);
 
 			if (((h >> 16) & 255) > (uint32_t)(density * 200.0f))
 				continue;
@@ -285,20 +339,31 @@ void world_generate(uint32_t seed)
 			world_update_height(x, y);
 
 	world_rebuild_lights();
-	num_edits = 0;
 }
 
+/*
+ * ---------------------------------------------------------------------------
+ * Derived data
+ * ---------------------------------------------------------------------------
+ *
+ * Two things are cached because recomputing them per pixel would be far
+ * too slow: how deep a block is buried, and where the light sources are.
+ */
 void world_update_height(int x, int y)
 {
 	int z = WORLD_Z - 1;
 
-	/* Leaves and glass let the daylight through. */
+	/* Leaves and glass let daylight through, so they do not count. */
 	while (z > 0 && !block_info[world_get_fast(x, y, z)].shades)
 		z--;
 
 	world_height[x][y] = z + 1;
 
-	/* Anything at all, including leaves, raises the ceiling. */
+	/*
+	 * Separately, remember the highest block of any kind. Rays heading
+	 * upwards past this can stop immediately, which saves a good deal
+	 * of work on every pixel of sky.
+	 */
 	z = WORLD_Z - 1;
 
 	while (z > 0 && !world_get_fast(x, y, z))
@@ -320,7 +385,7 @@ void world_rebuild_lights(void)
 				if (!block_info[block].light)
 					continue;
 
-				/* Buried lights are useless, skip them. */
+				/* A light with rock on all six sides is wasted. */
 				if (block_is_opaque(world_get(x, y, z + 1)) &&
 				    block_is_opaque(world_get(x, y, z - 1)) &&
 				    block_is_opaque(world_get(x - 1, y, z)) &&
@@ -339,6 +404,13 @@ void world_rebuild_lights(void)
 	}
 }
 
+/*
+ * Pick the handful of lights nearest the camera.
+ *
+ * The renderer loops over these for every lit pixel, so the count has to
+ * stay tiny. Choosing them once per frame instead of per pixel is the
+ * whole trick: distant lights cannot brighten anything we can see anyway.
+ */
 void world_select_lights(float px, float py, float pz)
 {
 	float best[MAX_ACTIVE_LIGHTS];
@@ -351,7 +423,6 @@ void world_select_lights(float px, float py, float pz)
 		float dz = world_lights[i].z + 0.5f - pz;
 		float d2 = dx * dx + dy * dy + dz * dz;
 
-		/* Anything further than this cannot brighten what we see. */
 		if (d2 > 40.0f * 40.0f)
 			continue;
 
@@ -360,7 +431,7 @@ void world_select_lights(float px, float py, float pz)
 		if (at < MAX_ACTIVE_LIGHTS) {
 			num_active_lights++;
 		} else {
-			/* Replace the furthest one, if we are closer. */
+			/* Full: throw out the furthest, if we beat it. */
 			int worst = 0;
 
 			for (int j = 1; j < MAX_ACTIVE_LIGHTS; j++)
@@ -378,17 +449,8 @@ void world_select_lights(float px, float py, float pz)
 	}
 }
 
-static void light_forget(int x, int y, int z)
-{
-	for (int i = 0; i < world_num_lights; i++) {
-		if (world_lights[i].x == x && world_lights[i].y == y && world_lights[i].z == z) {
-			world_lights[i] = world_lights[--world_num_lights];
-			return;
-		}
-	}
-}
-
-void world_set(int x, int y, int z, uint8_t block)
+/* Change a block and keep everything that depends on it up to date. */
+static void world_set_common(int x, int y, int z, uint8_t block, bool record)
 {
 	if (!world_inside(x, y, z))
 		return;
@@ -401,39 +463,52 @@ void world_set(int x, int y, int z, uint8_t block)
 	world_put_raw(x, y, z, block);
 	world_update_height(x, y);
 
-	/* Keep the light list in sync without rescanning the world. */
-	if (block_info[old].light)
-		light_forget(x, y, z);
+	/*
+	 * Keep the light list in step incrementally. Rescanning the whole
+	 * volume takes about a hundred thousand reads, which is a visible
+	 * stutter on the console every time you place a block.
+	 */
+	if (block_info[old].light) {
+		for (int i = 0; i < world_num_lights; i++) {
+			if (world_lights[i].x == x && world_lights[i].y == y &&
+			    world_lights[i].z == z) {
+				world_lights[i] = world_lights[--world_num_lights];
+				break;
+			}
+		}
+	}
 
 	if (block_info[block].light && world_num_lights < MAX_LIGHTS)
 		world_lights[world_num_lights++] =
 			(struct light){ x, y, z, block_info[block].light };
 
-	uint32_t packed = edit_pack(x, y, z, block);
-	uint32_t pos_mask = 0x1ffff;
-
-	for (int i = 0; i < num_edits; i++) {
-		if ((edits[i] & pos_mask) == (packed & pos_mask)) {
-			edits[i] = packed;
-			return;
-		}
-	}
-
-	if (num_edits < MAX_EDITS)
-		edits[num_edits++] = packed;
+	if (record)
+		save_note_edit(x, y, z, block);
 }
 
-void world_forget_edits(void)
+void world_set(int x, int y, int z, uint8_t block)
 {
-	num_edits = 0;
+	world_set_common(x, y, z, block, true);
+}
+
+/*
+ * Change a block without writing it to the save file.
+ *
+ * The nether spire uses this: it is thousands of blocks, it would swamp
+ * the edit list, and it is meant to be temporary anyway.
+ */
+void world_set_quiet(int x, int y, int z, uint8_t block)
+{
+	world_set_common(x, y, z, block, false);
 }
 
 void world_find_spawn(float *out_x, float *out_y, float *out_z)
 {
-	/* Spiral out of the middle until we find dry land. */
+	/* Spiral outwards from the middle until we find dry land. */
 	for (int r = 0; r < WORLD_X / 2; r++) {
 		for (int dy = -r; dy <= r; dy++) {
 			for (int dx = -r; dx <= r; dx++) {
+				/* Only the rim of the square is new each round. */
 				if (abs(dx) != r && abs(dy) != r)
 					continue;
 
@@ -466,6 +541,31 @@ void world_find_spawn(float *out_x, float *out_y, float *out_z)
 	*out_z = SEA_LEVEL + 2;
 }
 
+/*
+ * ---------------------------------------------------------------------------
+ * Ray casting
+ * ---------------------------------------------------------------------------
+ *
+ * This is the grid traversal that the whole game is built on, so it is
+ * worth understanding properly. It is usually called a DDA, and the
+ * version for voxel grids works like this.
+ *
+ * A ray leaves a point and travels in a direction. It only ever crosses
+ * from one cube to the next through a wall perpendicular to x, y or z. So
+ * instead of stepping along the ray by small amounts and hoping not to
+ * miss anything, we jump exactly from wall to wall:
+ *
+ *   - For each axis, work out how far along the ray we must travel to
+ *     cross the next wall on that axis. Call those tx, ty and tz.
+ *   - Whichever is smallest is the wall we hit first, so step to that
+ *     cube and add the constant distance between walls on that axis.
+ *   - Repeat.
+ *
+ * The distance between walls on the x axis is 1/|dx| for a unit direction,
+ * which is where the divisions at the top come from. No cube is ever
+ * skipped and none is visited twice, and the loop body is a couple of
+ * comparisons and an add.
+ */
 bool world_raycast(float ox, float oy, float oz, float dx, float dy, float dz, float max_dist,
 		   int *hx, int *hy, int *hz, int *px, int *py, int *pz)
 {
@@ -475,6 +575,7 @@ bool world_raycast(float ox, float oy, float oz, float dx, float dy, float dz, f
 
 	int lx = mx, ly = my, lz = mz;
 
+	/* Distance along the ray between two walls on each axis. */
 	float ddx = (dx == 0.0f) ? 1e30f : fabsf(1.0f / dx);
 	float ddy = (dy == 0.0f) ? 1e30f : fabsf(1.0f / dy);
 	float ddz = (dz == 0.0f) ? 1e30f : fabsf(1.0f / dz);
@@ -483,11 +584,13 @@ bool world_raycast(float ox, float oy, float oz, float dx, float dy, float dz, f
 	int sy = dy < 0.0f ? -1 : 1;
 	int sz = dz < 0.0f ? -1 : 1;
 
+	/* Distance to the first wall, which depends where in the cube we start. */
 	float tx = (dx < 0.0f ? (ox - mx) : (mx + 1.0f - ox)) * ddx;
 	float ty = (dy < 0.0f ? (oy - my) : (my + 1.0f - oy)) * ddy;
 	float tz = (dz < 0.0f ? (oz - mz) : (mz + 1.0f - oz)) * ddz;
 
-	for (int i = 0; i < 64; i++) {
+	for (int i = 0; i < 96; i++) {
+		/* Remember where we were: that is where a block would go. */
 		lx = mx;
 		ly = my;
 		lz = mz;
@@ -516,6 +619,7 @@ bool world_raycast(float ox, float oy, float oz, float dx, float dy, float dz, f
 
 		uint8_t block = world_get_fast(mx, my, mz);
 
+		/* You cannot aim at air, and you cannot aim at a liquid. */
 		if (block == BLOCK_AIR || block_info[block].liquid)
 			continue;
 
@@ -536,122 +640,4 @@ bool world_raycast(float ox, float oy, float oz, float dx, float dy, float dz, f
 	}
 
 	return false;
-}
-
-/*
- * Persistence.
- */
-struct save_header {
-	char magic[4];
-	uint32_t seed;
-	float x, y, z;
-	float yaw, pitch;
-	float time;
-	uint8_t flying;
-	uint8_t slot;
-	uint8_t hotbar[9];
-	uint16_t num_edits;
-};
-
-#define SAVE_MAGIC "MVX1"
-#define SAVE_SLOT 0
-
-/* Shared by both directions, one copy is plenty. */
-static uint8_t save_buffer[SDK_SAVE_SLOT_SIZE];
-
-void world_save(void)
-{
-	uint8_t *buffer = save_buffer;
-
-	struct save_header hdr = {
-		.seed = world_seed,
-		.x = player.x,
-		.y = player.y,
-		.z = player.z,
-		.yaw = player.yaw,
-		.pitch = player.pitch,
-		.time = world_time,
-		.flying = player.flying,
-		.slot = player.slot,
-	};
-
-	memcpy(hdr.magic, SAVE_MAGIC, 4);
-	memcpy(hdr.hotbar, player.hotbar, sizeof(hdr.hotbar));
-
-	int room = (SDK_SAVE_SLOT_SIZE - (int)sizeof(hdr)) / 3;
-	int count = num_edits < room ? num_edits : room;
-	hdr.num_edits = count;
-
-	memset(buffer, 0, sizeof(save_buffer));
-	memcpy(buffer, &hdr, sizeof(hdr));
-
-	uint8_t *out = buffer + sizeof(hdr);
-
-	for (int i = 0; i < count; i++) {
-		out[i * 3 + 0] = edits[i] & 0xff;
-		out[i * 3 + 1] = (edits[i] >> 8) & 0xff;
-		out[i * 3 + 2] = (edits[i] >> 16) & 0xff;
-	}
-
-	sdk_save_write(SAVE_SLOT, buffer, sizeof(save_buffer));
-}
-
-bool world_load(void)
-{
-	uint8_t *buffer = save_buffer;
-
-	sdk_save_read(SAVE_SLOT, buffer, sizeof(save_buffer));
-
-	struct save_header hdr;
-	memcpy(&hdr, buffer, sizeof(hdr));
-
-	if (memcmp(hdr.magic, SAVE_MAGIC, 4))
-		return false;
-
-	int room = (SDK_SAVE_SLOT_SIZE - (int)sizeof(hdr)) / 3;
-
-	if (hdr.num_edits > room)
-		return false;
-
-	world_generate(hdr.seed);
-
-	const uint8_t *in = buffer + sizeof(hdr);
-
-	for (int i = 0; i < hdr.num_edits; i++) {
-		uint32_t packed = in[i * 3 + 0] | (in[i * 3 + 1] << 8) | (in[i * 3 + 2] << 16);
-
-		int x = packed & 63;
-		int y = (packed >> 6) & 63;
-		int z = (packed >> 12) & 31;
-		uint8_t block = (packed >> 17) & 15;
-
-		world_put_raw(x, y, z, block);
-		edits[i] = packed;
-	}
-
-	num_edits = hdr.num_edits;
-
-	world_top = 0;
-
-	for (int x = 0; x < WORLD_X; x++)
-		for (int y = 0; y < WORLD_Y; y++)
-			world_update_height(x, y);
-
-	world_rebuild_lights();
-
-	player.x = clampf(hdr.x, 1.0f, WORLD_X - 1.0f);
-	player.y = clampf(hdr.y, 1.0f, WORLD_Y - 1.0f);
-	player.z = clampf(hdr.z, 1.0f, WORLD_Z - 2.0f);
-	player.yaw = hdr.yaw;
-	player.pitch = clampf(hdr.pitch, -1.5f, 1.5f);
-	player.vx = player.vy = player.vz = 0.0f;
-	player.flying = hdr.flying;
-	player.slot = clampi(hdr.slot, 0, 8);
-	world_time = hdr.time;
-
-	for (int i = 0; i < 9; i++)
-		if (hdr.hotbar[i] < NUM_BLOCKS)
-			player.hotbar[i] = hdr.hotbar[i];
-
-	return true;
 }

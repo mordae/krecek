@@ -1,11 +1,17 @@
 add_executable(
     minevox
     main.c
+    mem.c
     blocks.c
     world.c
+    save.c
+    items.c
+    mobs.c
+    nether.c
     player.c
     render.c
     hud.c
+    menu.c
 )
 
 target_link_libraries(minevox krecek)
