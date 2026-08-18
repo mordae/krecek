@@ -87,7 +87,7 @@ typedef struct {
 	bool active;
 } Pickup;
 
-typedef enum { GAME_MENU, GAME_PLAYING, GAME_DEAD } GameState;
+typedef enum { GAME_MENU, GAME_PLAYING, GAME_DEAD, GAME_WON } GameState;
 
 typedef enum {
 	BROKE = 0,
@@ -203,6 +203,7 @@ static MuzzleFlash muzzle_flash;
 static PickupMessage pickup_msg;
 static TexureMaps Textures[64];
 static GameState game_state = GAME_MENU;
+static int best_score = 0;
 static bool collected_pickups[MAP_ROWS][MAP_COLS];
 static float zBuffer[SCREEN_WIDTH]; // For depth testing
 static Pickup pickups[MAX_PICKUPS];
@@ -214,8 +215,9 @@ static void shootBullet(float start_angle, float max_range_tiles, int visual_siz
 void Map_starter(const TileType (*next_map)[MAP_ROWS][MAP_COLS],
 		 const Door_Side (*door_map)[MAP_ROWS][MAP_COLS]);
 static void handleShooting();
-extern void map_starter_caller();
 static void textures_load();
+static void start_random_map();
+static void campaign_won();
 static void handlePickup(int tile_x, int tile_y);
 extern void game_handle_audio(float dt, float volume);
 static void renderPickups();
@@ -236,12 +238,14 @@ extern void draw_sprite_column_asm(int x, int y_start, int y_end, uint32_t tex_p
 				   int tex_x, int shade_int, int is_hurt);
 int randomnumb(int maxnumber)
 {
-	int number;
+	// Plain LCG; the state advances so consecutive calls are not nearly identical.
+	uint32_t state = (uint32_t)seed * 1103515245u + 12345u;
+	seed = (int)state;
 
-	number = seed * 214013 + 2531011;
+	if (maxnumber <= 0)
+		return 0;
 
-	seed += 1;
-	return abs((number >> 16) % maxnumber);
+	return (int)((state >> 16) % (uint32_t)maxnumber);
 }
 
 static void renderGame()
@@ -739,11 +743,9 @@ static void handlePlayerMovement(float dt)
 
 	player.strafing = sdk_inputs.x ? true : false;
 
-	if (sdk_inputs_delta.a == 1 && sdk_inputs.start) {
-		if (mode.debug) {
-			mode.debug = false;
-		} else
-			mode.debug = true;
+	// B while holding START toggles the debug overlay; A stays a shooting-only button.
+	if (sdk_inputs_delta.b == 1 && sdk_inputs.start) {
+		mode.debug = !mode.debug;
 	}
 
 	// Manual door open check (START button)
@@ -792,29 +794,31 @@ static void handlePlayerMovement(float dt)
 	float player_fx = player.x + player_dx;
 	float player_fy = player.y + player_dy;
 
-	int player_tile_fx = player_fx / TILE_SIZE;
-	int player_tile_fy = player_fy / TILE_SIZE;
-
-	// Collision with walls - use isSolid instead of isWall
-	if (isSolid(player_tile_fx, player_tile_fy)) {
-		// Simple slide/collision response could be added here, but for now just stop
-		return;
+	// Collision with walls, one axis at a time so we slide instead of sticking.
+	if (!isSolid(player_fx / TILE_SIZE, player.y / TILE_SIZE)) {
+		player.x = player_fx;
 	}
 
-	// Check for pickups
-	if (isPickup(player_tile_fx, player_tile_fy)) {
-		handlePickup(player_tile_fx, player_tile_fy);
+	if (!isSolid(player.x / TILE_SIZE, player_fy / TILE_SIZE)) {
+		player.y = player_fy;
 	}
-
-	player.x = player_fx;
-	player.y = player_fy;
 
 	int player_tile_x = player.x / TILE_SIZE;
 	int player_tile_y = player.y / TILE_SIZE;
 
+	// Check for pickups
+	if (isPickup(player_tile_x, player_tile_y)) {
+		handlePickup(player_tile_x, player_tile_y);
+	}
+
 	// Teleport
 	if (level.map[player_tile_y][player_tile_x].type == TELEPORT) {
-		map_starter_caller();
+		if (mode.map_type == RANDOM) {
+			start_random_map();
+		} else if (map_starter_caller()) {
+			// Nothing left to teleport to, the campaign is over.
+			campaign_won();
+		}
 	}
 
 	// Update enemies
@@ -822,16 +826,6 @@ static void handlePlayerMovement(float dt)
 
 	// Update doors
 	updateDoors(dt);
-
-	// Low ammo warning
-	if (player.ammo <= 3 && player.ammo > 0) {
-		static float warning_timer = 0;
-		warning_timer += dt;
-		if (warning_timer > 2.0f) {
-			tft_draw_string(30, 20, RED, "Low Ammo");
-			warning_timer = 0;
-		}
-	}
 }
 
 static void updateDoors(float dt)
@@ -926,8 +920,8 @@ static void player_view_draw()
 		uint32_t current_time = time_us_64();
 		if (current_time - muzzle_flash.timer_start < MUZZLE_FLASH_DURATION_MS * 1000) {
 			for (int i = 0; i < 10; i++) {
-				int fx = 80 + (rand() % 20) - 10;
-				int fy = 50 + (rand() % 20) - 10;
+				int fx = 80 + randomnumb(20) - 10;
+				int fy = 50 + randomnumb(20) - 10;
 				tft_draw_pixel(fx, fy, YELLOW);
 			}
 		} else {
@@ -1024,12 +1018,12 @@ static void handleShooting()
 				visual_size = 8;
 
 				// Shotgun spread - multiple pellets with wider spread
-				int pellet_count = 8; // Increased from 5 to 8
+				int pellet_count = SHOTGUN_PELLETS;
 				float spread_angle = SHOTGUN_SPREAD_DEGREES * M_PI / 180.0f;
 
 				for (int i = 0; i < pellet_count; i++) {
 					// Wider spread for shotgun
-					float spread = ((float)rand() / RAND_MAX - 0.5f) *
+					float spread = ((float)randomnumb(1000) / 1000.0f - 0.5f) *
 						       spread_angle * 2.0f;
 					float pellet_angle = player.angle + spread;
 					shootBullet(pellet_angle, current_gun_range,
@@ -1262,7 +1256,7 @@ static void spawnEnemy(float x, float y, int health)
 			enemies[i].last_hit_time = 0;
 			enemies[i].state = ENEMY_PATROL;
 			enemies[i].state_timer = 0;
-			enemies[i].patrol_angle = (float)(rand() % 360) * M_PI / 180.0f;
+			enemies[i].patrol_angle = (float)randomnumb(360) * M_PI / 180.0f;
 			enemies[i].patrol_timer = 0;
 			enemies[i].chase_timer = 0;
 			enemies[i].hurt_timer = 0;
@@ -1359,7 +1353,7 @@ static void updateEnemies(float dt)
 			if (enemies[i].state_timer > 2.0f) {
 				enemies[i].state = ENEMY_PATROL;
 				enemies[i].state_timer = 0;
-				enemies[i].patrol_angle = (float)(rand() % 360) * M_PI / 180.0f;
+				enemies[i].patrol_angle = (float)randomnumb(360) * M_PI / 180.0f;
 			}
 			// Check if player is visible
 			if (canSeePlayer(&enemies[i])) {
@@ -1374,7 +1368,7 @@ static void updateEnemies(float dt)
 			// Change direction occasionally
 			if (enemies[i].patrol_timer > 3.0f) {
 				enemies[i].patrol_angle +=
-					((float)(rand() % 100) / 100.0f - 0.5f) * M_PI;
+					((float)randomnumb(100) / 100.0f - 0.5f) * M_PI;
 				enemies[i].patrol_timer = 0;
 			}
 
@@ -1396,7 +1390,7 @@ static void updateEnemies(float dt)
 				// Hit a wall, change direction
 				enemies[i].patrol_angle +=
 					M_PI * 0.5f +
-					((float)(rand() % 100) / 100.0f - 0.5f) * M_PI;
+					((float)randomnumb(100) / 100.0f - 0.5f) * M_PI;
 			}
 
 			// Check if player is visible
@@ -1755,9 +1749,8 @@ static void renderPickups()
 	}
 }
 
-static void real_game_start(void)
+static void reset_player_state(void)
 {
-	Map_starter(&maps_map1, &maps_doors1);
 	textures_load();
 
 	mode.auto_door_open = false;
@@ -1765,6 +1758,7 @@ static void real_game_start(void)
 	player.health = 100;
 	player.angle = (float)M_PI / 2.0f;
 	player.ammo = 15;
+	player.score = 0;
 	player.alive = true;
 	player.gun = BROKE;
 	player.shotgun_unlocked = false;
@@ -1773,6 +1767,135 @@ static void real_game_start(void)
 	muzzle_flash.visible = false;
 	muzzle_flash.timer_start = 0;
 	pickup_msg.visible = false;
+}
+
+static void real_game_start(void)
+{
+	reset_player_state();
+	Map_starter(&maps_map1, &maps_doors1);
+}
+
+// Levels built at run time for the random mode.
+static TileType random_map[MAP_ROWS][MAP_COLS];
+static Door_Side random_doors[MAP_ROWS][MAP_COLS];
+
+static void scatter_random(TileType type, int amount)
+{
+	for (int i = 0; i < amount; i++) {
+		for (int tries = 0; tries < 64; tries++) {
+			int x = randomnumb(MAP_COLS);
+			int y = randomnumb(MAP_ROWS);
+
+			if (random_map[y][x] == EMPTY) {
+				random_map[y][x] = type;
+				break;
+			}
+		}
+	}
+}
+
+#define RANDOM_MAX_ROOMS 8
+
+static void generate_random_map(void)
+{
+	int cx[RANDOM_MAX_ROOMS], cy[RANDOM_MAX_ROOMS];
+	int rooms = 0;
+
+	for (int y = 0; y < MAP_ROWS; y++) {
+		for (int x = 0; x < MAP_COLS; x++) {
+			random_map[y][x] = BRICKS;
+			random_doors[y][x] = NOTHING;
+		}
+	}
+
+	// Carve rooms.
+	int wanted = 4 + randomnumb(RANDOM_MAX_ROOMS - 3);
+
+	for (int i = 0; i < wanted; i++) {
+		int w = 3 + randomnumb(5);
+		int h = 3 + randomnumb(5);
+		int x0 = 2 + randomnumb(MAP_COLS - w - 4);
+		int y0 = 2 + randomnumb(MAP_ROWS - h - 4);
+
+		for (int y = y0; y < y0 + h; y++) {
+			for (int x = x0; x < x0 + w; x++) {
+				random_map[y][x] = EMPTY;
+			}
+		}
+
+		cx[rooms] = x0 + w / 2;
+		cy[rooms] = y0 + h / 2;
+		rooms++;
+	}
+
+	// Connect them with L-shaped corridors.
+	for (int i = 1; i < rooms; i++) {
+		int x = cx[i - 1];
+		int y = cy[i - 1];
+
+		while (x != cx[i]) {
+			random_map[y][x] = EMPTY;
+			x += cx[i] > x ? 1 : -1;
+		}
+
+		while (y != cy[i]) {
+			random_map[y][x] = EMPTY;
+			y += cy[i] > y ? 1 : -1;
+		}
+
+		random_map[y][x] = EMPTY;
+	}
+
+	// Keep the level closed.
+	for (int x = 0; x < MAP_COLS; x++) {
+		random_map[0][x] = BRICKS;
+		random_map[MAP_ROWS - 1][x] = BRICKS;
+	}
+
+	for (int y = 0; y < MAP_ROWS; y++) {
+		random_map[y][0] = BRICKS;
+		random_map[y][MAP_COLS - 1] = BRICKS;
+	}
+
+	// Spawn in the first room; the exit goes as far from it as the level allows.
+	// Rooms are chained by corridors, so every free tile can be walked to.
+	random_map[cy[0]][cx[0]] = PLAYER_SPAWN;
+
+	int exit_x = -1, exit_y = -1, exit_dist = -1;
+
+	for (int y = 1; y < MAP_ROWS - 1; y++) {
+		for (int x = 1; x < MAP_COLS - 1; x++) {
+			if (random_map[y][x] != EMPTY)
+				continue;
+
+			int dx = x - cx[0];
+			int dy = y - cy[0];
+			int dist = dx * dx + dy * dy;
+
+			if (dist > exit_dist) {
+				exit_dist = dist;
+				exit_x = x;
+				exit_y = y;
+			}
+		}
+	}
+
+	if (exit_x >= 0) {
+		random_map[exit_y][exit_x] = TELEPORT;
+	}
+
+	scatter_random(ENEMY1, 4 + randomnumb(4));
+	scatter_random(ENEMY2, 1 + randomnumb(3));
+	scatter_random(HEALTH_PACK, 3);
+	scatter_random(AMMO_BOX, 4);
+	scatter_random(SHOTGUN_PICKUP, 1);
+}
+
+static void start_random_map(void)
+{
+	generate_random_map();
+	Map_starter((const TileType(*)[MAP_ROWS][MAP_COLS]) & random_map,
+		    (const Door_Side(*)[MAP_ROWS][MAP_COLS]) & random_doors);
 }
 
 void game_start(void)
@@ -1894,13 +2017,15 @@ static void menu_inputs()
 	if (sdk_inputs_delta.start == 1) {
 		switch (menu.pointer) {
 		case 0:
+			mode.map_type = CAMPAIGN;
 			real_game_start();
 			game_state = GAME_PLAYING;
-			mode.map_type = CAMPAIGN;
 			break;
 		case 1:
-			game_state = GAME_PLAYING;
 			mode.map_type = RANDOM;
+			reset_player_state();
+			start_random_map();
+			game_state = GAME_PLAYING;
 			break;
 		default:
 			break;
@@ -1909,14 +2034,36 @@ static void menu_inputs()
 	menu.pointer = clamp(menu.pointer += sdk_inputs_delta.vertical, 0, 1);
 }
 
-static void dead_state_inputs()
+// Restarts whichever mode was being played.
+static void restart_game(void)
+{
+	if (mode.map_type == RANDOM) {
+		reset_player_state();
+		start_random_map();
+	} else {
+		real_game_start();
+	}
+
+	game_state = GAME_PLAYING;
+}
+
+// Shared by the death and the campaign-clear screens.
+static void end_state_inputs()
 {
 	if (sdk_inputs_delta.start == 1) {
-		real_game_start();
-		game_state = GAME_PLAYING;
+		restart_game();
 	} else if (sdk_inputs_delta.select == 1) {
 		game_state = GAME_MENU;
 	}
+}
+
+static void campaign_won(void)
+{
+	if (player.score > best_score) {
+		best_score = player.score;
+	}
+
+	game_state = GAME_WON;
 }
 
 void game_input(unsigned dt_usec)
@@ -1931,11 +2078,16 @@ void game_input(unsigned dt_usec)
 	case GAME_PLAYING:
 		handlePlayerMovement(dt);
 		if (player.health <= 0) {
+			if (player.score > best_score) {
+				best_score = player.score;
+			}
+
 			game_state = GAME_DEAD;
 		}
 		break;
 	case GAME_DEAD:
-		dead_state_inputs();
+	case GAME_WON:
+		end_state_inputs();
 		break;
 	default:
 		break;
@@ -1969,6 +2121,24 @@ static void render_menu(float dt)
 	tft_draw_string(60, 40, WHITE, "Campaign");
 	tft_draw_string(60, 51, WHITE, "Random");
 	tft_draw_string(50, 40 + menu.pointer * 10 + menu.pointer, YELLOW, ">");
+
+	if (best_score > 0) {
+		tft_draw_string(40, 80, YELLOW, "Best score: %d", best_score);
+	}
+}
+
+static void render_won_state(void)
+{
+	for (int y = 0; y < SCREEN_HEIGHT; y += 2) {
+		for (int x = 0; x < SCREEN_WIDTH; x += 2) {
+			tft_draw_pixel(x, y, 0);
+		}
+	}
+
+	tft_draw_string(20, SCREEN_HEIGHT / 2 - 20, GREEN, "CAMPAIGN CLEAR");
+	tft_draw_string(20, SCREEN_HEIGHT / 2, WHITE, "Score: %d", player.score);
+	tft_draw_string(20, SCREEN_HEIGHT / 2 + 20, WHITE, "START to replay");
+	tft_draw_string(20, SCREEN_HEIGHT / 2 + 40, WHITE, "SELECT for menu");
 }
 
 static void render_dead_state(void) // Removed unused dt parameter
@@ -2011,6 +2181,12 @@ void game_paint(unsigned dt_usec)
 		renderGame(); // Still render the game world in background
 		render_dead_state();
 		break;
+
+	case GAME_WON:
+		tft_fill(GRAY);
+		renderGame();
+		render_won_state();
+		break;
 	default:
 		break;
 	}
@@ -2018,7 +2194,8 @@ void game_paint(unsigned dt_usec)
 
 static void textures_load()
 {
-	for (int i = 0; i < 19; i++) {
+	// T_00 .. T_19 back TileType COBLE .. IRON, i.e. wall type - 1.
+	for (int i = 0; i < 20; i++) {
 		Textures[i].name = (const unsigned char *)texture_names[i];
 		Textures[i].h = texture_heights[i];
 		Textures[i].w = texture_widths[i];

@@ -11,3 +11,4 @@ _autosave-*
 WARP.md
 New-game.py
 /src/*/saves/
+/.claude/
