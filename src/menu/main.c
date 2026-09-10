@@ -1,5 +1,6 @@
 #include <sdk.h>
 #include <cover.png.h>
+#include "intro.h"
 
 sdk_game_info("menu", &image_cover_png);
 
@@ -7,6 +8,7 @@ extern sdk_scene_t scene_root;
 
 void game_start(void)
 {
+	intro_set_boot_mode(true);
 	sdk_scene_push(&scene_root);
 }
 

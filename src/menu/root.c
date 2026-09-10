@@ -1,11 +1,20 @@
-#include <sdk.h>
+#include "intro.h"
+#include <stdlib.h>
+#include <string.h>
 
 extern sdk_scene_t scene_games;
 extern sdk_scene_t scene_screens;
+extern sdk_scene_t scene_intro;
 
-#define NUM_SCENES 2
-static sdk_scene_t *scenes[NUM_SCENES] = { &scene_games, &scene_screens };
+#define NUM_SCENES 3
+static sdk_scene_t *scenes[NUM_SCENES] = { &scene_games, &scene_screens, &scene_intro };
 static int current_scene = 0;
+
+void root_set_scene(int idx)
+{
+	if (idx >= 0 && idx < NUM_SCENES)
+		current_scene = idx;
+}
 
 static int bayer4x4[4][4] = {
 	{ 0, 8, 2, 10 },
@@ -47,7 +56,21 @@ static bool root_handle(sdk_event_t event, int depth)
 
 static void root_pushed(void)
 {
-	sdk_scene_push(scenes[current_scene]);
+#if defined(RUNNING_ON_HOST)
+	const char *ms = getenv("MENU_START");
+	if (ms && strcmp(ms, "intro_section") == 0) {
+		current_scene = 2;
+		intro_set_boot_mode(false);
+		sdk_scene_push(&scene_intro);
+		return;
+	}
+#endif
+	if (intro_is_boot_mode()) {
+		current_scene = 2;
+		sdk_scene_push(&scene_intro);
+	} else {
+		sdk_scene_push(scenes[current_scene]);
+	}
 }
 
 sdk_scene_t scene_root = {

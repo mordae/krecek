@@ -188,6 +188,22 @@ void __noreturn sdk_main(const struct sdk_config *conf)
 		SDL_UnlockTexture(texture);
 		SDL_RenderCopy(renderer, texture, NULL, NULL);
 		SDL_RenderPresent(renderer);
+
+		const char *ss = getenv("SCREENSHOT_FILE");
+		if (ss) {
+			static int fcount = 0;
+			int target_frame = 10;
+			const char *sf = getenv("SCREENSHOT_FRAME");
+			if (sf) target_frame = atoi(sf);
+			if (++fcount >= target_frame) {
+				FILE *f = fopen(ss, "wb");
+				if (f) {
+					fwrite(pixels, sizeof(uint16_t), TFT_WIDTH * TFT_HEIGHT, f);
+					fclose(f);
+				}
+				exit(0);
+			}
+		}
 	}
 
 	SDL_DestroyRenderer(renderer);

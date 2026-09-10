@@ -13,6 +13,7 @@
 #include <overline.png.h>
 #include <pistol.png.h>
 #include <shotgun.png.h>
+#include <shooteffect.png.h>
 
 #include "../textures/TTE_00.h"
 #include "../textures/TTE_01.h"

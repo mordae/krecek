@@ -1,7 +1,8 @@
 add_executable(
   puntog
   ../../src/puntog/main.c
-  ../../src/puntog/maps/tuturial.c
+  ../../src/puntog/dungeon.c
+  ../../src/puntog/pool.c
 )
 
 generate_png_headers()

@@ -207,13 +207,19 @@ static bool collected_pickups[MAP_ROWS][MAP_COLS];
 static float zBuffer[SCREEN_WIDTH]; // For depth testing
 static Pickup pickups[MAX_PICKUPS];
 static int active_pickup_count = 0;
+static float weapon_recoil = 0.0f;
+static float weapon_bob = 0.0f;
+static float attack_cooldown = 0.0f;
+static float chainsaw_timer = 0.0f;
+static float hurt_flash_timer = 0.0f;
+static bool crosshair_target_locked = false;
 static bool isWall(int Tile_x, int Tile_y);
 static bool isPickup(int Tile_x, int Tile_y);
 static void shootBullet(float start_angle, float max_range_tiles, int visual_size,
 			uint16_t visual_color);
 void Map_starter(const TileType (*next_map)[MAP_ROWS][MAP_COLS],
 		 const Door_Side (*door_map)[MAP_ROWS][MAP_COLS]);
-static void handleShooting();
+static void handleShooting(float dt);
 extern void map_starter_caller();
 static void textures_load();
 static void handlePickup(int tile_x, int tile_y);
@@ -718,36 +724,55 @@ static void handlePlayerMovement(float dt)
 		player.has_moved = true;
 	}
 
+	// Strafe via joystick when holding X
 	if (sdk_inputs.joy_x > 500 || sdk_inputs.joy_x < -500) {
 		if (player.strafing) {
-			player_dx += cosf(player.angle + M_PI / 2) * MOVE_SPEED * dt *
+			player_dx += cosf(player.angle + M_PI / 2.0f) * MOVE_SPEED * dt *
 				     ((float)sdk_inputs.joy_x / 2048);
-			player_dy += sinf(player.angle + M_PI / 2) * MOVE_SPEED * dt *
+			player_dy += sinf(player.angle + M_PI / 2.0f) * MOVE_SPEED * dt *
 				     ((float)sdk_inputs.joy_x / 2048);
 			player.has_moved = true;
 		}
 	}
 
-	// Footstep sounds
+	// Natural strafing via D-Pad Left/Right or Shoulder Brackets
+	if (sdk_inputs.horizontal < 0 || sdk_inputs.brack_l > 500) {
+		player_dx += cosf(player.angle - M_PI / 2.0f) * MOVE_SPEED * dt;
+		player_dy += sinf(player.angle - M_PI / 2.0f) * MOVE_SPEED * dt;
+		player.has_moved = true;
+	} else if (sdk_inputs.horizontal > 0 || sdk_inputs.brack_r > 500) {
+		player_dx += cosf(player.angle + M_PI / 2.0f) * MOVE_SPEED * dt;
+		player_dy += sinf(player.angle + M_PI / 2.0f) * MOVE_SPEED * dt;
+		player.has_moved = true;
+	}
+
+	// Footstep sounds & weapon bobbing
 	if (player.has_moved) {
 		footstep_timer += dt;
-		if (footstep_timer > 0.4f) {
+		weapon_bob += dt * 9.0f;
+		if (footstep_timer > 0.38f) {
 			sdk_melody_play("/i:noise (p) c");
 			footstep_timer = 0;
 		}
+	} else {
+		weapon_bob = 0.0f;
 	}
+
+	// Weapon recoil decay and cooldowns
+	weapon_recoil = fmaxf(0.0f, weapon_recoil - dt * 45.0f);
+	if (attack_cooldown > 0.0f)
+		attack_cooldown -= dt;
+	if (hurt_flash_timer > 0.0f)
+		hurt_flash_timer -= dt;
 
 	player.strafing = sdk_inputs.x ? true : false;
 
 	if (sdk_inputs_delta.a == 1 && sdk_inputs.start) {
-		if (mode.debug) {
-			mode.debug = false;
-		} else
-			mode.debug = true;
+		mode.debug = !mode.debug;
 	}
 
-	// Manual door open check (START button)
-	if (sdk_inputs_delta.start == 1) {
+	// Manual door open check (START or B button)
+	if (sdk_inputs_delta.start == 1 || sdk_inputs_delta.b == 1) {
 		float checkX = player.x + cosf(player.angle) * TILE_SIZE;
 		float checkY = player.y + sinf(player.angle) * TILE_SIZE;
 		int tileX = (int)(checkX / TILE_SIZE);
@@ -761,13 +786,13 @@ static void handlePlayerMovement(float dt)
 					sdk_melody_play("/i:square c#"); // Door sound
 				} else if (level.map[tileY][tileX].doors.state == DOOR_OPEN ||
 					   level.map[tileY][tileX].doors.state == DOOR_OPENING) {
-					// Maybe manual close?
 					level.map[tileY][tileX].doors.state = DOOR_CLOSING;
 				}
 			}
 		}
 	}
 
+	// Cycle weapon with Y
 	if (sdk_inputs_delta.y == 1) {
 		player.gun += 1;
 		if (player.gun >= N_GUNS) {
@@ -776,18 +801,21 @@ static void handlePlayerMovement(float dt)
 		if (player.gun == SHOTGUN && !player.shotgun_unlocked) {
 			player.gun = BROKE;
 		}
+		sdk_melody_play("/i:square (f) < c > c");
 	}
+
 	if (sdk_inputs_delta.select == 1) {
 		game_state = GAME_MENU;
 	}
 
+	// Turn left / right with analog joystick
 	if (sdk_inputs.joy_x > 500 || sdk_inputs.joy_x < -500) {
 		if (!player.strafing) {
 			player.angle += ROTATE_SPEED * dt * ((float)sdk_inputs.joy_x / 2048);
 		}
 	}
 
-	handleShooting();
+	handleShooting(dt);
 
 	float player_fx = player.x + player_dx;
 	float player_fy = player.y + player_dy;
@@ -795,9 +823,8 @@ static void handlePlayerMovement(float dt)
 	int player_tile_fx = player_fx / TILE_SIZE;
 	int player_tile_fy = player_fy / TILE_SIZE;
 
-	// Collision with walls - use isSolid instead of isWall
+	// Collision with walls
 	if (isSolid(player_tile_fx, player_tile_fy)) {
-		// Simple slide/collision response could be added here, but for now just stop
 		return;
 	}
 
@@ -812,8 +839,12 @@ static void handlePlayerMovement(float dt)
 	int player_tile_x = player.x / TILE_SIZE;
 	int player_tile_y = player.y / TILE_SIZE;
 
-	// Teleport
+	// Teleport / Exit warp
 	if (level.map[player_tile_y][player_tile_x].type == TELEPORT) {
+		sdk_melody_play("/i:sine (ff) c e g C");
+		sprintf(pickup_msg.message, "WARPING TO NEXT LEVEL!");
+		pickup_msg.visible = true;
+		pickup_msg.timer_start = time_us_64();
 		map_starter_caller();
 	}
 
@@ -823,13 +854,24 @@ static void handlePlayerMovement(float dt)
 	// Update doors
 	updateDoors(dt);
 
-	// Low ammo warning
-	if (player.ammo <= 3 && player.ammo > 0) {
-		static float warning_timer = 0;
-		warning_timer += dt;
-		if (warning_timer > 2.0f) {
-			tft_draw_string(30, 20, RED, "Low Ammo");
-			warning_timer = 0;
+	// Crosshair enemy lock-on detection
+	crosshair_target_locked = false;
+	for (int i = 0; i < MAX_ENEMIES; i++) {
+		if (!enemies[i].alive || !enemies[i].active)
+			continue;
+		float edx = enemies[i].x - player.x;
+		float edy = enemies[i].y - player.y;
+		float edist = sqrtf(edx * edx + edy * edy);
+		if (edist > 12.0f * TILE_SIZE)
+			continue;
+		float eangle = atan2f(edy, edx);
+		float diff = fabsf(eangle - player.angle);
+		if (diff > M_PI)
+			diff = 2.0f * (float)M_PI - diff;
+		float tol = atanf(TILE_SIZE * 0.35f / edist);
+		if (diff < tol) {
+			crosshair_target_locked = true;
+			break;
 		}
 	}
 }
@@ -901,66 +943,89 @@ static void player_view_draw()
 		return;
 	}
 
-	sdk_draw_tile(0, 0, &ts_overline_png, 1);
-	tft_draw_string(22, 105, DRAW_RED, "%-i", player.score);
-	tft_draw_string(70, 105, DRAW_RED, "%-i", player.health);
-	tft_draw_string(105, 105, DRAW_RED, "%-i", player.ammo);
+	int bob_x = (int)(sinf(weapon_bob) * 3.0f);
+	int bob_y = (int)(fabsf(cosf(weapon_bob)) * 3.0f);
+	int recoil_y = (int)weapon_recoil;
 
+	// 1. Draw Weapon FIRST (behind HUD panel)
 	switch (player.gun) {
 	case PISTOL:
-		sdk_draw_tile(75, 65, &ts_pistol_png, 1);
+		sdk_draw_tile(75 + bob_x, 65 + bob_y + recoil_y, &ts_pistol_png, 0);
 		break;
 	case SHOTGUN:
 		if (player.shotgun_unlocked) {
-			sdk_draw_tile(55, 49, &ts_shotgun_png, 1);
+			sdk_draw_tile(55 + bob_x, 49 + bob_y + recoil_y, &ts_shotgun_png, 0);
 		}
 		break;
 	case BROKE:
-		sdk_draw_tile(55, 49, &ts_chainsaw_png, 1);
+		{
+			int saw_jitter = (sdk_inputs.a) ? (rand() % 3 - 1) : 0;
+			sdk_draw_tile(55 + bob_x + saw_jitter, 49 + bob_y + recoil_y + saw_jitter,
+				      &ts_chainsaw_png, 0);
+		}
 		break;
 	default:
 		break;
 	}
 
+	// 2. Animated Muzzle Flash
 	if (muzzle_flash.visible) {
 		uint32_t current_time = time_us_64();
 		if (current_time - muzzle_flash.timer_start < MUZZLE_FLASH_DURATION_MS * 1000) {
-			for (int i = 0; i < 10; i++) {
-				int fx = 80 + (rand() % 20) - 10;
-				int fy = 50 + (rand() % 20) - 10;
-				tft_draw_pixel(fx, fy, YELLOW);
+			if (player.gun == PISTOL) {
+				sdk_draw_tile(73 + bob_x, 48 + bob_y, &ts_shooteffect_png, 0);
+			} else if (player.gun == SHOTGUN) {
+				sdk_draw_tile(67 + bob_x, 34 + bob_y, &ts_shooteffect_png, 1);
+			} else if (player.gun == BROKE) {
+				for (int i = 0; i < 6; i++) {
+					tft_draw_pixel(70 + (rand() % 22), 54 + (rand() % 16), YELLOW);
+				}
 			}
 		} else {
 			muzzle_flash.visible = false;
 		}
 	}
 
-	// Bullet hit marker - show different colors for enemy vs wall hits
+	// 3. Draw HUD Overline (160x120 overlay frame)
+	sdk_draw_tile(0, 0, &ts_overline_png, 0);
+	tft_draw_string(22, 105, DRAW_RED, "%-i", player.score);
+	tft_draw_string(70, 105, DRAW_RED, "%-i", player.health);
+	tft_draw_string(105, 105, DRAW_RED, "%-i", player.ammo);
+
+	// 4. Tactical Crosshair with enemy lock indicator
+	uint16_t ch_color = crosshair_target_locked ? RED : GREEN;
+	int cx = SCREEN_WIDTH / 2;
+	int cy = SCREEN_HEIGHT / 2;
+	tft_draw_pixel(cx, cy, ch_color);
+	tft_draw_pixel(cx - 3, cy, ch_color);
+	tft_draw_pixel(cx + 3, cy, ch_color);
+	tft_draw_pixel(cx, cy - 3, ch_color);
+	tft_draw_pixel(cx, cy + 3, ch_color);
+
+	// 5. Bullet hit marker
 	if (bullet.hit_visible) {
 		uint32_t current_time = time_us_64();
 		if (current_time - bullet.hit_timer_start < BULLET_VISUAL_DURATION_MS * 1000) {
-			// Draw hit marker at crosshair for enemy hits
 			if (bullet.hit_screen_x == SCREEN_WIDTH / 2 &&
 			    bullet.hit_screen_y == SCREEN_HEIGHT / 2) {
-				// Enemy hit - draw red cross
-				for (int i = -2; i <= 2; i++) {
-					tft_draw_pixel(SCREEN_WIDTH / 2 + i, SCREEN_HEIGHT / 2,
-						       RED);
-					tft_draw_pixel(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + i,
-						       RED);
-				}
+				// Enemy hit - draw red/yellow cross marker
+				tft_draw_pixel(cx - 2, cy - 2, RED);
+				tft_draw_pixel(cx + 2, cy - 2, RED);
+				tft_draw_pixel(cx - 2, cy + 2, RED);
+				tft_draw_pixel(cx + 2, cy + 2, RED);
+				tft_draw_pixel(cx - 3, cy - 3, YELLOW);
+				tft_draw_pixel(cx + 3, cy - 3, YELLOW);
+				tft_draw_pixel(cx - 3, cy + 3, YELLOW);
+				tft_draw_pixel(cx + 3, cy + 3, YELLOW);
 			} else {
-				// Wall hit - draw at hit location
-				for (int dy = -bullet.hit_size / 2; dy <= bullet.hit_size / 2;
-				     dy++) {
-					for (int dx = -bullet.hit_size / 2;
-					     dx <= bullet.hit_size / 2; dx++) {
+				// Wall hit
+				for (int dy = -bullet.hit_size / 2; dy <= bullet.hit_size / 2; dy++) {
+					for (int dx = -bullet.hit_size / 2; dx <= bullet.hit_size / 2; dx++) {
 						int draw_x = bullet.hit_screen_x + dx;
 						int draw_y = bullet.hit_screen_y + dy;
 						if (draw_x >= 0 && draw_x < SCREEN_WIDTH &&
 						    draw_y >= 0 && draw_y < SCREEN_HEIGHT) {
-							tft_draw_pixel(draw_x, draw_y,
-								       bullet.hit_color);
+							tft_draw_pixel(draw_x, draw_y, bullet.hit_color);
 						}
 					}
 				}
@@ -970,65 +1035,91 @@ static void player_view_draw()
 		}
 	}
 
-	// Pickup message display
+	// 6. Hurt screen vignette flash
+	if (hurt_flash_timer > 0.0f) {
+		for (int x = 0; x < SCREEN_WIDTH; x++) {
+			tft_draw_pixel(x, 0, RED);
+			tft_draw_pixel(x, 1, RED);
+			tft_draw_pixel(x, 102, RED);
+		}
+		for (int y = 0; y < 103; y++) {
+			tft_draw_pixel(0, y, RED);
+			tft_draw_pixel(1, y, RED);
+			tft_draw_pixel(SCREEN_WIDTH - 1, y, RED);
+			tft_draw_pixel(SCREEN_WIDTH - 2, y, RED);
+		}
+	}
+
+	// 7. Pickup & event message display
 	if (pickup_msg.visible) {
 		uint32_t current_time = time_us_64();
-		if (current_time - pickup_msg.timer_start < 2000000) { // 2 seconds
-			tft_draw_string(SCREEN_WIDTH / 2 - 40, 20, GREEN, pickup_msg.message);
+		if (current_time - pickup_msg.timer_start < 2000000) {
+			tft_draw_string(SCREEN_WIDTH / 2 - 35, 16, YELLOW, pickup_msg.message);
 		} else {
 			pickup_msg.visible = false;
 		}
 	}
 
-	// Low ammo warning
+	// 8. Low / Empty ammo notice
 	if (player.ammo <= 3 && player.ammo > 0) {
-		tft_draw_string(50, 20, RED, "Low Ammo");
+		tft_draw_string(50, 16, RED, "LOW AMMO");
+	} else if (player.ammo == 0 && player.gun != BROKE) {
+		tft_draw_string(30, 16, RED, "OUT OF AMMO! [Y] CHAINSAW");
 	}
 }
 
-static void handleShooting()
+static void handleShooting(float dt)
 {
+	if (player.gun == BROKE) {
+		if (sdk_inputs.a) {
+			chainsaw_timer -= dt;
+			if (chainsaw_timer <= 0.0f) {
+				chainsaw_timer = 0.14f;
+				muzzle_flash.visible = true;
+				muzzle_flash.timer_start = time_us_64();
+				sdk_melody_play("/i:noise (ff) < g c");
+				weapon_recoil = 3.0f;
+				shootBullet(player.angle, CHAINSAW_MAX_RANGE_TILES, 4, RED);
+			}
+		} else {
+			chainsaw_timer = 0.0f;
+		}
+		return;
+	}
+
 	if (sdk_inputs_delta.a == 1) {
+		if (attack_cooldown > 0.0f)
+			return;
+
 		if (player.gun == SHOTGUN && !player.shotgun_unlocked) {
 			sdk_melody_play("/i:noise (p) c");
 			return;
 		}
-		if (player.gun == BROKE) {
-			float shoot_angle = player.angle;
-			uint16_t visual_color = RED;
-			float current_gun_range = 0.0f;
-			int visual_size = 0;
-			current_gun_range = CHAINSAW_MAX_RANGE_TILES;
-			visual_size = 3;
-			muzzle_flash.visible = true;
-			muzzle_flash.timer_start = time_us_64();
 
-			shootBullet(shoot_angle, current_gun_range, visual_size, visual_color);
-			return;
-		}
 		if (player.ammo > 0) {
 			uint16_t visual_color = YELLOW;
 			float current_gun_range = 0.0f;
 			int visual_size = 8;
 
 			if (player.gun == PISTOL) {
+				attack_cooldown = 0.18f;
+				weapon_recoil = 6.0f;
 				current_gun_range = PISTOL_MAX_RANGE_TILES;
 				sdk_melody_play("/i:square (ff) e_");
 				visual_size = 6;
-				// Single bullet for pistol
 				shootBullet(player.angle, current_gun_range, visual_size,
 					    visual_color);
 			} else if (player.gun == SHOTGUN) {
+				attack_cooldown = 0.55f;
+				weapon_recoil = 12.0f;
 				current_gun_range = SHOTGUN_MAX_RANGE_TILES;
 				sdk_melody_play("/i:noise (fff) < c_");
 				visual_size = 8;
 
-				// Shotgun spread - multiple pellets with wider spread
-				int pellet_count = 8; // Increased from 5 to 8
+				int pellet_count = 8;
 				float spread_angle = SHOTGUN_SPREAD_DEGREES * M_PI / 180.0f;
 
 				for (int i = 0; i < pellet_count; i++) {
-					// Wider spread for shotgun
 					float spread = ((float)rand() / RAND_MAX - 0.5f) *
 						       spread_angle * 2.0f;
 					float pellet_angle = player.angle + spread;
@@ -1042,9 +1133,6 @@ static void handleShooting()
 			player.ammo--;
 		} else {
 			sdk_melody_play("/i:noise (p) c");
-			if (mode.debug) {
-				printf("Out of ammo!\n");
-			}
 		}
 	}
 }
@@ -1202,29 +1290,25 @@ static void shootBullet(float current_shoot_angle, float max_range_tiles, int vi
 			enemies[hit_enemy_index].state = ENEMY_DEAD;
 			enemies[hit_enemy_index].alive = false;
 			enemies[hit_enemy_index].active = false;
-			player.score += (enemies[hit_enemy_index].type == 1) ? 100 : 200;
+			int kill_score = (enemies[hit_enemy_index].type == 1) ? 100 : 200;
+			player.score += kill_score;
 			active_enemy_count--;
 
-			int random = randomnumb(10);
-			;
-			if (mode.debug)
-				printf("dead random number %i\n", random);
-			switch (random) {
-			case 3:
-				give_pickup(HEALTH_PACK);
-				break;
-			case 2:
+			// Punchy enemy death sound!
+			sdk_melody_play("/i:noise (fff) > e c < g#");
+
+			sprintf(pickup_msg.message, "+%d PTS", kill_score);
+			pickup_msg.visible = true;
+			pickup_msg.timer_start = time_us_64();
+
+			// Generous drops so player stays equipped and challenged
+			int random = rand() % 10;
+			if (random < 4) {
 				give_pickup(AMMO_BOX);
-				break;
-			case 1:
+			} else if (random < 7) {
+				give_pickup(HEALTH_PACK);
+			} else if (random == 7 && !player.shotgun_unlocked) {
 				give_pickup(SHOTGUN_PICKUP);
-				break;
-			default:
-				break;
-			}
-			if (mode.debug) {
-				printf("Enemy %d killed immediately! Score: %d, Active enemies: %d\n",
-				       hit_enemy_index, player.score, active_enemy_count);
 			}
 		}
 	}
@@ -1452,8 +1536,9 @@ static void updateEnemies(float dt)
 				enemies[i].attack_timer = ENEMY_ATTACK_COOLDOWN;
 				enemies[i].last_attack_time = time_us_64();
 
-				// Play attack sound
-				sdk_melody_play("/i:noise (ff) c");
+				// Pain sound and red screen damage flash
+				hurt_flash_timer = 0.22f;
+				sdk_melody_play("/i:noise (fff) c_");
 
 				if (mode.debug) {
 					printf("Enemy %d attacked! Player health: %d\n", i,
@@ -1760,15 +1845,21 @@ static void real_game_start(void)
 	Map_starter(&maps_map1, &maps_doors1);
 	textures_load();
 
-	mode.auto_door_open = false;
+	mode.auto_door_open = true;
 
 	player.health = 100;
 	player.angle = (float)M_PI / 2.0f;
-	player.ammo = 15;
+	player.ammo = 25;
 	player.alive = true;
-	player.gun = BROKE;
+	player.gun = PISTOL;
 	player.shotgun_unlocked = false;
 	player.has_moved = false;
+
+	weapon_recoil = 0.0f;
+	weapon_bob = 0.0f;
+	attack_cooldown = 0.0f;
+	chainsaw_timer = 0.0f;
+	hurt_flash_timer = 0.0f;
 
 	muzzle_flash.visible = false;
 	muzzle_flash.timer_start = 0;
@@ -1785,8 +1876,8 @@ void Map_starter(const TileType (*next_map)[MAP_ROWS][MAP_COLS],
 {
 	load_map(next_map, door_map);
 	player.angle = (float)M_PI / 2.0f;
-	if (player.ammo < 15) {
-		player.ammo = 15;
+	if (player.ammo < 20) {
+		player.ammo = 20;
 	}
 	player.alive = true;
 
@@ -1891,7 +1982,7 @@ void Map_starter(const TileType (*next_map)[MAP_ROWS][MAP_COLS],
 
 static void menu_inputs()
 {
-	if (sdk_inputs_delta.start == 1) {
+	if (sdk_inputs_delta.start == 1 || sdk_inputs_delta.a == 1) {
 		switch (menu.pointer) {
 		case 0:
 			real_game_start();
@@ -1899,6 +1990,7 @@ static void menu_inputs()
 			mode.map_type = CAMPAIGN;
 			break;
 		case 1:
+			real_game_start();
 			game_state = GAME_PLAYING;
 			mode.map_type = RANDOM;
 			break;
@@ -1906,12 +1998,12 @@ static void menu_inputs()
 			break;
 		}
 	}
-	menu.pointer = clamp(menu.pointer += sdk_inputs_delta.vertical, 0, 1);
+	menu.pointer = clamp(menu.pointer + sdk_inputs_delta.vertical, 0, 1);
 }
 
 static void dead_state_inputs()
 {
-	if (sdk_inputs_delta.start == 1) {
+	if (sdk_inputs_delta.start == 1 || sdk_inputs_delta.a == 1) {
 		real_game_start();
 		game_state = GAME_PLAYING;
 	} else if (sdk_inputs_delta.select == 1) {
@@ -1969,9 +2061,10 @@ static void render_menu(float dt)
 	tft_draw_string(60, 40, WHITE, "Campaign");
 	tft_draw_string(60, 51, WHITE, "Random");
 	tft_draw_string(50, 40 + menu.pointer * 10 + menu.pointer, YELLOW, ">");
+	tft_draw_string(30, 80, YELLOW, "[A / START] Select");
 }
 
-static void render_dead_state(void) // Removed unused dt parameter
+static void render_dead_state(void)
 {
 	// Draw a semi-dark screen by drawing a semi-transparent black rectangle
 	for (int y = 0; y < SCREEN_HEIGHT; y += 2) {
@@ -1983,7 +2076,7 @@ static void render_dead_state(void) // Removed unused dt parameter
 	// Draw game over message
 	tft_draw_string(20, SCREEN_HEIGHT / 2 - 20, RED, "YOU DIED");
 	tft_draw_string(20, SCREEN_HEIGHT / 2, WHITE, "Score: %d", player.score);
-	tft_draw_string(20, SCREEN_HEIGHT / 2 + 20, WHITE, "START to restart");
+	tft_draw_string(20, SCREEN_HEIGHT / 2 + 20, WHITE, "A / START to restart");
 	tft_draw_string(20, SCREEN_HEIGHT / 2 + 40, WHITE, "SELECT for menu");
 }
 void game_paint(unsigned dt_usec)

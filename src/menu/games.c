@@ -69,6 +69,7 @@ static bool games_handle(sdk_event_t event, int depth)
 
 static void games_pushed(void)
 {
+#if !defined(RUNNING_ON_HOST)
 	for (int i = 0; i < NUM_GAMES; i++) {
 		unsigned base = XIP_BASE + (i * 512 * 1024) + 256;
 
@@ -80,6 +81,10 @@ static void games_pushed(void)
 			break;
 		}
 	}
+#else
+	extern const sdk_game_info_t sdk_game_info;
+	games[0] = &sdk_game_info;
+#endif
 }
 
 sdk_scene_t scene_games = {

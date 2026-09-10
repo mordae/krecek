@@ -1,4 +1,4 @@
-add_executable(menu main.c root.c games.c screens.c)
+add_executable(menu main.c root.c games.c screens.c intro.c)
 target_include_directories(menu PRIVATE include)
 generate_png_headers()
 target_link_libraries(menu krecek ${PNG_HEADERS_TARGET})

@@ -7,15 +7,31 @@ void Map_starter(const TileType (*next_map)[MAP_ROWS][MAP_COLS], const Door_Side
 
 static inline void map_starter_caller(void)
 {
-	if (level.map_id == &maps_map2) {
-		Map_starter(&maps_map3, &maps_doors3);
-		return;
-	}
 	if (level.map_id == &maps_map1) {
 		Map_starter(&maps_map2, &maps_doors2);
 		return;
 	}
+	if (level.map_id == &maps_map2) {
+		Map_starter(&maps_map3, &maps_doors3);
+		return;
+	}
 	if (level.map_id == &maps_map3) {
+		Map_starter(&maps_map4, &maps_doors4);
+		return;
+	}
+	if (level.map_id == &maps_map4) {
+		Map_starter(&maps_map5, &maps_doors5);
+		return;
+	}
+	if (level.map_id == &maps_map5) {
+		Map_starter(&maps_map6, &maps_doors6);
+		return;
+	}
+	if (level.map_id == &maps_map6) {
+		Map_starter(&maps_map7, &maps_doors7);
+		return;
+	}
+	if (level.map_id == &maps_map7) {
 		Map_starter(&maps_map1, &maps_doors1);
 		return;
 	}

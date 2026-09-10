@@ -930,22 +930,27 @@ static void delete_selected_map(int map_index)
 		char new_filename[256];
 		char old_mapname[256];
 		char new_mapname[256];
+		char old_doorsname[256];
+		char new_doorsname[256];
 
 		snprintf(old_filename, sizeof(old_filename), "../krecdoom/maps/map%d.c", i);
 		snprintf(new_filename, sizeof(new_filename), "../krecdoom/maps/map%d.c", i - 1);
 		snprintf(old_mapname, sizeof(old_mapname), "maps_map%d", i);
 		snprintf(new_mapname, sizeof(new_mapname), "maps_map%d", i - 1);
+		snprintf(old_doorsname, sizeof(old_doorsname), "maps_doors%d", i);
+		snprintf(new_doorsname, sizeof(new_doorsname), "maps_doors%d", i - 1);
 
 		// Rename the file
 		if (rename(old_filename, new_filename) == 0) {
 			printf("Renamed %s to %s\n", old_filename, new_filename);
 
 			// Update the map variable name inside the file
-			FILE *file = fopen(new_filename, "r+");
+			FILE *file = fopen(new_filename, "r");
 			if (file) {
-				char content[4096];
+				char content[8192];
 				size_t bytes_read = fread(content, 1, sizeof(content) - 1, file);
 				content[bytes_read] = '\0';
+				fclose(file);
 
 				// Replace the old map name with new map name
 				char *pos = strstr(content, old_mapname);
@@ -954,12 +959,23 @@ static void delete_selected_map(int map_index)
 						pos + strlen(old_mapname),
 						strlen(pos + strlen(old_mapname)) + 1);
 					memcpy(pos, new_mapname, strlen(new_mapname));
-
-					// Write back
-					fseek(file, 0, SEEK_SET);
-					fwrite(content, 1, strlen(content), file);
 				}
-				fclose(file);
+
+				// Replace the old doors name with new doors name
+				pos = strstr(content, old_doorsname);
+				if (pos) {
+					memmove(pos + strlen(new_doorsname),
+						pos + strlen(old_doorsname),
+						strlen(pos + strlen(old_doorsname)) + 1);
+					memcpy(pos, new_doorsname, strlen(new_doorsname));
+				}
+
+				// Write back
+				file = fopen(new_filename, "w");
+				if (file) {
+					fwrite(content, 1, strlen(content), file);
+					fclose(file);
+				}
 			}
 		}
 	}

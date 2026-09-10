@@ -19,6 +19,9 @@ if (TARGET SDL2::SDL2main)
   target_link_libraries(sdk PRIVATE SDL2::SDL2main)
 endif()
 
+generate_png_headers()
+target_link_libraries(sdk PUBLIC ${PNG_HEADERS_TARGET})
+
 target_link_libraries(sdk PRIVATE SDL2::SDL2 ${PA_LIBRARIES} m)
 
 set_property(TARGET sdk PROPERTY C_STANDARD 23)

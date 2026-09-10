@@ -7,6 +7,9 @@ add_executable(
     maps/map2.c
     maps/map3.c
     maps/map4.c
+    maps/map5.c
+    maps/map6.c
+    maps/map7.c
 )
 
 target_include_directories(krecdoom PRIVATE include)

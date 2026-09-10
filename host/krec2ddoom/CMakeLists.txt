@@ -6,6 +6,9 @@ add_executable(
   ../../src/krecdoom/maps/map2.c
   ../../src/krecdoom/maps/map3.c
   ../../src/krecdoom/maps/map4.c
+  ../../src/krecdoom/maps/map5.c
+  ../../src/krecdoom/maps/map6.c
+  ../../src/krecdoom/maps/map7.c
 )
 
 generate_png_headers()
